@@ -1,35 +1,38 @@
+# Fleet Management Backend Structure
+
+```text
 fleet-management-backend/
 ├── src/
-│   ├── auth/                           # Authentication & Authorization Module
-│   │   ├── dto/                        # Data Transfer Objects for validation
+│   ├── auth/                          # Authentication & Authorization Module
+│   │   ├── dto/                       # Data Transfer Objects for validation
 │   │   │   ├── login.dto.ts
 │   │   │   ├── register.dto.ts
 │   │   │   └── reset-password.dto.ts
-│   │   ├── guards/                     # Route protection (JWT, Roles)
+│   │   ├── guards/                    # Route protection (JWT, Roles)
 │   │   │   ├── jwt-auth.guard.ts
 │   │   │   └── roles.guard.ts
-│   │   ├── strategies/                 # Passport strategies (e.g., JWT)
+│   │   ├── strategies/                # Passport strategies (e.g., JWT)
 │   │   │   └── jwt.strategy.ts
-│   │   ├── auth.controller.ts          # Handles HTTP requests for login/register
-│   │   ├── auth.module.ts              # Registers auth-related providers
-│   │   └── auth.service.ts             # Business logic for auth (e.g., password hashing)
+│   │   ├── auth.controller.ts         # Handles HTTP requests for login/register
+│   │   ├── auth.module.ts             # Registers auth-related providers
+│   │   └── auth.service.ts            # Business logic for auth (e.g., password hashing)
 │   │
-│   ├── common/                         # Shared utilities across modules
-│   │   ├── decorators/                 # Custom decorators (e.g., @Roles)
-│   │   ├── filters/                    # Exception filters (e.g., for global error handling)
-│   │   ├── interceptors/               # Interceptors (e.g., for logging, data transformation)
-│   │   └── pipes/                      # Custom pipes (e.g., for validation)
+│   ├── common/                        # Shared utilities across modules
+│   │   ├── decorators/                # Custom decorators (e.g., @Roles)
+│   │   ├── filters/                   # Exception filters (global error handling)
+│   │   ├── interceptors/              # Interceptors (logging, transformation)
+│   │   └── pipes/                     # Custom pipes (validation)
 │   │
-│   ├── config/                         # Configuration management
+│   ├── config/                        # Configuration management
 │   │   ├── database.config.ts
 │   │   ├── jwt.config.ts
 │   │   └── app.config.ts
 │   │
-│   ├── database/                       # Database related files
-│   │   ├── migrations/                 # TypeORM migration files
-│   │   └── seeds/                      # Database seeders (for initial data)
+│   ├── database/                      # Database related files
+│   │   ├── migrations/                # TypeORM migrations
+│   │   └── seeds/                     # Database seeders
 │   │
-│   ├── fleet/                          # Fleet Management Module (Vehicles, Drivers)
+│   ├── fleet/                         # Fleet Management Module
 │   │   ├── controllers/
 │   │   │   ├── driver.controller.ts
 │   │   │   └── vehicle.controller.ts
@@ -37,16 +40,16 @@ fleet-management-backend/
 │   │   │   ├── create-driver.dto.ts
 │   │   │   ├── create-vehicle.dto.ts
 │   │   │   └── update-vehicle.dto.ts
-│   │   ├── entities/                   # TypeORM database entities
+│   │   ├── entities/
 │   │   │   ├── driver.entity.ts
 │   │   │   └── vehicle.entity.ts
-│   │   ├── interfaces/                 # TypeScript interfaces
+│   │   ├── interfaces/
 │   │   ├── fleet.module.ts
 │   │   └── services/
 │   │       ├── driver.service.ts
 │   │       └── vehicle.service.ts
 │   │
-│   ├── fuel/                           # Fuel Management Module
+│   ├── fuel/                          # Fuel Management Module
 │   │   ├── controllers/
 │   │   ├── dto/
 │   │   ├── entities/
@@ -54,16 +57,16 @@ fleet-management-backend/
 │   │   ├── fuel.module.ts
 │   │   └── services/
 │   │
-│   ├── gps/                            # GPS Tracking Module
+│   ├── gps/                           # GPS Tracking Module
 │   │   ├── controllers/
 │   │   ├── dto/
 │   │   ├── entities/
 │   │   │   └── gps-location.entity.ts
-│   │   ├── gps.gateway.ts              # WebSocket gateway for real-time tracking
+│   │   ├── gps.gateway.ts             # WebSocket gateway
 │   │   ├── gps.module.ts
 │   │   └── services/
 │   │
-│   ├── maintenance/                    # Maintenance Management Module
+│   ├── maintenance/                   # Maintenance Management Module
 │   │   ├── controllers/
 │   │   ├── dto/
 │   │   ├── entities/
@@ -71,18 +74,18 @@ fleet-management-backend/
 │   │   ├── maintenance.module.ts
 │   │   └── services/
 │   │
-│   ├── notification/                   # Notification Module (Email, SMS, Push)
+│   ├── notification/                  # Notification Module
 │   │   ├── controllers/
 │   │   ├── notification.module.ts
 │   │   └── services/
 │   │
-│   ├── report/                         # Reporting & Analytics Module
+│   ├── report/                        # Reporting & Analytics Module
 │   │   ├── controllers/
 │   │   ├── dto/
 │   │   ├── report.module.ts
 │   │   └── services/
 │   │
-│   ├── trip/                           # Trip Management Module
+│   ├── trip/                          # Trip Management Module
 │   │   ├── controllers/
 │   │   ├── dto/
 │   │   ├── entities/
@@ -91,7 +94,7 @@ fleet-management-backend/
 │   │   ├── trip.module.ts
 │   │   └── services/
 │   │
-│   ├── upload/                         # File Upload Module (for documents)
+│   ├── upload/                        # File Upload Module
 │   │   ├── controllers/
 │   │   ├── dto/
 │   │   ├── entities/
@@ -99,7 +102,7 @@ fleet-management-backend/
 │   │   ├── upload.module.ts
 │   │   └── services/
 │   │
-│   ├── user/                           # User Management Module
+│   ├── user/                          # User Management Module
 │   │   ├── controllers/
 │   │   ├── dto/
 │   │   ├── entities/
@@ -108,16 +111,16 @@ fleet-management-backend/
 │   │   ├── user.module.ts
 │   │   └── services/
 │   │
-│   ├── app.controller.ts               # Root controller (e.g., for health check)
-│   ├── app.module.ts                   # Root application module
-│   └── main.ts                         # Application entry point
+│   ├── app.controller.ts              # Root controller
+│   ├── app.module.ts                  # Root module
+│   └── main.ts                        # Application entry point
 │
-├── test/                               # End-to-end and integration tests
-│
-├── .env.example                        # Example environment variables
+├── test/                              # E2E & integration tests
+├── .env.example                       # Environment variables example
 ├── .gitignore
-├── nest-cli.json                       # NestJS CLI configuration
+├── nest-cli.json
 ├── package.json
 ├── tsconfig.build.json
 ├── tsconfig.json
 └── README.md
+```
