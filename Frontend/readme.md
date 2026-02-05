@@ -125,8 +125,8 @@ fleet-management-frontend/
 ###  Getting Started
 
 ```bash
-git clone <repository-url>
-cd fleet-management-frontend
+git clone https://github.com/etrnkz/Fleet-Management-System.git
+cd Frontend
 npm install
 npm run dev
 ```
