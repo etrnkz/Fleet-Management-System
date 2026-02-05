@@ -1,4 +1,4 @@
-# Frontend Development Guide and Workflow - Fleet Management System
+## Frontend Development Guide and Workflow - Fleet Management System
 
 
 **Tech Stack:**
@@ -11,7 +11,7 @@
 
 ---
 
-## 📁 Frontend Folder Structure
+### Frontend Folder Structure
 
 ```text
 fleet-management-frontend/
@@ -40,9 +40,9 @@ fleet-management-frontend/
 
 ---
 
-## 📅 Week-by-Week Task Breakdown
+### Week-by-Week Task Breakdown
 
-### **Week 1: Project Setup & Authentication**
+####  **Week 1: Project Setup & Authentication**
 
 **Goal:** Get the project running locally and build the login/register pages.
 
@@ -54,7 +54,7 @@ fleet-management-frontend/
 
 ---
 
-### **Week 2: Core Fleet Management - Vehicles**
+##@# **Week 2: Core Fleet Management - Vehicles**
 
 **Goal:** Build the complete UI for managing vehicles.
 
@@ -66,7 +66,7 @@ fleet-management-frontend/
 
 ---
 
-### **Week 3: Core Fleet Management - Drivers**
+#### **Week 3: Core Fleet Management - Drivers**
 
 **Goal:** Build the complete UI for managing drivers.
 
@@ -78,7 +78,7 @@ fleet-management-frontend/
 
 ---
 
-### **Week 4: Trip Management**
+#### **Week 4: Trip Management**
 
 **Goal:** Allow users to request and view trips.
 
@@ -90,7 +90,7 @@ fleet-management-frontend/
 
 ---
 
-### **Week 5: Real-time GPS Tracking**
+#### **Week 5: Real-time GPS Tracking**
 
 **Goal:** Integrate the live map to track vehicles during trips.
 
@@ -102,7 +102,7 @@ fleet-management-frontend/
 
 ---
 
-### **Week 6: Fuel, Maintenance & Reports**
+#### **Week 6: Fuel, Maintenance & Reports**
 
 **Goal:** Complete the remaining feature pages.
 
@@ -115,8 +115,6 @@ fleet-management-frontend/
 ---
 
 
-## 👥 Team
-
 **Developers:**
 - Lebsi Turara
 - Eyuel Kasahun
@@ -124,7 +122,7 @@ fleet-management-frontend/
 
 ---
 
-## 🛠 Getting Started
+###  Getting Started
 
 ```bash
 git clone <repository-url>
