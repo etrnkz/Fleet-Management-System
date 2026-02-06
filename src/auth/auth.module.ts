@@ -13,7 +13,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: (config: ConfigService): JwtModuleOptions => ({
         secret: config.get<string>('jwt.secret', 'SECRET_KEY'),
         signOptions: { 
-          expiresIn: config.get<string>('jwt.expiration', '3600s'), // Use seconds or time string
+          expiresIn: config.get<number>('jwt.expiration', 3600), // Use number (seconds)
         },
       }),
     }),
