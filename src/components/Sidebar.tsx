@@ -34,7 +34,7 @@ export function Sidebar() {
         <div className="flex h-full w-64 flex-col border-r bg-card text-card-foreground">
             <div className="flex h-16 items-center border-b px-6">
                 <span className="text-xl font-bold tracking-tight text-primary">
-                    FleetManager
+                    HU Fleet Manager
                 </span>
             </div>
             <div className="flex-1 overflow-y-auto py-4">

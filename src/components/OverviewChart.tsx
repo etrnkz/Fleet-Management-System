@@ -69,7 +69,7 @@ export function OverviewChart() {
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
+                    tickFormatter={(value) => `ETB ${value}`}
                 />
                 <Tooltip
                     cursor={{ fill: 'transparent' }}
