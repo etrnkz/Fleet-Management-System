@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bell, Search, User } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -16,14 +17,18 @@ export function Header() {
                 </div>
             </div>
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-600 border border-card" />
+                <Button variant="ghost" size="icon" className="relative" asChild>
+                    <Link href="/signup">
+                        <Bell className="h-5 w-5" />
+                        <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-600 border border-card" />
+                    </Link>
                 </Button>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <User className="h-5 w-5" />
-                    </div>
+                <Button variant="ghost" size="icon" className="rounded-full" asChild>
+                    <Link href="/login">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <User className="h-5 w-5" />
+                        </div>
+                    </Link>
                 </Button>
             </div>
         </header>
