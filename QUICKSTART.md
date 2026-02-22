@@ -18,7 +18,7 @@ npm install
 # Install global tools
 npm install -g @nestjs/cli
 ```
-
+ 
 ### 2. Environment Setup
 
 Create `.env` file:
