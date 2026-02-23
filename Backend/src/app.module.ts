@@ -8,6 +8,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { CollegesModule } from './colleges/colleges.module';
+import { DepartmentsModule } from './departments/departments.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -40,6 +42,8 @@ import configuration from './config/configuration';
       }),
     }),
     UsersModule,
+    CollegesModule,
+    DepartmentsModule,
     AuthModule,
   ],
   controllers: [AppController],
