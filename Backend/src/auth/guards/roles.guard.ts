@@ -7,7 +7,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '../dto/register.dto'; 
+import { UserRole } from '../../users/entities/user.entity';
 
 // Constants for metadata key
 export const ROLES_KEY = 'roles';
@@ -42,7 +42,7 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User role not defined');
     }
 
-    const hasRole = requiredRoles.some((role) => this.matchRole(user.role, role));
+    const hasRole = requiredRoles.some((role) => user.role === role);
     
     if (!hasRole) {
       this.logger.warn(
@@ -61,21 +61,5 @@ export class RolesGuard implements CanActivate {
     );
     
     return true;
-  }
-
-  private matchRole(userRole: UserRole, requiredRole: UserRole): boolean {
-    if (userRole === requiredRole) {
-      return true;
-    }
-
-    const roleHierarchy = {
-      [UserRole.SYSTEM_ADMIN]: Object.values(UserRole),
-      [UserRole.PRESIDENT]: [UserRole.PRESIDENT, UserRole.COLLEGE_DEAN, UserRole.EMPLOYEE],
-      [UserRole.COLLEGE_DEAN]: [UserRole.COLLEGE_DEAN, UserRole.EMPLOYEE],
-      [UserRole.TRANSPORT_ADMIN]: [UserRole.TRANSPORT_ADMIN, UserRole.DRIVER],
-    };
-
-    const allowedRoles = roleHierarchy[userRole] || [userRole];
-    return allowedRoles.includes(requiredRole);
   }
 }
