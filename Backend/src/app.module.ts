@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CollegesModule } from './colleges/colleges.module';
 import { DepartmentsModule } from './departments/departments.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
+import { DriversModule } from './drivers/drivers.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -44,6 +46,8 @@ import configuration from './config/configuration';
     UsersModule,
     CollegesModule,
     DepartmentsModule,
+    VehiclesModule,
+    DriversModule,
     AuthModule,
   ],
   controllers: [AppController],
