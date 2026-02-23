@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  ManyToOne,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
@@ -42,6 +43,12 @@ export class User {
 
   @Column({ nullable: true })
   phoneNumber: string;
+
+  @ManyToOne('Department', { nullable: true })
+  department: any;
+
+  @ManyToOne('College', { nullable: true })
+  college: any;
 
   @Column({ default: true })
   isActive: boolean;
