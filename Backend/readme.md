@@ -1,261 +1,246 @@
+# Fleet Management System - Backend
 
-### Backend Development Guide - Fleet Management System
+Production-grade NestJS backend for the Fleet Management System with RBAC, workflow automation, and real-time tracking.
 
+## 📋 Documentation
 
-**Tech Stack:**
-*   **Framework:** NestJS
-*   **Language:** TypeScript
-*   **Database:** PostgreSQL
-*   **ORM:** TypeORM
-*   **Authentication:** JWT (JSON Web Tokens)
-*   **Real-time:** WebSockets (for GPS tracking)
-*   **Validation:** Class-validator & Class-transformer
+- [Architecture Overview](./ARCHITECTURE.md) - System design and technical architecture
+- [Database Schema](./DATABASE_SCHEMA.md) - Complete database design with TypeORM entities
+- [API Contracts](./API_CONTRACTS.md) - REST and WebSocket API documentation
+- [Workflow Engine](./WORKFLOW_ENGINE.md) - Workflow system design and implementation
+- [Module Structure](./MODULE_STRUCTURE.md) - NestJS project organization
+- [Implementation Plan](./plan.md) - 16-week development roadmap
+- [Quick Start Guide](./QUICKSTART.md) - Setup and installation instructions
 
----
+## 🚀 Quick Start
 
-### Backend Folder Structure
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL 15+
+- Redis 7+
+- Docker & Docker Compose (optional)
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start database services (Docker)
+docker-compose up -d postgres redis
+
+# Run migrations
+npm run migration:run
+
+# Start development server
+npm run start:dev
+```
+
+Visit `http://localhost:3000/api/docs` for API documentation.
+
+## 📂 Project Structure
 
 ```
-fleet-management-backend/
+Backend/
 ├── src/
-│   ├── auth/                           # Authentication & Authorization Module
-│   │   ├── dto/                        # Data Transfer Objects for validation
-│   │   │   ├── login.dto.ts
-│   │   │   └── register.dto.ts
-│   │   ├── guards/                     # Route protection (JWT, Roles)
-│   │   │   ├── jwt-auth.guard.ts
-│   │   │   └── roles.guard.ts
-│   │   ├── strategies/                 # Passport strategies (e.g., JWT)
-│   │   │   └── jwt.strategy.ts
-│   │   ├── auth.controller.ts          # Handles HTTP requests for login/register
-│   │   ├── auth.module.ts              # Registers auth-related providers
-│   │   └── auth.service.ts             # Business logic for auth (e.g., password hashing)
-│   │
-│   ├── common/                         # Shared utilities across modules
-│   │   ├── decorators/                 # Custom decorators (e.g., @Roles)
-│   │   ├── filters/                    # Exception filters (e.g., for global error handling)
-│   │   ├── interceptors/               # Interceptors (e.g., for logging, data transformation)
-│   │   └── pipes/                      # Custom pipes (e.g., for validation)
-│   │
-│   ├── config/                         # Configuration management
-│   │   ├── database.config.ts
-│   │   ├── jwt.config.ts
-│   │   └── app.config.ts
-│   │
-│   ├── database/                       # Database related files
-│   │   ├── migrations/                 # TypeORM migration files
-│   │   └── seeds/                      # Database seeders (for initial data)
-│   │
-│   ├── fleet/                          # Fleet Management Module (Vehicles, Drivers)
-│   │   ├── controllers/
-│   │   │   ├── driver.controller.ts
-│   │   │   └── vehicle.controller.ts
-│   │   ├── dto/
-│   │   │   ├── create-driver.dto.ts
-│   │   │   ├── create-vehicle.dto.ts
-│   │   │   └── update-vehicle.dto.ts
-│   │   ├── entities/                   # TypeORM database entities
-│   │   │   ├── driver.entity.ts
-│   │   │   └── vehicle.entity.ts
-│   │   ├── fleet.module.ts
-│   │   └── services/
-│   │       ├── driver.service.ts
-│   │       └── vehicle.service.ts
-│   │
-│   ├── fuel/                           # Fuel Management Module
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── entities/
-│   │   │   └── fuel-record.entity.ts
-│   │   ├── fuel.module.ts
-│   │   └── services/
-│   │
-│   ├── gps/                            # GPS Tracking Module
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── entities/
-│   │   │   └── gps-location.entity.ts
-│   │   ├── gps.gateway.ts              # WebSocket gateway for real-time tracking
-│   │   ├── gps.module.ts
-│   │   └── services/
-│   │
-│   ├── maintenance/                    # Maintenance Management Module
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── entities/
-│   │   │   └── maintenance-record.entity.ts
-│   │   ├── maintenance.module.ts
-│   │   └── services/
-│   │
-│   ├── notification/                   # Notification Module (Email, SMS, Push)
-│   │   ├── controllers/
-│   │   ├── notification.module.ts
-│   │   └── services/
-│   │
-│   ├── report/                         # Reporting & Analytics Module
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── report.module.ts
-│   │   └── services/
-│   │
-│   ├── trip/                           # Trip Management Module
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── entities/
-│   │   │   ├── trip.entity.ts
-│   │   │   └── trip-approval.entity.ts
-│   │   ├── trip.module.ts
-│   │   └── services/
-│   │
-│   ├── upload/                         # File Upload Module (for documents)
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── entities/
-│   │   │   └── document.entity.ts
-│   │   ├── upload.module.ts
-│   │   └── services/
-│   │
-│   ├── user/                           # User Management Module
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── entities/
-│   │   │   ├── user.entity.ts
-│   │   │   └── role.entity.ts
-│   │   ├── user.module.ts
-│   │   └── services/
-│   │
-│   ├── app.controller.ts               # Root controller (e.g., for health check)
-│   ├── app.module.ts                   # Root application module
-│   └── main.ts                         # Application entry point
-│
-├── test/                               # End-to-end and integration tests
-│
-├── .env.example                        # Example environment variables
-├── .gitignore
-├── nest-cli.json                       # NestJS CLI configuration
-├── package.json
-├── tsconfig.build.json
-├── tsconfig.json
-└── README.md
+│   ├── auth/                    # Authentication & authorization
+│   ├── users/                   # User management
+│   ├── departments/             # Department management
+│   ├── colleges/                # College management
+│   ├── vehicles/                # Vehicle management
+│   ├── drivers/                 # Driver management
+│   ├── trips/                   # Trip request management
+│   ├── workflow/                # Workflow engine
+│   ├── deployment/              # Vehicle allocation
+│   ├── transport/               # Transport office operations
+│   ├── maintenance/             # Maintenance management
+│   ├── fuel/                    # Fuel management
+│   ├── tracking/                # GPS tracking
+│   ├── notifications/           # Notification system
+│   ├── reports/                 # Reporting & analytics
+│   ├── audit/                   # Audit logging
+│   ├── scheduler/               # Scheduled jobs
+│   ├── integrations/            # External integrations
+│   ├── config/                  # Configuration
+│   ├── common/                  # Shared utilities
+│   └── main.ts                  # Application entry point
+├── test/                        # E2E tests
+├── scripts/                     # Utility scripts
+└── package.json
 ```
 
+## 🧪 Testing
+
+```bash
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+
+# Watch mode
+npm run test:watch
+```
+
+## 🔧 Development
+
+```bash
+# Development mode with hot reload
+npm run start:dev
+
+# Debug mode
+npm run start:debug
+
+# Production build
+npm run build
+
+# Production mode
+npm run start:prod
+```
+
+## 📦 Database
+
+```bash
+# Generate migration
+npm run migration:generate -- -n MigrationName
+
+# Run migrations
+npm run migration:run
+
+# Revert last migration
+npm run migration:revert
+
+# Seed database
+npm run seed
+```
+
+## 🔍 Code Quality
+
+```bash
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+
+# Type check
+npm run type-check
+```
+
+## 🐳 Docker
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f app
+
+# Stop services
+docker-compose down
+
+# Rebuild
+docker-compose up -d --build
+```
+
+## 🔐 Environment Variables
+
+Create a `.env` file based on `.env.example`:
+
+```env
+# Application
+NODE_ENV=development
+PORT=3000
+API_PREFIX=api/v1
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_NAME=fleet_management
+
+# JWT
+JWT_SECRET=your-secret-key
+JWT_EXPIRATION=15m
+JWT_REFRESH_SECRET=your-refresh-secret
+JWT_REFRESH_EXPIRATION=7d
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Web Push
+VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:admin@school.edu
+```
+
+## 📊 API Documentation
+
+Once the server is running, visit:
+- Swagger UI: `http://localhost:3000/api/docs`
+- OpenAPI JSON: `http://localhost:3000/api/docs-json`
+
+## 🔄 Workflow States
+
+### Trip States
+- DRAFT → SUBMITTED → PENDING_DEPARTMENT → PENDING_COLLEGE → PENDING_DEAN
+- → APPROVED_FOR_ALLOCATION → CAR_ALLOCATED → PENDING_TRANSPORT_CONFIRM
+- → READY → IN_PROGRESS → COMPLETED
+
+### Rejection States
+- REJECTED (manual rejection)
+- AUTO_REJECTED_TIMEOUT (48-hour timeout)
+- CANCELLED (user cancellation)
+
+## 🎯 Key Features
+
+- ✅ JWT Authentication with refresh tokens
+- ✅ Role-based access control (9 roles)
+- ✅ Configurable workflow engine
+- ✅ 48-hour timeout with auto-rejection
+- ✅ Real-time GPS tracking (WebSocket)
+- ✅ Web Push notifications
+- ✅ Complete audit trail
+- ✅ Comprehensive reporting
+- ✅ Event-driven architecture
+
+## 📈 Monitoring
+
+- Health check: `GET /health`
+- Metrics: `GET /metrics`
+- Prometheus integration
+- Grafana dashboards
+- Sentry error tracking
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Write/update tests
+4. Ensure all tests pass
+5. Submit a pull request
+
+## 📝 License
+
+MIT License
+
+## 📧 Support
+
+For support and questions:
+- Documentation: [/docs](./docs)
+- Email: support@school.edu
+- Issues: GitHub Issues
+
 ---
 
-### Team & Workflow
-
-**Developers:**
-*   etrnkz
-*   Lemi
-
-**Our Workflow:**
-1.  **Weekly Sprints:** We work in one-week sprints. Each developer is assigned specific modules to complete.
-2.  **Branching:** For each task, create a new feature branch from `develop`. Name it `feature/your-name-description` (e.g., `feature/etrnkz-vehicle-entity`).
-3.  **Daily Stand-ups:** Briefly share what you did yesterday, what you'll do today, and any blockers.
-4.  **Code Review:** Before merging into `develop`, create a Pull Request. The other team member must review and approve it.
-5.  **End of Week:** On Friday, we merge all completed features into `develop` and prepare for the next week's assignments.
-
----
-
-### Week-by-Week Task Breakdown
-
-#### **Week 1: Foundation & Authentication**
-
-**Goal:** Set up the project and implement the core security and data models.
-
-| Assigned To | Task | Modules/Files to Create | Details |
-| :--- | :--- | :--- | :--- |
-| **etrnkz** | User & Role Data Models | `src/user/` | Create `User` and `Role` entities. Implement full CRUD controllers and services for managing users and their roles. |
-| **Lemi** | Authentication Module | `src/auth/` | Implement JWT strategy, guards (`JwtAuthGuard`, `RolesGuard`), and the `auth.controller`/`service` for login and registration. |
-
----
-
-#### **Week 2: Core Fleet - Vehicles & Drivers**
-
-**Goal:** Build the APIs for the primary assets of the fleet.
-
-| Assigned To | Task | Modules/Files to Create | Details |
-| :--- | :--- | :--- | :--- |
-| **etrnkz** | Vehicle Management | `src/fleet/` (Vehicle) | Create the `Vehicle` entity. Implement controller, service, and DTOs for all vehicle CRUD operations. |
-| **Lemi** | Driver Management | `src/fleet/` (Driver) | Create the `Driver` entity. Implement controller, service, and DTOs for all driver CRUD operations. |
-
----
-
-#### **Week 3: Trip Management Logic**
-
-**Goal:** Implement the core business logic for scheduling and managing trips.
-
-| Assigned To | Task | Modules/Files to Create | Details |
-| :--- | :--- | :--- | :--- |
-| **etrnkz** | Trip Data Model | `src/trip/entities/` | Design and create the `Trip` entity, establishing complex relationships with `User`, `Vehicle`, and `Driver`. |
-| **Lemi** | Trip API & Logic | `src/trip/` | Implement the `trip.controller` and `trip.service` to handle creating trips, approving them, and updating their status (e.g., 'Approved', 'In Progress', 'Completed'). |
-
----
-
-#### **Week 4: Logging & History - Fuel & Maintenance**
-
-**Goal:** Create modules to track operational history and costs.
-
-| Assigned To | Task | Modules/Files to Create | Details |
-| :--- | :--- | :--- | :--- |
-| **etrnkz** | Fuel Management | `src/fuel/` | Create the `FuelRecord` entity. Implement APIs to log fuel intake and retrieve fuel history for a specific vehicle. |
-| **Lemi** | Maintenance Management | `src/maintenance/` | Create the `MaintenanceRecord` entity. Implement APIs to log maintenance services, costs, and retrieve maintenance history. |
-
----
-
-#### **Week 5: Real-time & Reporting**
-
-**Goal:** Implement the most advanced features: live tracking and data analytics.
-
-| Assigned To | Task | Modules/Files to Create | Details |
-| :--- | :--- | :--- | :--- |
-| **etrnkz** | Real-time GPS Tracking | `src/gps/` | Implement the `gps.gateway.ts` using NestJS WebSockets. Create an endpoint for the mobile app to send location data and broadcast it to connected clients. |
-| **Lemi** | Reporting & Analytics | `src/report/` | Create the `report.controller` and `report.service`. Write complex queries to aggregate data (e.g., fuel efficiency, vehicle utilization) and provide it as structured JSON for the frontend. |
-
----
-
-#### **Week 6: Final Touches & Polish**
-
-**Goal:** Add remaining features and ensure the system is robust and production-ready.
-
-| Assigned To | Task | Modules/Files to Create | Details |
-| :--- | :--- | :--- | :--- |
-| **etrnkz** | Document Management | `src/upload/` | Implement the `upload.controller` and `service` to handle file uploads (e.g., for insurance documents), save them to storage, and manage metadata in the database. |
-| **Lemi** | Validation & Error Handling | `src/common/`<br>All `dto/` folders | Add comprehensive validation rules to all DTOs. Implement a global exception filter to handle errors gracefully and consistently. Write unit tests for at least 2 critical services. |
-
----
-
-#### Getting Started
-
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd fleet-management-backend
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Set up environment variables:**
-    *   Copy `.env.example` to `.env`.
-    *   Fill in your database credentials, JWT secret, and other configuration values.
-
-4.  **Set up the database:**
-    *   Ensure your PostgreSQL server is running.
-    *   Run database migrations to create the tables:
-        ```bash
-        npm run migration:run
-        ```
-
-5.  **Run the development server:**
-    ```bash
-    npm run start:dev
-    ```
-
-6.  **Test the API:**
-    *   The API will be running at `http://localhost:3000`.
-    *   You can use a tool like Postman or Insomnia to test the endpoints.
-
----
-
+**Built with NestJS and TypeScript**
