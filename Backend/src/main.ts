@@ -37,32 +37,66 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Fleet Management System API')
     .setDescription(
-      'Production-grade Fleet Management System for school transportation with RBAC, workflow automation, and real-time tracking.',
+      `Production-grade Fleet Management System for school transportation with RBAC, workflow automation, and real-time tracking.
+      
+## Features
+- 🔐 JWT Authentication with refresh tokens
+- 👥 Role-based access control (9 roles)
+- 🚗 Vehicle and driver management
+- 📋 Trip request workflow with multi-level approval
+- ⏰ Automatic timeout and rejection (48 hours per level)
+- 🔔 Real-time notifications
+- 🔧 Maintenance management
+- 📊 Comprehensive audit logs
+- 📈 Statistics and analytics
+
+## Authentication
+Most endpoints require authentication. To use protected endpoints:
+1. Register or login to get an access token
+2. Click the "Authorize" button (🔓 icon)
+3. Enter: \`Bearer <your_access_token>\`
+4. Click "Authorize" and "Close"
+
+## Roles
+- **User**: Regular users who can request trips
+- **DepartmentHead**: Approve department-level trips
+- **CollegeHead**: Approve college-level trips
+- **Dean**: Final approval for all trips
+- **DeploymentTeam**: Allocate vehicles and drivers
+- **TransportOffice**: Confirm transport and manage fuel
+- **MaintenanceTeam**: Handle vehicle maintenance
+- **Driver**: Execute trips and report issues
+- **Developer**: Full system access
+
+## Workflow
+Normal Trip: User → Department → College → Dean → Allocation → Transport → Execution
+VIP Trip: User → Dean → Allocation → Transport → Execution`,
     )
-    .setVersion('1.0')
-    .addTag('Authentication', 'User authentication and authorization endpoints')
-    .addTag('Users', 'User management endpoints')
-    .addTag('Departments', 'Department management endpoints')
-    .addTag('Colleges', 'College management endpoints')
-    .addTag('Vehicles', 'Vehicle management endpoints')
-    .addTag('Drivers', 'Driver management endpoints')
-    .addTag('Trips', 'Trip request and management endpoints')
-    .addTag('Workflow', 'Workflow configuration and management')
-    .addTag('Deployment', 'Vehicle and driver allocation')
-    .addTag('Transport', 'Transport office operations')
-    .addTag('Maintenance', 'Vehicle maintenance management')
-    .addTag('Fuel', 'Fuel tracking and management')
-    .addTag('Tracking', 'Real-time GPS tracking')
-    .addTag('Notifications', 'Notification management')
-    .addTag('Reports', 'Reporting and analytics')
-    .addTag('Audit', 'Audit logs and trail')
+    .setVersion('1.0.0')
+    .setContact(
+      'Fleet Management Team',
+      'https://github.com/etrnkz/Fleet-Management-System',
+      'support@fleet.school.edu',
+    )
+    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
+    .addTag('App', 'System information and health checks')
+    .addTag('Authentication', 'User authentication and authorization')
+    .addTag('Users', 'User management and profiles')
+    .addTag('Departments', 'Department management and hierarchy')
+    .addTag('Colleges', 'College management and operations')
+    .addTag('Vehicles', 'Vehicle fleet management and tracking')
+    .addTag('Drivers', 'Driver management and assignments')
+    .addTag('Trips', 'Trip requests, approvals, and execution')
+    .addTag('Notifications', 'User notifications and alerts')
+    .addTag('Maintenance', 'Vehicle maintenance and repairs')
+    .addTag('Audit', 'Audit logs and activity tracking')
     .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
         name: 'JWT',
-        description: 'Enter JWT token',
+        description: 'Enter JWT token (obtained from /auth/login)',
         in: 'header',
       },
       'JWT-auth',
@@ -77,10 +111,26 @@ async function bootstrap() {
       persistAuthorization: true,
       tagsSorter: 'alpha',
       operationsSorter: 'alpha',
+      docExpansion: 'none',
+      filter: true,
+      showRequestDuration: true,
+      syntaxHighlight: {
+        activate: true,
+        theme: 'monokai',
+      },
+      tryItOutEnabled: true,
+      requestSnippetsEnabled: true,
+      defaultModelsExpandDepth: 3,
+      defaultModelExpandDepth: 3,
     },
-    customSiteTitle: 'Fleet Management API Docs',
+    customSiteTitle: 'Fleet Management API Documentation',
     customfavIcon: 'https://nestjs.com/img/logo-small.svg',
-    customCss: '.swagger-ui .topbar { display: none }',
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info { margin: 20px 0; }
+      .swagger-ui .info .title { font-size: 36px; }
+      .swagger-ui .scheme-container { background: #fafafa; padding: 15px; }
+    `,
   });
 
   const port = process.env.PORT || 3000;
