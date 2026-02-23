@@ -1,167 +1,120 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto, UserRole } from './dto/register.dto';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  isActive: boolean;
-  createdAt: Date;
-  lastLoginAt?: Date;
-}
+import { RegisterDto } from './dto/register.dto';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private readonly users: Map<string, User> = new Map();
-  private readonly emailIndex: Map<string, string> = new Map();
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password } = registerDto;
+    this.logger.log(`Registering new user: ${registerDto.email}`);
 
-    if (this.emailIndex.has(email)) {
-      throw new ConflictException('User with this email already exists');
-    }
+    const user = await this.usersService.create({
+      email: registerDto.email,
+      password: registerDto.password,
+      name: registerDto.name,
+      role: registerDto.role,
+      phoneNumber: registerDto.phoneNumber,
+    });
 
-    const userId = uuidv4();
-    const hashedPassword = await this.hashPassword(password);
-    const now = new Date();
+    // Remove password from response
+    const { password, ...result } = user;
 
-    const user: User = {
-      id: userId,
-      ...registerDto,
-      password: hashedPassword,
-      isActive: true,
-      createdAt: now,
-    };
-
-    this.users.set(userId, user);
-    this.emailIndex.set(email, userId);
-
-    this.logger.log(`User registered: ${email} (${registerDto.role})`);
-
-    return this.sanitizeUser(user);
+    return result;
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateCredentials(loginDto.email, loginDto.password);
-    
+    this.logger.log(`Login attempt for: ${loginDto.email}`);
+
+    const user = await this.usersService.findByEmail(loginDto.email);
+
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      this.logger.warn(`Login failed: User not found - ${loginDto.email}`);
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedException('Account is deactivated');
+      this.logger.warn(`Login failed: User inactive - ${loginDto.email}`);
+      throw new UnauthorizedException('Account is inactive');
     }
 
-    user.lastLoginAt = new Date();
+    const isPasswordValid = await user.validatePassword(loginDto.password);
 
-    const tokens = await this.generateTokens(user);
-    
-    this.logger.log(`User logged in: ${user.email}`);
+    if (!isPasswordValid) {
+      this.logger.warn(`Login failed: Invalid password - ${loginDto.email}`);
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    this.logger.log(`Login successful for: ${loginDto.email}`);
+
+    // Remove password from response
+    const { password, ...userWithoutPassword } = user;
 
     return {
-      ...tokens,
-      user: this.sanitizeUser(user),
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: userWithoutPassword,
     };
   }
 
   async refreshToken(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
-      });
+      const payload = this.jwtService.verify(refreshToken);
 
-      const user = this.users.get(payload.sub);
-      
+      const user = await this.usersService.findById(payload.sub);
+
       if (!user || !user.isActive) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Invalid refresh token');
       }
 
-      return this.generateAccessToken(user);
-    } catch {
+      const newPayload = {
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+      };
+
+      const newAccessToken = this.jwtService.sign(newPayload);
+
+      return {
+        access_token: newAccessToken,
+      };
+    } catch (error) {
+      this.logger.error(`Refresh token failed: ${error.message}`);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
   async logout(token: string) {
-    // Implement token blacklisting or Redis invalidation in production
-    this.logger.debug(`Logout requested for token: ${token.substring(0, 20)}...`);
+    // In a production app, you would add the token to a blacklist
+    // For now, we'll just log the logout
+    this.logger.log('User logged out');
+    return { message: 'Logged out successfully' };
   }
 
-  async validateUserById(userId: string): Promise<User | null> {
-    return this.users.get(userId) || null;
-  }
+  async validateUser(payload: any): Promise<User> {
+    const user = await this.usersService.findById(payload.sub);
 
-  async validateUserByEmail(email: string): Promise<User | null> {
-    const userId = this.emailIndex.get(email);
-    return userId ? this.users.get(userId) || null : null;
-  }
-
-  private async validateCredentials(email: string, password: string): Promise<User | null> {
-    const user = await this.validateUserByEmail(email);
-    
-    if (!user) {
-      await this.simulatePasswordCheck(); // Prevent timing attacks
-      return null;
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('User not found or inactive');
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
-    return isValid ? user : null;
-  }
-
-  private async generateTokens(user: User) {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-    };
-
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
-    
-    const refreshToken = this.jwtService.sign(
-      { sub: user.id },
-      { 
-        secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
-        expiresIn: '7d',
-      }
-    );
-
-    return { access_token: accessToken, refresh_token: refreshToken };
-  }
-
-  private generateAccessToken(user: User) {
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-    };
-
-    return { access_token: this.jwtService.sign(payload, { expiresIn: '15m' }) };
-  }
-
-  private async hashPassword(password: string): Promise<string> {
-    const saltRounds = 12;
-    return bcrypt.hash(password, saltRounds);
-  }
-
-  private sanitizeUser(user: User) {
-    const { password, ...sanitized } = user;
-    return sanitized;
-  }
-
-  private async simulatePasswordCheck(): Promise<void> {
-    // Simulate bcrypt comparison timing to prevent timing attacks
-    await bcrypt.compare('dummy', '$2b$10$dummyhashdummyhashdummyhashdu');
+    return user;
   }
 }
