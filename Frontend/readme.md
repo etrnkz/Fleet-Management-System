@@ -46,10 +46,10 @@ fleet-management-frontend/
 
 **Goal:** Get the project running locally and build the login/register pages.
 
-| Assigned To | Task | Pages/Components to Create | Details |
-| :--- | :--- | :--- | :--- |
-| **Lebsi** | Auth Pages | `src/app/(auth)/login/page.tsx`<br>`src/app/(auth)/register/page.tsx` | Build the UI for both pages. Use form inputs for email/password. Add validation. |
-| **Eyuel** | Auth Logic & Hooks | `src/hooks/useAuth.ts`<br>`src/lib/auth.ts`<br>`src/store/auth-store.ts` | Create the `useAuth` hook to handle login/logout calls and manage auth state. Set up token storage. |
+| Assigned To | Task                   | Pages/Components to Create                                                           | Details                                                                                                                     |
+| :------------| :-----------------------| :-------------------------------------------------------------------------------------| :----------------------------------------------------------------------------------------------------------------------------|
+| **Lebsi**   | Auth Pages             | `src/app/(auth)/login/page.tsx`<br>`src/app/(auth)/register/page.tsx`                | Build the UI for both pages. Use form inputs for email/password. Add validation.                                            |
+| **Eyuel**   | Auth Logic & Hooks     | `src/hooks/useAuth.ts`<br>`src/lib/auth.ts`<br>`src/store/auth-store.ts`             | Create the `useAuth` hook to handle login/logout calls and manage auth state. Set up token storage.                         |
 | **Yididya** | Project Setup & Layout | `src/app/layout.tsx`<br>`src/app/(dashboard)/layout.tsx`<br>`src/components/layout/` | Initialize the Next.js project. Create the root layout and the main dashboard layout with a placeholder sidebar and header. |
 
 ---
