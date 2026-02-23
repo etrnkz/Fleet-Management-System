@@ -1,0 +1,32 @@
+import { IsEnum, IsString, IsDateString, IsInt, Min, IsNotEmpty } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { TripType } from '../entities/trip-request.entity';
+
+export class CreateTripDto {
+  @ApiProperty({ enum: TripType, example: TripType.Normal })
+  @IsEnum(TripType)
+  tripType: TripType;
+
+  @ApiProperty({ example: 'Academic conference attendance' })
+  @IsString()
+  @IsNotEmpty()
+  purpose: string;
+
+  @ApiProperty({ example: 'City Convention Center' })
+  @IsString()
+  @IsNotEmpty()
+  destination: string;
+
+  @ApiProperty({ example: '2024-01-20T09:00:00Z' })
+  @IsDateString()
+  startDateTime: string;
+
+  @ApiProperty({ example: '2024-01-20T17:00:00Z' })
+  @IsDateString()
+  endDateTime: string;
+
+  @ApiProperty({ example: 5 })
+  @IsInt()
+  @Min(1)
+  passengerCount: number;
+}

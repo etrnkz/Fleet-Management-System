@@ -20,4 +20,8 @@ export default () => ({
     ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10), // milliseconds
     limit: parseInt(process.env.THROTTLE_LIMIT || '10', 10),
   },
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  },
 });

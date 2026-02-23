@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
@@ -12,6 +14,11 @@ import { CollegesModule } from './colleges/colleges.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { DriversModule } from './drivers/drivers.module';
+import { TripsModule } from './trips/trips.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { WorkflowModule } from './workflow/workflow.module';
+import { MaintenanceModule } from './maintenance/maintenance.module';
+import { AuditModule } from './audit/audit.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -20,6 +27,7 @@ import configuration from './config/configuration';
       isGlobal: true,
       load: [configuration],
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -43,11 +51,26 @@ import configuration from './config/configuration';
         ],
       }),
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        redis: {
+          host: config.get('redis.host', 'localhost'),
+          port: config.get('redis.port', 6379),
+        },
+      }),
+    }),
     UsersModule,
     CollegesModule,
     DepartmentsModule,
     VehiclesModule,
     DriversModule,
+    TripsModule,
+    NotificationsModule,
+    WorkflowModule,
+    MaintenanceModule,
+    AuditModule,
     AuthModule,
   ],
   controllers: [AppController],
