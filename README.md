@@ -17,13 +17,14 @@ A production-grade Fleet Management System for school transportation with strict
 
 ## 📋 Documentation
 
-- [Architecture Overview](./ARCHITECTURE.md) - System design and technical architecture
-- [Database Schema](./DATABASE_SCHEMA.md) - Complete database design with TypeORM entities
-- [API Contracts](./API_CONTRACTS.md) - REST and WebSocket API documentation
-- [Workflow Engine](./WORKFLOW_ENGINE.md) - Workflow system design and implementation
-- [Module Structure](./MODULE_STRUCTURE.md) - NestJS project organization
-- [Implementation Plan](./plan.md) - 16-week development roadmap
-- [Quick Start Guide](./QUICKSTART.md) - Setup and installation instructions
+### Backend Documentation
+- [Architecture Overview](./Backend/ARCHITECTURE.md) - System design and technical architecture
+- [Database Schema](./Backend/DATABASE_SCHEMA.md) - Complete database design with TypeORM entities
+- [API Contracts](./Backend/API_CONTRACTS.md) - REST and WebSocket API documentation
+- [Workflow Engine](./Backend/WORKFLOW_ENGINE.md) - Workflow system design and implementation
+- [Module Structure](./Backend/MODULE_STRUCTURE.md) - NestJS project organization
+- [Implementation Plan](./Backend/plan.md) - 16-week development roadmap
+- [Quick Start Guide](./Backend/QUICKSTART.md) - Setup and installation instructions
 
 ## 🛠️ Technology Stack
 
@@ -35,6 +36,21 @@ A production-grade Fleet Management System for school transportation with strict
 - **WebSocket**: Socket.io 4.x
 - **Authentication**: JWT with Passport
 - **Documentation**: Swagger/OpenAPI
+
+## 📁 Project Structure
+
+```
+Fleet-Management-System/
+├── Backend/              # NestJS backend application
+│   ├── src/             # Source code
+│   ├── test/            # Test files
+│   ├── scripts/         # Utility scripts
+│   ├── *.md             # Backend documentation
+│   └── package.json     # Backend dependencies
+├── Frontend/            # Frontend application (TBD)
+├── .gitignore          # Git ignore rules
+└── README.md           # This file
+```
 
 ## 🚦 Quick Start
 
@@ -48,6 +64,9 @@ A production-grade Fleet Management System for school transportation with strict
 ### Installation
 
 ```bash
+# Navigate to backend directory
+cd Backend
+
 # Install dependencies
 npm install
 
@@ -67,7 +86,7 @@ npm run start:dev
 
 Visit `http://localhost:3000/api/docs` for API documentation.
 
-For detailed setup instructions, see [QUICKSTART.md](./QUICKSTART.md).
+For detailed setup instructions, see [Backend/QUICKSTART.md](./Backend/QUICKSTART.md).
 
 ## 👥 User Roles
 
@@ -174,7 +193,7 @@ For support and questions, please contact:
 
 ## 🗺️ Roadmap
 
-See [plan.md](./plan.md) for the complete 16-week implementation roadmap.
+See [Backend/plan.md](./Backend/plan.md) for the complete 16-week implementation roadmap.
 
 ### Phase 1: Foundation (Week 1-2)
 - ✅ Project setup and configuration
