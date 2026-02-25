@@ -16,7 +16,7 @@ export default function DashboardPage() {
                 </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-blue-500">
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             Total Vehicles
@@ -33,7 +33,7 @@ export default function DashboardPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
+                <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             Active Drivers
@@ -50,7 +50,7 @@ export default function DashboardPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500">
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             Fuel Consumption
@@ -67,7 +67,7 @@ export default function DashboardPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500">
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             Active Alerts
@@ -87,7 +87,7 @@ export default function DashboardPage() {
             </div>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-cyan-500">
+                <Card className="border-l-4 border-l-cyan-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active Trips</CardTitle>
                         <div className="h-8 w-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
@@ -99,7 +99,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground mt-1">In progress now</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-amber-500">
+                <Card className="border-l-4 border-l-amber-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Maintenance Due</CardTitle>
                         <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center">
@@ -111,7 +111,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground mt-1">This week</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-indigo-500">
+                <Card className="border-l-4 border-l-indigo-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Distance</CardTitle>
                         <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
@@ -123,7 +123,7 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground mt-1">This month</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-rose-500">
+                <Card className="border-l-4 border-l-rose-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Fuel Cost</CardTitle>
                         <div className="h-8 w-8 rounded-full bg-rose-500/10 flex items-center justify-center">
@@ -138,7 +138,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4 border-t-4 border-t-blue-500">
+                <Card className="col-span-4 border-t-4 border-t-blue-500 hover:shadow-lg transition-all duration-300">
                     <CardHeader>
                         <CardTitle>Fleet Overview</CardTitle>
                         <p className="text-sm text-muted-foreground">Monthly performance metrics</p>
@@ -147,14 +147,14 @@ export default function DashboardPage() {
                         <OverviewChart />
                     </CardContent>
                 </Card>
-                <Card className="col-span-3 border-t-4 border-t-green-500">
+                <Card className="col-span-3 border-t-4 border-t-green-500 hover:shadow-lg transition-all duration-300">
                     <CardHeader>
                         <CardTitle>Recent Activity</CardTitle>
                         <p className="text-sm text-muted-foreground">Latest fleet updates</p>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-6">
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
                                 <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 relative">
                                     <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>
                                 </div>
@@ -168,7 +168,7 @@ export default function DashboardPage() {
                                     <p className="text-xs text-muted-foreground">2m ago</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
                                 <div className="h-2 w-2 rounded-full bg-orange-500 mt-2" />
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                                     <p className="text-xs text-muted-foreground">1h ago</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
                                 <div className="h-2 w-2 rounded-full bg-green-500 mt-2" />
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">
@@ -192,7 +192,7 @@ export default function DashboardPage() {
                                     <p className="text-xs text-muted-foreground">3h ago</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
                                 <div className="h-2 w-2 rounded-full bg-purple-500 mt-2" />
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">
