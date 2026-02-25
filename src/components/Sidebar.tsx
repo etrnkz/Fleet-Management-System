@@ -51,12 +51,18 @@ export function Sidebar() {
                                 key={index}
                                 href={item.href === "/dashboard" ? "/" : item.href}
                                 className={cn(
-                                    "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
-                                    (isActive || isDashboardActive) ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                                    "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 ease-in-out",
+                                    "hover:bg-accent hover:text-accent-foreground hover:scale-105 hover:shadow-sm",
+                                    "active:scale-95 active:shadow-none",
+                                    (isActive || isDashboardActive) ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground"
                                 )}
                             >
-                                <Icon className="h-4 w-4" />
-                                <span>{item.name}</span>
+                                <Icon className={cn(
+                                    "h-4 w-4 transition-transform duration-200",
+                                    "group-hover:scale-110",
+                                    "group-active:scale-90"
+                                )} />
+                                <span className="transition-all duration-200">{item.name}</span>
                             </Link>
                         );
                     })}
@@ -65,13 +71,34 @@ export function Sidebar() {
             <div className="border-t p-4">
                 <Link
                     href="/settings"
-                    className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors text-muted-foreground"
+                    className={cn(
+                        "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 ease-in-out",
+                        "hover:bg-accent hover:text-accent-foreground hover:scale-105 hover:shadow-sm",
+                        "active:scale-95 active:shadow-none",
+                        pathname === "/settings" ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground"
+                    )}
                 >
-                    <Settings className="h-4 w-4" />
+                    <Settings className={cn(
+                        "h-4 w-4 transition-transform duration-200",
+                        "group-hover:scale-110 group-hover:rotate-90",
+                        "group-active:scale-90"
+                    )} />
                     <span>Settings</span>
                 </Link>
-                <Link href="/login" className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors mt-1">
-                    <LogOut className="h-4 w-4" />
+                <Link 
+                    href="/login" 
+                    className={cn(
+                        "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 ease-in-out mt-1",
+                        "text-destructive hover:bg-destructive/10 hover:scale-105 hover:shadow-sm",
+                        "active:scale-95 active:shadow-none",
+                        "group"
+                    )}
+                >
+                    <LogOut className={cn(
+                        "h-4 w-4 transition-transform duration-200",
+                        "group-hover:scale-110 group-hover:translate-x-1",
+                        "group-active:scale-90"
+                    )} />
                     <span>Log out</span>
                 </Link>
             </div>
