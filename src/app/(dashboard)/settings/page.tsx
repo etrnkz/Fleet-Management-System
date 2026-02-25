@@ -356,52 +356,79 @@ export default function SettingsPage() {
                                             <p className="text-sm text-muted-foreground mb-4">
                                                 Choose your preferred theme or let the system decide
                                             </p>
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <button
-                                                    onClick={() => setTheme("light")}
-                                                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                                            <div className="space-y-3">
+                                                <label 
+                                                    className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
                                                         theme === "light"
-                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 scale-105 shadow-lg"
-                                                            : "border-muted hover:border-orange-300 hover:scale-102"
+                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
+                                                            : "border-muted hover:border-orange-300 hover:bg-muted/50"
                                                     }`}
                                                 >
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <Sun className={`h-8 w-8 ${theme === "light" ? "text-orange-500" : "text-muted-foreground"}`} />
-                                                        <span className={`text-sm font-medium ${theme === "light" ? "text-orange-600" : ""}`}>Light</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <Sun className={`h-5 w-5 ${theme === "light" ? "text-orange-500" : "text-muted-foreground"}`} />
+                                                        <div>
+                                                            <p className={`font-medium ${theme === "light" ? "text-orange-600" : ""}`}>Light</p>
+                                                            <p className="text-xs text-muted-foreground">Always use light theme</p>
+                                                        </div>
                                                     </div>
-                                                </button>
-                                                <button
-                                                    onClick={() => setTheme("dark")}
-                                                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                                                    <input
+                                                        type="radio"
+                                                        name="theme"
+                                                        value="light"
+                                                        checked={theme === "light"}
+                                                        onChange={() => setTheme("light")}
+                                                        className="w-4 h-4 text-orange-500 focus:ring-orange-500"
+                                                    />
+                                                </label>
+                                                
+                                                <label 
+                                                    className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
                                                         theme === "dark"
-                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 scale-105 shadow-lg"
-                                                            : "border-muted hover:border-orange-300 hover:scale-102"
+                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
+                                                            : "border-muted hover:border-orange-300 hover:bg-muted/50"
                                                     }`}
                                                 >
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <Moon className={`h-8 w-8 ${theme === "dark" ? "text-orange-500" : "text-muted-foreground"}`} />
-                                                        <span className={`text-sm font-medium ${theme === "dark" ? "text-orange-600" : ""}`}>Dark</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <Moon className={`h-5 w-5 ${theme === "dark" ? "text-orange-500" : "text-muted-foreground"}`} />
+                                                        <div>
+                                                            <p className={`font-medium ${theme === "dark" ? "text-orange-600" : ""}`}>Dark</p>
+                                                            <p className="text-xs text-muted-foreground">Always use dark theme</p>
+                                                        </div>
                                                     </div>
-                                                </button>
-                                                <button
-                                                    onClick={() => setTheme("auto")}
-                                                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                                                    <input
+                                                        type="radio"
+                                                        name="theme"
+                                                        value="dark"
+                                                        checked={theme === "dark"}
+                                                        onChange={() => setTheme("dark")}
+                                                        className="w-4 h-4 text-orange-500 focus:ring-orange-500"
+                                                    />
+                                                </label>
+                                                
+                                                <label 
+                                                    className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
                                                         theme === "auto"
-                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 scale-105 shadow-lg"
-                                                            : "border-muted hover:border-orange-300 hover:scale-102"
+                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
+                                                            : "border-muted hover:border-orange-300 hover:bg-muted/50"
                                                     }`}
                                                 >
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <Monitor className={`h-8 w-8 ${theme === "auto" ? "text-orange-500" : "text-muted-foreground"}`} />
-                                                        <span className={`text-sm font-medium ${theme === "auto" ? "text-orange-600" : ""}`}>Auto</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <Monitor className={`h-5 w-5 ${theme === "auto" ? "text-orange-500" : "text-muted-foreground"}`} />
+                                                        <div>
+                                                            <p className={`font-medium ${theme === "auto" ? "text-orange-600" : ""}`}>Auto</p>
+                                                            <p className="text-xs text-muted-foreground">Follow system preferences</p>
+                                                        </div>
                                                     </div>
-                                                </button>
+                                                    <input
+                                                        type="radio"
+                                                        name="theme"
+                                                        value="auto"
+                                                        checked={theme === "auto"}
+                                                        onChange={() => setTheme("auto")}
+                                                        className="w-4 h-4 text-orange-500 focus:ring-orange-500"
+                                                    />
+                                                </label>
                                             </div>
-                                            {theme === "auto" && (
-                                                <p className="text-xs text-muted-foreground mt-3 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200">
-                                                    Auto mode follows your system preferences and adjusts automatically
-                                                </p>
-                                            )}
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium flex items-center gap-2">
