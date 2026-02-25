@@ -47,11 +47,11 @@ export default function LoginPage() {
                     <div className="grid grid-cols-2 gap-4 pt-8">
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg">
                             <div className="text-3xl font-bold text-white mb-1">128+</div>
-                            <div className="text-green-100 text-sm">Vehicles Managed</div>
+                            <div className="text-green-100 text-sm">Active Vehicles</div>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg" style={{ animationDelay: "0.1s" }}>
-                            <div className="text-3xl font-bold text-white mb-1">45+</div>
-                            <div className="text-green-100 text-sm">Active Drivers</div>
+                            <div className="text-3xl font-bold text-white mb-1">Real-Time</div>
+                            <div className="text-green-100 text-sm">GPS Tracking</div>
                         </div>
                     </div>
                 </div>
