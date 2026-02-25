@@ -124,10 +124,10 @@ export default function FuelPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-blue-500">
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Consumption</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Droplet className="h-4 w-4 text-blue-500" />
                         </div>
                     </CardHeader>
@@ -139,10 +139,10 @@ export default function FuelPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
+                <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <DollarSign className="h-4 w-4 text-green-500" />
                         </div>
                     </CardHeader>
@@ -154,10 +154,10 @@ export default function FuelPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500">
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Avg. Price/L</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Fuel className="h-4 w-4 text-purple-500" />
                         </div>
                     </CardHeader>
@@ -166,10 +166,10 @@ export default function FuelPage() {
                         <p className="text-xs text-muted-foreground mt-1">Current rate</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500">
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Avg. Consumption</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Fuel className="h-4 w-4 text-orange-500" />
                         </div>
                     </CardHeader>
@@ -217,17 +217,21 @@ export default function FuelPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {filteredFuel.map((fuel) => (
-                            <div key={fuel.id} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
+                        {filteredFuel.map((fuel, index) => (
+                            <div 
+                                key={fuel.id} 
+                                className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer animate-slideInLeft group"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
                                 <div className="flex items-start gap-4 flex-1">
-                                    <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                                        <Fuel className="h-6 w-6 text-white" />
+                                    <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+                                        <Fuel className="h-6 w-6 text-white transition-transform duration-300 group-hover:scale-110" />
                                     </div>
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-center gap-2">
                                             <p className="font-medium text-lg">{fuel.vehicle}</p>
                                             <span className="text-xs text-muted-foreground">({fuel.vehicleId})</span>
-                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 transition-all duration-200 group-hover:scale-105">
                                                 {fuel.fuelType}
                                             </span>
                                         </div>
@@ -253,10 +257,10 @@ export default function FuelPage() {
                                 </div>
                                 <div className="text-right space-y-1 ml-4">
                                     <div className="flex items-center gap-2">
-                                        <Droplet className="h-4 w-4 text-blue-500" />
+                                        <Droplet className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:scale-125" />
                                         <p className="text-2xl font-bold">{fuel.amount} L</p>
                                     </div>
-                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{fuel.cost} ETB</p>
+                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400 transition-all duration-300 group-hover:scale-105">{fuel.cost} ETB</p>
                                     <p className="text-xs text-muted-foreground">{fuel.pricePerLiter} ETB/L</p>
                                 </div>
                             </div>
