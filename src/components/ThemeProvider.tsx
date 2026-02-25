@@ -42,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     useEffect(() => {
-        if (theme === "auto") {
+        if (mounted && theme === "auto") {
             const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
             const handleChange = () => {
                 document.documentElement.classList.toggle("dark", mediaQuery.matches);
@@ -50,7 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             mediaQuery.addEventListener("change", handleChange);
             return () => mediaQuery.removeEventListener("change", handleChange);
         }
-    }, [theme]);
+    }, [theme, mounted]);
 
     const setTheme = (newTheme: Theme) => {
         setThemeState(newTheme);
@@ -62,6 +62,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const newTheme = theme === "light" ? "dark" : "light";
         setTheme(newTheme);
     };
+
+    if (!mounted) {
+        return null;
+    }
 
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
