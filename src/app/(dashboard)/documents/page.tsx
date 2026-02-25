@@ -55,10 +55,10 @@ export default function DocumentsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-blue-500">
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <FileText className="h-4 w-4 text-blue-500" />
                         </div>
                     </CardHeader>
@@ -67,10 +67,10 @@ export default function DocumentsPage() {
                         <p className="text-xs text-muted-foreground mt-1">All documents</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500">
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Calendar className="h-4 w-4 text-orange-500" />
                         </div>
                     </CardHeader>
@@ -79,10 +79,10 @@ export default function DocumentsPage() {
                         <p className="text-xs text-muted-foreground mt-1">Requires renewal</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
+                <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Valid</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <FileText className="h-4 w-4 text-green-500" />
                         </div>
                     </CardHeader>
@@ -93,10 +93,10 @@ export default function DocumentsPage() {
                         <p className="text-xs text-muted-foreground mt-1">Up to date</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500">
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <FileText className="h-4 w-4 text-purple-500" />
                         </div>
                     </CardHeader>
@@ -150,17 +150,21 @@ export default function DocumentsPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {filteredDocuments.map((doc) => (
-                            <div key={doc.id} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
+                        {filteredDocuments.map((doc, index) => (
+                            <div 
+                                key={doc.id} 
+                                className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer animate-slideInLeft group"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
                                 <div className="flex items-start gap-4 flex-1">
-                                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                                        doc.type === "Registration" ? "bg-green-500/10" :
-                                        doc.type === "Insurance" ? "bg-purple-500/10" :
-                                        doc.type === "License" ? "bg-orange-500/10" :
-                                        doc.type === "Certificate" ? "bg-cyan-500/10" :
-                                        "bg-blue-500/10"
+                                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${
+                                        doc.type === "Registration" ? "bg-green-500/10 group-hover:bg-green-500/20" :
+                                        doc.type === "Insurance" ? "bg-purple-500/10 group-hover:bg-purple-500/20" :
+                                        doc.type === "License" ? "bg-orange-500/10 group-hover:bg-orange-500/20" :
+                                        doc.type === "Certificate" ? "bg-cyan-500/10 group-hover:bg-cyan-500/20" :
+                                        "bg-blue-500/10 group-hover:bg-blue-500/20"
                                     }`}>
-                                        <FileText className={`h-5 w-5 ${
+                                        <FileText className={`h-5 w-5 transition-transform duration-300 group-hover:scale-110 ${
                                             doc.type === "Registration" ? "text-green-500" :
                                             doc.type === "Insurance" ? "text-purple-500" :
                                             doc.type === "License" ? "text-orange-500" :
@@ -171,10 +175,10 @@ export default function DocumentsPage() {
                                     <div className="flex-1 space-y-1">
                                         <div className="flex items-center gap-2">
                                             <p className="font-medium">{doc.name}</p>
-                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium transition-all duration-200 group-hover:scale-105 ${
                                                 doc.status === "Valid" 
                                                     ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
-                                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300"
+                                                    : "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 group-hover:animate-pulse"
                                             }`}>
                                                 {doc.status}
                                             </span>
@@ -197,15 +201,15 @@ export default function DocumentsPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button size="sm" variant="ghost" className="gap-2">
-                                        <Eye className="h-4 w-4" />
+                                    <Button size="sm" variant="ghost" className="gap-2 group/btn">
+                                        <Eye className="h-4 w-4 transition-transform duration-300 group-hover/btn:scale-125" />
                                         View
                                     </Button>
-                                    <Button size="sm" variant="ghost" className="gap-2">
-                                        <Download className="h-4 w-4" />
+                                    <Button size="sm" variant="ghost" className="gap-2 group/btn">
+                                        <Download className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-y-1" />
                                     </Button>
-                                    <Button size="sm" variant="ghost" className="gap-2 text-destructive hover:text-destructive">
-                                        <Trash2 className="h-4 w-4" />
+                                    <Button size="sm" variant="ghost" className="gap-2 text-destructive hover:text-destructive group/btn">
+                                        <Trash2 className="h-4 w-4 transition-transform duration-300 group-hover/btn:scale-125 group-hover/btn:rotate-12" />
                                     </Button>
                                 </div>
                             </div>
