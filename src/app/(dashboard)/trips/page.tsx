@@ -146,10 +146,10 @@ export default function TripsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-blue-500">
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Trips</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Map className="h-4 w-4 text-blue-500" />
                         </div>
                     </CardHeader>
@@ -158,10 +158,10 @@ export default function TripsPage() {
                         <p className="text-xs text-muted-foreground mt-1">This week</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
+                <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Clock className="h-4 w-4 text-green-500" />
                         </div>
                     </CardHeader>
@@ -170,10 +170,10 @@ export default function TripsPage() {
                         <p className="text-xs text-muted-foreground mt-1">Active now</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500">
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Distance</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <MapPin className="h-4 w-4 text-purple-500" />
                         </div>
                     </CardHeader>
@@ -182,10 +182,10 @@ export default function TripsPage() {
                         <p className="text-xs text-muted-foreground mt-1">This week</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500">
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <TrendingUp className="h-4 w-4 text-orange-500" />
                         </div>
                     </CardHeader>
@@ -233,17 +233,21 @@ export default function TripsPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {filteredTrips.map((trip) => (
-                            <div key={trip.id} className="flex items-start justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
+                        {filteredTrips.map((trip, index) => (
+                            <div 
+                                key={trip.id} 
+                                className="flex items-start justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer animate-slideInLeft group"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
                                 <div className="flex items-start gap-4 flex-1">
-                                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${
+                                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 ${
                                         trip.status === "Completed" 
-                                            ? "bg-green-500/10" 
+                                            ? "bg-green-500/10 group-hover:bg-green-500/20" 
                                             : trip.status === "In Progress"
-                                            ? "bg-blue-500/10"
-                                            : "bg-orange-500/10"
+                                            ? "bg-blue-500/10 group-hover:bg-blue-500/20"
+                                            : "bg-orange-500/10 group-hover:bg-orange-500/20"
                                     }`}>
-                                        <Navigation className={`h-6 w-6 ${
+                                        <Navigation className={`h-6 w-6 transition-transform duration-300 group-hover:scale-110 ${
                                             trip.status === "Completed" 
                                                 ? "text-green-500" 
                                                 : trip.status === "In Progress"
@@ -254,7 +258,7 @@ export default function TripsPage() {
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <p className="font-medium text-lg">{trip.id}</p>
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-200 group-hover:scale-105 ${
                                                 trip.status === "Completed" 
                                                     ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
                                                     : trip.status === "In Progress"
@@ -269,10 +273,10 @@ export default function TripsPage() {
                                             <p className="text-sm text-muted-foreground">Driver: {trip.driver}</p>
                                         </div>
                                         <div className="flex items-center gap-2 text-sm">
-                                            <MapPin className="h-4 w-4 text-blue-500" />
+                                            <MapPin className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:scale-125" />
                                             <span className="font-medium">{trip.from}</span>
-                                            <span className="text-muted-foreground">→</span>
-                                            <MapPin className="h-4 w-4 text-green-500" />
+                                            <span className="text-muted-foreground transition-transform duration-300 group-hover:translate-x-1">→</span>
+                                            <MapPin className="h-4 w-4 text-green-500 transition-transform duration-300 group-hover:scale-125" />
                                             <span className="font-medium">{trip.to}</span>
                                             <span className="text-muted-foreground ml-2">({trip.route})</span>
                                         </div>
