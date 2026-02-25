@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { User, Bell, Shield, Globe, Save, Palette, Clock, Database, Mail, Smartphone, MapPin, DollarSign, Building, Languages, Download, Trash2, Key, Sun, Moon, Monitor } from "lucide-react";
+import { User, Bell, Shield, Globe, Save, Palette, Clock, Database, Mail, Smartphone, MapPin, DollarSign, Building, Languages, Download, Trash2, Key, Sun, Moon, Monitor, Camera, Upload } from "lucide-react";
 import { PageLoader } from "@/components/PageLoader";
 import { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -11,6 +11,7 @@ import { useTheme } from "@/components/ThemeProvider";
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const [activeSection, setActiveSection] = useState("general");
+    const [profileImage, setProfileImage] = useState<string | null>(null);
     const [notifications, setNotifications] = useState({
         maintenance: true,
         fuel: true,
@@ -22,6 +23,15 @@ export default function SettingsPage() {
     });
 
     const [settings, setSettings] = useState({
+        // User Profile
+        firstName: "Admin",
+        lastName: "User",
+        username: "admin",
+        userEmail: "admin@hufleet.com",
+        userPhone: "+251-911-123456",
+        role: "Fleet Manager",
+        department: "Operations",
+        // Company Information
         companyName: "HU Fleet Manager",
         email: "admin@hufleet.com",
         phone: "+251-911-000000",
@@ -35,6 +45,17 @@ export default function SettingsPage() {
         dateFormat: "DD/MM/YYYY",
         timeFormat: "24h",
     });
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfileImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const sections = [
         { id: "general", label: "General", icon: User, color: "text-blue-500" },
@@ -95,10 +116,148 @@ export default function SettingsPage() {
                     {/* General Section */}
                     {activeSection === "general" && (
                         <div className="space-y-6 animate-fadeIn">
+                            {/* User Profile Card */}
                             <Card className="border-l-4 border-l-blue-500">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <User className="h-5 w-5 text-blue-500" />
+                                        User Profile
+                                    </CardTitle>
+                                    <CardDescription>Manage your personal information and profile picture</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    {/* Profile Photo Upload */}
+                                    <div className="flex items-start gap-6">
+                                        <div className="relative">
+                                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border-4 border-blue-200">
+                                                {profileImage ? (
+                                                    <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span>{settings.firstName[0]}{settings.lastName[0]}</span>
+                                                )}
+                                            </div>
+                                            <label className="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full cursor-pointer transition-all duration-200 hover:scale-110 shadow-lg">
+                                                <Camera className="h-4 w-4" />
+                                                <input 
+                                                    type="file" 
+                                                    accept="image/*" 
+                                                    onChange={handleImageUpload}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-semibold">{settings.firstName} {settings.lastName}</h3>
+                                            <p className="text-sm text-muted-foreground">{settings.role}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">{settings.department}</p>
+                                            <Button variant="outline" size="sm" className="mt-3 border-blue-500 text-blue-600 hover:bg-blue-50">
+                                                <Upload className="h-4 w-4 mr-2" />
+                                                Upload New Photo
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* User Information Fields */}
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <User className="h-4 w-4 text-blue-500" />
+                                                First Name
+                                            </label>
+                                            <Input 
+                                                value={settings.firstName}
+                                                onChange={(e) => setSettings({...settings, firstName: e.target.value})}
+                                                placeholder="Enter first name"
+                                                className="border-blue-200 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <User className="h-4 w-4 text-blue-500" />
+                                                Last Name
+                                            </label>
+                                            <Input 
+                                                value={settings.lastName}
+                                                onChange={(e) => setSettings({...settings, lastName: e.target.value})}
+                                                placeholder="Enter last name"
+                                                className="border-blue-200 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <User className="h-4 w-4 text-blue-500" />
+                                                Username
+                                            </label>
+                                            <Input 
+                                                value={settings.username}
+                                                onChange={(e) => setSettings({...settings, username: e.target.value})}
+                                                placeholder="Enter username"
+                                                className="border-blue-200 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <Mail className="h-4 w-4 text-blue-500" />
+                                                Email Address
+                                            </label>
+                                            <Input 
+                                                type="email" 
+                                                value={settings.userEmail}
+                                                onChange={(e) => setSettings({...settings, userEmail: e.target.value})}
+                                                placeholder="user@example.com"
+                                                className="border-blue-200 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <Smartphone className="h-4 w-4 text-blue-500" />
+                                                Phone Number
+                                            </label>
+                                            <Input 
+                                                value={settings.userPhone}
+                                                onChange={(e) => setSettings({...settings, userPhone: e.target.value})}
+                                                placeholder="+251-911-000000"
+                                                className="border-blue-200 focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <Building className="h-4 w-4 text-blue-500" />
+                                                Role
+                                            </label>
+                                            <select 
+                                                value={settings.role}
+                                                onChange={(e) => setSettings({...settings, role: e.target.value})}
+                                                className="w-full h-10 rounded-md border border-blue-200 bg-background px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                            >
+                                                <option value="Fleet Manager">Fleet Manager</option>
+                                                <option value="Administrator">Administrator</option>
+                                                <option value="Supervisor">Supervisor</option>
+                                                <option value="Operator">Operator</option>
+                                                <option value="Viewer">Viewer</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium flex items-center gap-2">
+                                                <Building className="h-4 w-4 text-blue-500" />
+                                                Department
+                                            </label>
+                                            <Input 
+                                                value={settings.department}
+                                                onChange={(e) => setSettings({...settings, department: e.target.value})}
+                                                placeholder="Enter department"
+                                                className="border-blue-200 focus:border-blue-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Company Information Card */}
+                            <Card className="border-l-4 border-l-blue-500">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Building className="h-5 w-5 text-blue-500" />
                                         Company Information
                                     </CardTitle>
                                     <CardDescription>Update your company details and contact information</CardDescription>
@@ -120,7 +279,7 @@ export default function SettingsPage() {
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium flex items-center gap-2">
                                                 <Mail className="h-4 w-4 text-blue-500" />
-                                                Email Address
+                                                Company Email
                                             </label>
                                             <Input 
                                                 type="email" 
@@ -133,7 +292,7 @@ export default function SettingsPage() {
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium flex items-center gap-2">
                                                 <Smartphone className="h-4 w-4 text-blue-500" />
-                                                Phone Number
+                                                Company Phone
                                             </label>
                                             <Input 
                                                 value={settings.phone}
