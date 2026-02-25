@@ -126,10 +126,10 @@ export default function VehiclesPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-blue-500">
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Vehicles</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Car className="h-4 w-4 text-blue-500" />
                         </div>
                     </CardHeader>
@@ -138,10 +138,10 @@ export default function VehiclesPage() {
                         <p className="text-xs text-muted-foreground mt-1">In fleet</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
+                <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Car className="h-4 w-4 text-green-500" />
                         </div>
                     </CardHeader>
@@ -150,10 +150,10 @@ export default function VehiclesPage() {
                         <p className="text-xs text-muted-foreground mt-1">On the road</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500">
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Wrench className="h-4 w-4 text-orange-500" />
                         </div>
                     </CardHeader>
@@ -162,10 +162,10 @@ export default function VehiclesPage() {
                         <p className="text-xs text-muted-foreground mt-1">In service</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500">
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Avg. Mileage</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Gauge className="h-4 w-4 text-purple-500" />
                         </div>
                     </CardHeader>
@@ -205,17 +205,21 @@ export default function VehiclesPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredVehicles.map((vehicle) => (
-                    <Card key={vehicle.id} className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
+                {filteredVehicles.map((vehicle, index) => (
+                    <Card 
+                        key={vehicle.id} 
+                        className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 animate-slideInLeft group cursor-pointer"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                             <div className="flex items-center gap-3">
-                                <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${
-                                    vehicle.type === "Pickup" ? "bg-blue-500/10" :
-                                    vehicle.type === "Van" ? "bg-purple-500/10" :
-                                    vehicle.type === "Truck" ? "bg-orange-500/10" :
-                                    "bg-green-500/10"
+                                <div className={`h-12 w-12 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 ${
+                                    vehicle.type === "Pickup" ? "bg-blue-500/10 group-hover:bg-blue-500/20" :
+                                    vehicle.type === "Van" ? "bg-purple-500/10 group-hover:bg-purple-500/20" :
+                                    vehicle.type === "Truck" ? "bg-orange-500/10 group-hover:bg-orange-500/20" :
+                                    "bg-green-500/10 group-hover:bg-green-500/20"
                                 }`}>
-                                    <Car className={`h-6 w-6 ${
+                                    <Car className={`h-6 w-6 transition-transform duration-300 group-hover:scale-110 ${
                                         vehicle.type === "Pickup" ? "text-blue-500" :
                                         vehicle.type === "Van" ? "text-purple-500" :
                                         vehicle.type === "Truck" ? "text-orange-500" :
@@ -227,7 +231,7 @@ export default function VehiclesPage() {
                                     <p className="text-xs text-muted-foreground">{vehicle.id}</p>
                                 </div>
                             </div>
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-200 group-hover:scale-105 ${
                                 vehicle.status === "Active" 
                                     ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
                                     : vehicle.status === "Maintenance"
