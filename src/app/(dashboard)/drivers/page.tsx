@@ -204,7 +204,7 @@ export default function DriversPage() {
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredDrivers.map((driver) => (
-                    <Card key={driver.id} className="hover:shadow-lg transition-shadow">
+                    <Card key={driver.id} className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                             <div className="flex items-center gap-3">
                                 <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">

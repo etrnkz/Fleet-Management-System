@@ -234,7 +234,7 @@ export default function TripsPage() {
                 <CardContent>
                     <div className="space-y-4">
                         {filteredTrips.map((trip) => (
-                            <div key={trip.id} className="flex items-start justify-between border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                            <div key={trip.id} className="flex items-start justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
                                 <div className="flex items-start gap-4 flex-1">
                                     <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${
                                         trip.status === "Completed" 

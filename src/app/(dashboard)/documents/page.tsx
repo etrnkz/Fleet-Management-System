@@ -130,10 +130,10 @@ export default function DocumentsPage() {
                     <button
                         key={type.name}
                         onClick={() => setSelectedType(type.name)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 hover:scale-105 active:scale-95 ${
                             selectedType === type.name
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted hover:bg-muted/80"
+                                ? "bg-primary text-primary-foreground shadow-md"
+                                : "bg-muted hover:bg-muted/80 hover:shadow-sm"
                         }`}
                     >
                         {type.name} ({type.count})
@@ -151,7 +151,7 @@ export default function DocumentsPage() {
                 <CardContent>
                     <div className="space-y-4">
                         {filteredDocuments.map((doc) => (
-                            <div key={doc.id} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                            <div key={doc.id} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
                                 <div className="flex items-start gap-4 flex-1">
                                     <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
                                         doc.type === "Registration" ? "bg-green-500/10" :

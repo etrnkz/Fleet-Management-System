@@ -179,7 +179,7 @@ export default function ReportsPage() {
                     {reportTypes.map((report, index) => {
                         const Icon = report.icon;
                         return (
-                            <Card key={index} className="hover:shadow-lg transition-shadow">
+                            <Card key={index} className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                                     <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${
                                         report.color === "blue" ? "bg-blue-500/10" :
@@ -238,7 +238,7 @@ export default function ReportsPage() {
                 <CardContent>
                     <div className="space-y-4">
                         {recentReports.map((report, index) => (
-                            <div key={index} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                            <div key={index} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
                                 <div className="flex items-start gap-4 flex-1">
                                     <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                                         <FileBarChart className="h-5 w-5 text-white" />
