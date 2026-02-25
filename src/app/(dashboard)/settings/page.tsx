@@ -3,15 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { User, Bell, Shield, Globe, Save, Palette, Clock, Database, Mail, Smartphone, MapPin, DollarSign, Building, Languages, Download, Trash2, Key } from "lucide-react";
 import { PageLoader } from "@/components/PageLoader";
 import { useState } from "react";
 
-type TabType = "general" | "notifications" | "regional" | "appearance" | "security" | "data";
-
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState<TabType>("general");
-    
     const [notifications, setNotifications] = useState({
         maintenance: true,
         fuel: true,
@@ -37,15 +34,6 @@ export default function SettingsPage() {
         timeFormat: "24h",
     });
 
-    const tabs = [
-        { id: "general" as TabType, label: "General", icon: User },
-        { id: "notifications" as TabType, label: "Notifications", icon: Bell },
-        { id: "regional" as TabType, label: "Regional", icon: Globe },
-        { id: "appearance" as TabType, label: "Appearance", icon: Palette },
-        { id: "security" as TabType, label: "Security", icon: Shield },
-        { id: "data" as TabType, label: "Data", icon: Database },
-    ];
-
     return (
         <PageLoader>
         <div className="flex-1 space-y-6">
@@ -61,33 +49,31 @@ export default function SettingsPage() {
                 </Button>
             </div>
 
-            {/* Tabs Navigation */}
-            <div className="border-b">
-                <nav className="flex space-x-1 overflow-x-auto" aria-label="Tabs">
-                    {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-200 whitespace-nowrap ${
-                                    activeTab === tab.id
-                                        ? "border-primary text-primary"
-                                        : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
-                                }`}
-                            >
-                                <Icon className="h-4 w-4" />
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </nav>
-            </div>
+            {/* Tabs */}
+            <Tabs defaultValue="general">
+                <TabsList>
+                    <TabsTrigger value="general" icon={<User className="h-4 w-4" />}>
+                        General
+                    </TabsTrigger>
+                    <TabsTrigger value="notifications" icon={<Bell className="h-4 w-4" />}>
+                        Notifications
+                    </TabsTrigger>
+                    <TabsTrigger value="regional" icon={<Globe className="h-4 w-4" />}>
+                        Regional
+                    </TabsTrigger>
+                    <TabsTrigger value="appearance" icon={<Palette className="h-4 w-4" />}>
+                        Appearance
+                    </TabsTrigger>
+                    <TabsTrigger value="security" icon={<Shield className="h-4 w-4" />}>
+                        Security
+                    </TabsTrigger>
+                    <TabsTrigger value="data" icon={<Database className="h-4 w-4" />}>
+                        Data
+                    </TabsTrigger>
+                </TabsList>
 
-            {/* Tab Content */}
-            <div className="animate-fadeIn">
                 {/* General Tab */}
-                {activeTab === "general" && (
+                <TabsContent value="general">
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
@@ -156,10 +142,10 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                )}
+                </TabsContent>
 
                 {/* Notifications Tab */}
-                {activeTab === "notifications" && (
+                <TabsContent value="notifications">
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
@@ -223,10 +209,10 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                )}
+                </TabsContent>
 
                 {/* Regional Tab */}
-                {activeTab === "regional" && (
+                <TabsContent value="regional">
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
@@ -316,10 +302,10 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                )}
+                </TabsContent>
 
                 {/* Appearance Tab */}
-                {activeTab === "appearance" && (
+                <TabsContent value="appearance">
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
@@ -360,10 +346,10 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                )}
+                </TabsContent>
 
                 {/* Security Tab */}
-                {activeTab === "security" && (
+                <TabsContent value="security">
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
@@ -413,10 +399,10 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                )}
+                </TabsContent>
 
                 {/* Data Tab */}
-                {activeTab === "data" && (
+                <TabsContent value="data">
                     <div className="space-y-6">
                         <Card>
                             <CardHeader>
@@ -470,7 +456,7 @@ export default function SettingsPage() {
                                             <span className="font-medium">12.4 MB of 1 GB</span>
                                         </div>
                                         <div className="w-full bg-muted rounded-full h-2">
-                                            <div className="bg-primary h-2 rounded-full" style={{ width: "1.24%" }}></div>
+                                            <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: "1.24%" }}></div>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 pt-4">
@@ -487,8 +473,8 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </div>
-                )}
-            </div>
+                </TabsContent>
+            </Tabs>
         </div>
         </PageLoader>
     );
