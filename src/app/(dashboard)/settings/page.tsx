@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { User, Bell, Shield, Globe, Save } from "lucide-react";
+import { PageLoader } from "@/components/PageLoader";
 
 export default function SettingsPage() {
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
@@ -120,5 +122,6 @@ export default function SettingsPage() {
                 </Card>
             </div>
         </div>
+        </PageLoader>
     );
 }

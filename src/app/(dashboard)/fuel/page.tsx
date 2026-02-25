@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Plus, Search, Filter, Fuel, TrendingDown, TrendingUp, Calendar, DollarSign, Droplet } from "lucide-react";
 import { useState } from "react";
+import { PageLoader } from "@/components/PageLoader";
 
 const fuelData = [
     { 
@@ -109,6 +110,7 @@ export default function FuelPage() {
     const avgConsumption = totalLiters / fuelData.length;
 
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -263,5 +265,6 @@ export default function FuelPage() {
                 </CardContent>
             </Card>
         </div>
+        </PageLoader>
     );
 }

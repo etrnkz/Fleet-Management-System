@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Plus, Search, Filter, Map, MapPin, Clock, Navigation, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { PageLoader } from "@/components/PageLoader";
 
 const tripsData = [
     { 
@@ -131,6 +132,7 @@ export default function TripsPage() {
     const completedTrips = tripsData.filter(t => t.status === "Completed").length;
 
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -311,5 +313,6 @@ export default function TripsPage() {
                 </CardContent>
             </Card>
         </div>
+        </PageLoader>
     );
 }

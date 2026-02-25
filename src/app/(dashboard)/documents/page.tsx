@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Plus, Search, Filter, FileText, Calendar, Download, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { PageLoader } from "@/components/PageLoader";
 
 const documentsData = [
     { id: "DOC-001", name: "Vehicle Registration - Toyota Hilux", type: "Registration", vehicle: "Toyota Hilux (V-001)", expiryDate: "2025-06-15", uploadDate: "2024-01-10", status: "Valid", size: "2.4 MB" },
@@ -40,6 +41,7 @@ export default function DocumentsPage() {
     const expiringCount = documentsData.filter(d => d.status === "Expiring Soon").length;
 
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -212,5 +214,6 @@ export default function DocumentsPage() {
                 </CardContent>
             </Card>
         </div>
+        </PageLoader>
     );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Plus, Search, Filter, User, Phone, Mail, MapPin, Calendar, Award } from "lucide-react";
 import { useState } from "react";
+import { PageLoader } from "@/components/PageLoader";
 
 const driversData = [
     { 
@@ -110,6 +111,7 @@ export default function DriversPage() {
     const avgRating = (driversData.reduce((sum, d) => sum + d.rating, 0) / driversData.length).toFixed(1);
 
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -274,5 +276,6 @@ export default function DriversPage() {
                 ))}
             </div>
         </div>
+        </PageLoader>
     );
 }

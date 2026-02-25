@@ -3,9 +3,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { OverviewChart } from "@/components/OverviewChart";
 import { Car, Fuel, Users, AlertTriangle, TrendingUp, TrendingDown, MapPin, Wrench } from "lucide-react";
+import { PageLoader } from "@/components/PageLoader";
 
 export default function DashboardPage() {
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
@@ -207,5 +209,6 @@ export default function DashboardPage() {
                 </Card>
             </div>
         </div>
+        </PageLoader>
     );
 }

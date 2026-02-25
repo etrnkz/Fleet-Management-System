@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Plus, Search, Filter, Wrench, AlertTriangle, CheckCircle, Clock, Calendar } from "lucide-react";
 import { useState } from "react";
+import { PageLoader } from "@/components/PageLoader";
 
 const maintenanceData = [
     { 
@@ -117,6 +118,7 @@ export default function MaintenancePage() {
     const totalCost = maintenanceData.reduce((sum, item) => sum + parseFloat(item.cost.replace(/,/g, '')), 0);
 
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -310,5 +312,6 @@ export default function MaintenancePage() {
                 </CardContent>
             </Card>
         </div>
+        </PageLoader>
     );
 }

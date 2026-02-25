@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { FileBarChart, Download, Calendar, TrendingUp, FileText, BarChart3, PieChart, Activity } from "lucide-react";
+import { PageLoader } from "@/components/PageLoader";
 
 const reportTypes = [
     { 
@@ -106,6 +107,7 @@ const recentReports = [
 
 export default function ReportsPage() {
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -273,5 +275,6 @@ export default function ReportsPage() {
                 </CardContent>
             </Card>
         </div>
+        </PageLoader>
     );
 }

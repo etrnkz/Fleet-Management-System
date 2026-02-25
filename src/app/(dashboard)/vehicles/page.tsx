@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Plus, Search, Filter, Car, Gauge, Calendar, Wrench, Fuel } from "lucide-react";
 import { useState } from "react";
+import { PageLoader } from "@/components/PageLoader";
 
 const vehiclesData = [
     { 
@@ -111,6 +112,7 @@ export default function VehiclesPage() {
     const avgMileage = Math.round(vehiclesData.reduce((sum, v) => sum + parseInt(v.mileage.replace(/,/g, '')), 0) / vehiclesData.length);
 
     return (
+        <PageLoader>
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between">
                 <div>
@@ -303,5 +305,6 @@ export default function VehiclesPage() {
                 ))}
             </div>
         </div>
+        </PageLoader>
     );
 }
