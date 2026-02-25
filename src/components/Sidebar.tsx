@@ -14,12 +14,14 @@ import {
     FileText,
     LogOut,
     Settings,
+    Navigation,
 } from "lucide-react";
 
 const sidebarItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Vehicles", href: "/vehicles", icon: Car },
     { name: "Drivers", href: "/drivers", icon: Users },
+    { name: "Real-Time GPS", href: "/gps-tracking", icon: Navigation },
     { name: "Trips", href: "/trips", icon: Map },
     { name: "Fuel", href: "/fuel", icon: Fuel },
     { name: "Maintenance", href: "/maintenance", icon: Wrench },
