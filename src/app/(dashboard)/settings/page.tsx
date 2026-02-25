@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { User, Bell, Shield, Globe, Save, Palette, Clock, Database, Mail, Smartphone, MapPin, DollarSign, Building, Languages, Download, Trash2, Key, Sun, Moon, Monitor, Camera, Upload } from "lucide-react";
+import { User, Bell, Shield, Globe, Save, Palette, Clock, Database, Mail, Smartphone, MapPin, DollarSign, Building, Languages, Download, Trash2, Key, Sun, Moon, Monitor, Camera, Upload, AlertCircle, CheckCircle, XCircle, Info, Wrench, Fuel as FuelIcon, FileText, Car } from "lucide-react";
 import { PageLoader } from "@/components/PageLoader";
 import { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -334,6 +334,124 @@ export default function SettingsPage() {
                     {/* Notifications Section */}
                     {activeSection === "notifications" && (
                         <div className="space-y-6 animate-fadeIn">
+                            {/* Active Notifications Card */}
+                            <Card className="border-l-4 border-l-green-500">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Bell className="h-5 w-5 text-green-500" />
+                                        Active Notifications
+                                    </CardTitle>
+                                    <CardDescription>Recent notification messages and alerts</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-3">
+                                        {[
+                                            { 
+                                                id: 1, 
+                                                type: "warning", 
+                                                icon: AlertCircle, 
+                                                color: "text-orange-500", 
+                                                bgColor: "bg-orange-50 dark:bg-orange-950/20",
+                                                borderColor: "border-orange-200",
+                                                title: "Maintenance Due", 
+                                                message: "Vehicle ET-3-12345 requires scheduled maintenance in 2 days",
+                                                time: "2 hours ago",
+                                                read: false
+                                            },
+                                            { 
+                                                id: 2, 
+                                                type: "error", 
+                                                icon: XCircle, 
+                                                color: "text-red-500", 
+                                                bgColor: "bg-red-50 dark:bg-red-950/20",
+                                                borderColor: "border-red-200",
+                                                title: "Document Expired", 
+                                                message: "Insurance document for vehicle ET-3-67890 has expired",
+                                                time: "5 hours ago",
+                                                read: false
+                                            },
+                                            { 
+                                                id: 3, 
+                                                type: "success", 
+                                                icon: CheckCircle, 
+                                                color: "text-green-500", 
+                                                bgColor: "bg-green-50 dark:bg-green-950/20",
+                                                borderColor: "border-green-200",
+                                                title: "Trip Completed", 
+                                                message: "Driver Abebe Kebede completed trip #TR-2024-0156 successfully",
+                                                time: "1 day ago",
+                                                read: true
+                                            },
+                                            { 
+                                                id: 4, 
+                                                type: "info", 
+                                                icon: Info, 
+                                                color: "text-blue-500", 
+                                                bgColor: "bg-blue-50 dark:bg-blue-950/20",
+                                                borderColor: "border-blue-200",
+                                                title: "Fuel Alert", 
+                                                message: "Unusual fuel consumption detected for vehicle ET-3-11111",
+                                                time: "1 day ago",
+                                                read: true
+                                            },
+                                            { 
+                                                id: 5, 
+                                                type: "info", 
+                                                icon: Car, 
+                                                color: "text-cyan-500", 
+                                                bgColor: "bg-cyan-50 dark:bg-cyan-950/20",
+                                                borderColor: "border-cyan-200",
+                                                title: "New Vehicle Added", 
+                                                message: "Vehicle ET-3-99999 has been added to the fleet",
+                                                time: "2 days ago",
+                                                read: true
+                                            },
+                                        ].map((notification, index) => {
+                                            const Icon = notification.icon;
+                                            return (
+                                                <div 
+                                                    key={notification.id}
+                                                    className={`flex items-start gap-4 p-4 rounded-lg border transition-all duration-200 hover:scale-102 hover:shadow-md ${
+                                                        notification.read 
+                                                            ? "border-muted bg-muted/30" 
+                                                            : `${notification.borderColor} ${notification.bgColor}`
+                                                    }`}
+                                                    style={{ animationDelay: `${index * 50}ms` }}
+                                                >
+                                                    <div className={`p-2 rounded-full ${notification.bgColor}`}>
+                                                        <Icon className={`h-5 w-5 ${notification.color}`} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <h4 className={`font-semibold ${!notification.read ? notification.color : ""}`}>
+                                                                {notification.title}
+                                                            </h4>
+                                                            {!notification.read && (
+                                                                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                                                        <p className="text-xs text-muted-foreground mt-2">{notification.time}</p>
+                                                    </div>
+                                                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                                                        <XCircle className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t flex justify-between items-center">
+                                        <Button variant="outline" size="sm" className="text-green-600 border-green-500 hover:bg-green-50">
+                                            Mark All as Read
+                                        </Button>
+                                        <Button variant="ghost" size="sm" className="text-muted-foreground">
+                                            Clear All
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Notification Preferences Card */}
                             <Card className="border-l-4 border-l-green-500">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
