@@ -15,59 +15,59 @@ export default function LoginPage() {
         <PageLoader>
         <div className="flex min-h-screen">
             {/* Left Side - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 p-12 flex-col justify-between relative overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 via-green-700 to-emerald-700 p-12 flex-col justify-between relative overflow-hidden">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
+                    <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
+                    <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2 animate-pulse" style={{ animationDelay: "1s" }}></div>
                 </div>
                 
-                <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <div className="relative z-10 animate-fadeIn">
+                    <div className="flex items-center gap-3 mb-8 hover:scale-105 transition-transform duration-300">
+                        <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center animate-bounce" style={{ animationDuration: "3s" }}>
                             <Truck className="h-7 w-7 text-white" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">HU Fleet Manager</h1>
-                            <p className="text-blue-100 text-sm">Professional Fleet Management</p>
+                            <p className="text-green-100 text-sm">Professional Fleet Management</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="relative z-10 space-y-6">
+                <div className="relative z-10 space-y-6 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
                     <div>
                         <h2 className="text-4xl font-bold text-white mb-4">
                             Manage Your Fleet<br />with Confidence
                         </h2>
-                        <p className="text-blue-100 text-lg">
+                        <p className="text-green-100 text-lg">
                             Track vehicles, monitor fuel consumption, manage drivers, and optimize your fleet operations all in one place.
                         </p>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 pt-8">
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg">
                             <div className="text-3xl font-bold text-white mb-1">128+</div>
-                            <div className="text-blue-100 text-sm">Vehicles Managed</div>
+                            <div className="text-green-100 text-sm">Vehicles Managed</div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg" style={{ animationDelay: "0.1s" }}>
                             <div className="text-3xl font-bold text-white mb-1">45+</div>
-                            <div className="text-blue-100 text-sm">Active Drivers</div>
+                            <div className="text-green-100 text-sm">Active Drivers</div>
                         </div>
                     </div>
                 </div>
 
-                <div className="relative z-10 text-blue-100 text-sm">
+                <div className="relative z-10 text-green-100 text-sm animate-fadeIn" style={{ animationDelay: "0.4s" }}>
                     © 2024 HU Fleet Manager. All rights reserved.
                 </div>
             </div>
 
             {/* Right Side - Login Form */}
             <div className="flex-1 flex items-center justify-center p-8 bg-background">
-                <div className="w-full max-w-md space-y-8">
+                <div className="w-full max-w-md space-y-8 animate-fadeIn" style={{ animationDelay: "0.3s" }}>
                     {/* Mobile Logo */}
-                    <div className="lg:hidden flex items-center gap-3 mb-8">
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Truck className="h-7 w-7 text-primary" />
+                    <div className="lg:hidden flex items-center gap-3 mb-8 hover:scale-105 transition-transform duration-300">
+                        <div className="h-12 w-12 rounded-xl bg-green-100 dark:bg-green-950 flex items-center justify-center">
+                            <Truck className="h-7 w-7 text-green-600 dark:text-green-400" />
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold">HU Fleet Manager</h1>
@@ -82,9 +82,9 @@ export default function LoginPage() {
                         </p>
                     </div>
 
-                    <Card className="border-2">
+                    <Card className="border-2 border-green-200 dark:border-green-800 hover:shadow-xl transition-shadow duration-300">
                         <CardHeader className="space-y-1">
-                            <CardTitle className="text-2xl">Sign in</CardTitle>
+                            <CardTitle className="text-2xl text-green-700 dark:text-green-400">Sign in</CardTitle>
                             <CardDescription>
                                 Use your email and password to login
                             </CardDescription>
@@ -94,13 +94,13 @@ export default function LoginPage() {
                                 <label htmlFor="email" className="text-sm font-medium">
                                     Email Address
                                 </label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <div className="relative group">
+                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-green-600 transition-colors" />
                                     <Input 
                                         id="email" 
                                         type="email" 
                                         placeholder="admin@hufleet.com" 
-                                        className="pl-10"
+                                        className="pl-10 border-green-200 focus:border-green-500 focus:ring-green-500 transition-all duration-200"
                                     />
                                 </div>
                             </div>
@@ -111,23 +111,23 @@ export default function LoginPage() {
                                     </label>
                                     <Link 
                                         href="/forgot-password" 
-                                        className="text-sm text-primary hover:underline"
+                                        className="text-sm text-green-600 dark:text-green-400 hover:underline hover:text-green-700 transition-colors"
                                     >
                                         Forgot password?
                                     </Link>
                                 </div>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <div className="relative group">
+                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-green-600 transition-colors" />
                                     <Input 
                                         id="password" 
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Enter your password"
-                                        className="pl-10 pr-10"
+                                        className="pl-10 pr-10 border-green-200 focus:border-green-500 focus:ring-green-500 transition-all duration-200"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                                        className="absolute right-3 top-3 text-muted-foreground hover:text-green-600 transition-colors"
                                     >
                                         {showPassword ? (
                                             <EyeOff className="h-4 w-4" />
@@ -141,7 +141,7 @@ export default function LoginPage() {
                                 <input
                                     type="checkbox"
                                     id="remember"
-                                    className="h-4 w-4 rounded border-gray-300"
+                                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                                 />
                                 <label
                                     htmlFor="remember"
@@ -152,7 +152,7 @@ export default function LoginPage() {
                             </div>
                         </CardContent>
                         <CardFooter className="flex flex-col gap-4">
-                            <Button className="w-full h-11 text-base" asChild>
+                            <Button className="w-full h-11 text-base bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 hover:shadow-lg" asChild>
                                 <Link href="/">Sign in</Link>
                             </Button>
                             <div className="relative">
@@ -167,7 +167,7 @@ export default function LoginPage() {
                             </div>
                             <div className="text-center text-sm text-muted-foreground">
                                 Don&apos;t have an account?{" "}
-                                <Link href="/signup" className="font-medium text-primary hover:underline">
+                                <Link href="/signup" className="font-medium text-green-600 dark:text-green-400 hover:underline hover:text-green-700 transition-colors">
                                     Create account
                                 </Link>
                             </div>
@@ -176,11 +176,11 @@ export default function LoginPage() {
 
                     <p className="text-center text-xs text-muted-foreground">
                         By signing in, you agree to our{" "}
-                        <Link href="/terms" className="underline hover:text-primary">
+                        <Link href="/terms" className="underline hover:text-green-600 transition-colors">
                             Terms of Service
                         </Link>{" "}
                         and{" "}
-                        <Link href="/privacy" className="underline hover:text-primary">
+                        <Link href="/privacy" className="underline hover:text-green-600 transition-colors">
                             Privacy Policy
                         </Link>
                     </p>
