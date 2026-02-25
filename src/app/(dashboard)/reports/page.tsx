@@ -121,10 +121,10 @@ export default function ReportsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-blue-500">
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <FileBarChart className="h-4 w-4 text-blue-500" />
                         </div>
                     </CardHeader>
@@ -133,10 +133,10 @@ export default function ReportsPage() {
                         <p className="text-xs text-muted-foreground mt-1">Generated this month</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
+                <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Downloads</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Download className="h-4 w-4 text-green-500" />
                         </div>
                     </CardHeader>
@@ -147,10 +147,10 @@ export default function ReportsPage() {
                         <p className="text-xs text-muted-foreground mt-1">Total downloads</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500">
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Report Types</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <FileText className="h-4 w-4 text-purple-500" />
                         </div>
                     </CardHeader>
@@ -159,10 +159,10 @@ export default function ReportsPage() {
                         <p className="text-xs text-muted-foreground mt-1">Available templates</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500">
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <FileBarChart className="h-4 w-4 text-orange-500" />
                         </div>
                     </CardHeader>
@@ -238,15 +238,19 @@ export default function ReportsPage() {
                 <CardContent>
                     <div className="space-y-4">
                         {recentReports.map((report, index) => (
-                            <div key={index} className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
+                            <div 
+                                key={index} 
+                                className="flex items-center justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer animate-slideInLeft group"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
                                 <div className="flex items-start gap-4 flex-1">
-                                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                                        <FileBarChart className="h-5 w-5 text-white" />
+                                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+                                        <FileBarChart className="h-5 w-5 text-white transition-transform duration-300 group-hover:scale-110" />
                                     </div>
                                     <div className="flex-1 space-y-1">
                                         <div className="flex items-center gap-2">
                                             <p className="font-medium">{report.name}</p>
-                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 transition-all duration-200 group-hover:scale-105">
                                                 {report.status}
                                             </span>
                                         </div>
@@ -264,8 +268,8 @@ export default function ReportsPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button size="sm" variant="outline" className="gap-2">
-                                        <Download className="h-4 w-4" />
+                                    <Button size="sm" variant="outline" className="gap-2 group/btn">
+                                        <Download className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-y-1" />
                                         Download
                                     </Button>
                                 </div>
