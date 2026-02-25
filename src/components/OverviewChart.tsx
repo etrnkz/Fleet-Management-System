@@ -59,27 +59,33 @@ export function OverviewChart() {
             <BarChart data={data}>
                 <XAxis
                     dataKey="name"
-                    stroke="#888888"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                 />
                 <YAxis
-                    stroke="#888888"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `ETB ${value}`}
+                    tickFormatter={(value) => `${value}`}
                 />
                 <Tooltip
-                    cursor={{ fill: 'transparent' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    cursor={{ fill: 'hsl(var(--muted) / 0.2)' }}
+                    contentStyle={{ 
+                        borderRadius: '8px', 
+                        border: 'none', 
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        backgroundColor: 'hsl(var(--card))',
+                        color: 'hsl(var(--card-foreground))'
+                    }}
+                    formatter={(value) => [`${value} ETB`, 'Revenue']}
                 />
                 <Bar
                     dataKey="total"
-                    fill="currentColor"
-                    radius={[4, 4, 0, 0]}
-                    className="fill-primary"
+                    fill="hsl(217 91% 60%)"
+                    radius={[8, 8, 0, 0]}
                 />
             </BarChart>
         </ResponsiveContainer>
