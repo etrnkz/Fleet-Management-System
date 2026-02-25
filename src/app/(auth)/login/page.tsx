@@ -37,7 +37,7 @@ export default function LoginPage() {
                 <div className="relative z-10 space-y-6 animate-fadeIn" style={{ animationDelay: "0.2s" }}>
                     <div>
                         <h2 className="text-4xl font-bold text-white mb-4">
-                            Manage Your Fleet<br />with Confidence
+                            Haramaya University<br />Fleet Manager
                         </h2>
                         <p className="text-green-100 text-lg">
                             Track vehicles, monitor fuel consumption, manage drivers, and optimize your fleet operations all in one place.
