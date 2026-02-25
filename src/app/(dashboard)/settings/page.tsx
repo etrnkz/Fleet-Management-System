@@ -3,11 +3,13 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { User, Bell, Shield, Globe, Save, Palette, Clock, Database, Mail, Smartphone, MapPin, DollarSign, Building, Languages, Download, Trash2, Key } from "lucide-react";
+import { User, Bell, Shield, Globe, Save, Palette, Clock, Database, Mail, Smartphone, MapPin, DollarSign, Building, Languages, Download, Trash2, Key, Sun, Moon, Monitor } from "lucide-react";
 import { PageLoader } from "@/components/PageLoader";
 import { useState } from "react";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function SettingsPage() {
+    const { theme, setTheme } = useTheme();
     const [activeSection, setActiveSection] = useState("general");
     const [notifications, setNotifications] = useState({
         maintenance: true,
@@ -350,16 +352,56 @@ export default function SettingsPage() {
                                 <CardContent className="space-y-6">
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="text-sm font-medium mb-3 block text-orange-600">Theme</label>
+                                            <label className="text-sm font-medium mb-3 block text-orange-600">Theme Mode</label>
                                             <p className="text-sm text-muted-foreground mb-4">
-                                                Toggle between light and dark mode using the theme button in the header
+                                                Choose your preferred theme or let the system decide
                                             </p>
-                                            <div className="flex gap-4">
-                                                <div className="flex-1 p-4 rounded-lg border-2 border-orange-500 bg-background">
-                                                    <div className="aspect-video bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-950 rounded mb-2"></div>
-                                                    <p className="text-sm font-medium">Current Theme</p>
-                                                </div>
+                                            <div className="grid grid-cols-3 gap-4">
+                                                <button
+                                                    onClick={() => setTheme("light")}
+                                                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                                                        theme === "light"
+                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 scale-105 shadow-lg"
+                                                            : "border-muted hover:border-orange-300 hover:scale-102"
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Sun className={`h-8 w-8 ${theme === "light" ? "text-orange-500" : "text-muted-foreground"}`} />
+                                                        <span className={`text-sm font-medium ${theme === "light" ? "text-orange-600" : ""}`}>Light</span>
+                                                    </div>
+                                                </button>
+                                                <button
+                                                    onClick={() => setTheme("dark")}
+                                                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                                                        theme === "dark"
+                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 scale-105 shadow-lg"
+                                                            : "border-muted hover:border-orange-300 hover:scale-102"
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Moon className={`h-8 w-8 ${theme === "dark" ? "text-orange-500" : "text-muted-foreground"}`} />
+                                                        <span className={`text-sm font-medium ${theme === "dark" ? "text-orange-600" : ""}`}>Dark</span>
+                                                    </div>
+                                                </button>
+                                                <button
+                                                    onClick={() => setTheme("auto")}
+                                                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                                                        theme === "auto"
+                                                            ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 scale-105 shadow-lg"
+                                                            : "border-muted hover:border-orange-300 hover:scale-102"
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Monitor className={`h-8 w-8 ${theme === "auto" ? "text-orange-500" : "text-muted-foreground"}`} />
+                                                        <span className={`text-sm font-medium ${theme === "auto" ? "text-orange-600" : ""}`}>Auto</span>
+                                                    </div>
+                                                </button>
                                             </div>
+                                            {theme === "auto" && (
+                                                <p className="text-xs text-muted-foreground mt-3 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200">
+                                                    Auto mode follows your system preferences and adjusts automatically
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium flex items-center gap-2">
