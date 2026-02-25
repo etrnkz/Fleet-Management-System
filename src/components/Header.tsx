@@ -125,29 +125,30 @@ export function Header() {
 
                     {/* Notification Panel */}
                     {showNotifications && (
-                        <div className="absolute right-0 mt-2 w-96 bg-card border rounded-lg shadow-2xl z-50 animate-fadeIn">
-                            <div className="p-4 border-b flex items-center justify-between">
+                        <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-50 animate-fadeIn">
+                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950">
                                 <div>
-                                    <h3 className="font-semibold text-lg">Notifications</h3>
-                                    <p className="text-xs text-muted-foreground">{unreadCount} unread messages</p>
+                                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Notifications</h3>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">{unreadCount} unread messages</p>
                                 </div>
                                 <Button 
                                     variant="ghost" 
                                     size="icon"
                                     onClick={() => setShowNotifications(false)}
+                                    className="hover:bg-gray-200 dark:hover:bg-gray-700"
                                 >
-                                    <X className="h-4 w-4" />
+                                    <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                                 </Button>
                             </div>
                             
-                            <div className="max-h-[500px] overflow-y-auto">
+                            <div className="max-h-[500px] overflow-y-auto bg-white dark:bg-gray-800">
                                 {notifications.map((notification) => {
                                     const Icon = notification.icon;
                                     return (
                                         <div 
                                             key={notification.id}
-                                            className={`p-4 border-b hover:bg-muted/50 transition-colors cursor-pointer ${
-                                                !notification.read ? "bg-muted/30" : ""
+                                            className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
+                                                !notification.read ? "bg-blue-50 dark:bg-blue-950/30" : "bg-white dark:bg-gray-800"
                                             }`}
                                         >
                                             <div className="flex items-start gap-3">
@@ -156,17 +157,17 @@ export function Header() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between gap-2">
-                                                        <h4 className={`font-semibold text-sm ${!notification.read ? notification.color : ""}`}>
+                                                        <h4 className={`font-semibold text-sm text-gray-900 dark:text-white ${!notification.read ? notification.color : ""}`}>
                                                             {notification.title}
                                                         </h4>
                                                         {!notification.read && (
-                                                            <span className="flex h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></span>
+                                                            <span className="flex h-2 w-2 rounded-full bg-blue-500 flex-shrink-0 animate-pulse"></span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                                                         {notification.message}
                                                     </p>
-                                                    <p className="text-xs text-muted-foreground mt-2">
+                                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                                                         {notification.time}
                                                     </p>
                                                 </div>
@@ -176,11 +177,11 @@ export function Header() {
                                 })}
                             </div>
 
-                            <div className="p-3 border-t bg-muted/30">
+                            <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                                 <Link href="/settings">
                                     <Button 
                                         variant="ghost" 
-                                        className="w-full text-sm text-primary hover:bg-primary/10"
+                                        className="w-full text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950 font-medium"
                                         onClick={() => setShowNotifications(false)}
                                     >
                                         View All Notifications
