@@ -12,109 +12,123 @@ const tripsData = [
         id: "T-001", 
         vehicle: "Toyota Hilux", 
         vehicleId: "V-001",
-        driver: "John Doe", 
-        from: "Addis Ababa", 
-        to: "Bahir Dar", 
-        distance: "565", 
-        duration: "8h 30m", 
+        driver: "Abebe Kebede", 
+        from: "Haramaya University", 
+        to: "Dire Dawa", 
+        distance: "18", 
+        duration: "25m", 
         status: "Completed", 
         date: "2024-02-20",
         startTime: "06:00 AM",
-        endTime: "02:30 PM",
-        fuelUsed: "45.5 L",
-        avgSpeed: "66 km/h",
-        route: "Via Debre Markos"
+        endTime: "06:25 AM",
+        fuelUsed: "2.5 L",
+        avgSpeed: "43 km/h",
+        route: "Direct Route",
+        fromCoords: { lat: 9.4034, lng: 42.0839 },
+        toCoords: { lat: 9.5930, lng: 41.8661 }
     },
     { 
         id: "T-002", 
         vehicle: "Isuzu D-Max", 
         vehicleId: "V-002",
-        driver: "Jane Smith", 
-        from: "Addis Ababa", 
-        to: "Hawassa", 
-        distance: "275", 
-        duration: "4h 15m", 
+        driver: "Tigist Alemu", 
+        from: "Haramaya University", 
+        to: "Harar", 
+        distance: "35", 
+        duration: "45m", 
         status: "In Progress", 
         date: "2024-02-21",
         startTime: "08:00 AM",
-        endTime: "Est. 12:15 PM",
-        fuelUsed: "22.3 L",
-        avgSpeed: "65 km/h",
-        route: "Via Mojo"
+        endTime: "Est. 08:45 AM",
+        fuelUsed: "4.2 L",
+        avgSpeed: "47 km/h",
+        route: "Via Awaday",
+        fromCoords: { lat: 9.4034, lng: 42.0839 },
+        toCoords: { lat: 9.3142, lng: 42.1181 }
     },
     { 
         id: "T-003", 
         vehicle: "Ford Transit", 
         vehicleId: "V-004",
-        driver: "Mike Johnson", 
+        driver: "Dawit Tesfaye", 
         from: "Dire Dawa", 
-        to: "Harar", 
-        distance: "52", 
-        duration: "1h 10m", 
+        to: "Haramaya University", 
+        distance: "18", 
+        duration: "28m", 
         status: "Completed", 
         date: "2024-02-20",
         startTime: "09:30 AM",
-        endTime: "10:40 AM",
-        fuelUsed: "8.2 L",
-        avgSpeed: "45 km/h",
-        route: "Direct Route"
+        endTime: "09:58 AM",
+        fuelUsed: "2.8 L",
+        avgSpeed: "39 km/h",
+        route: "Direct Route",
+        fromCoords: { lat: 9.5930, lng: 41.8661 },
+        toCoords: { lat: 9.4034, lng: 42.0839 }
     },
     { 
         id: "T-004", 
         vehicle: "Hino 500", 
         vehicleId: "V-005",
-        driver: "Sarah Williams", 
-        from: "Addis Ababa", 
-        to: "Mekelle", 
-        distance: "783", 
-        duration: "12h 45m", 
+        driver: "Sara Mohammed", 
+        from: "Haramaya University", 
+        to: "Jijiga", 
+        distance: "95", 
+        duration: "1h 45m", 
         status: "Scheduled", 
         date: "2024-02-22",
         startTime: "05:00 AM",
-        endTime: "Est. 05:45 PM",
-        fuelUsed: "Est. 85 L",
-        avgSpeed: "61 km/h",
-        route: "Via Dessie"
+        endTime: "Est. 06:45 AM",
+        fuelUsed: "Est. 12 L",
+        avgSpeed: "54 km/h",
+        route: "Via Harar",
+        fromCoords: { lat: 9.4034, lng: 42.0839 },
+        toCoords: { lat: 9.3497, lng: 42.7975 }
     },
     { 
         id: "T-005", 
         vehicle: "Mercedes Sprinter", 
         vehicleId: "V-003",
-        driver: "David Brown", 
-        from: "Gondar", 
-        to: "Axum", 
-        distance: "243", 
-        duration: "4h 30m", 
+        driver: "Yohannes Tadesse", 
+        from: "Harar", 
+        to: "Haramaya University", 
+        distance: "35", 
+        duration: "42m", 
         status: "Completed", 
         date: "2024-02-19",
         startTime: "07:00 AM",
-        endTime: "11:30 AM",
-        fuelUsed: "28.5 L",
-        avgSpeed: "54 km/h",
-        route: "Via Shire"
+        endTime: "07:42 AM",
+        fuelUsed: "4.5 L",
+        avgSpeed: "50 km/h",
+        route: "Via Awaday",
+        fromCoords: { lat: 9.3142, lng: 42.1181 },
+        toCoords: { lat: 9.4034, lng: 42.0839 }
     },
     { 
         id: "T-006", 
         vehicle: "Toyota Hilux", 
         vehicleId: "V-001",
-        driver: "John Doe", 
-        from: "Bahir Dar", 
-        to: "Addis Ababa", 
-        distance: "565", 
-        duration: "8h 15m", 
+        driver: "Abebe Kebede", 
+        from: "Haramaya University", 
+        to: "Chiro", 
+        distance: "65", 
+        duration: "1h 15m", 
         status: "Completed", 
         date: "2024-02-21",
         startTime: "06:30 AM",
-        endTime: "02:45 PM",
-        fuelUsed: "44.8 L",
-        avgSpeed: "68 km/h",
-        route: "Via Debre Markos"
+        endTime: "07:45 AM",
+        fuelUsed: "8.2 L",
+        avgSpeed: "52 km/h",
+        route: "Via Asebe Teferi",
+        fromCoords: { lat: 9.4034, lng: 42.0839 },
+        toCoords: { lat: 9.0833, lng: 40.8667 }
     },
 ];
 
 export default function TripsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+    const [selectedTrip, setSelectedTrip] = useState<typeof tripsData[0] | null>(null);
+    const [showRouteMap, setShowRouteMap] = useState(false);
 
     const filteredTrips = tripsData.filter(trip => {
         const matchesSearch = trip.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -306,7 +320,17 @@ export default function TripsPage() {
                                         <p className="text-sm text-muted-foreground">{trip.duration}</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button size="sm" variant="outline">
+                                        <Button 
+                                            size="sm" 
+                                            variant="outline"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedTrip(trip);
+                                                setShowRouteMap(true);
+                                            }}
+                                            className="hover:bg-blue-50 hover:border-blue-500 transition-all duration-200"
+                                        >
+                                            <Map className="h-3 w-3 mr-1" />
                                             View Route
                                         </Button>
                                     </div>
@@ -316,6 +340,130 @@ export default function TripsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Route Map Modal */}
+            {showRouteMap && selectedTrip && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={() => setShowRouteMap(false)}>
+                    <Card className="w-full max-w-5xl max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300" onClick={(e) => e.stopPropagation()}>
+                        <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950 dark:to-green-950">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                                        <Map className="h-5 w-5" />
+                                        Trip Route - {selectedTrip.id}
+                                    </CardTitle>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        {selectedTrip.from} → {selectedTrip.to}
+                                    </p>
+                                </div>
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => setShowRouteMap(false)}
+                                    className="hover:bg-red-100 dark:hover:bg-red-950"
+                                >
+                                    <Plus className="h-5 w-5 rotate-45 text-gray-600 dark:text-gray-400" />
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="relative h-[600px]">
+                                {/* Google Maps Embed with Directions */}
+                                <iframe
+                                    src={`https://www.google.com/maps/embed/v1/directions?key=YOUR_API_KEY&origin=${selectedTrip.fromCoords.lat},${selectedTrip.fromCoords.lng}&destination=${selectedTrip.toCoords.lat},${selectedTrip.toCoords.lng}&mode=driving`}
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    allowFullScreen
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    className="rounded-b-lg"
+                                ></iframe>
+
+                                {/* Trip Info Overlay */}
+                                <div className="absolute top-4 left-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 border-2 border-blue-500 animate-in slide-in-from-top-4 duration-500">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+                                                <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">From</p>
+                                                <p className="font-semibold text-sm">{selectedTrip.from}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center">
+                                                <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">To</p>
+                                                <p className="font-semibold text-sm">{selectedTrip.to}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-950 flex items-center justify-center">
+                                                <Navigation className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Distance</p>
+                                                <p className="font-semibold text-sm">{selectedTrip.distance} km</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-950 flex items-center justify-center">
+                                                <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Duration</p>
+                                                <p className="font-semibold text-sm">{selectedTrip.duration}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 pt-3 border-t flex items-center justify-between text-sm">
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-muted-foreground">Vehicle: <span className="font-medium text-foreground">{selectedTrip.vehicle}</span></span>
+                                            <span className="text-muted-foreground">Driver: <span className="font-medium text-foreground">{selectedTrip.driver}</span></span>
+                                        </div>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                            selectedTrip.status === "Completed" 
+                                                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
+                                                : selectedTrip.status === "In Progress"
+                                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                                                : "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300"
+                                        }`}>
+                                            {selectedTrip.status}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Route Legend */}
+                                <div className="absolute bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 animate-in slide-in-from-bottom-4 duration-700">
+                                    <h4 className="font-semibold text-sm mb-3">Route Information</h4>
+                                    <div className="space-y-2 text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                                            <span>Starting Point</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                                            <span>Destination</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-0.5 w-6 bg-blue-500"></div>
+                                            <span>Route Path</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 pt-3 border-t text-xs text-muted-foreground">
+                                        <p>Route: {selectedTrip.route}</p>
+                                        <p className="mt-1">Avg Speed: {selectedTrip.avgSpeed}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
         </PageLoader>
     );
