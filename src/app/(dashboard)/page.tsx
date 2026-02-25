@@ -154,7 +154,7 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-6">
-                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer hover:translate-x-1 animate-slideInLeft" style={{ animationDelay: '0ms' }}>
                                 <div className="h-2 w-2 rounded-full bg-blue-500 mt-2 relative">
                                     <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>
                                 </div>
@@ -168,8 +168,10 @@ export default function DashboardPage() {
                                     <p className="text-xs text-muted-foreground">2m ago</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
-                                <div className="h-2 w-2 rounded-full bg-orange-500 mt-2" />
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer hover:translate-x-1 animate-slideInLeft" style={{ animationDelay: '100ms' }}>
+                                <div className="h-2 w-2 rounded-full bg-orange-500 mt-2 relative">
+                                    <span className="absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-0 hover:opacity-75 hover:animate-ping transition-opacity"></span>
+                                </div>
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">
                                         Maintenance Alert: Truck #55
@@ -180,8 +182,10 @@ export default function DashboardPage() {
                                     <p className="text-xs text-muted-foreground">1h ago</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
-                                <div className="h-2 w-2 rounded-full bg-green-500 mt-2" />
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer hover:translate-x-1 animate-slideInLeft" style={{ animationDelay: '200ms' }}>
+                                <div className="h-2 w-2 rounded-full bg-green-500 mt-2 relative">
+                                    <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-0 hover:opacity-75 hover:animate-ping transition-opacity"></span>
+                                </div>
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">
                                         Driver Check-in: John Doe
@@ -192,8 +196,10 @@ export default function DashboardPage() {
                                     <p className="text-xs text-muted-foreground">3h ago</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer">
-                                <div className="h-2 w-2 rounded-full bg-purple-500 mt-2" />
+                            <div className="flex items-start gap-4 p-2 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer hover:translate-x-1 animate-slideInLeft" style={{ animationDelay: '300ms' }}>
+                                <div className="h-2 w-2 rounded-full bg-purple-500 mt-2 relative">
+                                    <span className="absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-0 hover:opacity-75 hover:animate-ping transition-opacity"></span>
+                                </div>
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">
                                         Fuel refill completed
