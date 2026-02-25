@@ -1,9 +1,14 @@
+"use client";
+
 import Link from "next/link";
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, Moon, Sun } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useTheme } from "@/components/ThemeProvider";
 
 export function Header() {
+    const { theme, toggleTheme } = useTheme();
+
     return (
         <header className="flex h-16 items-center justify-between border-b bg-card px-6">
             <div className="flex w-full max-w-sm items-center space-x-2">
@@ -17,6 +22,13 @@ export function Header() {
                 </div>
             </div>
             <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={toggleTheme}>
+                    {theme === "dark" ? (
+                        <Sun className="h-5 w-5" />
+                    ) : (
+                        <Moon className="h-5 w-5" />
+                    )}
+                </Button>
                 <Button variant="ghost" size="icon" className="relative" asChild>
                     <Link href="/signup">
                         <Bell className="h-5 w-5" />
