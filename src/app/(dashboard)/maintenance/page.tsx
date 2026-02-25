@@ -132,10 +132,10 @@ export default function MaintenancePage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border-l-4 border-l-orange-500">
+                <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <AlertTriangle className="h-4 w-4 text-orange-500" />
                         </div>
                     </CardHeader>
@@ -144,10 +144,10 @@ export default function MaintenancePage() {
                         <p className="text-xs text-muted-foreground mt-1">Requires attention</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-blue-500">
+                <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Clock className="h-4 w-4 text-blue-500" />
                         </div>
                     </CardHeader>
@@ -156,10 +156,10 @@ export default function MaintenancePage() {
                         <p className="text-xs text-muted-foreground mt-1">Currently servicing</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
+                <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <CheckCircle className="h-4 w-4 text-green-500" />
                         </div>
                     </CardHeader>
@@ -168,10 +168,10 @@ export default function MaintenancePage() {
                         <p className="text-xs text-muted-foreground mt-1">This month</p>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500">
+                <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-all duration-300 hover:scale-[1.03] cursor-pointer">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Wrench className="h-4 w-4 text-purple-500" />
                         </div>
                     </CardHeader>
@@ -220,19 +220,23 @@ export default function MaintenancePage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {filteredMaintenance.map((item) => (
-                            <div key={item.id} className="flex items-start justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer">
+                        {filteredMaintenance.map((item, index) => (
+                            <div 
+                                key={item.id} 
+                                className="flex items-start justify-between border rounded-lg p-4 hover:bg-muted/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-md cursor-pointer animate-slideInLeft group"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
                                 <div className="flex items-start gap-4 flex-1">
-                                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${
+                                    <div className={`h-12 w-12 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 ${
                                         item.status === "Completed" 
-                                            ? "bg-green-500/10" 
+                                            ? "bg-green-500/10 group-hover:bg-green-500/20" 
                                             : item.status === "In Progress"
-                                            ? "bg-blue-500/10"
+                                            ? "bg-blue-500/10 group-hover:bg-blue-500/20"
                                             : item.status === "Pending"
-                                            ? "bg-orange-500/10"
-                                            : "bg-gray-500/10"
+                                            ? "bg-orange-500/10 group-hover:bg-orange-500/20"
+                                            : "bg-gray-500/10 group-hover:bg-gray-500/20"
                                     }`}>
-                                        <Wrench className={`h-6 w-6 ${
+                                        <Wrench className={`h-6 w-6 transition-transform duration-300 group-hover:scale-110 ${
                                             item.status === "Completed" 
                                                 ? "text-green-500" 
                                                 : item.status === "In Progress"
@@ -245,7 +249,7 @@ export default function MaintenancePage() {
                                     <div className="flex-1 space-y-2">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <p className="font-medium text-lg">{item.id}</p>
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-200 group-hover:scale-105 ${
                                                 item.status === "Completed" 
                                                     ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
                                                     : item.status === "In Progress"
@@ -256,9 +260,9 @@ export default function MaintenancePage() {
                                             }`}>
                                                 {item.status}
                                             </span>
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-200 group-hover:scale-105 ${
                                                 item.priority === "High" 
-                                                    ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300" 
+                                                    ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 group-hover:animate-pulse" 
                                                     : item.priority === "Medium"
                                                     ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
                                                     : "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
