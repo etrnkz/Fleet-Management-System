@@ -45,10 +45,17 @@ export default function LoginPage() {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 pt-8">
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg">
-                            <div className="text-3xl font-bold text-white mb-1">128+</div>
-                            <div className="text-green-100 text-sm">Active Vehicles</div>
-                        </div>
+                        <Link href="/drivers">
+                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer group">
+                                <div className="text-3xl font-bold text-white mb-1 group-hover:animate-pulse">128+</div>
+                                <div className="text-green-100 text-sm flex items-center gap-1">
+                                    <span>Active Drivers</span>
+                                    <svg className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </Link>
                         <Link href="/gps-tracking">
                             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer group" style={{ animationDelay: "0.1s" }}>
                                 <div className="text-3xl font-bold text-white mb-1 group-hover:animate-pulse">Real-Time</div>
