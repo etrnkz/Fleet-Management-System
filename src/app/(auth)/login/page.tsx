@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/Input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Mail, Lock, Eye, EyeOff, Truck } from "lucide-react"
 import { useState } from "react"
+import { PageLoader } from "@/components/PageLoader"
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
 
     return (
+        <PageLoader>
         <div className="flex min-h-screen">
             {/* Left Side - Branding */}
             <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 p-12 flex-col justify-between relative overflow-hidden">
@@ -185,5 +187,6 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+        </PageLoader>
     )
 }
