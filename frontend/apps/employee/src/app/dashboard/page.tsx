@@ -19,6 +19,12 @@ export default function DashboardPage() {
   // UI states
   const [showNotifications, setShowNotifications] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState<any>(null)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [editedProfile, setEditedProfile] = useState({
+    name: '',
+    email: '',
+    phoneNumber: '',
+  })
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false,
     message: '',
@@ -67,6 +73,27 @@ export default function DashboardPage() {
   const handleSectionChange = (section: string) => {
     setActiveSection(section)
     setSidebarOpen(false)
+  }
+
+  const handleOpenProfileModal = () => {
+    setEditedProfile({
+      name: user?.name || '',
+      email: user?.email || '',
+      phoneNumber: user?.phoneNumber || '',
+    })
+    setShowProfileModal(true)
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      await userApi.updateProfile(editedProfile)
+      setUser({ ...user, ...editedProfile })
+      localStorage.setItem('user', JSON.stringify({ ...user, ...editedProfile }))
+      setShowProfileModal(false)
+      showToast('Profile updated successfully!', 'success')
+    } catch (error: any) {
+      showToast(error.message || 'Failed to update profile', 'error')
+    }
   }
 
   const unreadCount = notifications.filter((n: any) => !n.isRead).length
@@ -301,6 +328,51 @@ export default function DashboardPage() {
     </div>
   )
 
+  // Document Center Component
+  const DocumentCenter = () => (
+    <div className="max-w-4xl mx-auto">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Document Center</h2>
+      <div className="grid grid-cols-1 gap-4">
+        {[
+          { name: 'Vehicle Usage Policy.pdf', date: 'Updated Jan 2025', size: '2.5 MB', color: 'red' },
+          { name: 'Trip Request Guide.docx', date: 'Uploaded Jan 2025', size: '1.2 MB', color: 'blue' },
+          { name: 'Route & Rate Table 2025.xlsx', date: 'Updated Feb 2025', size: '945 KB', color: 'green' },
+          { name: 'Safety Guidelines.pdf', date: 'Updated Dec 2024', size: '1.8 MB', color: 'red' },
+          { name: 'Fleet Maintenance Schedule.pdf', date: 'Updated Feb 2025', size: '3.1 MB', color: 'red' },
+        ].map((doc, index) => (
+          <div key={index} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 bg-${doc.color}-50 rounded flex items-center justify-center`}>
+                  <svg className={`w-6 h-6 text-${doc.color}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-base font-medium text-gray-800">{doc.name}</p>
+                  <p className="text-sm text-gray-500">{doc.date} • {doc.size}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -336,24 +408,32 @@ export default function DashboardPage() {
             <h1 className="text-xl font-bold text-gray-900">HUFMS</h1>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.role}</p>
-              </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleOpenProfileModal}
+                className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2"
+              >
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-xs text-gray-500">{user?.role}</p>
+                </div>
+                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <span className="text-emerald-600 font-semibold">{user?.name?.charAt(0)}</span>
+                </div>
+              </button>
               <button onClick={handleLogout} className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg">
                 Logout
               </button>
@@ -370,6 +450,7 @@ export default function DashboardPage() {
               { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
               { id: 'request', label: 'Request Trip', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
               { id: 'vehicles', label: 'Available Vehicles', icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z' },
+              { id: 'documents', label: 'Documents', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
             ].map((item) => (
               <button
                 key={item.id}
@@ -392,8 +473,68 @@ export default function DashboardPage() {
           {activeSection === 'overview' && <Overview />}
           {activeSection === 'request' && <RequestTripForm />}
           {activeSection === 'vehicles' && <AvailableVehicles />}
+          {activeSection === 'documents' && <DocumentCenter />}
         </main>
       </div>
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">Edit Profile</h3>
+              <button onClick={() => setShowProfileModal(false)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  value={editedProfile.name}
+                  onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={editedProfile.email}
+                  onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  value={editedProfile.phoneNumber}
+                  onChange={(e) => setEditedProfile({ ...editedProfile, phoneNumber: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSaveProfile}
+                  className="flex-1 bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
