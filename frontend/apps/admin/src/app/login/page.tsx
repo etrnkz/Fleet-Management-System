@@ -43,16 +43,40 @@ export default function LoginPage() {
 
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      // Check credentials (demo purposes)
-      if (formData.email === 'admin@hu.edu.et' && formData.password === 'admin123') {
-        router.push('/dashboard')
-      } else {
-        setErrors({ email: 'Invalid credentials' })
-        setIsLoading(false)
+    try {
+      // Call backend API
+      const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed')
       }
-    }, 1500)
+
+      // Save tokens and user data
+      localStorage.setItem('accessToken', data.access_token)
+      localStorage.setItem('refreshToken', data.refresh_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      
+      // Save email if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', formData.email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
+
+      // Redirect to dashboard
+      router.push('/dashboard')
+    } catch (error: any) {
+      setErrors({ email: error.message || 'Invalid credentials' })
+      setIsLoading(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
