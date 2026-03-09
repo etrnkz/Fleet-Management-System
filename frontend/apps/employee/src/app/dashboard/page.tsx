@@ -24,7 +24,13 @@ export default function DashboardPage() {
     name: '',
     email: '',
     phoneNumber: '',
+    employeeId: '',
+    organizationType: '',
+    college: '',
+    office: '',
+    department: '',
   })
+  const [profileImage, setProfileImage] = useState<string | null>(null)
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false,
     message: '',
@@ -76,23 +82,67 @@ export default function DashboardPage() {
   }
 
   const handleOpenProfileModal = () => {
+    const userData = localStorage.getItem('userData')
+    const parsedData = userData ? JSON.parse(userData) : {}
+    
     setEditedProfile({
       name: user?.name || '',
       email: user?.email || '',
       phoneNumber: user?.phoneNumber || '',
+      employeeId: parsedData.employeeId || '',
+      organizationType: parsedData.organizationType || '',
+      college: parsedData.college || '',
+      office: parsedData.office || '',
+      department: parsedData.department || '',
     })
+    setProfileImage(parsedData.profileImage || null)
     setShowProfileModal(true)
   }
 
   const handleSaveProfile = async () => {
     try {
-      await userApi.updateProfile(editedProfile)
+      // Update backend
+      await userApi.updateProfile({
+        name: editedProfile.name,
+        email: editedProfile.email,
+        phoneNumber: editedProfile.phoneNumber,
+      })
+      
+      // Update user state
       setUser({ ...user, ...editedProfile })
       localStorage.setItem('user', JSON.stringify({ ...user, ...editedProfile }))
+      
+      // Save extended profile data to localStorage
+      const userData = {
+        ...editedProfile,
+        profileImage,
+      }
+      localStorage.setItem('userData', JSON.stringify(userData))
+      
       setShowProfileModal(false)
       showToast('Profile updated successfully!', 'success')
     } catch (error: any) {
       showToast(error.message || 'Failed to update profile', 'error')
+    }
+  }
+
+  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setProfileImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleMarkNotificationAsRead = async (id: string) => {
+    try {
+      await notificationApi.markAsRead(id)
+      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n))
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
     }
   }
 
@@ -480,7 +530,7 @@ export default function DashboardPage() {
       {/* Profile Modal */}
       {showProfileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-900">Edit Profile</h3>
               <button onClick={() => setShowProfileModal(false)} className="text-gray-400 hover:text-gray-600">
@@ -489,34 +539,128 @@ export default function DashboardPage() {
                 </svg>
               </button>
             </div>
+
+            {/* Profile Image */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-emerald-500">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-emerald-500 text-white p-2 rounded-full cursor-pointer hover:bg-emerald-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </label>
+                <input
+                  type="file"
+                  id="profileImageUpload"
+                  accept="image/*"
+                  onChange={handleProfileImageUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                <input
-                  type="text"
-                  value={editedProfile.name}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    value={editedProfile.name}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={editedProfile.email}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={editedProfile.email}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    value={editedProfile.phoneNumber}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, phoneNumber: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
+                  <input
+                    type="text"
+                    value={editedProfile.employeeId}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, employeeId: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  value={editedProfile.phoneNumber}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, phoneNumber: e.target.value })}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Organization Type</label>
+                <select
+                  value={editedProfile.organizationType}
+                  onChange={(e) => setEditedProfile({ ...editedProfile, organizationType: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                />
+                >
+                  <option value="">Select type</option>
+                  <option value="college">College</option>
+                  <option value="administrative">Administrative Office</option>
+                </select>
               </div>
+
+              {editedProfile.organizationType === 'college' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">College</label>
+                    <input
+                      type="text"
+                      value={editedProfile.college}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, college: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                    <input
+                      type="text"
+                      value={editedProfile.department}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, department: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                </>
+              )}
+
+              {editedProfile.organizationType === 'administrative' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Office</label>
+                  <input
+                    type="text"
+                    value={editedProfile.office}
+                    onChange={(e) => setEditedProfile({ ...editedProfile, office: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+              )}
+
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleSaveProfile}
@@ -531,6 +675,53 @@ export default function DashboardPage() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications Panel */}
+      {showNotifications && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center sm:justify-end z-50 p-4">
+          <div className="bg-white rounded-lg w-full sm:w-96 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+              <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  <p>No notifications</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {notifications.map((notification: any) => (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleMarkNotificationAsRead(notification.id)}
+                      className={`p-4 hover:bg-gray-50 cursor-pointer ${!notification.isRead ? 'bg-blue-50' : ''}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-2 h-2 rounded-full mt-2 ${!notification.isRead ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{notification.title || notification.type}</p>
+                          <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            {new Date(notification.sentAt || notification.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
