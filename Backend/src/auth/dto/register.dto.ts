@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum, Matches, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum, Matches, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../users/entities/user.entity';
 
@@ -24,34 +24,53 @@ export class RegisterDto {
 
   @ApiProperty({ 
     example: 'SecurePass@123',
-    description: 'Password (min 8 chars, must include uppercase, lowercase, number, and special character)'
+    description: 'Password (min 6 chars)'
   })
   @IsString({ message: 'Password must be a string' })
   @IsNotEmpty({ message: 'Password is required' })
-  @MinLength(8, { message: 'Password must be at least 8 characters long' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, {
-    message: 'Password must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character'
-  })
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
   password: string;
 
-  @ApiProperty({ 
+  @ApiPropertyOptional({ 
     enum: UserRole,
-    example: UserRole.Driver,
-    description: 'User role in the system'
+    example: UserRole.User,
+    description: 'User role in the system (defaults to User if not provided)'
   })
+  @IsOptional()
   @IsEnum(UserRole, { 
     message: `Role must be one of: ${Object.values(UserRole).join(', ')}` 
   })
-  role: UserRole;
+  role?: UserRole;
 
   @ApiPropertyOptional({ 
     example: '+251912345678',
-    description: 'Phone number (10-15 digits)'
+    description: 'Phone number'
   })
   @IsOptional()
   @IsString({ message: 'Phone must be a string' })
-  @Matches(/^[0-9+\-\s]{10,15}$/, {
-    message: 'Phone number must be 10-15 digits and can include +, -, or spaces'
-  })
   phoneNumber?: string;
+
+  @ApiPropertyOptional({ 
+    example: 'EMP-12345',
+    description: 'Employee ID'
+  })
+  @IsOptional()
+  @IsString({ message: 'Employee ID must be a string' })
+  employeeId?: string;
+
+  @ApiPropertyOptional({ 
+    example: 'uuid',
+    description: 'Department ID'
+  })
+  @IsOptional()
+  @IsUUID('4', { message: 'Department ID must be a valid UUID' })
+  departmentId?: string;
+
+  @ApiPropertyOptional({ 
+    example: 'uuid',
+    description: 'College ID'
+  })
+  @IsOptional()
+  @IsUUID('4', { message: 'College ID must be a valid UUID' })
+  collegeId?: string;
 }

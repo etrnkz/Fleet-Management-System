@@ -43,9 +43,9 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login failed')
       }
 
-      // Save tokens and user data
-      localStorage.setItem('accessToken', data.accessToken)
-      localStorage.setItem('refreshToken', data.refreshToken)
+      // Save tokens and user data (backend returns access_token, refresh_token, user)
+      localStorage.setItem('accessToken', data.access_token)
+      localStorage.setItem('refreshToken', data.refresh_token)
       localStorage.setItem('user', JSON.stringify(data.user))
       
       // Save or remove email based on remember me checkbox
