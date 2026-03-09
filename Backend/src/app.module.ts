@@ -19,6 +19,9 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { WorkflowModule } from './workflow/workflow.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { AuditModule } from './audit/audit.module';
+import { FuelModule } from './fuel/fuel.module';
+import { EmailModule } from './email/email.module';
+import { TrackingModule } from './tracking/tracking.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -71,6 +74,9 @@ import configuration from './config/configuration';
     WorkflowModule,
     MaintenanceModule,
     AuditModule,
+    FuelModule,
+    // EmailModule, // Temporarily disabled - optional feature
+    TrackingModule,
     AuthModule,
   ],
   controllers: [AppController],
