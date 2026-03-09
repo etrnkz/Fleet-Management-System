@@ -271,8 +271,8 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-      {/* Header Info */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          {/* Header Info */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <p className="text-xs sm:text-sm text-gray-500">Semester II, 2024 | Last updated: Oct 12, 09:45 AM</p>
         </div>
@@ -499,7 +499,7 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
-      )}
+      </div>
         </>
       )}
 
