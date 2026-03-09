@@ -119,6 +119,39 @@ export class UsersController {
     return this.usersService.findById(req.user.id);
   }
 
+  @Patch('me')
+  @ApiOperation({ 
+    summary: 'Update current user profile',
+    description: 'Update the profile of the currently authenticated user'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Profile updated successfully',
+    schema: {
+      example: {
+        id: 'uuid',
+        name: 'John Doe Updated',
+        email: 'john.doe@school.edu',
+        phoneNumber: '+251912345678',
+        role: 'Driver',
+        isActive: true,
+        updatedAt: '2024-01-16T10:00:00Z'
+      }
+    }
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  updateProfile(
+    @Request() req,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    // Users can only update their own name, email, and phone
+    const allowedFields = {
+      name: updateUserDto.name,
+      phoneNumber: updateUserDto.phoneNumber,
+    };
+    return this.usersService.update(req.user.id, allowedFields);
+  }
+
   @Get(':id')
   @ApiOperation({ 
     summary: 'Get user by ID',

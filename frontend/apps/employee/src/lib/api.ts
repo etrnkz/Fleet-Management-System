@@ -111,16 +111,10 @@ export const vehicleApi = {
 
 // User APIs
 export const userApi = {
-  getProfile: () => {
-    const user = getCurrentUser();
-    return apiFetch(`/users/${user?.id}`);
-  },
+  getProfile: () => apiFetch('/users/me'),
   
-  updateProfile: (data: any) => {
-    const user = getCurrentUser();
-    return apiFetch(`/users/${user?.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  },
+  updateProfile: (data: any) => apiFetch('/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
 };
