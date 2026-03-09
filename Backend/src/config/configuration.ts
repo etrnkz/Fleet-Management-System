@@ -24,4 +24,12 @@ export default () => ({
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
   },
+  email: {
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.EMAIL_PORT || '587', 10),
+    secure: process.env.EMAIL_SECURE === 'true' || false,
+    user: process.env.EMAIL_USER,
+    password: process.env.EMAIL_PASSWORD,
+    from: process.env.EMAIL_FROM || 'Fleet Management <noreply@fleet.school.edu>',
+  },
 });
