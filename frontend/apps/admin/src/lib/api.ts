@@ -17,9 +17,9 @@ export const getCurrentUser = () => {
 // Generic fetch wrapper
 async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = getAuthToken();
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
 
   if (token) {
@@ -130,6 +130,11 @@ export const maintenanceApi = {
   
   getById: (id: string) => apiFetch(`/maintenance/${id}`),
   
+  create: (data: any) => apiFetch('/maintenance', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
   inspect: (id: string, data: any) => apiFetch(`/maintenance/${id}/inspect`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -147,7 +152,38 @@ export const maintenanceApi = {
 
 // Fuel APIs
 export const fuelApi = {
-  getAll: () => apiFetch('/fuel'),
+  getAll: (vehicleId?: string, type?: string, startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams()
+    if (vehicleId) params.append('vehicleId', vehicleId)
+    if (type) params.append('type', type)
+    if (startDate) params.append('startDate', startDate)
+    if (endDate) params.append('endDate', endDate)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiFetch(`/fuel${query}`)
+  },
+  
+  getById: (id: string) => apiFetch(`/fuel/${id}`),
+  
+  getStatistics: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams()
+    if (startDate) params.append('startDate', startDate)
+    if (endDate) params.append('endDate', endDate)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiFetch(`/fuel/statistics${query}`)
+  },
+  
+  getCostAnalysis: (vehicleId?: string, startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams()
+    if (vehicleId) params.append('vehicleId', vehicleId)
+    if (startDate) params.append('startDate', startDate)
+    if (endDate) params.append('endDate', endDate)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiFetch(`/fuel/cost-analysis${query}`)
+  },
+  
+  getVehicleHistory: (vehicleId: string) => apiFetch(`/fuel/vehicle/${vehicleId}/history`),
+  
+  getVehicleEfficiency: (vehicleId: string) => apiFetch(`/fuel/vehicle/${vehicleId}/efficiency`),
   
   create: (data: any) => apiFetch('/fuel', {
     method: 'POST',
@@ -161,6 +197,11 @@ export const userApi = {
   
   getProfile: () => apiFetch('/users/me'),
   
+  updateProfile: (data: any) => apiFetch('/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+  
   create: (data: any) => apiFetch('/users', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -171,3 +212,25 @@ export const userApi = {
     body: JSON.stringify(data),
   }),
 };
+
+// Tracking APIs
+export const trackingApi = {
+  // Get all GPS locations
+  getAll: () => apiFetch('/tracking'),
+  
+  // Get location for specific vehicle
+  getByVehicle: (vehicleId: string) => apiFetch(`/tracking/vehicle/${vehicleId}`),
+  
+  // Get latest location for specific vehicle
+  getLatest: (vehicleId: string) => apiFetch(`/tracking/vehicle/${vehicleId}/latest`),
+  
+  // Update location (for drivers)
+  updateLocation: (data: { vehicleId: string; latitude: number; longitude: number; speed?: number; heading?: number }) =>
+    apiFetch('/tracking', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};
+
+// WebSocket URL for real-time tracking
+export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3000';

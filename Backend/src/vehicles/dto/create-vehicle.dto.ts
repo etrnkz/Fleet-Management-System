@@ -1,16 +1,31 @@
-import { IsString, IsNotEmpty, IsNumber, IsEnum, IsOptional, Min, Max, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsEnum, IsOptional, Min, Max, Matches, IsDateString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { FuelType } from '../entities/vehicle.entity';
+import { FuelType, VehicleStatus } from '../entities/vehicle.entity';
 
 export class CreateVehicleDto {
+  @ApiPropertyOptional({ 
+    example: 'VEH-001',
+    description: 'Custom vehicle ID'
+  })
+  @IsString()
+  @IsOptional()
+  vehicleId?: string;
+
   @ApiProperty({ 
     example: 'ABC-1234',
     description: 'Vehicle plate number (unique)'
   })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^[A-Z0-9-]+$/, { message: 'Plate number must contain only uppercase letters, numbers, and hyphens' })
   plateNumber: string;
+
+  @ApiPropertyOptional({ 
+    example: 'Truck',
+    description: 'Vehicle type (Truck, Van, Bus, Sedan, SUV)'
+  })
+  @IsString()
+  @IsOptional()
+  vehicleType?: string;
 
   @ApiProperty({ 
     example: 'Toyota',
@@ -37,14 +52,15 @@ export class CreateVehicleDto {
   @Max(new Date().getFullYear() + 1)
   year: number;
 
-  @ApiProperty({ 
+  @ApiPropertyOptional({ 
     example: 15,
     description: 'Passenger capacity'
   })
   @IsNumber()
+  @IsOptional()
   @Min(1)
   @Max(100)
-  capacity: number;
+  capacity?: number;
 
   @ApiProperty({ 
     enum: FuelType,
@@ -55,6 +71,24 @@ export class CreateVehicleDto {
   fuelType: FuelType;
 
   @ApiPropertyOptional({ 
+    example: 80,
+    description: 'Fuel tank capacity in liters'
+  })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  fuelCapacity?: number;
+
+  @ApiPropertyOptional({ 
+    enum: VehicleStatus,
+    example: VehicleStatus.Active,
+    description: 'Vehicle status'
+  })
+  @IsEnum(VehicleStatus)
+  @IsOptional()
+  status?: VehicleStatus;
+
+  @ApiPropertyOptional({ 
     example: 125000,
     description: 'Current mileage in kilometers'
   })
@@ -62,6 +96,30 @@ export class CreateVehicleDto {
   @IsOptional()
   @Min(0)
   currentMileage?: number;
+
+  @ApiPropertyOptional({ 
+    example: '2024-01-15',
+    description: 'Vehicle purchase date'
+  })
+  @IsDateString()
+  @IsOptional()
+  purchaseDate?: string;
+
+  @ApiPropertyOptional({ 
+    example: '2025-12-31',
+    description: 'Insurance expiry date'
+  })
+  @IsDateString()
+  @IsOptional()
+  insuranceExpiryDate?: string;
+
+  @ApiPropertyOptional({ 
+    example: '2024-06-30',
+    description: 'Next scheduled service date'
+  })
+  @IsDateString()
+  @IsOptional()
+  nextServiceDate?: string;
 
   @ApiPropertyOptional({ 
     example: 'White',

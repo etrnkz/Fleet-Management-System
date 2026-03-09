@@ -101,7 +101,7 @@ export class VehiclesService {
 
   async setMaintenanceStatus(id: string, underMaintenance: boolean): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
-    vehicle.status = underMaintenance ? VehicleStatus.UnderMaintenance : VehicleStatus.Active;
+    vehicle.status = underMaintenance ? VehicleStatus.Maintenance : VehicleStatus.Active;
     
     if (underMaintenance) {
       vehicle.lastMaintenanceDate = new Date();
@@ -119,7 +119,7 @@ export class VehiclesService {
   async getStatistics() {
     const total = await this.vehicleRepository.count();
     const active = await this.vehicleRepository.count({ where: { status: VehicleStatus.Active } });
-    const underMaintenance = await this.vehicleRepository.count({ where: { status: VehicleStatus.UnderMaintenance } });
+    const underMaintenance = await this.vehicleRepository.count({ where: { status: VehicleStatus.Maintenance } });
     const inactive = await this.vehicleRepository.count({ where: { status: VehicleStatus.Inactive } });
 
     return {
