@@ -23,23 +23,43 @@ export default function LoginPage() {
     }
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (email === 'employee@hu.edu.et' && password === 'employee123') {
+    setIsLoading(true)
+
+    try {
+      // Call backend API
+      const response = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed')
+      }
+
+      // Save tokens and user data
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('refreshToken', data.refreshToken)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      
       // Save or remove email based on remember me checkbox
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email)
       } else {
         localStorage.removeItem('rememberedEmail')
       }
-      
-      setIsLoading(true)
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2000)
-    } else {
-      alert('Invalid credentials. Use:\nEmail: employee@hu.edu.et\nPassword: employee123')
+
+      // Redirect to dashboard
+      router.push('/dashboard')
+    } catch (error: any) {
+      setIsLoading(false)
+      alert(error.message || 'Login failed. Please check your credentials.')
     }
   }
 
