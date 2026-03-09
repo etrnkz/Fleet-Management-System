@@ -21,8 +21,10 @@ export class AuthService {
       email: registerDto.email,
       password: registerDto.password,
       name: registerDto.name,
-      role: registerDto.role,
+      role: registerDto.role || 'User', // Default to User role if not provided
       phoneNumber: registerDto.phoneNumber,
+      departmentId: registerDto.departmentId,
+      collegeId: registerDto.collegeId,
     });
 
     // Remove password from response

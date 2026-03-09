@@ -149,7 +149,7 @@ export default function SignupPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (formData.password !== formData.confirmPassword) {
@@ -162,28 +162,52 @@ export default function SignupPage() {
       return
     }
 
-    // Save user data to localStorage
-    const userData = {
-      fullName: formData.fullName,
-      email: formData.email,
-      employeeId: formData.employeeId,
-      organizationType: formData.organizationType,
-      college: formData.college,
-      office: formData.office,
-      department: formData.department,
-      phone: formData.phone,
-      profileImage: profileImage
-    }
-    localStorage.setItem('userData', JSON.stringify(userData))
-
-    // Mock signup - redirect to login
     setIsLoading(true)
-    setTimeout(() => {
+
+    try {
+      // Call backend API
+      const response = await fetch('http://localhost:3000/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          phoneNumber: formData.phone,
+          role: 'User', // Default role for employee signup
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed')
+      }
+
+      // Save user data to localStorage for profile
+      const userData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        employeeId: formData.employeeId,
+        organizationType: formData.organizationType,
+        college: formData.college,
+        office: formData.office,
+        department: formData.department,
+        phone: formData.phone,
+        profileImage: profileImage
+      }
+      localStorage.setItem('userData', JSON.stringify(userData))
+
       showToast('Account created successfully! Redirecting to login...', 'success')
       setTimeout(() => {
         router.push('/login')
       }, 1500)
-    }, 2000)
+    } catch (error: any) {
+      setIsLoading(false)
+      showToast(error.message || 'Registration failed. Please try again.', 'error')
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
