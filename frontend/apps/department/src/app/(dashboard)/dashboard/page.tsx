@@ -1,14 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import ConfirmModal from '@/components/ConfirmModal'
+import Toast from '@/components/Toast'
+import { tripApi, vehicleApi, getCurrentUser } from '@/lib/api'
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [selectedMonth] = useState('October 2024')
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [loading, setLoading] = useState(true)
+  const [trips, setTrips] = useState<any[]>([])
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([])
+  const [vehicles, setVehicles] = useState<any[]>([])
+  const [statistics, setStatistics] = useState<any>(null)
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    show: false,
+    message: '',
+    type: 'success'
+  })
   const [confirmModal, setConfirmModal] = useState<{
     show: boolean
     title: string
@@ -30,37 +45,104 @@ export default function DashboardPage() {
     vehicleType: '',
     priority: 'MEDIUM',
     description: '',
-    requestorName: 'Dr. Ahmed Hassan',
-    department: 'Department Head Office',
-    email: 'department@hu.edu.et',
-    phone: '+251 91 123 4567'
+    requestorName: '',
+    department: '',
+    email: '',
+    phone: ''
   })
+
+  // Load user and data on mount
+  useEffect(() => {
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+    setUser(currentUser)
+    
+    // Set user info in form
+    setFormData(prev => ({
+      ...prev,
+      requestorName: currentUser.name || '',
+      department: currentUser.department || 'Department Head Office',
+      email: currentUser.email || '',
+      phone: currentUser.phoneNumber || ''
+    }))
+    
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      const [tripsData, approvalsData, vehiclesData, statsData] = await Promise.all([
+        tripApi.getAll().catch(() => []),
+        tripApi.getPendingApprovals().catch(() => []),
+        vehicleApi.getAll().catch(() => []),
+        tripApi.getStatistics().catch(() => null)
+      ])
+      
+      setTrips(Array.isArray(tripsData) ? tripsData : [])
+      setPendingApprovals(Array.isArray(approvalsData) ? approvalsData : [])
+      setVehicles(Array.isArray(vehiclesData) ? vehiclesData : [])
+      setStatistics(statsData)
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ show: true, message, type })
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmitRequest = (e: React.FormEvent) => {
+  const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Trip request submitted:', formData)
-    setShowRequestModal(false)
-    setShowSuccessModal(true)
-    // Reset form
-    setTimeout(() => {
-      setFormData({
-        ...formData,
-        purpose: '',
-        to: '',
-        departureDate: '',
-        returnDate: '',
-        departureTime: '',
-        passengers: '1',
-        vehicleType: '',
-        priority: 'MEDIUM',
-        description: ''
+    
+    try {
+      // Combine date and time for startDateTime
+      const startDateTime = `${formData.departureDate}T${formData.departureTime}:00`
+      const endDateTime = `${formData.returnDate}T${formData.departureTime}:00`
+      
+      await tripApi.create({
+        tripType: 'Normal',
+        purpose: formData.purpose,
+        destination: formData.to,
+        startDateTime,
+        endDateTime,
+        passengerCount: parseInt(formData.passengers),
+        priority: formData.priority,
+        description: formData.description
       })
-    }, 500)
+      
+      setShowRequestModal(false)
+      setShowSuccessModal(true)
+      loadDashboardData() // Reload data
+      
+      // Reset form
+      setTimeout(() => {
+        setFormData({
+          ...formData,
+          purpose: '',
+          to: '',
+          departureDate: '',
+          returnDate: '',
+          departureTime: '',
+          passengers: '1',
+          vehicleType: '',
+          priority: 'MEDIUM',
+          description: ''
+        })
+      }, 500)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to submit trip request', 'error')
+    }
   }
 
   const handleQuickApprove = (id: number, name: string) => {
@@ -69,10 +151,16 @@ export default function DashboardPage() {
       title: 'Approve Trip Request',
       message: `Are you sure you want to approve the trip request from ${name}?`,
       confirmColor: 'emerald',
-      onConfirm: () => {
-        console.log('Quick approved:', id)
-        ;(window as any).showToast?.('Trip request approved successfully!', 'success')
-        setConfirmModal(null)
+      onConfirm: async () => {
+        try {
+          await tripApi.approve(id.toString())
+          showToast('Trip request approved successfully!', 'success')
+          loadDashboardData()
+          setConfirmModal(null)
+        } catch (error: any) {
+          showToast(error.message || 'Failed to approve trip', 'error')
+          setConfirmModal(null)
+        }
       }
     })
   }
@@ -83,10 +171,16 @@ export default function DashboardPage() {
       title: 'Reject Trip Request',
       message: `Are you sure you want to reject the trip request from ${name}? You can provide a detailed reason in the approvals page.`,
       confirmColor: 'red',
-      onConfirm: () => {
-        console.log('Quick rejected:', id)
-        ;(window as any).showToast?.('Trip request rejected.', 'info')
-        setConfirmModal(null)
+      onConfirm: async () => {
+        try {
+          await tripApi.reject(id.toString(), 'Rejected by department head')
+          showToast('Trip request rejected.', 'info')
+          loadDashboardData()
+          setConfirmModal(null)
+        } catch (error: any) {
+          showToast(error.message || 'Failed to reject trip', 'error')
+          setConfirmModal(null)
+        }
       }
     })
   }
@@ -114,11 +208,18 @@ export default function DashboardPage() {
     window.URL.revokeObjectURL(url)
   }
 
-  const pendingApprovals = [
-    { id: 1, name: 'Amanuel Tekle', role: 'Research', trip: 'Bishoftu - Oct 12-14', passengers: '4 Passengers • Toyota Hilux', priority: 'HIGH', priorityColor: 'bg-red-100 text-red-700' },
-    { id: 2, name: 'Dr. Sara Ahmed', role: 'Faculty/Acad', trip: 'Harar - Oct 15-15', passengers: '15 Passengers • Coaster Bus', priority: 'MEDIUM', priorityColor: 'bg-orange-100 text-orange-700' },
-    { id: 3, name: 'Kebede Jilo', role: 'Meeting', trip: 'Adama - Oct 18-17', passengers: '2 Passengers • Sedan', priority: 'LOW', priorityColor: 'bg-gray-100 text-gray-700' },
-  ]
+  const getPriorityColor = (priority: string) => {
+    switch (priority?.toUpperCase()) {
+      case 'HIGH':
+        return 'bg-red-100 text-red-700'
+      case 'MEDIUM':
+        return 'bg-orange-100 text-orange-700'
+      case 'LOW':
+        return 'bg-gray-100 text-gray-700'
+      default:
+        return 'bg-gray-100 text-gray-700'
+    }
+  }
 
   const recentActivity = [
     { id: 1, title: 'Trip to Dire Dawa Approved', subtitle: 'Requested by Dr. Tadesse • 2 hours ago', color: 'bg-emerald-500' },
@@ -126,30 +227,22 @@ export default function DashboardPage() {
     { id: 3, title: 'New Request Received', subtitle: 'From Prof. Martha G. • Yesterday', color: 'bg-emerald-500' },
   ]
 
-  const fleetStatus = [
-    { id: 1, name: 'Campus A Main', location: 'Campus / LOCATION', status: 'READY', statusColor: 'text-emerald-600', percentage: 85, vehicle: 'TOYOTA HILUX • HU-4-06541' },
-    { id: 2, name: 'Central Garage', location: 'Garage / LOCATION', status: 'MAINTENANCE', statusColor: 'text-orange-600', percentage: 12, vehicle: 'COASTER BUS • HU-3-01122' },
-    { id: 3, name: 'Main Admin Lot', location: 'Admin / LOCATION', status: 'READY', statusColor: 'text-emerald-600', percentage: 60, vehicle: 'HYUNDAI SEDAN • HU-1-06818' },
-  ]
+  const fleetStatus = vehicles.slice(0, 3).map((vehicle: any, index: number) => ({
+    id: vehicle.id,
+    name: vehicle.plateNumber,
+    location: `${vehicle.status} / LOCATION`,
+    status: vehicle.status,
+    statusColor: vehicle.status === 'Active' ? 'text-emerald-600' : 'text-orange-600',
+    percentage: vehicle.status === 'Active' ? 85 : 12,
+    vehicle: `${vehicle.make} ${vehicle.model} • ${vehicle.plateNumber}`
+  }))
 
-  const tripHistory = [
-    { date: 'Oct 05, 2024', route: 'Main Campus → Harar', requestedBy: 'Dr. Belayneh W.', fuel: '14.5L', status: 'COMPLETED' },
-    { date: 'Oct 04, 2024', route: 'Main Campus → Adama', requestedBy: 'Prof. Girma S.', fuel: '28.2L', status: 'COMPLETED' },
-    { date: 'Oct 03, 2024', route: 'Main Campus → Addis Ababa', requestedBy: 'College Admin Team', fuel: '45.0L', status: 'COMPLETED' },
-    { date: 'Oct 02, 2024', route: 'Main Campus → Dire Dawa', requestedBy: 'Dr. Sara M.', fuel: '32.1L', status: 'COMPLETED' },
-    { date: 'Oct 01, 2024', route: 'Main Campus → Harar', requestedBy: 'Prof. Ahmed K.', fuel: '15.8L', status: 'COMPLETED' },
-    { date: 'Sep 30, 2024', route: 'Main Campus → Bishoftu', requestedBy: 'Dr. Fatima H.', fuel: '12.3L', status: 'COMPLETED' },
-    { date: 'Sep 29, 2024', route: 'Main Campus → Adama', requestedBy: 'Prof. Kebede J.', fuel: '26.7L', status: 'COMPLETED' },
-    { date: 'Sep 28, 2024', route: 'Main Campus → Addis Ababa', requestedBy: 'Dr. Mohammed A.', fuel: '43.2L', status: 'COMPLETED' },
-    { date: 'Sep 27, 2024', route: 'Main Campus → Harar', requestedBy: 'Prof. Amanuel T.', fuel: '16.4L', status: 'COMPLETED' },
-    { date: 'Sep 26, 2024', route: 'Main Campus → Dire Dawa', requestedBy: 'Dr. Belayneh W.', fuel: '31.5L', status: 'COMPLETED' },
-  ]
-
-  // Filter trips based on search query
-  const filteredTrips = tripHistory.filter(trip => 
-    trip.route.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    trip.requestedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    trip.date.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter trips based on search query - use real trips data
+  const completedTrips = trips.filter((t: any) => t.state === 'COMPLETED')
+  const filteredTrips = completedTrips.filter(trip => 
+    trip.destination?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    trip.requester?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    trip.purpose?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   // Pagination
@@ -164,6 +257,20 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'success' })}
+        />
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+        </div>
+      ) : (
+        <>
       {/* Header Info */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
@@ -327,15 +434,23 @@ export default function DashboardPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {currentTrips.length > 0 ? (
-                currentTrips.map((trip, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{trip.date}</td>
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900">{trip.route}</td>
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900">{trip.requestedBy}</td>
-                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">{trip.fuel}</td>
+                currentTrips.map((trip: any) => (
+                  <tr key={trip.id} className="hover:bg-gray-50">
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">
+                      {new Date(trip.startDateTime).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900">
+                      Main Campus → {trip.destination}
+                    </td>
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900">
+                      {trip.requester?.name || 'N/A'}
+                    </td>
+                    <td className="px-4 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-900 whitespace-nowrap">
+                      {trip.fuelConsumed ? `${trip.fuelConsumed}L` : 'N/A'}
+                    </td>
                     <td className="px-4 md:px-6 py-3 md:py-4">
                       <span className="inline-block px-2 md:px-3 py-0.5 md:py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap">
-                        {trip.status}
+                        {trip.state}
                       </span>
                     </td>
                   </tr>
@@ -384,7 +499,9 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
-      </div>
+      )}
+        </>
+      )}
 
       {/* Trip Request Modal */}
       {showRequestModal && (

@@ -33,42 +33,37 @@ export default function LoginPage() {
     }
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    const DEMO_EMAIL = 'department@hu.edu.et'
-    const DEMO_PASSWORD = 'dept123'
-
-    setTimeout(() => {
-      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        const userData = {
+    try {
+      const { authApi } = await import('../../lib/api')
+      const response: any = await authApi.login(email, password)
+      
+      // Store tokens and user data
+      localStorage.setItem('accessToken', response.accessToken)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      
+      if (rememberMe) {
+        const expiryDate = new Date()
+        expiryDate.setDate(expiryDate.getDate() + 30)
+        
+        localStorage.setItem('departmentRememberedUser', JSON.stringify({
           email: email,
-          role: 'department',
-          fullName: 'Department User'
-        }
-        
-        if (rememberMe) {
-          const expiryDate = new Date()
-          expiryDate.setDate(expiryDate.getDate() + 30)
-          
-          localStorage.setItem('departmentRememberedUser', JSON.stringify({
-            email: email,
-            password: password,
-            expiry: expiryDate.toISOString()
-          }))
-        } else {
-          localStorage.removeItem('departmentRememberedUser')
-        }
-        
-        localStorage.setItem('departmentUserData', JSON.stringify(userData))
-        router.push('/dashboard')
+          password: password,
+          expiry: expiryDate.toISOString()
+        }))
       } else {
-        setError('Invalid email or password')
-        setLoading(false)
+        localStorage.removeItem('departmentRememberedUser')
       }
-    }, 500)
+      
+      router.push('/dashboard')
+    } catch (error: any) {
+      setError(error.message || 'Invalid email or password')
+      setLoading(false)
+    }
   }
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
