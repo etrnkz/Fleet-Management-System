@@ -26,7 +26,7 @@ export default function ConfirmModal({
       case 'red':
         return 'bg-red-500 hover:bg-red-600 text-white'
       case 'blue':
-        return 'bg-blue-500 hover:bg-blue-600 text-white'
+        return 'bg-emerald-500 hover:bg-emerald-600 text-white'
     }
   }
 
@@ -37,7 +37,7 @@ export default function ConfirmModal({
       case 'red':
         return 'bg-red-100 text-red-600'
       case 'blue':
-        return 'bg-blue-100 text-blue-600'
+        return 'bg-emerald-100 text-emerald-600'
     }
   }
 
