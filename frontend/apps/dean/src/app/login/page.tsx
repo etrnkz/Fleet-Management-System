@@ -13,25 +13,37 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    // Demo credentials
-    const DEMO_EMAIL = 'dean@hu.edu.et'
-    const DEMO_PASSWORD = 'dean123'
-
-    // Simulate login delay
-    setTimeout(() => {
-      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        // Successful login
-        router.push('/dashboard')
+    try {
+      const { authApi } = await import('../../lib/api')
+      const response: any = await authApi.login(email, password)
+      
+      // Store tokens and user data
+      localStorage.setItem('accessToken', response.accessToken)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      
+      if (rememberMe) {
+        const expiryDate = new Date()
+        expiryDate.setDate(expiryDate.getDate() + 30)
+        
+        localStorage.setItem('deanRememberedUser', JSON.stringify({
+          email: email,
+          password: password,
+          expiry: expiryDate.toISOString()
+        }))
       } else {
-        setError('Invalid email or password')
-        setLoading(false)
+        localStorage.removeItem('deanRememberedUser')
       }
-    }, 500)
+      
+      router.push('/dashboard')
+    } catch (error: any) {
+      setError(error.message || 'Invalid email or password')
+      setLoading(false)
+    }
   }
 
   return (

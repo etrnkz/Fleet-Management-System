@@ -1,125 +1,70 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Toast from '@/components/Toast'
+import { tripApi, getCurrentUser } from '@/lib/api'
 
 export default function ApprovalsPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [activeFilter, setActiveFilter] = useState('pending')
   const [selectedRequest, setSelectedRequest] = useState<any>(null)
   const [showApproveModal, setShowApproveModal] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [requests, setRequests] = useState<any[]>([])
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    show: false,
+    message: '',
+    type: 'success'
+  })
 
-  const requests = [
-    {
-      id: 1,
-      requestedBy: 'Dr. Amanuel Tekle',
-      department: 'Research Department',
-      email: 'amanuel.t@hu.edu.et',
-      phone: '+251 91 234 5678',
-      purpose: 'Research Field Study',
-      from: 'Main Campus',
-      to: 'Bishoftu',
-      departureDate: '2024-10-12',
-      returnDate: '2024-10-14',
-      departureTime: '08:00 AM',
-      passengers: 4,
-      vehicleType: 'Toyota Hilux',
-      priority: 'HIGH',
-      status: 'pending',
-      requestDate: '2024-10-08',
-      description: 'Field research study for agricultural development project. Need to visit multiple research sites in Bishoftu area.',
-    },
-    {
-      id: 2,
-      requestedBy: 'Dr. Sara Ahmed',
-      department: 'Faculty of Agriculture',
-      email: 'sara.ahmed@hu.edu.et',
-      phone: '+251 91 345 6789',
-      purpose: 'Academic Conference',
-      from: 'Main Campus',
-      to: 'Harar',
-      departureDate: '2024-10-15',
-      returnDate: '2024-10-15',
-      departureTime: '06:00 AM',
-      passengers: 15,
-      vehicleType: 'Coaster Bus',
-      priority: 'MEDIUM',
-      status: 'pending',
-      requestDate: '2024-10-09',
-      description: 'Attending regional agricultural conference with faculty members and students.',
-    },
-    {
-      id: 3,
-      requestedBy: 'Prof. Kebede Jilo',
-      department: 'Administration',
-      email: 'kebede.j@hu.edu.et',
-      phone: '+251 91 456 7890',
-      purpose: 'Administrative Meeting',
-      from: 'Main Campus',
-      to: 'Adama',
-      departureDate: '2024-10-18',
-      returnDate: '2024-10-17',
-      departureTime: '09:00 AM',
-      passengers: 2,
-      vehicleType: 'Sedan',
-      priority: 'LOW',
-      status: 'pending',
-      requestDate: '2024-10-10',
-      description: 'Meeting with regional education office regarding curriculum development.',
-    },
-    {
-      id: 4,
-      requestedBy: 'Dr. Mohammed Ali',
-      department: 'Engineering Department',
-      email: 'mohammed.a@hu.edu.et',
-      phone: '+251 91 567 8901',
-      purpose: 'Site Inspection',
-      from: 'Main Campus',
-      to: 'Dire Dawa',
-      departureDate: '2024-10-05',
-      returnDate: '2024-10-05',
-      departureTime: '07:00 AM',
-      passengers: 3,
-      vehicleType: 'SUV',
-      priority: 'HIGH',
-      status: 'approved',
-      requestDate: '2024-10-01',
-      approvedDate: '2024-10-02',
-      description: 'Engineering site inspection for infrastructure project.',
-    },
-    {
-      id: 5,
-      requestedBy: 'Prof. Fatima Hassan',
-      department: 'Medical Sciences',
-      email: 'fatima.h@hu.edu.et',
-      phone: '+251 91 678 9012',
-      purpose: 'Medical Outreach',
-      from: 'Main Campus',
-      to: 'Jijiga',
-      departureDate: '2024-10-03',
-      returnDate: '2024-10-04',
-      departureTime: '05:00 AM',
-      passengers: 8,
-      vehicleType: 'Van',
-      priority: 'MEDIUM',
-      status: 'rejected',
-      requestDate: '2024-09-28',
-      rejectedDate: '2024-09-29',
-      rejectionReason: 'Vehicle not available for requested dates',
-      description: 'Community health outreach program.',
-    },
-  ]
+  useEffect(() => {
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+    setUser(currentUser)
+    loadRequests()
+  }, [])
 
-  const filteredRequests = requests.filter(r => r.status === activeFilter)
+  const loadRequests = async () => {
+    try {
+      setLoading(true)
+      const data = await tripApi.getAll()
+      setRequests(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to load requests:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ show: true, message, type })
+  }
+
+  // Map trip states to status for filtering
+  const getStatusFromState = (state: string) => {
+    if (state?.includes('PENDING')) return 'pending'
+    if (state === 'APPROVED' || state === 'CAR_ALLOCATED' || state === 'READY' || state === 'IN_PROGRESS' || state === 'COMPLETED') return 'approved'
+    if (state === 'REJECTED' || state === 'CANCELLED') return 'rejected'
+    return 'pending'
+  }
+
+  const filteredRequests = requests.filter(r => getStatusFromState(r.state) === activeFilter)
 
   const stats = {
-    pending: requests.filter(r => r.status === 'pending').length,
-    approved: requests.filter(r => r.status === 'approved').length,
-    rejected: requests.filter(r => r.status === 'rejected').length,
+    pending: requests.filter(r => getStatusFromState(r.state) === 'pending').length,
+    approved: requests.filter(r => getStatusFromState(r.state) === 'approved').length,
+    rejected: requests.filter(r => getStatusFromState(r.state) === 'rejected').length,
   }
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
+    switch (priority?.toUpperCase()) {
       case 'HIGH':
         return 'bg-red-100 text-red-700'
       case 'MEDIUM':
@@ -131,26 +76,53 @@ export default function ApprovalsPage() {
     }
   }
 
-  const handleApprove = (id: number) => {
-    console.log('Approved request:', id)
-    setShowApproveModal(false)
-    setSelectedRequest(null)
-    // Here you would typically make an API call to approve the request
+  const handleApprove = async (id: string) => {
+    try {
+      await tripApi.approve(id)
+      showToast('Trip request approved successfully!', 'success')
+      setShowApproveModal(false)
+      setSelectedRequest(null)
+      loadRequests()
+    } catch (error: any) {
+      showToast(error.message || 'Failed to approve request', 'error')
+    }
   }
 
-  const handleReject = (id: number) => {
+  const handleReject = async (id: string) => {
     if (!rejectionReason.trim()) {
       return
     }
-    console.log('Rejected request:', id, 'Reason:', rejectionReason)
-    setShowRejectModal(false)
-    setRejectionReason('')
-    setSelectedRequest(null)
-    // Here you would typically make an API call to reject the request
+    
+    try {
+      await tripApi.reject(id, rejectionReason)
+      showToast('Trip request rejected', 'info')
+      setShowRejectModal(false)
+      setRejectionReason('')
+      setSelectedRequest(null)
+      loadRequests()
+    } catch (error: any) {
+      showToast(error.message || 'Failed to reject request', 'error')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'success' })}
+        />
+      )}
+
       <div>
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Trip Approvals</h1>
         <p className="text-xs md:text-sm text-gray-500 mt-1">Review and manage trip requests from faculty and staff</p>
@@ -227,11 +199,11 @@ export default function ApprovalsPage() {
             <div className="p-4 md:p-6 border-b border-gray-200">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0 mr-2">
-                  <h3 className="text-base md:text-lg font-semibold text-gray-900 truncate">{request.requestedBy}</h3>
-                  <p className="text-xs md:text-sm text-gray-500 truncate">{request.department}</p>
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900 truncate">{request.requester?.name || 'N/A'}</h3>
+                  <p className="text-xs md:text-sm text-gray-500 truncate">{request.requester?.department || 'N/A'}</p>
                 </div>
-                <span className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap ${getPriorityColor(request.priority)}`}>
-                  {request.priority}
+                <span className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap ${getPriorityColor(request.priority || 'MEDIUM')}`}>
+                  {request.priority || 'MEDIUM'}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs md:text-sm text-gray-600">
@@ -252,7 +224,7 @@ export default function ApprovalsPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs md:text-sm font-medium text-gray-900">Route</p>
-                  <p className="text-xs md:text-sm text-gray-600 truncate">{request.from} → {request.to}</p>
+                  <p className="text-xs md:text-sm text-gray-600 truncate">Main Campus → {request.destination}</p>
                 </div>
               </div>
 
@@ -263,36 +235,29 @@ export default function ApprovalsPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs md:text-sm font-medium text-gray-900">Travel Dates</p>
-                  <p className="text-xs md:text-sm text-gray-600">{request.departureDate}</p>
-                  <p className="text-[10px] md:text-xs text-gray-500">Return: {request.returnDate}</p>
+                  <p className="text-xs md:text-sm text-gray-600">{new Date(request.startDateTime).toLocaleDateString()}</p>
+                  <p className="text-[10px] md:text-xs text-gray-500">Return: {new Date(request.endDateTime).toLocaleDateString()}</p>
                 </div>
               </div>
 
-              {/* Passengers & Vehicle */}
+              {/* Passengers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-1.5 md:gap-2">
                   <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  <span className="text-[10px] md:text-xs text-gray-600">{request.passengers} Pax</span>
-                </div>
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-                  </svg>
-                  <span className="text-[10px] md:text-xs text-gray-600 truncate">{request.vehicleType}</span>
+                  <span className="text-[10px] md:text-xs text-gray-600">{request.passengerCount} Pax</span>
                 </div>
               </div>
 
               {/* Request Date */}
               <div className="flex items-center justify-between text-[10px] md:text-xs text-gray-500 pt-3 border-t border-gray-200">
                 <span>Requested</span>
-                <span>{request.requestDate}</span>
+                <span>{new Date(request.createdAt).toLocaleDateString()}</span>
               </div>
 
               {/* Rejection Reason (if rejected) */}
-              {request.status === 'rejected' && request.rejectionReason && (
+              {request.state === 'REJECTED' && request.rejectionReason && (
                 <div className="pt-3 border-t border-gray-200">
                   <p className="text-xs text-red-600">
                     <span className="font-medium">Reason:</span> {request.rejectionReason}
