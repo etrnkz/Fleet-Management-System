@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Toast, { ToastType } from '@/components/Toast'
+import { tripApi, vehicleApi, driverApi, maintenanceApi, fuelApi } from '@/lib/api'
 
 interface ToastMessage {
   message: string
@@ -12,10 +13,104 @@ export default function DashboardPage() {
   const [selectedAlert, setSelectedAlert] = useState<typeof alerts[0] | null>(null)
   const [showAddVehicleForm, setShowAddVehicleForm] = useState(false)
   const [toast, setToast] = useState<ToastMessage | null>(null)
-  const stats = [
+  const [loading, setLoading] = useState(true)
+  
+  // Data states
+  const [stats, setStats] = useState({
+    totalVehicles: 0,
+    activeTrips: 0,
+    pendingMaintenance: 0,
+    fuelUsage: 0,
+  })
+  const [alerts, setAlerts] = useState<any[]>([])
+
+  // Load dashboard data
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      const [vehicles, trips, maintenance, fuel] = await Promise.all([
+        vehicleApi.getAll().catch(() => []),
+        tripApi.getAll({ state: 'IN_PROGRESS' }).catch(() => []),
+        maintenanceApi.getAll('Submitted,EstimateProvided').catch(() => []),
+        fuelApi.getAll().catch(() => []),
+      ])
+
+      // Calculate stats
+      const vehiclesArray = Array.isArray(vehicles) ? vehicles : []
+      const tripsArray = Array.isArray(trips) ? trips : []
+      const maintenanceArray = Array.isArray(maintenance) ? maintenance : []
+      const fuelArray = Array.isArray(fuel) ? fuel : []
+
+      setStats({
+        totalVehicles: vehiclesArray.length,
+        activeTrips: tripsArray.length,
+        pendingMaintenance: maintenanceArray.length,
+        fuelUsage: fuelArray.reduce((sum: number, record: any) => sum + (record.quantity || 0), 0),
+      })
+
+      // Create alerts from real data
+      const newAlerts: any[] = []
+      
+      // Add maintenance alerts
+      maintenanceArray.slice(0, 2).forEach((m: any) => {
+        newAlerts.push({
+          type: 'Maintenance Due',
+          message: `${m.vehicle?.plateNumber || 'Vehicle'} requires maintenance`,
+          time: new Date(m.createdAt).toLocaleString(),
+          color: 'border-yellow-500',
+          details: {
+            vehicle: m.vehicle?.plateNumber || 'N/A',
+            issueDescription: m.issueDescription,
+            priority: m.priority,
+            status: m.status,
+            severity: 'Medium'
+          },
+          icon: (
+            <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          )
+        })
+      })
+
+      // Add trip completion alerts
+      tripsArray.slice(0, 2).forEach((t: any) => {
+        newAlerts.push({
+          type: 'Active Trip',
+          message: `Trip to ${t.destination} is in progress`,
+          time: new Date(t.startDateTime).toLocaleString(),
+          color: 'border-emerald-500',
+          details: {
+            destination: t.destination,
+            purpose: t.purpose,
+            driver: t.allocatedDriver?.user?.firstName || 'N/A',
+            vehicle: t.allocatedVehicle?.plateNumber || 'N/A',
+            status: t.state,
+          },
+          icon: (
+            <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          )
+        })
+      })
+
+      setAlerts(newAlerts)
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const statsDisplay = [
     {
       label: 'TOTAL VEHICLES',
-      value: '124',
+      value: stats.totalVehicles.toString(),
       change: '+2.4%',
       changePositive: true,
       icon: (
@@ -29,7 +124,7 @@ export default function DashboardPage() {
     },
     {
       label: 'ACTIVE TRIPS',
-      value: '18',
+      value: stats.activeTrips.toString(),
       change: '+5.1%',
       changePositive: true,
       icon: (
@@ -42,7 +137,7 @@ export default function DashboardPage() {
     },
     {
       label: 'MAINTENANCE',
-      value: '5',
+      value: stats.pendingMaintenance.toString(),
       subtitle: 'Pending',
       change: '-1.2%',
       changePositive: false,
@@ -57,7 +152,7 @@ export default function DashboardPage() {
     },
     {
       label: 'FUEL USAGE',
-      value: '1,240',
+      value: Math.round(stats.fuelUsage).toString(),
       subtitle: 'Liters',
       change: '-3.5%',
       changePositive: false,
@@ -71,117 +166,7 @@ export default function DashboardPage() {
     },
   ]
 
-  const alerts = [
-    {
-      type: 'Speeding Detected',
-      message: 'Truck #104 is over 80km/h on Highway A1.',
-      time: '2 mins ago',
-      color: 'border-red-500',
-      details: {
-        vehicle: 'Truck #104',
-        plateNumber: 'ET-3-10456',
-        driver: 'Ahmed Hassan',
-        currentSpeed: '87 km/h',
-        speedLimit: '80 km/h',
-        location: 'Highway A1, KM 45',
-        timestamp: '2:35 PM',
-        severity: 'High'
-      },
-      icon: (
-        <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      type: 'Maintenance Due',
-      message: 'Van #087 requires oil change in 500km.',
-      time: '1h mins ago',
-      color: 'border-yellow-500',
-      details: {
-        vehicle: 'Van #087',
-        plateNumber: 'ET-3-08745',
-        maintenanceType: 'Oil Change',
-        currentMileage: '24,500 km',
-        nextServiceAt: '25,000 km',
-        remainingDistance: '500 km',
-        lastService: 'Jan 15, 2026',
-        severity: 'Medium'
-      },
-      icon: (
-        <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      type: 'Trip Completed',
-      message: 'Driver Sarah Miller arrived at Depo-04.',
-      time: '45 mins ago',
-      color: 'border-emerald-500',
-      details: {
-        vehicle: 'Truck #042',
-        plateNumber: 'ET-3-04289',
-        driver: 'Sarah Miller',
-        origin: 'Main Campus',
-        destination: 'Depo-04',
-        distance: '45 km',
-        duration: '1h 15min',
-        arrivalTime: '1:50 PM',
-        status: 'Completed'
-      },
-      icon: (
-        <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      type: 'Route Deviation',
-      message: 'Truck #022 took an unplanned exit.',
-      time: '1 hour ago',
-      color: 'border-gray-500',
-      details: {
-        vehicle: 'Truck #022',
-        plateNumber: 'ET-3-02234',
-        driver: 'Mohammed Ali',
-        plannedRoute: 'Route A → Campus North',
-        actualLocation: 'Exit 12B (Unplanned)',
-        deviation: '2.5 km off route',
-        timestamp: '1:35 PM',
-        severity: 'Low'
-      },
-      icon: (
-        <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      type: 'Emergency Stop',
-      message: 'SOS triggered from Vehicle #012.',
-      time: '3 hours ago',
-      color: 'border-red-500',
-      details: {
-        vehicle: 'Vehicle #012',
-        plateNumber: 'ET-3-01267',
-        driver: 'Dawit Tesfaye',
-        sosType: 'Emergency Button Pressed',
-        location: 'Highway B2, KM 78',
-        timestamp: '11:35 AM',
-        responseStatus: 'Team Dispatched',
-        estimatedArrival: '15 minutes',
-        severity: 'Critical'
-      },
-      icon: (
-        <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-  ]
-
-  const handleAlertClick = (alert: typeof alerts[0]) => {
+  const handleAlertClick = (alert: any) => {
     setSelectedAlert(alert)
   }
 
@@ -193,11 +178,48 @@ export default function DashboardPage() {
     setToast({ message, type })
   }
 
-  const handleAddVehicle = (e: React.FormEvent) => {
+  const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission here
-    showToast('Vehicle added successfully!', 'success')
-    setShowAddVehicleForm(false)
+    const formData = new FormData(e.target as HTMLFormElement)
+    
+    try {
+      const vehicleData: any = {
+        vehicleId: formData.get('vehicleId'),
+        plateNumber: formData.get('plateNumber'),
+        vehicleType: formData.get('vehicleType'),
+        make: formData.get('make'),
+        model: formData.get('model'),
+        year: parseInt(formData.get('year') as string),
+        fuelType: formData.get('fuelType'),
+        status: formData.get('status') || 'Active',
+      }
+
+      // Add optional fields if provided
+      if (formData.get('color')) vehicleData.color = formData.get('color')
+      if (formData.get('vinNumber')) vehicleData.vinNumber = formData.get('vinNumber')
+      if (formData.get('fuelCapacity')) vehicleData.fuelCapacity = parseInt(formData.get('fuelCapacity') as string)
+      if (formData.get('capacity')) vehicleData.capacity = parseInt(formData.get('capacity') as string)
+      if (formData.get('currentMileage')) vehicleData.currentMileage = parseInt(formData.get('currentMileage') as string)
+      if (formData.get('purchaseDate')) vehicleData.purchaseDate = formData.get('purchaseDate')
+      if (formData.get('insuranceExpiryDate')) vehicleData.insuranceExpiryDate = formData.get('insuranceExpiryDate')
+      if (formData.get('nextServiceDate')) vehicleData.nextServiceDate = formData.get('nextServiceDate')
+      if (formData.get('notes')) vehicleData.notes = formData.get('notes')
+
+      await vehicleApi.create(vehicleData)
+      showToast('Vehicle added successfully!', 'success')
+      setShowAddVehicleForm(false)
+      loadDashboardData() // Reload data
+    } catch (error: any) {
+      showToast(error.message || 'Failed to add vehicle', 'error')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+      </div>
+    )
   }
 
   return (
@@ -205,7 +227,7 @@ export default function DashboardPage() {
     <div className="p-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {stats.map((stat, index) => (
+        {statsDisplay.map((stat, index) => (
           <div key={index} className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between mb-4">
               <div className={`w-12 h-12 ${stat.iconBg} rounded-lg flex items-center justify-center ${stat.iconColor}`}>
@@ -443,6 +465,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="text"
+                    name="vehicleId"
                     required
                     placeholder="e.g., VEH-001"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
@@ -455,6 +478,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="text"
+                    name="plateNumber"
                     required
                     placeholder="e.g., ET-3-12345"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
@@ -466,15 +490,16 @@ export default function DashboardPage() {
                     Vehicle Type <span className="text-red-500">*</span>
                   </label>
                   <select
+                    name="vehicleType"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   >
                     <option value="">Select Type</option>
-                    <option value="truck">Truck</option>
-                    <option value="van">Van</option>
-                    <option value="bus">Bus</option>
-                    <option value="sedan">Sedan</option>
-                    <option value="suv">SUV</option>
+                    <option value="Truck">Truck</option>
+                    <option value="Van">Van</option>
+                    <option value="Bus">Bus</option>
+                    <option value="Sedan">Sedan</option>
+                    <option value="SUV">SUV</option>
                   </select>
                 </div>
 
@@ -484,6 +509,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="text"
+                    name="make"
                     required
                     placeholder="e.g., Toyota"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
@@ -496,6 +522,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="text"
+                    name="model"
                     required
                     placeholder="e.g., Hilux"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
@@ -508,6 +535,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="number"
+                    name="year"
                     required
                     placeholder="e.g., 2024"
                     min="1990"
@@ -522,6 +550,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="text"
+                    name="color"
                     placeholder="e.g., White"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
@@ -533,6 +562,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="text"
+                    name="vinNumber"
                     placeholder="Vehicle Identification Number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
@@ -548,14 +578,15 @@ export default function DashboardPage() {
                     Fuel Type <span className="text-red-500">*</span>
                   </label>
                   <select
+                    name="fuelType"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   >
                     <option value="">Select Fuel Type</option>
-                    <option value="gasoline">Gasoline</option>
-                    <option value="diesel">Diesel</option>
-                    <option value="electric">Electric</option>
-                    <option value="hybrid">Hybrid</option>
+                    <option value="Gasoline">Gasoline</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
                   </select>
                 </div>
 
@@ -565,6 +596,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="number"
+                    name="fuelCapacity"
                     placeholder="e.g., 80"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
@@ -576,6 +608,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="number"
+                    name="capacity"
                     placeholder="e.g., 5"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
@@ -587,6 +620,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="number"
+                    name="currentMileage"
                     placeholder="e.g., 15000"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
@@ -602,13 +636,14 @@ export default function DashboardPage() {
                     Status <span className="text-red-500">*</span>
                   </label>
                   <select
+                    name="status"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   >
                     <option value="">Select Status</option>
-                    <option value="active">Active</option>
-                    <option value="maintenance">Under Maintenance</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="Active">Active</option>
+                    <option value="Maintenance">Under Maintenance</option>
+                    <option value="Inactive">Inactive</option>
                   </select>
                 </div>
 
@@ -618,6 +653,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="date"
+                    name="purchaseDate"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
                 </div>
@@ -628,6 +664,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="date"
+                    name="insuranceExpiryDate"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
                 </div>
@@ -638,6 +675,7 @@ export default function DashboardPage() {
                   </label>
                   <input
                     type="date"
+                    name="nextServiceDate"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                   />
                 </div>
@@ -647,6 +685,7 @@ export default function DashboardPage() {
                     Notes
                   </label>
                   <textarea
+                    name="notes"
                     rows={3}
                     placeholder="Additional information about the vehicle..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none"

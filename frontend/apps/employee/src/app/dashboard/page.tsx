@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { tripApi, notificationApi, vehicleApi, getCurrentUser } from '../../lib/api'
+import { tripApi, notificationApi, vehicleApi, userApi, getCurrentUser } from '../../lib/api'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -18,18 +18,6 @@ export default function DashboardPage() {
   
   // UI states
   const [showNotifications, setShowNotifications] = useState(false)
-  const [selectedNotification, setSelectedNotification] = useState<any>(null)
-  const [showProfileModal, setShowProfileModal] = useState(false)
-  const [editedProfile, setEditedProfile] = useState({
-    name: '',
-    email: '',
-    phoneNumber: '',
-    employeeId: '',
-    organizationType: '',
-    college: '',
-    office: '',
-    department: '',
-  })
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false,
@@ -45,6 +33,14 @@ export default function DashboardPage() {
       return
     }
     setUser(currentUser)
+    
+    // Load profile image
+    const userData = localStorage.getItem('userData')
+    if (userData) {
+      const parsedData = JSON.parse(userData)
+      setProfileImage(parsedData.profileImage || null)
+    }
+    
     loadDashboardData()
   }, [])
 
@@ -82,64 +78,7 @@ export default function DashboardPage() {
   }
 
   const handleOpenProfileModal = () => {
-    const userData = localStorage.getItem('userData')
-    const parsedData = userData ? JSON.parse(userData) : {}
-    
-    setEditedProfile({
-      name: user?.name || '',
-      email: user?.email || '',
-      phoneNumber: user?.phoneNumber || '',
-      employeeId: parsedData.employeeId || '',
-      organizationType: parsedData.organizationType || '',
-      college: parsedData.college || '',
-      office: parsedData.office || '',
-      department: parsedData.department || '',
-    })
-    setProfileImage(parsedData.profileImage || null)
-    setShowProfileModal(true)
-  }
-
-  const handleSaveProfile = async () => {
-    try {
-      // Update backend
-      await userApi.updateProfile({
-        name: editedProfile.name,
-        phoneNumber: editedProfile.phoneNumber,
-      })
-      
-      // Update user state
-      const updatedUser = {
-        ...user,
-        name: editedProfile.name,
-        email: editedProfile.email,
-        phoneNumber: editedProfile.phoneNumber,
-      }
-      setUser(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
-      
-      // Save extended profile data to localStorage
-      const userData = {
-        ...editedProfile,
-        profileImage,
-      }
-      localStorage.setItem('userData', JSON.stringify(userData))
-      
-      setShowProfileModal(false)
-      showToast('Profile updated successfully!', 'success')
-    } catch (error: any) {
-      showToast(error.message || 'Failed to update profile', 'error')
-    }
-  }
-
-  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
+    router.push('/profile')
   }
 
   const handleMarkNotificationAsRead = async (id: string) => {
@@ -311,13 +250,23 @@ export default function DashboardPage() {
 
         {/* Recent Trips */}
         <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Trip Requests</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Recent Trip Requests</h3>
+            {trips.length > 0 && (
+              <button
+                onClick={() => router.push('/trips')}
+                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                View All
+              </button>
+            )}
+          </div>
           {trips.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No trip requests yet</p>
           ) : (
             <div className="space-y-3">
               {trips.slice(0, 5).map((trip: any) => (
-                <div key={trip.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div key={trip.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-emerald-200 transition-colors">
                   <div>
                     <p className="font-medium text-gray-800">{trip.destination}</p>
                     <p className="text-sm text-gray-500">{trip.purpose}</p>
@@ -486,7 +435,11 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-500">{user?.role}</p>
                 </div>
                 <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <span className="text-emerald-600 font-semibold">{user?.name?.charAt(0)}</span>
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <span className="text-emerald-600 font-semibold">{user?.name?.charAt(0)}</span>
+                  )}
                 </div>
               </button>
               <button onClick={handleLogout} className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg">
@@ -502,14 +455,16 @@ export default function DashboardPage() {
         <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block w-64 bg-white shadow-sm min-h-screen`}>
           <nav className="p-4 space-y-2">
             {[
-              { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-              { id: 'request', label: 'Request Trip', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-              { id: 'vehicles', label: 'Available Vehicles', icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z' },
-              { id: 'documents', label: 'Documents', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+              { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', type: 'section' },
+              { id: 'request', label: 'Request Trip', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', type: 'section' },
+              { id: 'trips', label: 'My Trips', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', type: 'page' },
+              { id: 'vehicles', label: 'Available Vehicles', icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z', type: 'section' },
+              { id: 'notifications', label: 'Notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', type: 'page', badge: unreadCount },
+              { id: 'documents', label: 'Documents', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', type: 'section' },
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => handleSectionChange(item.id)}
+                onClick={() => item.type === 'page' ? router.push(`/${item.id}`) : handleSectionChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   activeSection === item.id ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
                 }`}
@@ -517,7 +472,12 @@ export default function DashboardPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
-                {item.label}
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.badge && item.badge > 0 && (
+                  <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
@@ -531,159 +491,6 @@ export default function DashboardPage() {
           {activeSection === 'documents' && <DocumentCenter />}
         </main>
       </div>
-
-      {/* Profile Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Edit Profile</h3>
-              <button onClick={() => setShowProfileModal(false)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Profile Image */}
-            <div className="flex flex-col items-center mb-6">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-emerald-500">
-                  {profileImage ? (
-                    <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-emerald-500 text-white p-2 rounded-full cursor-pointer hover:bg-emerald-600">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </label>
-                <input
-                  type="file"
-                  id="profileImageUpload"
-                  accept="image/*"
-                  onChange={handleProfileImageUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={editedProfile.name}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={editedProfile.email}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                  <input
-                    type="tel"
-                    value={editedProfile.phoneNumber}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
-                  <input
-                    type="text"
-                    value={editedProfile.employeeId}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, employeeId: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Organization Type</label>
-                <select
-                  value={editedProfile.organizationType}
-                  onChange={(e) => setEditedProfile({ ...editedProfile, organizationType: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Select type</option>
-                  <option value="college">College</option>
-                  <option value="administrative">Administrative Office</option>
-                </select>
-              </div>
-
-              {editedProfile.organizationType === 'college' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">College</label>
-                    <input
-                      type="text"
-                      value={editedProfile.college}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, college: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                    <input
-                      type="text"
-                      value={editedProfile.department}
-                      onChange={(e) => setEditedProfile({ ...editedProfile, department: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                </>
-              )}
-
-              {editedProfile.organizationType === 'administrative' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Office</label>
-                  <input
-                    type="text"
-                    value={editedProfile.office}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, office: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handleSaveProfile}
-                  className="flex-1 bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={() => setShowProfileModal(false)}
-                  className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Notifications Panel */}
       {showNotifications && (

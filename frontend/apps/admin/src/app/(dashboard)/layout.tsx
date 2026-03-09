@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Toast, { ToastType } from '@/components/Toast'
+import { getCurrentUser, tripApi, userApi } from '@/lib/api'
 
 interface ToastMessage {
   message: string
@@ -25,35 +26,51 @@ export default function DashboardLayout({
   const [isLoading, setIsLoading] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [selectedTrip, setSelectedTrip] = useState<typeof notifications[0] | null>(null)
-  const [fuelAllocation, setFuelAllocation] = useState({
-    liters: '',
-    fuelType: '',
-    notes: ''
-  })
+  const [selectedTrip, setSelectedTrip] = useState<any>(null)
   const [darkMode, setDarkMode] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
-  const [adminData, setAdminData] = useState<any>(null)
+  const [user, setUser] = useState<any>(null)
+  const [notifications, setNotifications] = useState<any[]>([])
   const [editedProfile, setEditedProfile] = useState({
-    fullName: '',
+    name: '',
     email: '',
+    phoneNumber: '',
     role: '',
-    phone: '',
-    profileImage: ''
   })
   const [tempProfileImage, setTempProfileImage] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
 
-  // Load admin data from localStorage
+  // Load user and notifications on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedData = localStorage.getItem('adminData')
-      if (storedData) {
-        setAdminData(JSON.parse(storedData))
-      }
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
     }
+    setUser(currentUser)
+    loadNotifications()
   }, [])
+
+  const loadNotifications = async () => {
+    try {
+      // For now, get pending trips as notifications
+      const trips = await tripApi.getAll({ state: 'PENDING_DEPARTMENT,PENDING_COLLEGE,PENDING_DEAN' })
+      const tripNotifications = Array.isArray(trips) ? trips.map((trip: any) => ({
+        id: trip.id,
+        type: 'trip_approval',
+        title: `Trip Request Pending`,
+        message: `Trip to ${trip.destination} requires approval`,
+        time: new Date(trip.createdAt).toLocaleString(),
+        read: false,
+        details: trip
+      })) : []
+      setNotifications(tripNotifications)
+    } catch (error) {
+      console.error('Failed to load notifications:', error)
+      setNotifications([])
+    }
+  }
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -64,134 +81,22 @@ export default function DashboardLayout({
     }
   }, [darkMode])
 
-  const notifications = [
-    {
-      id: 1,
-      type: 'dean_approval',
-      title: 'Trip Approved by Dean',
-      message: 'College of Engineering Dean approved trip request #TR-2024-045',
-      time: '5 mins ago',
-      read: false,
-      details: {
-        tripId: 'TR-2024-045',
-        approvedBy: 'Dr. Abebe Kebede (Dean)',
-        college: 'College of Engineering',
-        requestedBy: 'Prof. Lemesa Girma',
-        requestedByEmail: 'lemesa.girma@hu.edu.et',
-        requestedByPhone: '+251-911-234567',
-        destination: 'Addis Ababa - Conference Center',
-        tripDate: 'March 10, 2026',
-        departureTime: '08:00 AM',
-        returnTime: '06:00 PM',
-        passengers: '4 Faculty Members',
-        purpose: 'National Engineering Conference',
-        estimatedDistance: '450 km',
-        vehicleType: 'Van or Bus',
-        status: 'Awaiting Vehicle Assignment'
-      }
-    },
-    {
-      id: 2,
-      type: 'president_approval',
-      title: 'Trip Approved by President',
-      message: 'University President approved trip request #TR-2024-038',
-      time: '15 mins ago',
-      read: false,
-      details: {
-        tripId: 'TR-2024-038',
-        approvedBy: 'Dr. Solomon Tesfaye (President)',
-        college: 'College of Business',
-        requestedBy: 'Dr. Hanna Bekele',
-        requestedByEmail: 'hanna.bekele@hu.edu.et',
-        requestedByPhone: '+251-911-345678',
-        destination: 'Dire Dawa - Business Summit',
-        tripDate: 'March 8, 2026',
-        departureTime: '07:00 AM',
-        returnTime: '08:00 PM',
-        passengers: '6 Staff Members',
-        purpose: 'Regional Business Development Summit',
-        estimatedDistance: '520 km',
-        vehicleType: 'Bus',
-        status: 'Awaiting Vehicle Assignment'
-      }
-    },
-    {
-      id: 3,
-      type: 'dean_approval',
-      title: 'Trip Approved by Dean',
-      message: 'College of Science Dean approved trip request #TR-2024-032',
-      time: '1 hour ago',
-      read: true,
-      details: {
-        tripId: 'TR-2024-032',
-        approvedBy: 'Dr. Marta Alemayehu (Dean)',
-        college: 'College of Science',
-        requestedBy: 'Dr. Yohannes Tadesse',
-        requestedByEmail: 'yohannes.tadesse@hu.edu.et',
-        requestedByPhone: '+251-911-456789',
-        destination: 'Bahir Dar - Research Symposium',
-        tripDate: 'March 12, 2026',
-        departureTime: '06:00 AM',
-        returnTime: '09:00 PM',
-        passengers: '8 Researchers',
-        purpose: 'National Research Symposium',
-        estimatedDistance: '600 km',
-        vehicleType: 'Bus',
-        status: 'Awaiting President Approval'
-      }
-    },
-    {
-      id: 4,
-      type: 'president_approval',
-      title: 'Trip Approved by President',
-      message: 'University President approved trip request #TR-2024-029',
-      time: '2 hours ago',
-      read: true,
-      details: {
-        tripId: 'TR-2024-029',
-        approvedBy: 'Dr. Solomon Tesfaye (President)',
-        college: 'College of Health Sciences',
-        requestedBy: 'Dr. Tigist Hailu',
-        requestedByEmail: 'tigist.hailu@hu.edu.et',
-        requestedByPhone: '+251-911-567890',
-        destination: 'Hawassa - Medical Workshop',
-        tripDate: 'March 7, 2026',
-        departureTime: '07:30 AM',
-        returnTime: '07:00 PM',
-        passengers: '5 Medical Staff',
-        purpose: 'Regional Medical Training Workshop',
-        estimatedDistance: '380 km',
-        vehicleType: 'Van',
-        status: 'Awaiting Vehicle Assignment'
-      }
-    }
-  ]
+  const unreadCount = notifications.filter((n: any) => !n.read).length
 
-  const unreadCount = notifications.filter(n => !n.read).length
-
-  const handleNotificationClick = (notification: typeof notifications[0]) => {
+  const handleNotificationClick = (notification: any) => {
     setSelectedTrip(notification)
     setShowNotifications(false)
   }
 
-  const handleAllocateTrip = (e: React.FormEvent) => {
-    e.preventDefault()
-    showToast('Trip resources allocated successfully!', 'success')
-    setSelectedTrip(null)
-  }
-
   const handleOpenProfileModal = () => {
-    console.log('Opening profile modal...')
     setEditedProfile({
-      fullName: adminData?.fullName || '',
-      email: adminData?.email || '',
-      role: adminData?.role || '',
-      phone: adminData?.phone || '',
-      profileImage: adminData?.profileImage || ''
+      name: user?.name || '',
+      email: user?.email || '',
+      phoneNumber: user?.phoneNumber || '',
+      role: user?.role || '',
     })
-    setTempProfileImage(adminData?.profileImage || null)
+    setTempProfileImage(null)
     setShowProfileModal(true)
-    console.log('Modal state set to true')
   }
 
   const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,21 +105,27 @@ export default function DashboardLayout({
       const reader = new FileReader()
       reader.onloadend = () => {
         setTempProfileImage(reader.result as string)
-        setEditedProfile(prev => ({ ...prev, profileImage: reader.result as string }))
       }
       reader.readAsDataURL(file)
     }
   }
 
-  const handleSaveProfile = () => {
-    const updatedAdminData = {
-      ...adminData,
-      ...editedProfile
+  const handleSaveProfile = async () => {
+    try {
+      await userApi.updateProfile(editedProfile)
+      const updatedUser = { ...user, ...editedProfile }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      setShowProfileModal(false)
+      showToast('Profile updated successfully!', 'success')
+    } catch (error: any) {
+      showToast(error.message || 'Failed to update profile', 'error')
     }
-    localStorage.setItem('adminData', JSON.stringify(updatedAdminData))
-    setAdminData(updatedAdminData)
-    setShowProfileModal(false)
-    showToast('Profile updated successfully!', 'success')
+  }
+
+  const handleLogout = () => {
+    localStorage.clear()
+    router.push('/login')
   }
 
   const isActive = (path: string) => pathname === path
@@ -224,12 +135,10 @@ export default function DashboardLayout({
       e.preventDefault()
       setIsLoading(true)
       
-      // Navigate quickly (after 300ms)
       setTimeout(() => {
         router.push(path)
       }, 300)
       
-      // Keep spinner visible for ~2 seconds total
       setTimeout(() => {
         setIsLoading(false)
       }, 2000)
@@ -403,22 +312,14 @@ export default function DashboardLayout({
               className="w-full flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
               title="Edit Profile"
             >
-              {adminData?.profileImage ? (
-                <img 
-                  src={adminData.profileImage} 
-                  alt="Profile" 
-                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {adminData?.fullName ? adminData.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AJ'}
-                  </span>
-                </div>
-              )}
+              <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
+                </span>
+              </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-gray-900">{adminData?.fullName || 'Alex Johnson'}</p>
-                <p className="text-xs text-gray-500">{adminData?.role || 'Logistics Manager'}</p>
+                <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin'}</p>
+                <p className="text-xs text-gray-500">{user?.role || 'Administrator'}</p>
               </div>
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -962,7 +863,7 @@ export default function DashboardLayout({
                   ) : (
                     <div className="w-32 h-32 bg-emerald-100 rounded-full flex items-center justify-center border-4 border-emerald-200">
                       <span className="text-emerald-600 text-4xl font-bold">
-                        {editedProfile.fullName ? editedProfile.fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AJ'}
+                        {editedProfile.name ? editedProfile.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
                       </span>
                     </div>
                   )}
@@ -998,8 +899,8 @@ export default function DashboardLayout({
                       <td className="px-4 py-4">
                         <input 
                           type="text" 
-                          value={editedProfile.fullName}
-                          onChange={(e) => setEditedProfile(prev => ({ ...prev, fullName: e.target.value }))}
+                          value={editedProfile.name}
+                          onChange={(e) => setEditedProfile(prev => ({ ...prev, name: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                           placeholder="Enter your full name"
                         />
@@ -1041,7 +942,8 @@ export default function DashboardLayout({
                           value={editedProfile.role}
                           onChange={(e) => setEditedProfile(prev => ({ ...prev, role: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                          placeholder="e.g., Logistics Manager"
+                          placeholder="e.g., Administrator"
+                          disabled
                         />
                       </td>
                     </tr>
@@ -1058,8 +960,8 @@ export default function DashboardLayout({
                       <td className="px-4 py-4">
                         <input 
                           type="tel" 
-                          value={editedProfile.phone}
-                          onChange={(e) => setEditedProfile(prev => ({ ...prev, phone: e.target.value }))}
+                          value={editedProfile.phoneNumber}
+                          onChange={(e) => setEditedProfile(prev => ({ ...prev, phoneNumber: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                           placeholder="+251-91-234-5678"
                         />

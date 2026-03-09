@@ -8,12 +8,12 @@ import {
 
 export enum VehicleStatus {
   Active = 'Active',
-  UnderMaintenance = 'UnderMaintenance',
+  Maintenance = 'Maintenance',
   Inactive = 'Inactive',
 }
 
 export enum FuelType {
-  Petrol = 'Petrol',
+  Gasoline = 'Gasoline',
   Diesel = 'Diesel',
   Electric = 'Electric',
   Hybrid = 'Hybrid',
@@ -24,8 +24,14 @@ export class Vehicle {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ unique: true, nullable: true })
+  vehicleId: string;
+
   @Column({ unique: true })
   plateNumber: string;
+
+  @Column({ nullable: true })
+  vehicleType: string;
 
   @Column()
   make: string;
@@ -42,6 +48,9 @@ export class Vehicle {
   @Column()
   fuelType: FuelType;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  fuelCapacity: number;
+
   @Column({ default: VehicleStatus.Active })
   status: VehicleStatus;
 
@@ -53,6 +62,15 @@ export class Vehicle {
 
   @Column({ type: 'datetime', nullable: true })
   nextMaintenanceDate: Date;
+
+  @Column({ type: 'date', nullable: true })
+  purchaseDate: Date;
+
+  @Column({ type: 'date', nullable: true })
+  insuranceExpiryDate: Date;
+
+  @Column({ type: 'date', nullable: true })
+  nextServiceDate: Date;
 
   @Column({ nullable: true })
   color: string;

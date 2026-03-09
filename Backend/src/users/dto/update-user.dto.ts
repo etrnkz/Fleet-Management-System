@@ -13,6 +13,11 @@ export class UpdateUserDto {
   @IsOptional()
   email?: string;
 
+  @ApiPropertyOptional({ example: '+251912345678' })
+  @IsString()
+  @IsOptional()
+  phoneNumber?: string;
+
   @ApiPropertyOptional({ enum: UserRole, example: UserRole.Driver })
   @IsEnum(UserRole)
   @IsOptional()
