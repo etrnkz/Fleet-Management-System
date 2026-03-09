@@ -1,63 +1,120 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Toast from '@/components/Toast'
+import { vehicleApi, getCurrentUser } from '@/lib/api'
 
 export default function VehiclesPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [activeFilter, setActiveFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const [vehicles, setVehicles] = useState<any[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    show: false,
+    message: '',
+    type: 'success'
+  })
 
-  const vehicles = [
-    { id: 1, name: 'Toyota Hilux', plateNumber: 'HU-4-06541', type: 'Pickup Truck', status: 'available', location: 'Main Campus Parking', fuel: 85, lastService: '2024-09-15', driver: null },
-    { id: 2, name: 'Coaster Bus', plateNumber: 'HU-3-01122', type: 'Bus', status: 'maintenance', location: 'Central Garage', fuel: 12, lastService: '2024-08-20', driver: null, issue: 'Engine repair' },
-    { id: 3, name: 'Hyundai Sedan', plateNumber: 'HU-1-06818', type: 'Sedan', status: 'available', location: 'Admin Parking', fuel: 60, lastService: '2024-10-01', driver: null },
-    { id: 4, name: 'Toyota Land Cruiser', plateNumber: 'HU-2-03456', type: 'SUV', status: 'on-trip', location: 'En route to Harar', fuel: 45, lastService: '2024-09-28', driver: 'Ahmed Mohammed', destination: 'Harar', eta: '2 hours' },
-    { id: 5, name: 'Isuzu Truck', plateNumber: 'HU-5-07891', type: 'Truck', status: 'available', location: 'Transport Office', fuel: 70, lastService: '2024-09-10', driver: null },
-    { id: 6, name: 'Toyota Corolla', plateNumber: 'HU-1-04523', type: 'Sedan', status: 'on-trip', location: 'En route to Dire Dawa', fuel: 55, lastService: '2024-10-05', driver: 'Fatima Ali', destination: 'Dire Dawa', eta: '1 hour' },
-    { id: 7, name: 'Mitsubishi Pajero', plateNumber: 'HU-2-08765', type: 'SUV', status: 'maintenance', location: 'Central Garage', fuel: 20, lastService: '2024-07-15', driver: null, issue: 'Brake system check' },
-    { id: 8, name: 'Nissan Patrol', plateNumber: 'HU-2-05432', type: 'SUV', status: 'available', location: 'Main Campus Parking', fuel: 90, lastService: '2024-10-08', driver: null },
-  ]
+  useEffect(() => {
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+    setUser(currentUser)
+    loadVehicles()
+  }, [])
 
-  const filteredVehicles = activeFilter === 'all' 
-    ? vehicles 
-    : vehicles.filter(v => v.status === activeFilter)
+  const loadVehicles = async () => {
+    try {
+      setLoading(true)
+      const data = await vehicleApi.getAll()
+      setVehicles(Array.isArray(data) ? data : [])
+    } catch (error: any) {
+      showToast(error.message || 'Failed to load vehicles', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ show: true, message, type })
+  }
+
+  const filteredVehicles = vehicles.filter(v => {
+    const matchesFilter = activeFilter === 'all' || v.status === activeFilter
+    const matchesSearch = v.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         v.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         v.plateNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesFilter && matchesSearch
+  })
 
   const stats = {
     total: vehicles.length,
-    available: vehicles.filter(v => v.status === 'available').length,
-    onTrip: vehicles.filter(v => v.status === 'on-trip').length,
-    maintenance: vehicles.filter(v => v.status === 'maintenance').length,
+    available: vehicles.filter(v => v.status === 'Active').length,
+    onTrip: vehicles.filter(v => v.status === 'In Use').length,
+    maintenance: vehicles.filter(v => v.status === 'Maintenance').length,
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available':
+      case 'Active':
         return 'bg-emerald-100 text-emerald-700'
-      case 'on-trip':
-        return 'bg-emerald-100 text-emerald-700'
-      case 'maintenance':
+      case 'In Use':
+        return 'bg-blue-100 text-blue-700'
+      case 'Maintenance':
         return 'bg-orange-100 text-orange-700'
+      case 'Out of Service':
+        return 'bg-red-100 text-red-700'
       default:
         return 'bg-gray-100 text-gray-700'
     }
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'available':
-        return 'Available'
-      case 'on-trip':
-        return 'On Trip'
-      case 'maintenance':
-        return 'Maintenance'
-      default:
-        return status
-    }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'success' })}
+        />
+      )}
+
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Fleet Vehicles</h1>
         <p className="text-xs sm:text-sm text-gray-500 mt-1">View and manage all university vehicles</p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <p className="text-xs text-gray-500">Total Vehicles</p>
+          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <p className="text-xs text-gray-500">Available</p>
+          <p className="text-2xl font-bold text-emerald-600">{stats.available}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <p className="text-xs text-gray-500">On Trip</p>
+          <p className="text-2xl font-bold text-blue-600">{stats.onTrip}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-gray-200">
+          <p className="text-xs text-gray-500">Maintenance</p>
+          <p className="text-2xl font-bold text-orange-600">{stats.maintenance}</p>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -76,9 +133,9 @@ export default function VehiclesPage() {
               All Vehicles
             </button>
             <button
-              onClick={() => setActiveFilter('available')}
+              onClick={() => setActiveFilter('Active')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                activeFilter === 'available'
+                activeFilter === 'Active'
                   ? 'bg-emerald-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -86,9 +143,9 @@ export default function VehiclesPage() {
               Available
             </button>
             <button
-              onClick={() => setActiveFilter('on-trip')}
+              onClick={() => setActiveFilter('In Use')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                activeFilter === 'on-trip'
+                activeFilter === 'In Use'
                   ? 'bg-emerald-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -96,9 +153,9 @@ export default function VehiclesPage() {
               On Trip
             </button>
             <button
-              onClick={() => setActiveFilter('maintenance')}
+              onClick={() => setActiveFilter('Maintenance')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
-                activeFilter === 'maintenance'
+                activeFilter === 'Maintenance'
                   ? 'bg-emerald-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -112,6 +169,8 @@ export default function VehiclesPage() {
             <input
               type="text"
               placeholder="Search vehicles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none w-full"
             />
             <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,101 +181,74 @@ export default function VehiclesPage() {
       </div>
 
       {/* Vehicles Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVehicles.map((vehicle) => (
-          <div key={vehicle.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            {/* Vehicle Header */}
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{vehicle.name}</h3>
-                  <p className="text-sm text-gray-500">{vehicle.plateNumber}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>
-                  {getStatusText(vehicle.status)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <span>{vehicle.type}</span>
-              </div>
-            </div>
-
-            {/* Vehicle Details */}
-            <div className="p-6 space-y-4">
-              {/* Location */}
-              <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Location</p>
-                  <p className="text-sm text-gray-600">{vehicle.location}</p>
-                </div>
-              </div>
-
-              {/* Fuel Level */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-900">Fuel Level</span>
-                  <span className="text-sm text-gray-600">{vehicle.fuel}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full ${
-                      vehicle.fuel > 50 ? 'bg-emerald-500' : vehicle.fuel > 20 ? 'bg-orange-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${vehicle.fuel}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Driver (if on trip) */}
-              {vehicle.status === 'on-trip' && vehicle.driver && (
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+      {filteredVehicles.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-gray-500">No vehicles found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredVehicles.map((vehicle) => (
+            <div key={vehicle.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+              {/* Vehicle Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Driver</p>
-                    <p className="text-sm text-gray-600">{vehicle.driver}</p>
-                    <p className="text-xs text-gray-500 mt-1">To {vehicle.destination} • ETA: {vehicle.eta}</p>
+                    <h3 className="text-lg font-semibold text-gray-900">{vehicle.make} {vehicle.model}</h3>
+                    <p className="text-sm text-gray-500">{vehicle.plateNumber}</p>
                   </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>
+                    {vehicle.status}
+                  </span>
                 </div>
-              )}
-
-              {/* Maintenance Issue */}
-              {vehicle.status === 'maintenance' && vehicle.issue && (
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-orange-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Issue</p>
-                    <p className="text-sm text-gray-600">{vehicle.issue}</p>
-                  </div>
+                  <span>{vehicle.vehicleType || 'Vehicle'}</span>
                 </div>
-              )}
+              </div>
 
-              {/* Last Service */}
-              <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-200">
-                <span>Last Service</span>
-                <span>{vehicle.lastService}</span>
+              {/* Vehicle Details */}
+              <div className="p-6 space-y-4">
+                {/* Capacity */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Capacity</span>
+                  <span className="text-sm font-medium text-gray-900">{vehicle.capacity} seats</span>
+                </div>
+
+                {/* Fuel Type */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Fuel Type</span>
+                  <span className="text-sm font-medium text-gray-900">{vehicle.fuelType}</span>
+                </div>
+
+                {/* Year */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Year</span>
+                  <span className="text-sm font-medium text-gray-900">{vehicle.year}</span>
+                </div>
+
+                {/* Mileage */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Mileage</span>
+                  <span className="text-sm font-medium text-gray-900">{vehicle.mileage?.toLocaleString()} km</span>
+                </div>
+
+                {/* Last Service */}
+                {vehicle.nextServiceDate && (
+                  <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-200">
+                    <span>Next Service</span>
+                    <span>{new Date(vehicle.nextServiceDate).toLocaleDateString()}</span>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="px-6 pb-6">
-              <button className="w-full px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-medium">
-                View Details
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
