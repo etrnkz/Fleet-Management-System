@@ -104,13 +104,18 @@ export default function DashboardPage() {
       // Update backend
       await userApi.updateProfile({
         name: editedProfile.name,
-        email: editedProfile.email,
         phoneNumber: editedProfile.phoneNumber,
       })
       
       // Update user state
-      setUser({ ...user, ...editedProfile })
-      localStorage.setItem('user', JSON.stringify({ ...user, ...editedProfile }))
+      const updatedUser = {
+        ...user,
+        name: editedProfile.name,
+        email: editedProfile.email,
+        phoneNumber: editedProfile.phoneNumber,
+      }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
       
       // Save extended profile data to localStorage
       const userData = {
