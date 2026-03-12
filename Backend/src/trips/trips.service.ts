@@ -70,6 +70,8 @@ export class TripsService {
     const query = this.tripRepository
       .createQueryBuilder('trip')
       .leftJoinAndSelect('trip.requester', 'requester')
+      .leftJoinAndSelect('requester.department', 'requesterDepartment')
+      .leftJoinAndSelect('requester.college', 'requesterCollege')
       .leftJoinAndSelect('trip.allocatedVehicle', 'vehicle')
       .leftJoinAndSelect('trip.allocatedDriver', 'driver')
       .leftJoinAndSelect('driver.user', 'driverUser')
@@ -79,7 +81,20 @@ export class TripsService {
     // Filter based on role
     if (role === UserRole.User) {
       query.where('requester.id = :userId', { userId });
+    } else if (role === UserRole.DepartmentHead) {
+      // Department heads see trips from their department
+      query
+        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
+        .leftJoin('approver.department', 'approverDepartment')
+        .where('requesterDepartment.id = approverDepartment.id');
+    } else if (role === UserRole.CollegeHead) {
+      // College heads see trips from their college
+      query
+        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
+        .leftJoin('approver.college', 'approverCollege')
+        .where('requesterCollege.id = approverCollege.id');
     }
+    // Dean and other roles see all trips
 
     return query.getMany();
   }
@@ -181,17 +196,18 @@ export class TripsService {
     trip.state = initialState;
     trip.currentApprovalLevel = approvalLevel;
 
+    // Save trip first to ensure it has an ID
+    const savedTrip = await this.tripRepository.save(trip);
+
     // Create first approval record
     const approval = this.approvalRepository.create({
-      tripRequest: trip,
+      tripRequest: savedTrip,
       approvalLevel,
       status: ApprovalStatus.Pending,
       dueDate: this.calculateDueDate(48), // 48 hours timeout
     });
 
     await this.approvalRepository.save(approval);
-    
-    const savedTrip = await this.tripRepository.save(trip);
     
     // Initialize workflow (schedule timeout)
     try {
@@ -201,14 +217,6 @@ export class TripsService {
     }
     
     return savedTrip;
-    // Reschedule workflow for next level or cancel if done
-    try {
-      await this.workflowService.rescheduleOnApproval(trip);
-    } catch (error) {
-      console.error('Failed to reschedule workflow:', error);
-    }
-    
-    return this.tripRepository.save(trip);
   }
 
   async approve(
@@ -227,6 +235,17 @@ export class TripsService {
     );
 
     if (!approval) {
+      // Log for debugging
+      console.error('No pending approval found for trip:', {
+        tripId: trip.id,
+        tripState: trip.state,
+        approvalsCount: trip.approvals.length,
+        approvals: trip.approvals.map(a => ({
+          id: a.id,
+          level: a.approvalLevel,
+          status: a.status,
+        })),
+      });
       throw new BadRequestException('No pending approval found');
     }
 
@@ -239,13 +258,18 @@ export class TripsService {
 
     // Determine next state
     const nextState = this.getNextStateOnApprove(trip.state);
+    const oldState = trip.state;
     trip.state = nextState;
 
-    // If moving to next approval level, create approval record
+    // If moving to next approval level, create approval record BEFORE saving trip
     if (this.isApprovalState(nextState)) {
       const nextLevel = this.getApprovalLevelFromState(nextState);
       trip.currentApprovalLevel = nextLevel;
-
+      
+      // Save trip first to ensure it has the new state
+      await this.tripRepository.save(trip);
+      
+      // Now create the approval record
       const nextApproval = this.approvalRepository.create({
         tripRequest: trip,
         approvalLevel: nextLevel,
@@ -253,12 +277,23 @@ export class TripsService {
         dueDate: this.calculateDueDate(48),
       });
 
-      await this.approvalRepository.save(nextApproval);
+      const savedApproval = await this.approvalRepository.save(nextApproval);
+      
+      console.log('Created next approval:', {
+        tripId: trip.id,
+        oldState,
+        nextState,
+        nextLevel,
+        approvalId: savedApproval.id,
+        approvalStatus: savedApproval.status,
+      });
     } else {
       trip.currentApprovalLevel = null;
+      await this.tripRepository.save(trip);
     }
 
-    return this.tripRepository.save(trip);
+    // Reload trip with fresh approvals data
+    return this.findOne(trip.id);
   }
 
   async reject(
@@ -377,6 +412,16 @@ export class TripsService {
     return this.tripRepository.save(trip);
   }
 
+  private getRequiredRoleForState(state: TripState): UserRole {
+    const mapping = {
+      [TripState.PENDING_DEPARTMENT]: UserRole.DepartmentHead,
+      [TripState.PENDING_COLLEGE]: UserRole.Dean, // Dean is the college head
+      [TripState.PENDING_DEAN]: UserRole.Dean, // Keep for backward compatibility, but Dean approves at college level
+    };
+
+    return mapping[state];
+  }
+
   private validateApprover(trip: TripRequest, user: User): void {
     const requiredRole = this.getRequiredRoleForState(trip.state);
 
@@ -385,16 +430,6 @@ export class TripsService {
         `Only ${requiredRole} can approve at this level`,
       );
     }
-  }
-
-  private getRequiredRoleForState(state: TripState): UserRole {
-    const mapping = {
-      [TripState.PENDING_DEPARTMENT]: UserRole.DepartmentHead,
-      [TripState.PENDING_COLLEGE]: UserRole.CollegeHead,
-      [TripState.PENDING_DEAN]: UserRole.Dean,
-    };
-
-    return mapping[state];
   }
 
   private getNextStateOnApprove(currentState: TripState): TripState {
@@ -545,32 +580,50 @@ export class TripsService {
   }
 
   async getPendingApprovals(userId: string, role: UserRole): Promise<TripRequest[]> {
-    let state: TripState;
+    let states: TripState[] = [];
 
     switch (role) {
       case UserRole.DepartmentHead:
-        state = TripState.PENDING_DEPARTMENT;
+        states = [TripState.PENDING_DEPARTMENT];
         break;
       case UserRole.CollegeHead:
-        state = TripState.PENDING_COLLEGE;
+        // CollegeHead role is not used, Dean handles college approvals
+        states = [TripState.PENDING_COLLEGE];
         break;
       case UserRole.Dean:
-        state = TripState.PENDING_DEAN;
+        // Dean approves at college level (PENDING_COLLEGE)
+        states = [TripState.PENDING_COLLEGE, TripState.PENDING_DEAN];
         break;
       default:
         return [];
     }
 
-    return this.tripRepository.find({
-      where: { state },
-      relations: [
-        'requester',
-        'requester.department',
-        'requester.college',
-        'approvals',
-      ],
-      order: { createdAt: 'ASC' },
-    });
+    const query = this.tripRepository
+      .createQueryBuilder('trip')
+      .leftJoinAndSelect('trip.requester', 'requester')
+      .leftJoinAndSelect('requester.department', 'requesterDepartment')
+      .leftJoinAndSelect('requester.college', 'requesterCollege')
+      .leftJoinAndSelect('trip.approvals', 'approvals')
+      .where('trip.state IN (:...states)', { states })
+      .orderBy('trip.createdAt', 'ASC');
+
+    // For department heads, only show trips from their department
+    if (role === UserRole.DepartmentHead) {
+      query
+        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
+        .leftJoin('approver.department', 'approverDepartment')
+        .andWhere('requesterDepartment.id = approverDepartment.id');
+    }
+    
+    // For college heads and deans, only show trips from their college
+    if (role === UserRole.CollegeHead || role === UserRole.Dean) {
+      query
+        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
+        .leftJoin('approver.college', 'approverCollege')
+        .andWhere('requesterCollege.id = approverCollege.id');
+    }
+
+    return query.getMany();
   }
 
   async getStatistics() {

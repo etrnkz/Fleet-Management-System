@@ -149,3 +149,19 @@ export const departmentApi = {
   
   getById: (id: string) => apiFetch(`/departments/${id}`),
 };
+
+// Audit APIs
+export const auditApi = {
+  getAll: (params?: any) => {
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    return apiFetch(`/audit${query}`);
+  },
+  
+  getStatistics: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params}` : '';
+    return apiFetch(`/audit/statistics${query}`);
+  },
+};

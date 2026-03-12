@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
+import { getCurrentUser } from '@/lib/api'
 
 interface ToastMessage {
   id: number
@@ -23,7 +24,50 @@ export default function DashboardLayout({
   const [activeTab, setActiveTab] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
   const [toasts, setToasts] = useState<ToastMessage[]>([])
+  const [user, setUser] = useState<any>(null)
+  const [notifications, setNotifications] = useState<any[]>([])
   const pathname = usePathname()
+  const router = useRouter()
+
+  // Load user data on mount
+  useEffect(() => {
+    const currentUser = getCurrentUser()
+    if (!currentUser) {
+      router.push('/login')
+      return
+    }
+    setUser(currentUser)
+    setFormData({
+      fullName: currentUser.name || '',
+      email: currentUser.email || '',
+      phone: currentUser.phoneNumber || '',
+      department: currentUser.department || currentUser.college || '',
+      office: currentUser.office || 'Main Campus',
+      bio: currentUser.bio || '',
+    })
+    
+    // Load notifications
+    loadNotifications()
+  }, [])
+  
+  const loadNotifications = async () => {
+    try {
+      const { notificationApi } = await import('@/lib/api')
+      const data = await notificationApi.getAll(false) // Get unread notifications
+      setNotifications(Array.isArray(data) ? data.slice(0, 5) : []) // Show only 5 most recent
+    } catch (error) {
+      console.error('Failed to load notifications:', error)
+    }
+  }
+  
+  const getTimeAgo = (date: Date) => {
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
+    if (seconds < 60) return 'Just now'
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
+    return date.toLocaleDateString()
+  }
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     const id = Date.now()
@@ -34,20 +78,13 @@ export default function DashboardLayout({
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }
 
-  // Sample notification data - pending trip requests
-  const notifications = [
-    { id: 1, name: 'Dr. Amanuel Tekle', purpose: 'Research Field Study', destination: 'Bishoftu', date: '2024-10-12', time: '2 hours ago', priority: 'HIGH' },
-    { id: 2, name: 'Dr. Sara Ahmed', purpose: 'Academic Conference', destination: 'Harar', date: '2024-10-15', time: '5 hours ago', priority: 'MEDIUM' },
-    { id: 3, name: 'Prof. Kebede Jilo', purpose: 'Administrative Meeting', destination: 'Adama', date: '2024-10-18', time: '1 day ago', priority: 'LOW' },
-  ]
-
   const [formData, setFormData] = useState({
-    fullName: 'Dr. Abeba Kebede',
-    email: 'department@hu.edu.et',
-    phone: '+251 25 553 0325',
-    department: "Dean's College of Business",
-    office: 'Main Campus, Building A, Room 201',
-    bio: 'Dean of the College of Business with over 15 years of experience in academic administration and business education.',
+    fullName: '',
+    email: '',
+    phone: '',
+    department: '',
+    office: '',
+    bio: '',
   })
 
   const [passwordData, setPasswordData] = useState({
@@ -254,41 +291,36 @@ export default function DashboardLayout({
 
                   {/* Notifications List */}
                   <div className="divide-y divide-gray-200">
-                    {notifications.map((notification) => (
-                      <Link
-                        key={notification.id}
-                        href="/approvals"
-                        onClick={() => setNotificationDropdownOpen(false)}
-                        className="block p-3 sm:p-4 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-start gap-2 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{notification.name}</p>
-                              <span className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-full ${
-                                notification.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
-                                notification.priority === 'MEDIUM' ? 'bg-orange-100 text-orange-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {notification.priority}
-                              </span>
+                    {notifications.length > 0 ? (
+                      notifications.map((notification) => {
+                        const timeAgo = getTimeAgo(new Date(notification.sentAt))
+                        return (
+                          <Link
+                            key={notification.id}
+                            href="/approvals"
+                            onClick={() => setNotificationDropdownOpen(false)}
+                            className="block p-3 sm:p-4 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-start gap-2 sm:gap-3">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-gray-900 mb-1">{notification.title}</p>
+                                <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
+                                <p className="text-xs text-gray-400 mt-1">{timeAgo}</p>
+                              </div>
                             </div>
-                            <p className="text-xs text-gray-600 mb-1">{notification.purpose}</p>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                              <span>→ {notification.destination}</span>
-                              <span>•</span>
-                              <span className="hidden sm:inline">{notification.date}</span>
-                            </div>
-                            <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                          </Link>
+                        )
+                      })
+                    ) : (
+                      <div className="p-8 text-center text-sm text-gray-500">
+                        No new notifications
+                      </div>
+                    )}
                   </div>
 
                   {/* Footer */}
@@ -312,8 +344,8 @@ export default function DashboardLayout({
                 className="flex items-center gap-2 lg:gap-3 hover:bg-gray-50 rounded-lg p-2 transition-colors"
               >
                 <div className="hidden sm:block text-right">
-                  <div className="text-sm font-medium text-gray-900">Dr. Abeba Kebede</div>
-                  <div className="text-xs text-gray-500 hidden lg:block">Dean's College of Business</div>
+                  <div className="text-sm font-medium text-gray-900">{user?.name || 'User'}</div>
+                  <div className="text-xs text-gray-500 hidden lg:block">{user?.department?.name || user?.college?.name || user?.role}</div>
                 </div>
                 <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium text-sm">AK</span>
@@ -341,8 +373,8 @@ export default function DashboardLayout({
                           <span className="text-white font-medium text-base sm:text-lg">AK</span>
                         </div>
                         <div>
-                          <div className="text-sm sm:text-base font-medium text-gray-900">Dr. Abeba Kebede</div>
-                          <div className="text-xs sm:text-sm text-gray-500">Dean's College of Business</div>
+                          <div className="text-sm sm:text-base font-medium text-gray-900">{user?.name || 'User'}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{user?.department?.name || user?.college?.name || user?.role}</div>
                         </div>
                       </div>
                       <div className="space-y-1 text-xs sm:text-sm">
@@ -350,20 +382,20 @@ export default function DashboardLayout({
                           <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
-                          <span className="truncate">department@hu.edu.et</span>
+                          <span className="truncate">{formData.email || user?.email || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-gray-600">
                           <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
-                          <span>+251 25 553 0325</span>
+                          <span>{formData.phone || user?.phoneNumber || 'N/A'}</span>
                         </div>
                         <div className="flex items-start gap-2 text-gray-600">
                           <svg className="w-3 h-3 sm:w-4 sm:h-4 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
-                          <span className="text-xs">Main Campus, Building A, Room 201</span>
+                          <span className="text-xs">{formData.office || user?.office || 'N/A'}</span>
                         </div>
                       </div>
                     </div>

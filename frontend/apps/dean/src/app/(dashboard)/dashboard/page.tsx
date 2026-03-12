@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast from '@/components/Toast'
-import { tripApi, vehicleApi, getCurrentUser } from '@/lib/api'
+import { tripApi, vehicleApi, auditApi, getCurrentUser } from '@/lib/api'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([])
   const [vehicles, setVehicles] = useState<any[]>([])
   const [statistics, setStatistics] = useState<any>(null)
+  const [recentActivity, setRecentActivity] = useState<any[]>([])
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
     show: false,
     message: '',
@@ -75,22 +76,77 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      const [tripsData, approvalsData, vehiclesData, statsData] = await Promise.all([
+      const [tripsData, approvalsData, vehiclesData, statsData, auditData] = await Promise.all([
         tripApi.getAll().catch(() => []),
         tripApi.getPendingApprovals().catch(() => []),
         vehicleApi.getAll().catch(() => []),
-        tripApi.getStatistics().catch(() => null)
+        tripApi.getStatistics().catch(() => null),
+        auditApi.getAll({ page: 1, limit: 5 }).catch(() => ({ data: [] }))
       ])
       
       setTrips(Array.isArray(tripsData) ? tripsData : [])
       setPendingApprovals(Array.isArray(approvalsData) ? approvalsData : [])
       setVehicles(Array.isArray(vehiclesData) ? vehiclesData : [])
       setStatistics(statsData)
+      
+      // Transform audit logs to recent activity
+      const activities = (auditData.data || []).map((log: any) => {
+        const timeAgo = getTimeAgo(new Date(log.createdAt))
+        const userName = log.user?.name || 'Unknown User'
+        
+        let title = ''
+        let color = 'bg-blue-500'
+        
+        switch (log.action) {
+          case 'APPROVE':
+            title = `${log.entityType} Approved`
+            color = 'bg-emerald-500'
+            break
+          case 'REJECT':
+            title = `${log.entityType} Rejected`
+            color = 'bg-red-500'
+            break
+          case 'CREATE':
+            title = `New ${log.entityType} Created`
+            color = 'bg-blue-500'
+            break
+          case 'UPDATE':
+            title = `${log.entityType} Updated`
+            color = 'bg-orange-500'
+            break
+          case 'SUBMIT':
+            title = `${log.entityType} Submitted`
+            color = 'bg-purple-500'
+            break
+          default:
+            title = `${log.action} ${log.entityType}`
+            color = 'bg-gray-500'
+        }
+        
+        return {
+          id: log.id,
+          title,
+          subtitle: `By ${userName} • ${timeAgo}`,
+          color
+        }
+      })
+      
+      setRecentActivity(activities)
     } catch (error) {
       console.error('Failed to load dashboard data:', error)
     } finally {
       setLoading(false)
     }
+  }
+  
+  const getTimeAgo = (date: Date) => {
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
+    
+    if (seconds < 60) return 'Just now'
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
+    return date.toLocaleDateString()
   }
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -187,12 +243,18 @@ export default function DashboardPage() {
 
   const handleExportTrips = () => {
     console.log('Exporting trip history...')
-    // Create CSV content
+    // Create CSV content from completed trips
     const headers = ['Date', 'Route', 'Requested By', 'Fuel Consumption', 'Status']
     const csvContent = [
       headers.join(','),
-      ...tripHistory.map(trip => 
-        [trip.date, `"${trip.route}"`, trip.requestedBy, trip.fuel, trip.status].join(',')
+      ...completedTrips.map(trip => 
+        [
+          new Date(trip.startDateTime).toLocaleDateString(),
+          `"Main Campus → ${trip.destination}"`,
+          trip.requester?.name || 'N/A',
+          trip.fuelConsumed ? `${trip.fuelConsumed}L` : 'N/A',
+          trip.state
+        ].join(',')
       )
     ].join('\n')
 
@@ -220,12 +282,6 @@ export default function DashboardPage() {
         return 'bg-gray-100 text-gray-700'
     }
   }
-
-  const recentActivity = [
-    { id: 1, title: 'Trip to Dire Dawa Approved', subtitle: 'Requested by Dr. Tadesse • 2 hours ago', color: 'bg-emerald-500' },
-    { id: 2, title: 'Request Rejected: Incomplete Data', subtitle: 'Requested by Abdi M. • 3 hours ago', color: 'bg-red-500' },
-    { id: 3, title: 'New Request Received', subtitle: 'From Prof. Martha G. • Yesterday', color: 'bg-emerald-500' },
-  ]
 
   const fleetStatus = vehicles.slice(0, 3).map((vehicle: any, index: number) => ({
     id: vehicle.id,
@@ -274,7 +330,15 @@ export default function DashboardPage() {
           {/* Header Info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <p className="text-xs sm:text-sm text-gray-500">Semester II, 2024 | Last updated: Oct 12, 09:45 AM</p>
+          <p className="text-xs sm:text-sm text-gray-500">
+            Semester II, 2024 | Last updated: {new Date().toLocaleString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: true 
+            })}
+          </p>
         </div>
         <button 
           onClick={() => setShowRequestModal(true)}
@@ -325,7 +389,9 @@ export default function DashboardPage() {
             </div>
             <div className="text-center pt-3 md:pt-4 border-t border-gray-200">
               <div className="text-xs md:text-sm text-gray-500">Avg. Trips/Day</div>
-              <div className="text-xl md:text-2xl font-bold text-gray-900">2.4</div>
+              <div className="text-xl md:text-2xl font-bold text-gray-900">
+                {statistics?.averageTripsPerDay?.toFixed(1) || '0.0'}
+              </div>
             </div>
           </div>
         </div>
@@ -339,15 +405,21 @@ export default function DashboardPage() {
           </div>
           <div className="p-4 md:p-6">
             <div className="space-y-3 md:space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex gap-2 md:gap-3">
-                  <div className={`w-2 h-2 ${activity.color} rounded-full mt-1.5 md:mt-2 flex-shrink-0`}></div>
-                  <div className="min-w-0">
-                    <div className="text-xs md:text-sm font-medium text-gray-900">{activity.title}</div>
-                    <div className="text-[10px] md:text-xs text-gray-500">{activity.subtitle}</div>
+              {recentActivity.length > 0 ? (
+                recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex gap-2 md:gap-3">
+                    <div className={`w-2 h-2 ${activity.color} rounded-full mt-1.5 md:mt-2 flex-shrink-0`}></div>
+                    <div className="min-w-0">
+                      <div className="text-xs md:text-sm font-medium text-gray-900">{activity.title}</div>
+                      <div className="text-[10px] md:text-xs text-gray-500">{activity.subtitle}</div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-sm text-gray-500">
+                  No recent activity
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

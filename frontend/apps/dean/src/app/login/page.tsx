@@ -23,7 +23,8 @@ export default function LoginPage() {
       const response: any = await authApi.login(email, password)
       
       // Store tokens and user data
-      localStorage.setItem('accessToken', response.accessToken)
+      localStorage.setItem('accessToken', response.access_token)
+      localStorage.setItem('refreshToken', response.refresh_token)
       localStorage.setItem('user', JSON.stringify(response.user))
       
       if (rememberMe) {
