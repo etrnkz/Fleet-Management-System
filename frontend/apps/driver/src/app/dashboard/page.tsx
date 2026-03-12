@@ -1,90 +1,85 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { authApi, tripApi, vehicleApi, statsApi } from '../lib/api'
 
 export default function DriverDashboard() {
   const router = useRouter()
   const [activeSection, setActiveSection] = useState('overview')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [userData, setUserData] = useState<any>(null)
-  const [assignedVehicle, setAssignedVehicle] = useState<any>(null)
-  const [stats, setStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadUserData()
-  }, [])
-
-  const loadUserData = async () => {
-    try {
-      const [user, vehicle, driverStats] = await Promise.all([
-        authApi.getCurrentUser(),
-        vehicleApi.getAssignedVehicle(),
-        statsApi.getDriverStats()
-      ])
-      
-      setUserData(user)
-      setAssignedVehicle(vehicle)
-      setStats(driverStats)
-    } catch (error) {
-      console.error('Failed to load user data:', error)
-      // If token is invalid, redirect to login
-      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
-        router.push('/login')
-      }
-    } finally {
-      setLoading(false)
-    }
+  // Mock user data
+  const userData = {
+    fullName: 'Driver User',
+    email: 'driver@hu.edu.et',
+    vehicleAssigned: 'Toyota Hilux - ET-3-12345',
+    status: 'Available'
   }
 
-  const [assignedTrips, setAssignedTrips] = useState([])
-  const [activeTrips, setActiveTrips] = useState([])
-  const [completedTrips, setCompletedTrips] = useState([])
-
-  useEffect(() => {
-    if (activeSection === 'assigned-trips') {
-      loadAssignedTrips()
-    } else if (activeSection === 'active-trip') {
-      loadActiveTrips()
-    } else if (activeSection === 'trip-history') {
-      loadCompletedTrips()
+  // Mock assigned trips
+  const assignedTrips = [
+    {
+      id: 1,
+      destination: 'Dire Dawa',
+      passenger: 'Dr. Ahmed Hassan',
+      department: 'Engineering',
+      date: '2025-01-15',
+      time: '08:00 AM',
+      status: 'Upcoming',
+      distance: '45 km'
+    },
+    {
+      id: 2,
+      destination: 'Harar',
+      passenger: 'Prof. Sarah Mohammed',
+      department: 'Medicine',
+      date: '2025-01-16',
+      time: '10:00 AM',
+      status: 'Upcoming',
+      distance: '60 km'
     }
-  }, [activeSection])
+  ]
 
-  const loadAssignedTrips = async () => {
-    try {
-      const trips = await tripApi.getAssignedTrips()
-      setAssignedTrips(trips)
-    } catch (error) {
-      console.error('Failed to load assigned trips:', error)
+  // Mock active trips
+  const activeTrips = [
+    {
+      id: 3,
+      destination: 'Addis Ababa',
+      passenger: 'Dr. John Smith',
+      department: 'Business',
+      startTime: '07:30 AM',
+      estimatedArrival: '11:30 AM',
+      distance: '520 km',
+      progress: 45
     }
-  }
+  ]
 
-  const loadActiveTrips = async () => {
-    try {
-      const trips = await tripApi.getActiveTrips()
-      setActiveTrips(trips)
-    } catch (error) {
-      console.error('Failed to load active trips:', error)
+  // Mock completed trips
+  const completedTrips = [
+    {
+      id: 4,
+      destination: 'Jijiga',
+      passenger: 'Prof. Fatima Ali',
+      date: '2025-01-10',
+      distance: '95 km',
+      duration: '2h 15m',
+      fuelUsed: '12 L'
+    },
+    {
+      id: 5,
+      destination: 'Dire Dawa',
+      passenger: 'Dr. Michael Brown',
+      date: '2025-01-08',
+      distance: '45 km',
+      duration: '1h 10m',
+      fuelUsed: '6 L'
     }
-  }
-
-  const loadCompletedTrips = async () => {
-    try {
-      const trips = await tripApi.getCompletedTrips()
-      setCompletedTrips(trips)
-    } catch (error) {
-      console.error('Failed to load completed trips:', error)
-    }
-  }
+  ]
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token')
     localStorage.removeItem('userData')
-    router.push('/login')
+    router.push('/')
   }
 
   return (
@@ -101,7 +96,7 @@ export default function DriverDashboard() {
             </div>
             <div>
               <h1 className="font-bold text-gray-900">Driver Portal</h1>
-              <p className="text-xs text-gray-500">{userData?.fullName || 'Loading...'}</p>
+              <p className="text-xs text-gray-500">{userData.fullName}</p>
             </div>
           </div>
 
@@ -267,14 +262,14 @@ export default function DriverDashboard() {
                   <h2 className="text-xl font-bold text-gray-900 capitalize">
                     {activeSection.replace('-', ' ')}
                   </h2>
-                  <p className="text-sm text-gray-500">{assignedVehicle?.plateNumber || userData?.vehicleAssigned || 'No vehicle assigned'}</p>
+                  <p className="text-sm text-gray-500">{userData.vehicleAssigned}</p>
                 </div>
               </div>
               
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-emerald-700">{userData?.status || 'Available'}</span>
+                  <span className="text-sm font-medium text-emerald-700">{userData.status}</span>
                 </div>
               </div>
             </div>
@@ -293,7 +288,7 @@ export default function DriverDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Assigned Trips</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{assignedTrips.length}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">2</p>
                   </div>
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,7 +302,7 @@ export default function DriverDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Active Trip</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{activeTrips.length}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">1</p>
                   </div>
                   <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
@@ -322,7 +317,7 @@ export default function DriverDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Completed</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{stats?.completedTrips || 0}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">24</p>
                   </div>
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,7 +331,7 @@ export default function DriverDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Total Distance</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{stats?.totalDistance || '0'} km</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">1,245 km</p>
                   </div>
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,23 +353,23 @@ export default function DriverDashboard() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">{assignedVehicle?.make} {assignedVehicle?.model} - {assignedVehicle?.plateNumber}</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">{userData.vehicleAssigned}</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                     <div>
                       <p className="text-sm text-gray-600">Type</p>
-                      <p className="font-medium text-gray-900">{assignedVehicle?.type || 'Vehicle'}</p>
+                      <p className="font-medium text-gray-900">Pickup Truck</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Fuel Level</p>
-                      <p className="font-medium text-gray-900">{assignedVehicle?.fuelLevel || '0'}%</p>
+                      <p className="font-medium text-gray-900">75%</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Mileage</p>
-                      <p className="font-medium text-gray-900">{assignedVehicle?.mileage || '0'} km</p>
+                      <p className="font-medium text-gray-900">45,230 km</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Status</p>
-                      <p className="font-medium text-emerald-600">{assignedVehicle?.status || 'Unknown'}</p>
+                      <p className="font-medium text-emerald-600">Good Condition</p>
                     </div>
                   </div>
                 </div>
