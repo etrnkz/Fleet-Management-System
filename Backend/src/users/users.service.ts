@@ -2,15 +2,21 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { Department } from '../departments/entities/department.entity';
+import { College } from '../colleges/entities/college.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
+    @InjectRepository(College)
+    private readonly collegeRepository: Repository<College>,
   ) {}
 
-  async create(userData: Partial<User>): Promise<User> {
+  async create(userData: Partial<User> & { departmentId?: string; collegeId?: string }): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       where: { email: userData.email },
     });
@@ -20,6 +26,27 @@ export class UsersService {
     }
 
     const user = this.userRepository.create(userData);
+    
+    // Set department if departmentId is provided
+    if (userData.departmentId) {
+      const department = await this.departmentRepository.findOne({
+        where: { id: userData.departmentId },
+      });
+      if (department) {
+        user.department = department;
+      }
+    }
+    
+    // Set college if collegeId is provided
+    if (userData.collegeId) {
+      const college = await this.collegeRepository.findOne({
+        where: { id: userData.collegeId },
+      });
+      if (college) {
+        user.college = college;
+      }
+    }
+    
     return this.userRepository.save(user);
   }
 

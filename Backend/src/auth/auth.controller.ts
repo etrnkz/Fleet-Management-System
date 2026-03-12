@@ -13,7 +13,6 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -29,7 +28,6 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 attempts per minute
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   @ApiOperation({ summary: 'User login', description: 'Authenticate user and return JWT token' })
   @ApiBody({ type: LoginDto })
@@ -50,7 +48,6 @@ export class AuthController {
     }
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  @ApiResponse({ status: 429, description: 'Too many login attempts' })
   async login(
     @Body() loginDto: LoginDto,
     @Ip() ip: string,
@@ -73,7 +70,6 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 registrations per hour per IP
   @UsePipes(new ValidationPipe({ 
     transform: true, 
     whitelist: true,

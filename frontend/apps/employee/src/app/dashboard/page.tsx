@@ -108,7 +108,9 @@ export default function DashboardPage() {
       e.preventDefault()
       setSubmitting(true)
       try {
-        await tripApi.create(formData)
+        const createdTrip: any = await tripApi.create(formData)
+        // Automatically submit the trip for approval
+        await tripApi.submit(createdTrip.id)
         showToast('Trip request submitted successfully!', 'success')
         loadDashboardData()
         setActiveSection('overview')

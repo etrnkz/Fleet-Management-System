@@ -200,7 +200,7 @@ export default function ApprovalsPage() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0 mr-2">
                   <h3 className="text-base md:text-lg font-semibold text-gray-900 truncate">{request.requester?.name || 'N/A'}</h3>
-                  <p className="text-xs md:text-sm text-gray-500 truncate">{request.requester?.department || 'N/A'}</p>
+                  <p className="text-xs md:text-sm text-gray-500 truncate">{request.requester?.department?.name || 'N/A'}</p>
                 </div>
                 <span className={`px-2 md:px-3 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap ${getPriorityColor(request.priority || 'MEDIUM')}`}>
                   {request.priority || 'MEDIUM'}
@@ -384,7 +384,7 @@ export default function ApprovalsPage() {
                 </div>
 
                 {/* Actions */}
-                {selectedRequest.status === 'pending' && (
+                {getStatusFromState(selectedRequest.state) === 'pending' && (
                   <div className="flex flex-col sm:flex-row items-center gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
                     <button
                       onClick={() => setShowApproveModal(true)}
