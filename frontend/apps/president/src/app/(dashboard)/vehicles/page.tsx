@@ -1,169 +1,81 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { vehicleApi, driverApi } from '../../lib/api'
 
 export default function VehiclesPage() {
   const [selectedTab, setSelectedTab] = useState('all')
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+  const [vehicles, setVehicles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const vehicles = [
-    {
-      id: 1,
-      plateNumber: 'ABC-1234',
-      type: 'Toyota Coaster',
-      capacity: '40 seats',
-      status: 'on-trip',
-      driver: {
-        name: 'Ahmed Hassan',
-        phone: '+251-91-234-5678',
-        licenseNumber: 'DL-12345',
-        experience: '8 years',
-        assignedVehicle: 'ABC-1234'
-      },
-      department: 'Engineering',
-      destination: 'Addis Ababa',
-      tripStart: '2024-06-15 08:00',
-      tripEnd: '2024-06-18 17:00',
-      fuelLevel: 75,
-      mileage: '125,450 km',
-      lastMaintenance: '2024-05-10',
-      nextMaintenance: '2024-07-10',
-      insurance: 'Valid until 2024-12-31',
-      registrationExpiry: '2024-08-25'
-    },
-    {
-      id: 2,
-      plateNumber: 'XYZ-5678',
-      type: 'Isuzu NPR',
-      capacity: '3 tons',
-      status: 'available',
-      driver: null,
-      department: 'Available',
-      fuelLevel: 90,
-      mileage: '89,320 km',
-      lastMaintenance: '2024-06-01',
-      nextMaintenance: '2024-08-01',
-      insurance: 'Valid until 2024-11-30',
-      registrationExpiry: '2024-07-05'
-    },
-    {
-      id: 3,
-      plateNumber: 'DEF-9012',
-      type: 'Toyota Hiace',
-      capacity: '14 seats',
-      status: 'assigned',
-      driver: {
-        name: 'Fatuma Mohammed',
-        phone: '+251-91-345-6789',
-        licenseNumber: 'DL-23456',
-        experience: '5 years',
-        assignedVehicle: 'DEF-9012'
-      },
-      department: 'Medicine',
-      assignedTo: 'Medical Supplies Transport',
-      fuelLevel: 60,
-      mileage: '156,780 km',
-      lastMaintenance: '2024-05-20',
-      nextMaintenance: '2024-07-20',
-      insurance: 'Valid until 2024-10-15',
-      registrationExpiry: '2024-09-12'
-    },
-    {
-      id: 4,
-      plateNumber: 'GHI-3456',
-      type: 'Mitsubishi Rosa',
-      capacity: '28 seats',
-      status: 'maintenance',
-      driver: null,
-      department: 'Maintenance',
-      maintenanceType: 'Brake system repair',
-      estimatedCompletion: '2024-06-20',
-      fuelLevel: 45,
-      mileage: '198,650 km',
-      lastMaintenance: '2024-06-15',
-      nextMaintenance: '2024-08-15',
-      insurance: 'Valid until 2024-12-20',
-      registrationExpiry: '2024-11-10'
-    },
-    {
-      id: 5,
-      plateNumber: 'JKL-7890',
-      type: 'Nissan Civilian',
-      capacity: '35 seats',
-      status: 'on-trip',
-      driver: {
-        name: 'Abebe Kebede',
-        phone: '+251-91-456-7890',
-        licenseNumber: 'DL-34567',
-        experience: '12 years',
-        assignedVehicle: 'JKL-7890'
-      },
-      department: 'Business',
-      destination: 'Dire Dawa',
-      tripStart: '2024-06-16 09:00',
-      tripEnd: '2024-06-16 18:00',
-      fuelLevel: 55,
-      mileage: '142,890 km',
-      lastMaintenance: '2024-04-25',
-      nextMaintenance: '2024-06-25',
-      insurance: 'Valid until 2024-09-30',
-      registrationExpiry: '2024-08-15'
-    },
-    {
-      id: 6,
-      plateNumber: 'MNO-2345',
-      type: 'Toyota Land Cruiser',
-      capacity: '7 seats',
-      status: 'available',
-      driver: null,
-      department: 'Available',
-      fuelLevel: 85,
-      mileage: '78,450 km',
-      lastMaintenance: '2024-06-05',
-      nextMaintenance: '2024-08-05',
-      insurance: 'Valid until 2024-12-15',
-      registrationExpiry: '2024-10-20'
-    },
-    {
-      id: 7,
-      plateNumber: 'PQR-6789',
-      type: 'Mercedes Sprinter',
-      capacity: '16 seats',
-      status: 'assigned',
-      driver: {
-        name: 'Hanna Tesfaye',
-        phone: '+251-91-567-8901',
-        licenseNumber: 'DL-45678',
-        experience: '6 years',
-        assignedVehicle: 'PQR-6789'
-      },
-      department: 'Administration',
-      assignedTo: 'VIP Transport',
-      fuelLevel: 70,
-      mileage: '65,230 km',
-      lastMaintenance: '2024-05-15',
-      nextMaintenance: '2024-07-15',
-      insurance: 'Valid until 2024-11-25',
-      registrationExpiry: '2024-09-30'
-    },
-    {
-      id: 8,
-      plateNumber: 'STU-0123',
-      type: 'Toyota Hiace',
-      capacity: '14 seats',
-      status: 'idle',
-      driver: null,
-      department: 'Idle',
-      fuelLevel: 40,
-      mileage: '187,920 km',
-      lastMaintenance: '2024-03-10',
-      nextMaintenance: '2024-05-10',
-      insurance: 'Valid until 2024-08-30',
-      registrationExpiry: '2024-07-25',
-      note: 'Idle for 7 days - consider reassignment'
+  useEffect(() => {
+    loadVehiclesData()
+  }, [])
+
+  const loadVehiclesData = async () => {
+    try {
+      setLoading(true)
+      const vehiclesData = await vehicleApi.getAll()
+      
+      // Enhance vehicles with additional data
+      const enhancedVehicles = await Promise.all(
+        vehiclesData.map(async (vehicle: any) => {
+          let driver = null
+          if (vehicle.assignedDriverId) {
+            try {
+              driver = await driverApi.getById(vehicle.assignedDriverId)
+            } catch (error) {
+              console.error(`Failed to load driver for vehicle ${vehicle.id}:`, error)
+            }
+          }
+
+          // Map vehicle status and add mock data for demo
+          const status = vehicle.status?.toLowerCase() || 'available'
+          const fuelLevel = Math.floor(Math.random() * 100)
+          const department = vehicle.assignedDepartment || 'Available'
+          
+          return {
+            ...vehicle,
+            id: vehicle.id,
+            plateNumber: vehicle.plateNumber,
+            type: `${vehicle.make} ${vehicle.model}`,
+            capacity: vehicle.capacity ? `${vehicle.capacity} seats` : 'N/A',
+            status: status,
+            driver: driver ? {
+              name: `${driver.user?.firstName || ''} ${driver.user?.lastName || ''}`.trim(),
+              phone: driver.user?.phone || 'N/A',
+              licenseNumber: driver.licenseNumber || 'N/A',
+              experience: driver.experience || 'N/A',
+              assignedVehicle: vehicle.plateNumber
+            } : null,
+            department: department,
+            destination: status === 'on-trip' ? 'In Transit' : null,
+            tripStart: status === 'on-trip' ? new Date().toISOString().slice(0, 16) : null,
+            tripEnd: status === 'on-trip' ? new Date(Date.now() + 24*60*60*1000).toISOString().slice(0, 16) : null,
+            fuelLevel: fuelLevel,
+            mileage: vehicle.currentMileage ? `${vehicle.currentMileage.toLocaleString()} km` : 'N/A',
+            lastMaintenance: vehicle.lastServiceDate || 'N/A',
+            nextMaintenance: vehicle.nextServiceDate || 'N/A',
+            insurance: vehicle.insuranceExpiryDate ? `Valid until ${vehicle.insuranceExpiryDate}` : 'N/A',
+            registrationExpiry: vehicle.registrationExpiryDate || 'N/A',
+            assignedTo: vehicle.assignedTo || null,
+            maintenanceType: status === 'maintenance' ? 'Scheduled maintenance' : null,
+            estimatedCompletion: status === 'maintenance' ? new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0, 10) : null,
+            note: status === 'idle' ? `Idle for ${Math.floor(Math.random() * 10) + 1} days` : null
+          }
+        })
+      )
+      
+      setVehicles(enhancedVehicles)
+    } catch (error) {
+      console.error('Failed to load vehicles data:', error)
+      setVehicles([])
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -231,6 +143,20 @@ export default function VehiclesPage() {
     assigned: vehicles.filter(v => v.status === 'assigned').length,
     maintenance: vehicles.filter(v => v.status === 'maintenance').length,
     idle: vehicles.filter(v => v.status === 'idle').length,
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Fleet Management</h1>
+          <p className="text-gray-600 mt-1">Monitor and manage all university vehicles</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -309,7 +235,12 @@ export default function VehiclesPage() {
 
       {/* Vehicles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVehicles.map((vehicle) => (
+        {vehicles.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <p className="text-gray-500">No vehicles found</p>
+          </div>
+        ) : (
+          filteredVehicles.map((vehicle) => (
           <div
             key={vehicle.id}
             className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden cursor-pointer"
@@ -387,7 +318,8 @@ export default function VehiclesPage() {
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Vehicle Detail Modal */}

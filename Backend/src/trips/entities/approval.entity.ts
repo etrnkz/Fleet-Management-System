@@ -13,6 +13,7 @@ export enum ApprovalLevel {
   Department = 'Department',
   College = 'College',
   Dean = 'Dean',
+  President = 'President',
   Deployment = 'Deployment',
   Transport = 'Transport',
 }

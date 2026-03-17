@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { authApi } from '../lib/api'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -12,10 +13,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [savedCredentials, setSavedCredentials] = useState<{email: string; password: string} | null>(null)
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Load remembered credentials on component mount
   useEffect(() => {
-    const rememberedUser = localStorage.getItem('driverRememberedUser')
+    const rememberedUser = localStorage.getItem('rememberedUser')
     if (rememberedUser) {
       const userData = JSON.parse(rememberedUser)
       const expiryDate = new Date(userData.expiry)
@@ -26,38 +29,40 @@ export default function LoginPage() {
           password: userData.password
         })
       } else {
-        localStorage.removeItem('driverRememberedUser')
+        localStorage.removeItem('rememberedUser')
       }
     }
   }, [])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+    setIsLoading(true)
     
-    if (email === 'driver@hu.edu.et' && password === 'driver123') {
-      const userData = {
-        email: email,
-        role: 'driver',
-        fullName: 'Driver User'
-      }
+    try {
+      const response = await authApi.login(email, password)
+      
+      // Store the token
+      localStorage.setItem('access_token', response.access_token)
       
       if (rememberMe) {
         const expiryDate = new Date()
         expiryDate.setDate(expiryDate.getDate() + 30)
         
-        localStorage.setItem('driverRememberedUser', JSON.stringify({
+        localStorage.setItem('rememberedUser', JSON.stringify({
           email: email,
           password: password,
           expiry: expiryDate.toISOString()
         }))
       } else {
-        localStorage.removeItem('driverRememberedUser')
+        localStorage.removeItem('rememberedUser')
       }
       
-      localStorage.setItem('userData', JSON.stringify(userData))
       router.push('/dashboard')
-    } else {
-      alert('Invalid credentials. Use driver@hu.edu.et / driver123')
+    } catch (error: any) {
+      setError(error.message || 'Login failed')
+    } finally {
+      setIsLoading(false)
     }
   }
 

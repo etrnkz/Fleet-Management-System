@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { authApi, tripApi, vehicleApi, driverApi, maintenanceApi, statsApi } from '../../lib/api'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -17,85 +18,53 @@ export default function DashboardPage() {
     vehicleId: '',
     driverId: ''
   })
+  const [userData, setUserData] = useState<any>(null)
+  const [approvedRequests, setApprovedRequests] = useState([])
+  const [availableVehicles, setAvailableVehicles] = useState([])
+  const [availableDrivers, setAvailableDrivers] = useState([])
+  const [pendingApprovals, setPendingApprovals] = useState([])
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Sample approved requests waiting for assignment
-  const [approvedRequests, setApprovedRequests] = useState([
-    {
-      id: 'REQ-2024-001',
-      requestedBy: 'Dr. Sarah Ahmed',
-      department: 'Computer Science',
-      approvedBy: 'College Dean',
-      approver: 'Dr. Michael Brown',
-      purpose: 'Academic Conference - Addis Ababa',
-      date: '2024-03-15',
-      duration: '3 days',
-      passengers: 4,
-      timestamp: '2 hours ago',
-      status: 'pending_assignment',
-      isNew: true
-    },
-    {
-      id: 'REQ-2024-002',
-      requestedBy: 'Prof. John Smith',
-      department: 'Engineering',
-      approvedBy: 'President',
-      approver: 'Dr. Elizabeth Wilson',
-      purpose: 'Research Field Trip - Bahir Dar',
-      date: '2024-03-18',
-      duration: '5 days',
-      passengers: 8,
-      timestamp: '5 hours ago',
-      status: 'pending_assignment',
-      isNew: true
-    },
-    {
-      id: 'REQ-2024-003',
-      requestedBy: 'Dr. Ahmed Hassan',
-      department: 'Medical School',
-      approvedBy: 'College Dean',
-      approver: 'Dr. Sarah Johnson',
-      purpose: 'Medical Outreach Program',
-      date: '2024-03-20',
-      duration: '2 days',
-      passengers: 6,
-      timestamp: '1 day ago',
-      status: 'pending_assignment',
-      isNew: false
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      const [
+        user,
+        approvedTrips,
+        vehicles,
+        drivers,
+        maintenanceRequests,
+        deploymentStats
+      ] = await Promise.all([
+        authApi.getCurrentUser(),
+        tripApi.getApprovedTrips(),
+        vehicleApi.getAvailableVehicles(),
+        driverApi.getAvailableDrivers(),
+        maintenanceApi.getAllMaintenanceRequests(),
+        statsApi.getDeploymentStats()
+      ])
+      
+      setUserData(user)
+      setApprovedRequests(approvedTrips.filter((trip: any) => !trip.vehicleId || !trip.driverId))
+      setAvailableVehicles(vehicles)
+      setAvailableDrivers(drivers)
+      setPendingApprovals(maintenanceRequests.filter((req: any) => req.status === 'PENDING').slice(0, 5))
+      setStats(deploymentStats)
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error)
+      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
+        router.push('/login')
+      }
+    } finally {
+      setLoading(false)
     }
-  ])
+  }
 
-  const unreadCount = approvedRequests.filter(req => req.isNew).length
-
-  const availableVehicles = [
-    { id: 'V-001', name: 'Toyota Land Cruiser', plate: 'AA-12345', capacity: '7 seats', type: 'SUV' },
-    { id: 'V-002', name: 'Mercedes Sprinter', plate: 'AA-23456', capacity: '12 seats', type: 'Van' },
-    { id: 'V-003', name: 'Toyota Hiace', plate: 'AA-34567', capacity: '14 seats', type: 'Van' },
-    { id: 'V-004', name: 'Nissan Patrol', plate: 'AA-45678', capacity: '8 seats', type: 'SUV' }
-  ]
-
-  const availableDrivers = [
-    { id: 'D-001', name: 'Ahmed Hassan', license: 'Class A', experience: '10 years' },
-    { id: 'D-002', name: 'Bekele Girma', license: 'Class B', experience: '8 years' },
-    { id: 'D-003', name: 'Mohammed Ali', license: 'Class A', experience: '12 years' },
-    { id: 'D-004', name: 'Tadesse Girma', license: 'Class B', experience: '6 years' }
-  ]
-
-  const [pendingApprovals, setPendingApprovals] = useState([
-    {
-      id: 1,
-      type: 'Maintenance Request',
-      title: 'Maintenance Request',
-      description: 'Unit #V-901 - Brake Inspection',
-      icon: 'maintenance'
-    },
-    {
-      id: 2,
-      type: 'Driver Onboarding',
-      title: 'New Driver Onboarding',
-      description: 'Robert Vance - Class A CDL',
-      icon: 'driver'
-    }
-  ])
+  const unreadCount = approvedRequests.filter((req: any) => req.isNew).length
 
   // Toast notification handler
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -126,29 +95,51 @@ export default function DashboardPage() {
     setShowAssignmentModal(true)
   }
 
-  const handleAssignVehicleDriver = () => {
+  const handleAssignVehicleDriver = async () => {
     if (!assignmentData.vehicleId || !assignmentData.driverId) {
-      alert('Please select both vehicle and driver')
+      showNotification('Please select both vehicle and driver', 'error')
       return
     }
 
-    setApprovedRequests(prev =>
-      prev.map(req =>
-        req.id === selectedRequest.id
-          ? { ...req, status: 'assigned', isNew: false }
-          : req
-      ).filter(req => req.status !== 'assigned')
-    )
+    try {
+      await tripApi.assignVehicleAndDriver(
+        selectedRequest.id,
+        assignmentData.vehicleId,
+        assignmentData.driverId
+      )
 
-    setShowAssignmentModal(false)
-    setSelectedRequest(null)
-    setAssignmentData({ vehicleId: '', driverId: '' })
+      // Remove the assigned request from the list
+      setApprovedRequests(prev =>
+        prev.filter((req: any) => req.id !== selectedRequest.id)
+      )
 
-    alert(`Vehicle and driver assigned successfully for ${selectedRequest.id}`)
+      setShowAssignmentModal(false)
+      setSelectedRequest(null)
+      setAssignmentData({ vehicleId: '', driverId: '' })
+
+      showNotification(`Vehicle and driver assigned successfully for ${selectedRequest.id}`)
+    } catch (error) {
+      console.error('Failed to assign vehicle and driver:', error)
+      showNotification('Failed to assign vehicle and driver', 'error')
+    }
   }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
+      {loading && (
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+            ))}
+          </div>
+          <div className="h-64 bg-gray-200 rounded-xl"></div>
+        </div>
+      )}
+
+      {!loading && (
+        <>
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
