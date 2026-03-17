@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { tripApi, vehicleApi, driverApi } from '../../lib/api'
 
 export default function TripsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showAssignModal, setShowAssignModal] = useState(false)
@@ -21,83 +24,35 @@ export default function TripsPage() {
     urgency: 'normal',
     notes: ''
   })
+  const [tripsList, setTripsList] = useState([])
+  const [availableVehicles, setAvailableVehicles] = useState([])
+  const [availableDrivers, setAvailableDrivers] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const availableVehicles = [
-    { id: 'V-001', name: 'Toyota Land Cruiser', plate: 'AA-12345', capacity: '7 seats', type: 'SUV', status: 'Available', fuelLevel: 85 },
-    { id: 'V-004', name: 'Toyota Hiace', plate: 'AA-45678', capacity: '14 seats', type: 'Van', status: 'Available', fuelLevel: 95 },
-    { id: 'V-006', name: 'Mitsubishi Canter', plate: 'AA-67890', capacity: '3 tons', type: 'Truck', status: 'Available', fuelLevel: 80 },
-    { id: 'V-007', name: 'Ford Transit', plate: 'AA-78901', capacity: '15 seats', type: 'Van', status: 'Available', fuelLevel: 90 }
-  ]
+  useEffect(() => {
+    loadTripsData()
+  }, [])
 
-  const availableDrivers = [
-    { id: 'D-001', name: 'Ahmed Hassan', license: 'Class A', experience: '10 years', phone: '+251 911 123 456' },
-    { id: 'D-004', name: 'Tadesse Girma', license: 'Class B', experience: '6 years', phone: '+251 911 456 789' },
-    { id: 'D-006', name: 'Dawit Kebede', license: 'Class C', experience: '7 years', phone: '+251 911 678 901' },
-    { id: 'D-007', name: 'Solomon Haile', license: 'Class B', experience: '11 years', phone: '+251 911 789 012' }
-  ]
-
-  const [tripsList, setTripsList] = useState([
-    {
-      id: 'TRP-2024-001',
-      requestedBy: 'Dr. Sarah Ahmed',
-      department: 'Computer Science',
-      purpose: 'Academic Conference - Addis Ababa',
-      destination: 'Addis Ababa',
-      startDate: '2024-03-15',
-      endDate: '2024-03-18',
-      duration: '3 days',
-      passengers: 4,
-      status: 'Pending Assignment',
-      statusColor: 'bg-yellow-100 text-yellow-700',
-      approvals: [
-        { role: 'Department Head', approver: 'Prof. John Smith', status: 'Approved', date: '2024-03-10' },
-        { role: 'College Dean', approver: 'Dr. Michael Brown', status: 'Approved', date: '2024-03-11' },
-        { role: 'President', approver: 'Dr. Elizabeth Wilson', status: 'Approved', date: '2024-03-12' }
-      ],
-      vehicle: null,
-      driver: null
-    },
-    {
-      id: 'TRP-2024-002',
-      requestedBy: 'Prof. John Smith',
-      department: 'Engineering',
-      purpose: 'Research Field Trip - Bahir Dar',
-      destination: 'Bahir Dar',
-      startDate: '2024-03-18',
-      endDate: '2024-03-23',
-      duration: '5 days',
-      passengers: 8,
-      status: 'Pending Assignment',
-      statusColor: 'bg-yellow-100 text-yellow-700',
-      approvals: [
-        { role: 'Department Head', approver: 'Dr. Ahmed Hassan', status: 'Approved', date: '2024-03-09' },
-        { role: 'College Dean', approver: 'Dr. Sarah Johnson', status: 'Approved', date: '2024-03-10' },
-        { role: 'President', approver: 'Dr. Elizabeth Wilson', status: 'Approved', date: '2024-03-11' }
-      ],
-      vehicle: null,
-      driver: null
-    },
-    {
-      id: 'TRP-2024-003',
-      requestedBy: 'Dr. Ahmed Hassan',
-      department: 'Medical School',
-      purpose: 'Medical Outreach Program',
-      destination: 'Gondar',
-      startDate: '2024-03-20',
-      endDate: '2024-03-22',
-      duration: '2 days',
-      passengers: 6,
-      status: 'Assigned',
-      statusColor: 'bg-emerald-100 text-emerald-700',
-      approvals: [
-        { role: 'Department Head', approver: 'Prof. Mohammed Ali', status: 'Approved', date: '2024-03-08' },
-        { role: 'College Dean', approver: 'Dr. Sarah Johnson', status: 'Approved', date: '2024-03-09' },
-        { role: 'President', approver: 'Dr. Elizabeth Wilson', status: 'Approved', date: '2024-03-10' }
-      ],
-      vehicle: { id: 'V-002', name: 'Mercedes-Benz Sprinter', plate: 'AA-23456', fuelLevel: 60 } as any,
-      driver: { id: 'D-002', name: 'Bekele Girma', phone: '+251 911 234 567' } as any
-    },
-    {
+  const loadTripsData = async () => {
+    try {
+      const [trips, vehicles, drivers] = await Promise.all([
+        tripApi.getAllTrips(),
+        vehicleApi.getAvailableVehicles(),
+        driverApi.getAvailableDrivers()
+      ])
+      
+      setTripsList(trips)
+      setAvailableVehicles(vehicles)
+      setAvailableDrivers(drivers)
+    } catch (error) {
+      console.error('Failed to load trips data:', error)
+      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
+        router.push('/login')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
       id: 'TRP-2024-004',
       requestedBy: 'Dr. Yohannes Tesfaye',
       department: 'Business School',

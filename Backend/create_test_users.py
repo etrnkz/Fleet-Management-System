@@ -170,11 +170,19 @@ def main():
             "app": "http://localhost:3003 (Dean App)"
         },
         {
+            "name": "University President",
+            "email": "president@test.com",
+            "password": "password123",
+            "role": "President",
+            "phoneNumber": "+251911234570",
+            "app": "http://localhost:3004 (President App)"
+        },
+        {
             "name": "Deployment Team",
             "email": "deployment@test.com",
             "password": "password123",
             "role": "DeploymentTeam",
-            "phoneNumber": "+251911234570",
+            "phoneNumber": "+251911234571",
             "app": "http://localhost:3000 (Admin App)"
         },
         {
@@ -182,7 +190,7 @@ def main():
             "email": "transport@test.com",
             "password": "password123",
             "role": "TransportOffice",
-            "phoneNumber": "+251911234571",
+            "phoneNumber": "+251911234572",
             "app": "http://localhost:3000 (Admin App)"
         }
     ]

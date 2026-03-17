@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { authApi } from '../lib/api'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function LoginPage() {
@@ -20,7 +21,7 @@ export default function LoginPage() {
 
   // Load remembered credentials on component mount
   useEffect(() => {
-    const rememberedUser = localStorage.getItem('deploymentRememberedUser')
+    const rememberedUser = localStorage.getItem('rememberedUser')
     if (rememberedUser) {
       const userData = JSON.parse(rememberedUser)
       const expiryDate = new Date(userData.expiry)
@@ -31,7 +32,7 @@ export default function LoginPage() {
           password: userData.password
         })
       } else {
-        localStorage.removeItem('deploymentRememberedUser')
+        localStorage.removeItem('rememberedUser')
       }
     }
   }, [])
@@ -64,34 +65,31 @@ export default function LoginPage() {
 
     setIsLoading(true)
 
-    setTimeout(() => {
-      if (formData.email === 'deployment@hu.edu.et' && formData.password === 'deployment123') {
-        const userData = {
+    try {
+      const response = await authApi.login(formData.email, formData.password)
+      
+      // Store the token
+      localStorage.setItem('access_token', response.access_token)
+      
+      if (rememberMe) {
+        const expiryDate = new Date()
+        expiryDate.setDate(expiryDate.getDate() + 30)
+        
+        localStorage.setItem('rememberedUser', JSON.stringify({
           email: formData.email,
-          role: 'deployment',
-          fullName: 'Deployment Office User'
-        }
-        
-        if (rememberMe) {
-          const expiryDate = new Date()
-          expiryDate.setDate(expiryDate.getDate() + 30)
-          
-          localStorage.setItem('deploymentRememberedUser', JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-            expiry: expiryDate.toISOString()
-          }))
-        } else {
-          localStorage.removeItem('deploymentRememberedUser')
-        }
-        
-        localStorage.setItem('deploymentUserData', JSON.stringify(userData))
-        router.push('/dashboard')
+          password: formData.password,
+          expiry: expiryDate.toISOString()
+        }))
       } else {
-        setErrors({ email: 'Invalid credentials' })
-        setIsLoading(false)
+        localStorage.removeItem('rememberedUser')
       }
-    }, 1500)
+      
+      router.push('/dashboard')
+    } catch (error: any) {
+      setErrors({ email: error.message || 'Login failed' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {

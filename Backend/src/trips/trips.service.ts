@@ -8,11 +8,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TripRequest, TripState, TripType } from './entities/trip-request.entity';
 import { Approval, ApprovalLevel, ApprovalStatus } from './entities/approval.entity';
+import { TripFeedback, FeedbackRating } from './entities/trip-feedback.entity';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { ApproveTripDto } from './dto/approve-trip.dto';
 import { RejectTripDto } from './dto/reject-trip.dto';
 import { AllocateTripDto } from './dto/allocate-trip.dto';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { EarlyCompleteTripDto } from './dto/early-complete-trip.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { DriversService } from '../drivers/drivers.service';
@@ -26,6 +29,8 @@ export class TripsService {
     private readonly tripRepository: Repository<TripRequest>,
     @InjectRepository(Approval)
     private readonly approvalRepository: Repository<Approval>,
+    @InjectRepository(TripFeedback)
+    private readonly feedbackRepository: Repository<TripFeedback>,
     private readonly vehiclesService: VehiclesService,
     private readonly driversService: DriversService,
     private readonly notificationsService: NotificationsService,
@@ -209,6 +214,13 @@ export class TripsService {
 
     await this.approvalRepository.save(approval);
     
+    // Send notification about submission
+    try {
+      await this.notificationsService.notifyTripSubmitted(savedTrip);
+    } catch (error) {
+      console.error('Failed to send submission notification:', error);
+    }
+    
     // Initialize workflow (schedule timeout)
     try {
       await this.workflowService.initializeWorkflow(savedTrip);
@@ -290,6 +302,13 @@ export class TripsService {
     } else {
       trip.currentApprovalLevel = null;
       await this.tripRepository.save(trip);
+    }
+
+    // Send notification to employee about approval
+    try {
+      await this.notificationsService.notifyTripApproved(trip, user);
+    } catch (error) {
+      console.error('Failed to send approval notification:', error);
     }
 
     // Reload trip with fresh approvals data
@@ -416,7 +435,7 @@ export class TripsService {
     const mapping = {
       [TripState.PENDING_DEPARTMENT]: UserRole.DepartmentHead,
       [TripState.PENDING_COLLEGE]: UserRole.Dean, // Dean is the college head
-      [TripState.PENDING_DEAN]: UserRole.Dean, // Keep for backward compatibility, but Dean approves at college level
+      [TripState.PENDING_PRESIDENT]: UserRole.President,
     };
 
     return mapping[state];
@@ -435,8 +454,8 @@ export class TripsService {
   private getNextStateOnApprove(currentState: TripState): TripState {
     const mapping = {
       [TripState.PENDING_DEPARTMENT]: TripState.PENDING_COLLEGE,
-      [TripState.PENDING_COLLEGE]: TripState.PENDING_DEAN,
-      [TripState.PENDING_DEAN]: TripState.APPROVED_FOR_ALLOCATION,
+      [TripState.PENDING_COLLEGE]: TripState.PENDING_PRESIDENT,
+      [TripState.PENDING_PRESIDENT]: TripState.APPROVED_FOR_ALLOCATION,
     };
 
     return mapping[currentState];
@@ -446,7 +465,7 @@ export class TripsService {
     return [
       TripState.PENDING_DEPARTMENT,
       TripState.PENDING_COLLEGE,
-      TripState.PENDING_DEAN,
+      TripState.PENDING_PRESIDENT,
     ].includes(state);
   }
 
@@ -454,7 +473,7 @@ export class TripsService {
     const mapping = {
       [TripState.PENDING_DEPARTMENT]: ApprovalLevel.Department,
       [TripState.PENDING_COLLEGE]: ApprovalLevel.College,
-      [TripState.PENDING_DEAN]: ApprovalLevel.Dean,
+      [TripState.PENDING_PRESIDENT]: ApprovalLevel.President,
     };
 
     return mapping[state];
@@ -682,5 +701,202 @@ export class TripsService {
       totalDistance: distanceResult?.totalDistance ? parseFloat(distanceResult.totalDistance) : 0,
       completionRate: total > 0 ? ((completed / total) * 100).toFixed(2) : 0,
     };
+  }
+
+  async completeEarly(
+    id: string,
+    earlyCompleteTripDto: EarlyCompleteTripDto,
+    user: User,
+  ): Promise<TripRequest> {
+    const trip = await this.findOne(id);
+
+    if (trip.state !== TripState.IN_PROGRESS) {
+      throw new BadRequestException('Trip must be in IN_PROGRESS state to complete early');
+    }
+
+    // Only Transport Office or Deployment Team can complete trips early
+    if (
+      user.role !== UserRole.TransportOffice &&
+      user.role !== UserRole.DeploymentTeam
+    ) {
+      throw new ForbiddenException('Only Transport Office or Deployment Team can complete trips early');
+    }
+
+    // Check if trip is being completed before scheduled end time
+    const now = new Date();
+    const scheduledEnd = new Date(trip.endDateTime);
+    
+    if (now >= scheduledEnd) {
+      throw new BadRequestException('Trip cannot be completed early as scheduled end time has passed');
+    }
+
+    trip.actualDistance = earlyCompleteTripDto.actualDistance;
+    trip.actualFuelCost = earlyCompleteTripDto.actualFuelCost;
+    trip.state = TripState.COMPLETED;
+    trip.completedAt = now;
+
+    // Update vehicle mileage
+    if (trip.allocatedVehicle) {
+      await this.vehiclesService.updateMileage(
+        trip.allocatedVehicle.id,
+        earlyCompleteTripDto.finalMileage,
+      );
+    }
+
+    // Update driver statistics
+    if (trip.allocatedDriver) {
+      await this.driversService.incrementTripStats(
+        trip.allocatedDriver.id,
+        earlyCompleteTripDto.actualDistance,
+      );
+    }
+
+    const savedTrip = await this.tripRepository.save(trip);
+
+    // Send notification about early completion
+    try {
+      await this.notificationsService.notifyTripCompletedEarly(savedTrip, earlyCompleteTripDto.earlyCompletionReason);
+    } catch (error) {
+      console.error('Failed to send early completion notification:', error);
+    }
+
+    return savedTrip;
+  }
+
+  async submitFeedback(
+    id: string,
+    createFeedbackDto: CreateFeedbackDto,
+    user: User,
+  ): Promise<TripFeedback> {
+    const trip = await this.findOne(id);
+
+    if (trip.state !== TripState.COMPLETED) {
+      throw new BadRequestException('Can only submit feedback for completed trips');
+    }
+
+    // Check if feedback already exists
+    const existingFeedback = await this.feedbackRepository.findOne({
+      where: { tripRequest: { id } },
+    });
+
+    if (existingFeedback) {
+      throw new BadRequestException('Feedback has already been submitted for this trip');
+    }
+
+    // Only the trip requester can submit feedback
+    if (trip.requester.id !== user.id) {
+      throw new ForbiddenException('Only the trip requester can submit feedback');
+    }
+
+    const feedback = this.feedbackRepository.create({
+      tripRequest: trip,
+      submittedBy: user,
+      ...createFeedbackDto,
+    });
+
+    const savedFeedback = await this.feedbackRepository.save(feedback);
+
+    // Send notification to relevant parties about feedback
+    try {
+      await this.notificationsService.notifyFeedbackSubmitted(trip, savedFeedback);
+    } catch (error) {
+      console.error('Failed to send feedback notification:', error);
+    }
+
+    return savedFeedback;
+  }
+
+  async getFeedback(id: string): Promise<TripFeedback> {
+    const feedback = await this.feedbackRepository.findOne({
+      where: { tripRequest: { id } },
+      relations: ['tripRequest', 'submittedBy'],
+    });
+
+    if (!feedback) {
+      throw new NotFoundException('Feedback not found for this trip');
+    }
+
+    return feedback;
+  }
+
+  async getFeedbackStatistics(): Promise<any> {
+    const feedbacks = await this.feedbackRepository.find({
+      relations: ['tripRequest'],
+    });
+
+    if (feedbacks.length === 0) {
+      return {
+        totalFeedbacks: 0,
+        averageRatings: {},
+        ratingDistribution: {},
+        commonIssues: [],
+        recommendationRate: 0,
+      };
+    }
+
+    const totalFeedbacks = feedbacks.length;
+    
+    // Calculate average ratings
+    const averageRatings = {
+      overall: this.calculateAverageRating(feedbacks, 'overallRating'),
+      driver: this.calculateAverageRating(feedbacks, 'driverRating'),
+      vehicle: this.calculateAverageRating(feedbacks, 'vehicleRating'),
+      punctuality: this.calculateAverageRating(feedbacks, 'punctualityRating'),
+    };
+
+    // Calculate rating distribution
+    const ratingDistribution = this.calculateRatingDistribution(feedbacks);
+
+    // Get common issues
+    const allIssues = feedbacks
+      .filter(f => f.issues && f.issues.length > 0)
+      .flatMap(f => f.issues);
+    
+    const issueCount = allIssues.reduce((acc, issue) => {
+      acc[issue] = (acc[issue] || 0) + 1;
+      return acc;
+    }, {});
+
+    const commonIssues = Object.entries(issueCount)
+      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .slice(0, 10)
+      .map(([issue, count]) => ({ issue, count }));
+
+    // Calculate recommendation rate
+    const recommendCount = feedbacks.filter(f => f.wouldRecommend).length;
+    const recommendationRate = (recommendCount / totalFeedbacks) * 100;
+
+    return {
+      totalFeedbacks,
+      averageRatings,
+      ratingDistribution,
+      commonIssues,
+      recommendationRate,
+    };
+  }
+
+  private calculateAverageRating(feedbacks: TripFeedback[], field: string): number {
+    const validRatings = feedbacks
+      .map(f => f[field])
+      .filter(rating => rating !== null && rating !== undefined);
+    
+    if (validRatings.length === 0) return 0;
+    
+    const sum = validRatings.reduce((acc, rating) => acc + rating, 0);
+    return Math.round((sum / validRatings.length) * 100) / 100;
+  }
+
+  private calculateRatingDistribution(feedbacks: TripFeedback[]): any {
+    const distribution = {
+      1: 0, 2: 0, 3: 0, 4: 0, 5: 0
+    };
+
+    feedbacks.forEach(feedback => {
+      if (feedback.overallRating) {
+        distribution[feedback.overallRating]++;
+      }
+    });
+
+    return distribution;
   }
 }

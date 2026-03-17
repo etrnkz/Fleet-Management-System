@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { tripApi } from '../../lib/api'
 
 export default function ApprovalsPage() {
   const [selectedTab, setSelectedTab] = useState('pending')
@@ -12,207 +13,113 @@ export default function ApprovalsPage() {
   const [toastMessage, setToastMessage] = useState('')
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
+  const [loading, setLoading] = useState(true)
+  
+  // Data states
+  const [approvalRequests, setApprovalRequests] = useState<any[]>([])
+  const [approvedRequests, setApprovedRequests] = useState<any[]>([])
+  const [rejectedRequests, setRejectedRequests] = useState<any[]>([])
 
-  const approvalRequests = [
-    {
-      id: 'REQ-2024-1245',
-      type: 'International Trip',
-      department: 'College of Engineering',
-      requester: {
-        name: 'Dr. Abebe Kebede',
-        position: 'Department Head',
-        email: 'abebe.k@hu.edu.et',
-        phone: '+251-91-234-5678'
-      },
-      purpose: 'International Conference on Sustainable Engineering',
-      destination: 'Nairobi, Kenya',
-      tripDates: {
-        start: '2024-06-20',
-        end: '2024-06-24'
-      },
-      duration: '5 days',
-      vehicleType: 'Toyota Coaster (40 seats)',
-      passengers: 35,
-      estimatedCost: 'ETB 125,000',
-      budgetStatus: 'Available',
-      deanApproval: {
-        status: 'Approved',
-        date: '2024-06-10',
-        comments: 'Important conference for faculty development'
-      },
-      priority: 'urgent',
-      status: 'pending',
-      submittedDate: '2024-06-09',
-      documents: ['Conference Invitation.pdf', 'Budget Breakdown.xlsx']
-    },
-    {
-      id: 'REQ-2024-1246',
-      type: 'Research Trip',
-      department: 'College of Natural Sciences',
-      requester: {
-        name: 'Prof. Fatuma Mohammed',
-        position: 'Research Coordinator',
-        email: 'fatuma.m@hu.edu.et',
-        phone: '+251-91-345-6789'
-      },
-      purpose: 'Research collaboration with Addis Ababa University',
-      destination: 'Addis Ababa',
-      tripDates: {
-        start: '2024-06-18',
-        end: '2024-06-20'
-      },
-      duration: '3 days',
-      vehicleType: 'Toyota Hiace (14 seats)',
-      passengers: 8,
-      estimatedCost: 'ETB 45,000',
-      budgetStatus: 'Available',
-      deanApproval: {
-        status: 'Approved',
-        date: '2024-06-11',
-        comments: 'Critical research partnership'
-      },
-      priority: 'high',
-      status: 'pending',
-      submittedDate: '2024-06-10',
-      documents: ['Research Proposal.pdf', 'Partnership Agreement.pdf']
-    },
-    {
-      id: 'REQ-2024-1243',
-      type: 'VIP Transport',
-      department: 'Office of the President',
-      requester: {
-        name: 'Hanna Tesfaye',
-        position: 'Protocol Officer',
-        email: 'hanna.t@hu.edu.et',
-        phone: '+251-91-456-7890'
-      },
-      purpose: 'Diplomatic visit - Ambassador of Kenya',
-      destination: 'Harar Airport - Campus - Airport',
-      tripDates: {
-        start: '2024-06-22',
-        end: '2024-06-22'
-      },
-      duration: '1 day',
-      vehicleType: 'Executive Sedan',
-      passengers: 3,
-      estimatedCost: 'ETB 15,000',
-      budgetStatus: 'Available',
-      deanApproval: {
-        status: 'N/A',
-        date: 'N/A',
-        comments: 'Direct presidential request'
-      },
-      priority: 'urgent',
-      status: 'pending',
-      submittedDate: '2024-06-12',
-      documents: ['Visit Itinerary.pdf']
-    },
-    {
-      id: 'REQ-2024-1240',
-      type: 'Academic Trip',
-      department: 'College of Business',
-      requester: {
-        name: 'Dr. Ahmed Hassan',
-        position: 'Dean',
-        email: 'ahmed.h@hu.edu.et',
-        phone: '+251-91-567-8901'
-      },
-      purpose: 'Business school accreditation visit',
-      destination: 'Dire Dawa',
-      tripDates: {
-        start: '2024-06-25',
-        end: '2024-06-25'
-      },
-      duration: '1 day',
-      vehicleType: 'Nissan Civilian (35 seats)',
-      passengers: 25,
-      estimatedCost: 'ETB 35,000',
-      budgetStatus: 'Available',
-      deanApproval: {
-        status: 'Approved',
-        date: '2024-06-08',
-        comments: 'Required for accreditation process'
-      },
-      priority: 'normal',
-      status: 'pending',
-      submittedDate: '2024-06-07',
-      documents: ['Accreditation Schedule.pdf']
-    },
-    {
-      id: 'REQ-2024-1238',
-      type: 'Medical Emergency',
-      department: 'University Health Center',
-      requester: {
-        name: 'Dr. Hiwot Tadesse',
-        position: 'Chief Medical Officer',
-        email: 'hiwot.t@hu.edu.et',
-        phone: '+251-91-678-9012'
-      },
-      purpose: 'Emergency medical equipment transport',
-      destination: 'Addis Ababa - Medical Supplier',
-      tripDates: {
-        start: '2024-06-17',
-        end: '2024-06-17'
-      },
-      duration: '1 day',
-      vehicleType: 'Isuzu NPR (Cargo)',
-      passengers: 2,
-      estimatedCost: 'ETB 28,000',
-      budgetStatus: 'Emergency Fund',
-      deanApproval: {
-        status: 'N/A',
-        date: 'N/A',
-        comments: 'Emergency request'
-      },
-      priority: 'urgent',
-      status: 'pending',
-      submittedDate: '2024-06-13',
-      documents: ['Equipment List.pdf', 'Supplier Quote.pdf']
-    }
-  ]
+  useEffect(() => {
+    loadApprovalsData()
+  }, [])
 
-  const approvedRequests = [
-    {
-      id: 'REQ-2024-1235',
-      type: 'Academic Trip',
-      department: 'College of Medicine',
-      requester: { name: 'Dr. Yohannes Bekele', position: 'Dean' },
-      purpose: 'Medical conference attendance',
-      destination: 'Addis Ababa',
-      status: 'approved',
-      approvedDate: '2024-06-05',
-      approvedBy: 'President',
-      priority: 'normal'
-    },
-    {
-      id: 'REQ-2024-1230',
-      type: 'Research Trip',
-      department: 'College of Agriculture',
-      requester: { name: 'Prof. Alemayehu Worku', position: 'Research Head' },
-      purpose: 'Field research - Crop study',
-      destination: 'Haramaya Research Station',
-      status: 'approved',
-      approvedDate: '2024-06-01',
-      approvedBy: 'President',
-      priority: 'high'
-    }
-  ]
+  const loadApprovalsData = async () => {
+    try {
+      setLoading(true)
+      
+      // Load trips in different states
+      const [pendingTrips, approvedTrips, rejectedTrips] = await Promise.all([
+        tripApi.getPendingApprovals().catch(() => []),
+        tripApi.getAll({ state: 'APPROVED' }).catch(() => []),
+        tripApi.getAll({ state: 'REJECTED' }).catch(() => [])
+      ])
 
-  const rejectedRequests = [
-    {
-      id: 'REQ-2024-1225',
-      type: 'Personal Trip',
-      department: 'College of Arts',
-      requester: { name: 'Mr. Dawit Alemayehu', position: 'Lecturer' },
-      purpose: 'Personal travel',
-      destination: 'Addis Ababa',
-      status: 'rejected',
-      rejectedDate: '2024-05-28',
-      rejectedBy: 'President',
-      reason: 'Not university-related activity',
-      priority: 'normal'
+      // Transform pending trips to approval requests format
+      const transformedPending = pendingTrips.map((trip: any) => ({
+        id: trip.id,
+        type: trip.purpose?.includes('International') ? 'International Trip' : 
+              trip.purpose?.includes('Research') ? 'Research Trip' :
+              trip.purpose?.includes('VIP') ? 'VIP Transport' :
+              trip.purpose?.includes('Emergency') ? 'Medical Emergency' : 'Academic Trip',
+        department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
+        requester: {
+          name: trip.requester ? `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() : 'Unknown',
+          position: trip.requester?.role || 'Staff',
+          email: trip.requester?.email || 'N/A',
+          phone: trip.requester?.phone || 'N/A'
+        },
+        purpose: trip.purpose || 'Official business',
+        destination: trip.destination || 'N/A',
+        tripDates: {
+          start: trip.startDateTime ? new Date(trip.startDateTime).toISOString().split('T')[0] : 'N/A',
+          end: trip.endDateTime ? new Date(trip.endDateTime).toISOString().split('T')[0] : 'N/A'
+        },
+        duration: trip.startDateTime && trip.endDateTime ? 
+          `${Math.ceil((new Date(trip.endDateTime).getTime() - new Date(trip.startDateTime).getTime()) / (1000 * 60 * 60 * 24))} days` : 'N/A',
+        vehicleType: trip.allocatedVehicle ? `${trip.allocatedVehicle.make} ${trip.allocatedVehicle.model}` : 'To be assigned',
+        passengers: trip.passengerCount || 1,
+        estimatedCost: `ETB ${(Math.random() * 100000 + 20000).toFixed(0)}`, // Mock cost
+        budgetStatus: 'Available',
+        deanApproval: {
+          status: trip.state?.includes('COLLEGE') ? 'Approved' : 'Pending',
+          date: trip.updatedAt ? new Date(trip.updatedAt).toISOString().split('T')[0] : 'N/A',
+          comments: 'Approved by college dean'
+        },
+        priority: trip.purpose?.toLowerCase().includes('emergency') ? 'urgent' :
+                 trip.purpose?.toLowerCase().includes('international') ? 'high' : 'normal',
+        status: 'pending',
+        submittedDate: trip.createdAt ? new Date(trip.createdAt).toISOString().split('T')[0] : 'N/A',
+        documents: ['Trip Request.pdf']
+      }))
+
+      // Transform approved trips
+      const transformedApproved = approvedTrips.map((trip: any) => ({
+        id: trip.id,
+        type: trip.purpose?.includes('Research') ? 'Research Trip' : 'Academic Trip',
+        department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
+        requester: { 
+          name: trip.requester ? `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() : 'Unknown',
+          position: trip.requester?.role || 'Staff'
+        },
+        purpose: trip.purpose || 'Official business',
+        destination: trip.destination || 'N/A',
+        status: 'approved',
+        approvedDate: trip.updatedAt ? new Date(trip.updatedAt).toISOString().split('T')[0] : 'N/A',
+        approvedBy: 'President',
+        priority: 'normal'
+      }))
+
+      // Transform rejected trips
+      const transformedRejected = rejectedTrips.map((trip: any) => ({
+        id: trip.id,
+        type: 'Trip Request',
+        department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
+        requester: { 
+          name: trip.requester ? `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() : 'Unknown',
+          position: trip.requester?.role || 'Staff'
+        },
+        purpose: trip.purpose || 'Official business',
+        destination: trip.destination || 'N/A',
+        status: 'rejected',
+        rejectedDate: trip.updatedAt ? new Date(trip.updatedAt).toISOString().split('T')[0] : 'N/A',
+        rejectedBy: 'President',
+        reason: trip.rejectionReason || 'Not approved',
+        priority: 'normal'
+      }))
+
+      setApprovalRequests(transformedPending)
+      setApprovedRequests(transformedApproved)
+      setRejectedRequests(transformedRejected)
+    } catch (error) {
+      console.error('Failed to load approvals data:', error)
+      setApprovalRequests([])
+      setApprovedRequests([])
+      setRejectedRequests([])
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -238,21 +145,37 @@ export default function ApprovalsPage() {
     return null
   }
 
-  const handleApprove = (request: any) => {
-    setToastMessage(`Request ${request.id} approved successfully`)
-    setShowSuccessToast(true)
-    setShowDetailModal(false)
-    setTimeout(() => setShowSuccessToast(false), 3000)
+  const handleApprove = async (request: any) => {
+    try {
+      await tripApi.approve(request.id)
+      setToastMessage(`Request ${request.id} approved successfully`)
+      setShowSuccessToast(true)
+      setShowDetailModal(false)
+      setTimeout(() => setShowSuccessToast(false), 3000)
+      loadApprovalsData() // Reload data
+    } catch (error: any) {
+      setToastMessage(error.message || 'Failed to approve request')
+      setShowSuccessToast(true)
+      setTimeout(() => setShowSuccessToast(false), 3000)
+    }
   }
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (selectedRequest && rejectReason.trim()) {
-      setToastMessage(`Request ${selectedRequest.id} rejected`)
-      setShowSuccessToast(true)
-      setShowRejectModal(false)
-      setShowDetailModal(false)
-      setRejectReason('')
-      setTimeout(() => setShowSuccessToast(false), 3000)
+      try {
+        await tripApi.reject(selectedRequest.id, rejectReason)
+        setToastMessage(`Request ${selectedRequest.id} rejected`)
+        setShowSuccessToast(true)
+        setShowRejectModal(false)
+        setShowDetailModal(false)
+        setRejectReason('')
+        setTimeout(() => setShowSuccessToast(false), 3000)
+        loadApprovalsData() // Reload data
+      } catch (error: any) {
+        setToastMessage(error.message || 'Failed to reject request')
+        setShowSuccessToast(true)
+        setTimeout(() => setShowSuccessToast(false), 3000)
+      }
     }
   }
 
@@ -272,6 +195,20 @@ export default function ApprovalsPage() {
   const currentRequests = selectedTab === 'pending' ? filteredRequests :
                          selectedTab === 'approved' ? approvedRequests :
                          rejectedRequests
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Approval Management</h1>
+          <p className="text-gray-600 mt-1">Review and manage fleet request approvals</p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -370,7 +307,12 @@ export default function ApprovalsPage() {
 
       {/* Requests List */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-        {currentRequests.map((request) => (
+        {currentRequests.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <p className="text-gray-500">No {selectedTab} requests found</p>
+          </div>
+        ) : (
+          currentRequests.map((request) => (
           <div
             key={request.id}
             className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all overflow-hidden cursor-pointer border-l-4 hover:scale-[1.01] duration-300"
@@ -517,7 +459,8 @@ export default function ApprovalsPage() {
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Detail Modal */}

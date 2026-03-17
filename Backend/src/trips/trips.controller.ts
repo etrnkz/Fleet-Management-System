@@ -15,6 +15,8 @@ import { UpdateTripDto } from './dto/update-trip.dto';
 import { ApproveTripDto } from './dto/approve-trip.dto';
 import { RejectTripDto } from './dto/reject-trip.dto';
 import { AllocateTripDto } from './dto/allocate-trip.dto';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { EarlyCompleteTripDto } from './dto/early-complete-trip.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Trips')
@@ -221,6 +223,30 @@ export class TripsController {
     return this.tripsService.getPendingApprovals(req.user.id, req.user.role);
   }
 
+  @Post(':id/complete-early')
+  @ApiOperation({ summary: 'Complete trip early (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Trip completed early successfully' })
+  @ApiResponse({ status: 403, description: 'Only Transport Office or Deployment Team can complete early' })
+  completeEarly(
+    @Param('id') id: string,
+    @Body() earlyCompleteTripDto: EarlyCompleteTripDto,
+    @Request() req,
+  ) {
+    return this.tripsService.completeEarly(id, earlyCompleteTripDto, req.user);
+  }
+
+  @Post(':id/feedback')
+  @ApiOperation({ summary: 'Submit trip feedback' })
+  @ApiResponse({ status: 201, description: 'Feedback submitted successfully' })
+  @ApiResponse({ status: 400, description: 'Trip not completed or feedback already exists' })
+  submitFeedback(
+    @Param('id') id: string,
+    @Body() createFeedbackDto: CreateFeedbackDto,
+    @Request() req,
+  ) {
+    return this.tripsService.submitFeedback(id, createFeedbackDto, req.user);
+  }
+
   @Get('statistics/overview')
   @ApiOperation({ 
     summary: 'Get trip statistics',
@@ -253,5 +279,12 @@ export class TripsController {
   })
   getStatistics() {
     return this.tripsService.getStatistics();
+  }
+
+  @Get('feedback/statistics')
+  @ApiOperation({ summary: 'Get feedback statistics' })
+  @ApiResponse({ status: 200, description: 'Feedback statistics and analytics' })
+  getFeedbackStatistics() {
+    return this.tripsService.getFeedbackStatistics();
   }
 }

@@ -16,9 +16,13 @@ export enum NotificationType {
   TripReady = 'TripReady',
   TripStarted = 'TripStarted',
   TripCompleted = 'TripCompleted',
+  TripCompletedEarly = 'TripCompletedEarly',
   TripCancelled = 'TripCancelled',
   ApprovalReminder = 'ApprovalReminder',
   ApprovalTimeout = 'ApprovalTimeout',
+  FeedbackSubmitted = 'FeedbackSubmitted',
+  NewTripRequest = 'NewTripRequest',
+  ApprovalPending = 'ApprovalPending',
 }
 
 @Entity('notifications')

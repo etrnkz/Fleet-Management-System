@@ -10,12 +10,15 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
+import { Department } from '../../departments/entities/department.entity';
+import { College } from '../../colleges/entities/college.entity';
 
 export enum UserRole {
   User = 'User',
   DepartmentHead = 'DepartmentHead',
   CollegeHead = 'CollegeHead',
   Dean = 'Dean',
+  President = 'President',
   DeploymentTeam = 'DeploymentTeam',
   TransportOffice = 'TransportOffice',
   MaintenanceTeam = 'MaintenanceTeam',
@@ -44,11 +47,11 @@ export class User {
   @Column({ nullable: true })
   phoneNumber: string;
 
-  @ManyToOne('Department', { nullable: true })
-  department: any;
+  @ManyToOne(() => Department, { nullable: true })
+  department: Department;
 
-  @ManyToOne('College', { nullable: true })
-  college: any;
+  @ManyToOne(() => College, { nullable: true })
+  college: College;
 
   @Column({ default: true })
   isActive: boolean;

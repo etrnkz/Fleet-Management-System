@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { authApi, notificationApi } from '../../lib/api'
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default function DashboardLayout({
   const [selectedNotification, setSelectedNotification] = useState<any>(null)
   const [showNotificationDetail, setShowNotificationDetail] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [notifications, setNotifications] = useState<any[]>([])
   const [editedUser, setEditedUser] = useState({
     name: '',
     email: '',
@@ -37,32 +39,91 @@ export default function DashboardLayout({
   const [photoPreview, setPhotoPreview] = useState('')
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('presidentLoggedIn')
-    if (!isLoggedIn) {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
       router.push('/login')
       return
     }
 
-    const userData = localStorage.getItem('presidentUser')
-    if (userData) {
-      const parsedUser = JSON.parse(userData)
-      setUser(parsedUser)
-      setEditedUser({
-        name: parsedUser.name || '',
-        email: parsedUser.email || '',
-        phone: parsedUser.phone || '+251-11-123-4567',
-        office: parsedUser.office || 'President Office, Main Building',
-        title: parsedUser.title || 'University President',
-        department: parsedUser.department || 'Executive Office',
-        emergencyContact: parsedUser.emergencyContact || '',
-        emergencyPhone: parsedUser.emergencyPhone || '',
-        bio: parsedUser.bio || '',
-        profilePhoto: parsedUser.profilePhoto || '',
-        educationLevel: parsedUser.educationLevel || 'Ph.D.'
-      })
-      setPhotoPreview(parsedUser.profilePhoto || '')
-    }
+    loadUserData()
+    loadNotifications()
   }, [router])
+
+  const loadUserData = async () => {
+    try {
+      const userData = await authApi.getCurrentUser()
+      setUser(userData)
+      setEditedUser({
+        name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        email: userData.email || '',
+        phone: userData.phone || '',
+        office: userData.office || 'President Office, Main Building',
+        title: userData.title || 'University President',
+        department: userData.department || 'Executive Office',
+        emergencyContact: userData.emergencyContact || '',
+        emergencyPhone: userData.emergencyPhone || '',
+        bio: userData.bio || '',
+        profilePhoto: userData.profilePhoto || '',
+        educationLevel: userData.educationLevel || 'Ph.D.'
+      })
+      setPhotoPreview(userData.profilePhoto || '')
+    } catch (error) {
+      console.error('Failed to load user data:', error)
+      router.push('/login')
+    }
+  }
+
+  const loadNotifications = async () => {
+    try {
+      const notificationsData = await notificationApi.getAll()
+      
+      // Transform notifications to include mock details for demo
+      const enhancedNotifications = notificationsData.map((notif: any, index: number) => {
+        const mockDetails = [
+          {
+            requestId: 'REQ-2024-1245',
+            department: 'College of Engineering',
+            requestedBy: 'Dr. Abebe Kebede',
+            purpose: 'International Conference on Sustainable Engineering',
+            destination: 'Nairobi, Kenya',
+            duration: '5 days (June 20-24, 2024)',
+            vehicleType: 'Toyota Coaster (40 seats)',
+            passengers: '35 faculty members and students',
+            estimatedCost: 'ETB 125,000',
+            deanApproval: 'Approved on June 10, 2024',
+            budgetStatus: 'Funds available in department budget',
+            urgency: 'Conference registration deadline: June 15, 2024'
+          },
+          {
+            alertType: 'Budget Overrun',
+            period: 'Current Month',
+            budgetAllocated: 'ETB 500,000',
+            actualExpense: 'ETB 560,000',
+            variance: '+ETB 60,000 (12% over budget)',
+            mainCauses: [
+              'Increased fuel prices (8% increase)',
+              'Higher trip frequency (15% more trips)',
+              'Emergency medical transports (5 unplanned trips)'
+            ],
+            affectedDepartments: 'All departments',
+            recommendation: 'Review fuel consumption policies and consider trip consolidation',
+            actionRequired: 'Approve budget adjustment or implement cost control measures'
+          }
+        ]
+        
+        return {
+          ...notif,
+          category: notif.type || 'General',
+          details: mockDetails[index % mockDetails.length] || {}
+        }
+      })
+      
+      setNotifications(enhancedNotifications)
+    } catch (error) {
+      console.error('Failed to load notifications:', error)
+      setNotifications([])
+    }
+  }
 
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     e.preventDefault()
@@ -79,8 +140,8 @@ export default function DashboardLayout({
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('presidentLoggedIn')
-    localStorage.removeItem('presidentUser')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
     router.push('/')
   }
 
@@ -102,16 +163,22 @@ export default function DashboardLayout({
     setEditedUser({...editedUser, profilePhoto: ''})
   }
 
-  const handleSaveProfile = () => {
-    const updatedUser = {
-      ...user,
-      ...editedUser
+  const handleSaveProfile = async () => {
+    try {
+      const updatedUser = {
+        ...user,
+        ...editedUser
+      }
+      // In a real app, you would call an API to update the user
+      // await userApi.update(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      setUser(updatedUser)
+      setShowProfileModal(false)
+      setShowSuccessToast(true)
+      setTimeout(() => setShowSuccessToast(false), 3000)
+    } catch (error) {
+      console.error('Failed to save profile:', error)
     }
-    localStorage.setItem('presidentUser', JSON.stringify(updatedUser))
-    setUser(updatedUser)
-    setShowProfileModal(false)
-    setShowSuccessToast(true)
-    setTimeout(() => setShowSuccessToast(false), 3000)
   }
 
   const navigation = [
@@ -195,271 +262,6 @@ export default function DashboardLayout({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       )
-    },
-  ]
-
-  const notifications = [
-    { 
-      id: 1, 
-      title: 'High Priority Approval', 
-      message: 'Engineering Dept. international conference trip requires presidential approval', 
-      time: '5 min ago', 
-      type: 'urgent',
-      category: 'Approval Request',
-      details: {
-        requestId: 'REQ-2024-1245',
-        department: 'College of Engineering',
-        requestedBy: 'Dr. Abebe Kebede',
-        purpose: 'International Conference on Sustainable Engineering',
-        destination: 'Nairobi, Kenya',
-        duration: '5 days (June 20-24, 2024)',
-        vehicleType: 'Toyota Coaster (40 seats)',
-        passengers: '35 faculty members and students',
-        estimatedCost: 'ETB 125,000',
-        deanApproval: 'Approved on June 10, 2024',
-        budgetStatus: 'Funds available in department budget',
-        urgency: 'Conference registration deadline: June 15, 2024'
-      }
-    },
-    { 
-      id: 2, 
-      title: 'Dean Approved Request', 
-      message: 'College Dean approved 3-day research trip to Addis Ababa - awaiting final approval', 
-      time: '15 min ago', 
-      type: 'approval',
-      category: 'Dean Approved',
-      details: {
-        requestId: 'REQ-2024-1246',
-        department: 'College of Natural Sciences',
-        requestedBy: 'Prof. Fatuma Mohammed',
-        purpose: 'Research collaboration with Addis Ababa University',
-        destination: 'Addis Ababa',
-        duration: '3 days (June 18-20, 2024)',
-        vehicleType: 'Toyota Hiace (14 seats)',
-        passengers: '8 researchers',
-        estimatedCost: 'ETB 45,000',
-        deanApproval: 'Approved on June 11, 2024',
-        budgetStatus: 'Research grant funds allocated',
-        urgency: 'Meeting scheduled for June 18, 2024'
-      }
-    },
-    { 
-      id: 3, 
-      title: 'Budget Alert', 
-      message: 'Monthly fuel expenses exceeded threshold by 12% - review required', 
-      time: '1 hour ago', 
-      type: 'warning',
-      category: 'Financial',
-      details: {
-        alertType: 'Budget Overrun',
-        period: 'May 2024',
-        budgetAllocated: 'ETB 500,000',
-        actualExpense: 'ETB 560,000',
-        variance: '+ETB 60,000 (12% over budget)',
-        mainCauses: [
-          'Increased fuel prices (8% increase)',
-          'Higher trip frequency (15% more trips)',
-          'Emergency medical transports (5 unplanned trips)'
-        ],
-        affectedDepartments: 'All departments',
-        recommendation: 'Review fuel consumption policies and consider trip consolidation',
-        actionRequired: 'Approve budget adjustment or implement cost control measures'
-      }
-    },
-    { 
-      id: 4, 
-      title: 'Fleet Status Alert', 
-      message: 'Vehicle utilization dropped to 68% - below optimal threshold', 
-      time: '2 hours ago', 
-      type: 'info',
-      category: 'Fleet Status',
-      details: {
-        alertType: 'Low Utilization',
-        currentUtilization: '68%',
-        optimalThreshold: '75%',
-        totalVehicles: '40 vehicles',
-        activeVehicles: '27 vehicles',
-        idleVehicles: '13 vehicles',
-        analysis: 'Utilization has decreased by 9% compared to last month',
-        idleVehiclesList: [
-          'Toyota Coaster ABC-1234 (idle for 5 days)',
-          'Isuzu NPR XYZ-5678 (idle for 3 days)',
-          'Mitsubishi Rosa DEF-9012 (idle for 7 days)'
-        ],
-        recommendation: 'Consider reassigning idle vehicles or scheduling maintenance during low-demand periods',
-        potentialSavings: 'ETB 35,000/month through optimized scheduling'
-      }
-    },
-    { 
-      id: 5, 
-      title: 'Compliance Notice', 
-      message: '3 vehicle registrations expiring within 30 days', 
-      time: '3 hours ago', 
-      type: 'warning',
-      category: 'Compliance',
-      details: {
-        alertType: 'Registration Expiry',
-        affectedVehicles: [
-          {
-            vehicle: 'Toyota Coaster ABC-1234',
-            expiryDate: 'June 25, 2024',
-            daysRemaining: 10,
-            renewalCost: 'ETB 8,500'
-          },
-          {
-            vehicle: 'Isuzu NPR XYZ-5678',
-            expiryDate: 'July 5, 2024',
-            daysRemaining: 20,
-            renewalCost: 'ETB 7,200'
-          },
-          {
-            vehicle: 'Mitsubishi Rosa DEF-9012',
-            expiryDate: 'July 12, 2024',
-            daysRemaining: 27,
-            renewalCost: 'ETB 8,000'
-          }
-        ],
-        totalRenewalCost: 'ETB 23,700',
-        actionRequired: 'Initiate renewal process immediately to avoid penalties',
-        penalty: 'Late renewal penalty: ETB 2,000 per vehicle',
-        responsibleOffice: 'Transport Office'
-      }
-    },
-    { 
-      id: 6, 
-      title: 'Emergency Request', 
-      message: 'Medical emergency transport request from Health Center', 
-      time: '4 hours ago', 
-      type: 'urgent',
-      category: 'Emergency',
-      details: {
-        requestId: 'EMRG-2024-089',
-        requestedBy: 'University Health Center',
-        contactPerson: 'Dr. Hanna Tesfaye',
-        emergencyType: 'Medical Emergency',
-        patient: 'Student (confidential)',
-        destination: 'Hiwot Fana Specialized Hospital',
-        distance: '18 km',
-        vehicleAssigned: 'Ambulance AMB-001',
-        driver: 'Ahmed Hassan (Emergency certified)',
-        status: 'Completed - Patient transported safely',
-        departureTime: '10:30 AM',
-        arrivalTime: '10:55 AM',
-        notes: 'Patient stabilized and admitted to emergency ward'
-      }
-    },
-    { 
-      id: 7, 
-      title: 'Weekly Report Available', 
-      message: 'Fleet operations summary for Week 24 is ready for review', 
-      time: '5 hours ago', 
-      type: 'info',
-      category: 'Reports',
-      details: {
-        reportType: 'Weekly Fleet Operations Summary',
-        period: 'Week 24 (June 10-16, 2024)',
-        totalTrips: '127 trips',
-        totalDistance: '8,450 km',
-        fuelConsumption: '1,850 liters',
-        averageFuelEfficiency: '4.57 km/liter',
-        maintenanceEvents: '8 scheduled services',
-        emergencyRepairs: '2 incidents',
-        topDepartments: [
-          'College of Engineering (28 trips)',
-          'College of Medicine (22 trips)',
-          'College of Business (18 trips)'
-        ],
-        costSummary: {
-          fuel: 'ETB 125,000',
-          maintenance: 'ETB 35,000',
-          other: 'ETB 12,000',
-          total: 'ETB 172,000'
-        },
-        highlights: 'Fleet efficiency improved by 3% compared to previous week'
-      }
-    },
-    { 
-      id: 8, 
-      title: 'Safety Alert', 
-      message: 'Vehicle ABC-1234 failed safety inspection - immediate action required', 
-      time: '6 hours ago', 
-      type: 'urgent',
-      category: 'Safety',
-      details: {
-        alertType: 'Failed Safety Inspection',
-        vehicle: 'Toyota Coaster ABC-1234',
-        inspectionDate: 'June 15, 2024',
-        inspector: 'Mechanical Engineering Team',
-        failedItems: [
-          'Brake system - Worn brake pads (critical)',
-          'Tire condition - 2 tires below minimum tread depth',
-          'Suspension - Shock absorbers need replacement',
-          'Lights - Rear brake lights malfunction'
-        ],
-        safetyRating: 'UNSAFE - Do not operate',
-        estimatedRepairCost: 'ETB 45,000',
-        estimatedRepairTime: '3-5 days',
-        currentStatus: 'Vehicle grounded pending repairs',
-        actionRequired: 'Approve emergency repair budget and schedule immediate maintenance',
-        impactedSchedule: '2 upcoming trips need vehicle reassignment'
-      }
-    },
-    { 
-      id: 9, 
-      title: 'VIP Transport Request', 
-      message: 'Diplomatic visit scheduled - special vehicle arrangement needed', 
-      time: '8 hours ago', 
-      type: 'approval',
-      category: 'VIP Request',
-      details: {
-        requestId: 'VIP-2024-015',
-        requestedBy: 'Office of the President',
-        visitor: 'Ambassador of Kenya to Ethiopia',
-        visitPurpose: 'Academic collaboration discussion',
-        visitDate: 'June 22, 2024',
-        arrivalTime: '10:00 AM',
-        departureTime: '4:00 PM',
-        pickupLocation: 'Harar Airport',
-        itinerary: [
-          'Airport pickup',
-          'Campus tour',
-          'Meeting with President',
-          'Lunch at Guest House',
-          'Return to airport'
-        ],
-        vehicleRequired: 'Executive sedan with driver',
-        securityRequirements: 'Security escort required',
-        estimatedCost: 'ETB 15,000',
-        specialArrangements: 'University flag display, protocol officer accompaniment'
-      }
-    },
-    { 
-      id: 10, 
-      title: 'Maintenance Budget', 
-      message: 'Q2 maintenance costs 8% under budget - efficiency report available', 
-      time: '1 day ago', 
-      type: 'success',
-      category: 'Financial',
-      details: {
-        reportType: 'Quarterly Maintenance Performance',
-        period: 'Q2 2024 (April-June)',
-        budgetAllocated: 'ETB 450,000',
-        actualExpense: 'ETB 414,000',
-        savings: 'ETB 36,000 (8% under budget)',
-        maintenanceBreakdown: {
-          preventiveMaintenance: 'ETB 280,000',
-          emergencyRepairs: 'ETB 95,000',
-          partsReplacement: 'ETB 39,000'
-        },
-        efficiencyFactors: [
-          'Improved preventive maintenance schedule',
-          'Bulk parts procurement (12% cost savings)',
-          'In-house minor repairs (reduced outsourcing)',
-          'Better vehicle utilization planning'
-        ],
-        vehicleAvailability: '94% (up from 89% in Q1)',
-        recommendation: 'Continue current maintenance strategy and consider expanding in-house repair capabilities'
-      }
     },
   ]
 

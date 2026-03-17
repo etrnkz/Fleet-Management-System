@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { authApi, notificationApi } from '../lib/api'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function DashboardLayout({
@@ -16,61 +17,53 @@ export default function DashboardLayout({
   const [showNotifications, setShowNotifications] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
+  const [userData, setUserData] = useState<any>(null)
+  const [notifications, setNotifications] = useState([])
   const [profileData, setProfileData] = useState({
-    fullName: 'Alex Johnson',
-    email: 'deployment@hu.edu.et',
-    phone: '+251 911 234 567',
-    position: 'Head of Operations',
-    department: 'Deployment Office',
-    employeeId: 'EMP-2024-001'
+    fullName: '',
+    email: '',
+    phone: '',
+    position: '',
+    department: '',
+    employeeId: ''
   })
   const [isEditing, setIsEditing] = useState(false)
   const [editedData, setEditedData] = useState(profileData)
 
-  // Sample approved requests waiting for assignment
-  const approvedRequests = [
-    {
-      id: 'REQ-2024-001',
-      requestedBy: 'Dr. Sarah Ahmed',
-      department: 'Computer Science',
-      approvedBy: 'College Dean',
-      approver: 'Dr. Michael Brown',
-      purpose: 'Academic Conference - Addis Ababa',
-      date: '2024-03-15',
-      duration: '3 days',
-      passengers: 4,
-      timestamp: '2 hours ago',
-      isNew: true
-    },
-    {
-      id: 'REQ-2024-002',
-      requestedBy: 'Prof. John Smith',
-      department: 'Engineering',
-      approvedBy: 'President',
-      approver: 'Dr. Elizabeth Wilson',
-      purpose: 'Research Field Trip - Bahir Dar',
-      date: '2024-03-18',
-      duration: '5 days',
-      passengers: 8,
-      timestamp: '5 hours ago',
-      isNew: true
-    },
-    {
-      id: 'REQ-2024-003',
-      requestedBy: 'Dr. Ahmed Hassan',
-      department: 'Medical School',
-      approvedBy: 'College Dean',
-      approver: 'Dr. Sarah Johnson',
-      purpose: 'Medical Outreach Program',
-      date: '2024-03-20',
-      duration: '2 days',
-      passengers: 6,
-      timestamp: '1 day ago',
-      isNew: false
-    }
-  ]
+  useEffect(() => {
+    loadUserData()
+  }, [])
 
-  const unreadCount = approvedRequests.filter(req => req.isNew).length
+  const loadUserData = async () => {
+    try {
+      const [user, notificationData] = await Promise.all([
+        authApi.getCurrentUser(),
+        notificationApi.getNotifications()
+      ])
+      
+      setUserData(user)
+      setNotifications(notificationData)
+      
+      const profile = {
+        fullName: user.fullName || 'Deployment Officer',
+        email: user.email || 'deployment@hu.edu.et',
+        phone: user.phone || '+251 911 234 567',
+        position: user.position || 'Head of Operations',
+        department: user.department?.name || 'Deployment Office',
+        employeeId: user.employeeId || 'EMP-2024-001'
+      }
+      
+      setProfileData(profile)
+      setEditedData(profile)
+    } catch (error) {
+      console.error('Failed to load user data:', error)
+      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
+        router.push('/login')
+      }
+    }
+  }
+
+  const unreadCount = notifications.filter((notif: any) => !notif.isRead).length
 
   // Navigation handler with loading spinner
   const handleNavigation = (path: string) => {
