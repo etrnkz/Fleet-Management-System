@@ -1,0 +1,15 @@
+{
+  "name": "fleet-management-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:employee": "cd apps/employee && npm run dev",
+    "dev:admin": "cd apps/admin && npm run dev",
+    "dev:maintenance": "cd apps/maintenance && npm run dev",
+    "dev:college-dean": "cd apps/college-dean && npm run dev",
+    "dev:president": "cd apps/president && npm run dev",
+    "dev:deployment-office": "cd apps/deployment-office && npm run dev",
+    "dev:driver": "cd apps/driver && npm run dev",
+    "install:all": "cd apps/employee && npm install && cd ../admin && npm install && cd ../maintenance && npm install && cd ../college-dean && npm install && cd ../president && npm install && cd ../deployment-office && npm install && cd ../driver && npm install"
+  }
+}
