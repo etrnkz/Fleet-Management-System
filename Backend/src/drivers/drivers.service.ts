@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { Driver, DriverStatus } from './entities/driver.entity';
@@ -32,7 +37,9 @@ export class DriversService {
     });
 
     if (existingByUser) {
-      throw new ConflictException('Driver profile already exists for this user');
+      throw new ConflictException(
+        'Driver profile already exists for this user',
+      );
     }
 
     // Check if license number already exists
@@ -105,9 +112,12 @@ export class DriversService {
   async update(id: string, updateDriverDto: UpdateDriverDto): Promise<Driver> {
     const driver = await this.findOne(id);
 
-    if (updateDriverDto.licenseNumber && updateDriverDto.licenseNumber !== driver.licenseNumber) {
+    if (
+      updateDriverDto.licenseNumber &&
+      updateDriverDto.licenseNumber !== driver.licenseNumber
+    ) {
       const existing = await this.driverRepository.findOne({
-        where: { 
+        where: {
           licenseNumber: updateDriverDto.licenseNumber,
           id: Not(id),
         },
@@ -153,10 +163,18 @@ export class DriversService {
 
   async getStatistics() {
     const total = await this.driverRepository.count();
-    const available = await this.driverRepository.count({ where: { status: DriverStatus.Available } });
-    const onTrip = await this.driverRepository.count({ where: { status: DriverStatus.OnTrip } });
-    const onLeave = await this.driverRepository.count({ where: { status: DriverStatus.OnLeave } });
-    const inactive = await this.driverRepository.count({ where: { status: DriverStatus.Inactive } });
+    const available = await this.driverRepository.count({
+      where: { status: DriverStatus.Available },
+    });
+    const onTrip = await this.driverRepository.count({
+      where: { status: DriverStatus.OnTrip },
+    });
+    const onLeave = await this.driverRepository.count({
+      where: { status: DriverStatus.OnLeave },
+    });
+    const inactive = await this.driverRepository.count({
+      where: { status: DriverStatus.Inactive },
+    });
 
     const avgRatingResult = await this.driverRepository
       .createQueryBuilder('driver')
@@ -169,8 +187,11 @@ export class DriversService {
       onTrip,
       onLeave,
       inactive,
-      averageRating: avgRatingResult?.avgRating ? parseFloat(avgRatingResult.avgRating).toFixed(2) : 0,
-      availablePercentage: total > 0 ? ((available / total) * 100).toFixed(2) : 0,
+      averageRating: avgRatingResult?.avgRating
+        ? parseFloat(avgRatingResult.avgRating).toFixed(2)
+        : 0,
+      availablePercentage:
+        total > 0 ? ((available / total) * 100).toFixed(2) : 0,
     };
   }
 }

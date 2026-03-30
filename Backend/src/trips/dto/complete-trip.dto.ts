@@ -7,7 +7,7 @@ export class CompleteTripDto {
   @Min(0)
   actualDistance: number;
 
-  @ApiProperty({ example: 52.50 })
+  @ApiProperty({ example: 52.5 })
   @IsNumber()
   @Min(0)
   actualFuelCost: number;

@@ -10,7 +10,13 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { DepartmentsService } from './departments.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
@@ -36,7 +42,11 @@ export class DepartmentsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all departments' })
-  @ApiQuery({ name: 'collegeId', required: false, description: 'Filter by college ID' })
+  @ApiQuery({
+    name: 'collegeId',
+    required: false,
+    description: 'Filter by college ID',
+  })
   @ApiResponse({ status: 200, description: 'List of all departments' })
   findAll(@Query('collegeId') collegeId?: string) {
     if (collegeId) {

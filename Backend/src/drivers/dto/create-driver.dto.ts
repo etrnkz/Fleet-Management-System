@@ -1,51 +1,60 @@
-import { IsString, IsNotEmpty, IsNumber, IsUUID, IsDateString, IsOptional, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsUUID,
+  IsDateString,
+  IsOptional,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDriverDto {
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'uuid-of-user',
-    description: 'User ID (must have Driver role)'
+    description: 'User ID (must have Driver role)',
   })
   @IsUUID()
   @IsNotEmpty()
   userId: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'DL-123456789',
-    description: 'Driver license number (unique)'
+    description: 'Driver license number (unique)',
   })
   @IsString()
   @IsNotEmpty()
   licenseNumber: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: '2028-12-31',
-    description: 'License expiry date'
+    description: 'License expiry date',
   })
   @IsDateString()
   @IsNotEmpty()
   licenseExpiry: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 10,
-    description: 'Years of driving experience'
+    description: 'Years of driving experience',
   })
   @IsNumber()
   @Min(0)
   @Max(50)
   experienceYears: number;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'Heavy vehicles, Long distance',
-    description: 'Driver specializations'
+    description: 'Driver specializations',
   })
   @IsString()
   @IsOptional()
   specializations?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'Excellent safety record',
-    description: 'Additional notes'
+    description: 'Additional notes',
   })
   @IsString()
   @IsOptional()

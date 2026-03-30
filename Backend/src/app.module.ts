@@ -17,7 +17,6 @@ import { WorkflowModule } from './workflow/workflow.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { AuditModule } from './audit/audit.module';
 import { FuelModule } from './fuel/fuel.module';
-import { EmailModule } from './email/email.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { SystemAdminModule } from './system-admin/system-admin.module';
 import configuration from './config/configuration';

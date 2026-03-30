@@ -34,7 +34,9 @@ interface AuthenticatedSocket extends Socket {
   },
   namespace: '/notifications',
 })
-export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -48,8 +50,10 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   async handleConnection(client: AuthenticatedSocket) {
     try {
       // Extract token from handshake auth
-      const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.replace('Bearer ', '');
-      
+      const token =
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization?.replace('Bearer ', '');
+
       if (!token) {
         console.log('Client connection rejected: No token provided');
         client.disconnect();
@@ -67,19 +71,22 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
         // Join user-specific room
         client.join(`user_${client.userId}`);
-        
+
         // Join role-specific room for broadcast notifications
         if (client.userRole) {
           client.join(`role_${client.userRole}`);
         }
 
-        console.log(`User ${client.userId} (${client.userRole}) connected to notifications`);
+        console.log(
+          `User ${client.userId} (${client.userRole}) connected to notifications`,
+        );
 
         // Send initial unread count
-        const unreadCount = await this.notificationsService.getUnreadCount(client.userId);
+        const unreadCount = await this.notificationsService.getUnreadCount(
+          client.userId,
+        );
         client.emit('unread_count', { count: unreadCount });
       }
-
     } catch (error) {
       console.log('Client connection rejected: Invalid token', error.message);
       client.disconnect();
@@ -122,13 +129,20 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     if (!client.userId) return;
 
     try {
-      await this.notificationsService.markAsRead(data.notificationId, client.userId);
-      
+      await this.notificationsService.markAsRead(
+        data.notificationId,
+        client.userId,
+      );
+
       // Send updated unread count
-      const unreadCount = await this.notificationsService.getUnreadCount(client.userId);
+      const unreadCount = await this.notificationsService.getUnreadCount(
+        client.userId,
+      );
       client.emit('unread_count', { count: unreadCount });
-      
-      client.emit('notification_marked_read', { notificationId: data.notificationId });
+
+      client.emit('notification_marked_read', {
+        notificationId: data.notificationId,
+      });
     } catch (error) {
       client.emit('error', { message: 'Failed to mark notification as read' });
     }
@@ -140,11 +154,13 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
     try {
       await this.notificationsService.markAllAsRead(client.userId);
-      
+
       client.emit('unread_count', { count: 0 });
       client.emit('all_notifications_marked_read');
     } catch (error) {
-      client.emit('error', { message: 'Failed to mark all notifications as read' });
+      client.emit('error', {
+        message: 'Failed to mark all notifications as read',
+      });
     }
   }
 
@@ -153,9 +169,10 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     const userSocket = this.connectedUsers.get(userId);
     if (userSocket) {
       userSocket.emit('new_notification', notification);
-      
+
       // Update unread count
-      const unreadCount = await this.notificationsService.getUnreadCount(userId);
+      const unreadCount =
+        await this.notificationsService.getUnreadCount(userId);
       userSocket.emit('unread_count', { count: unreadCount });
     }
   }
@@ -169,7 +186,11 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   }
 
   // Trip-specific real-time updates
-  async notifyTripStatusUpdate(tripId: string, status: string, involvedUserIds: string[]) {
+  async notifyTripStatusUpdate(
+    tripId: string,
+    status: string,
+    involvedUserIds: string[],
+  ) {
     const update = {
       tripId,
       status,
@@ -185,7 +206,11 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     }
   }
 
-  async notifyLiveTracking(tripId: string, locationData: any, involvedUserIds: string[]) {
+  async notifyLiveTracking(
+    tripId: string,
+    locationData: any,
+    involvedUserIds: string[],
+  ) {
     const trackingUpdate = {
       tripId,
       location: locationData,
@@ -208,7 +233,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
   getConnectedUsersByRole(): Record<string, number> {
     const roleCount: Record<string, number> = {};
-    
+
     this.connectedUsers.forEach((socket) => {
       if (socket.userRole) {
         roleCount[socket.userRole] = (roleCount[socket.userRole] || 0) + 1;

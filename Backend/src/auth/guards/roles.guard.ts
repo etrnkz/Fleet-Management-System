@@ -1,7 +1,7 @@
-import { 
-  Injectable, 
-  CanActivate, 
-  ExecutionContext, 
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
   ForbiddenException,
   Logger,
   SetMetadata,
@@ -20,11 +20,11 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
@@ -43,23 +43,23 @@ export class RolesGuard implements CanActivate {
     }
 
     const hasRole = requiredRoles.some((role) => user.role === role);
-    
+
     if (!hasRole) {
       this.logger.warn(
         `Access denied for user ${user.email} (role: ${user.role}). ` +
-        `Required roles: ${requiredRoles.join(', ')}. ` +
-        `Path: ${request.path}`
+          `Required roles: ${requiredRoles.join(', ')}. ` +
+          `Path: ${request.path}`,
       );
-      
+
       throw new ForbiddenException(
-        `Insufficient permissions. Required role(s): ${requiredRoles.join(', ')}`
+        `Insufficient permissions. Required role(s): ${requiredRoles.join(', ')}`,
       );
     }
 
     this.logger.debug(
-      `Access granted for user ${user.email} with role ${user.role} to ${request.path}`
+      `Access granted for user ${user.email} with role ${user.role} to ${request.path}`,
     );
-    
+
     return true;
   }
 }

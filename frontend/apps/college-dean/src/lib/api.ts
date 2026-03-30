@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/a
 // Helper to get auth token
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('accessToken');
+  return localStorage.getItem('accessToken') || localStorage.getItem('access_token');
 };
 
 // Helper to get current user

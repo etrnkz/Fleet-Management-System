@@ -12,8 +12,8 @@ export const authApi = {
   },
 
   getCurrentUser: async () => {
-    const token = localStorage.getItem('access_token');
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
     return response.json();
@@ -24,7 +24,7 @@ export const authApi = {
 export const systemAdminApi = {
   // System Overview
   getSystemOverview: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/statistics/overview`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -33,7 +33,7 @@ export const systemAdminApi = {
 
   // User Management
   getAllUsers: async (filters?: any) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const params = new URLSearchParams(filters || {});
     const response = await fetch(`${API_BASE_URL}/system-admin/users?${params}`, {
       headers: { 'Authorization': `Bearer ${token}` },
@@ -42,7 +42,7 @@ export const systemAdminApi = {
   },
 
   createUser: async (userData: any) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/users`, {
       method: 'POST',
       headers: { 
@@ -55,7 +55,7 @@ export const systemAdminApi = {
   },
 
   updateUser: async (id: string, userData: any) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/users/${id}`, {
       method: 'PATCH',
       headers: { 
@@ -68,7 +68,7 @@ export const systemAdminApi = {
   },
 
   deleteUser: async (id: string) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/users/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
@@ -77,7 +77,7 @@ export const systemAdminApi = {
   },
 
   toggleUserStatus: async (id: string, activate: boolean) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const endpoint = activate ? 'activate' : 'deactivate';
     const response = await fetch(`${API_BASE_URL}/system-admin/users/${id}/${endpoint}`, {
       method: 'PATCH',
@@ -87,7 +87,7 @@ export const systemAdminApi = {
   },
 
   resetUserPassword: async (id: string) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/users/${id}/reset-password`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
@@ -97,7 +97,7 @@ export const systemAdminApi = {
 
   // Statistics
   getUserStatistics: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/statistics/users`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -105,7 +105,7 @@ export const systemAdminApi = {
   },
 
   getTripStatistics: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/statistics/trips`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -113,7 +113,7 @@ export const systemAdminApi = {
   },
 
   getVehicleStatistics: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/statistics/vehicles`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -121,7 +121,7 @@ export const systemAdminApi = {
   },
 
   getMaintenanceStatistics: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/statistics/maintenance`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -130,7 +130,7 @@ export const systemAdminApi = {
 
   // System Health
   getSystemHealth: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/system-health`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -139,7 +139,7 @@ export const systemAdminApi = {
 
   // Audit Logs
   getAuditLogs: async (filters?: any) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const params = new URLSearchParams(filters || {});
     const response = await fetch(`${API_BASE_URL}/system-admin/audit-logs?${params}`, {
       headers: { 'Authorization': `Bearer ${token}` },
@@ -149,7 +149,7 @@ export const systemAdminApi = {
 
   // System Configuration
   getSystemConfig: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/config`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -157,7 +157,7 @@ export const systemAdminApi = {
   },
 
   updateSystemConfig: async (config: any) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/config`, {
       method: 'PATCH',
       headers: { 
@@ -171,7 +171,7 @@ export const systemAdminApi = {
 
   // Maintenance Mode
   enableMaintenanceMode: async (reason: string, estimatedDuration?: number) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/maintenance-mode`, {
       method: 'POST',
       headers: { 
@@ -184,7 +184,7 @@ export const systemAdminApi = {
   },
 
   disableMaintenanceMode: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/maintenance-mode`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
@@ -194,7 +194,7 @@ export const systemAdminApi = {
 
   // Broadcast Notifications
   broadcastNotification: async (notification: any) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('accessToken');
     const response = await fetch(`${API_BASE_URL}/system-admin/notifications/broadcast`, {
       method: 'POST',
       headers: { 

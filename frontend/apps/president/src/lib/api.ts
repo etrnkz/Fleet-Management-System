@@ -3,7 +3,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/a
 // Get auth token from localStorage
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('accessToken')
+    return localStorage.getItem('accessToken') || localStorage.getItem('access_token')
   }
   return null
 }
@@ -142,13 +142,17 @@ export const auditApi = {
 }
 
 // Notifications API
+const fetchNotificationsList = async () => {
+  const response = await fetch(`${API_BASE_URL}/notifications`, {
+    headers: createHeaders()
+  })
+  return handleResponse(response)
+}
+
 export const notificationApi = {
-  getNotifications: async () => {
-    const response = await fetch(`${API_BASE_URL}/notifications`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
+  getNotifications: fetchNotificationsList,
+  /** Alias for layout code that calls `getAll` */
+  getAll: fetchNotificationsList,
 
   markAsRead: async (notificationId: string) => {
     const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
@@ -177,13 +181,17 @@ export const departmentApi = {
 }
 
 // Colleges API
+const fetchAllColleges = async () => {
+  const response = await fetch(`${API_BASE_URL}/colleges`, {
+    headers: createHeaders()
+  })
+  return handleResponse(response)
+}
+
 export const collegeApi = {
-  getAllColleges: async () => {
-    const response = await fetch(`${API_BASE_URL}/colleges`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  getAllColleges: fetchAllColleges,
+  /** Alias for pages that expect `getAll` */
+  getAll: fetchAllColleges,
 }
 
 // Vehicles API
@@ -208,6 +216,16 @@ export const vehicleApi = {
     })
     return handleResponse(response)
   }
+}
+
+// Maintenance API (fleet maintenance requests)
+export const maintenanceApi = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/maintenance`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
 }
 
 // Drivers API

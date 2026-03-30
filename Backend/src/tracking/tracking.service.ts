@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { GpsLocation } from './entities/gps-location.entity';
@@ -14,36 +18,46 @@ export class TrackingService {
     private readonly tripRepository: Repository<TripRequest>,
   ) {}
 
-  async saveLocation(tripId: string, locationDto: UpdateLocationDto): Promise<GpsLocation> {
+  async saveLocation(
+    tripId: string,
+    locationDto: UpdateLocationDto,
+  ): Promise<GpsLocation> {
     // Verify trip exists and is in progress
     const trip = await this.tripRepository.findOne({ where: { id: tripId } });
-    
+
     if (!trip) {
       throw new NotFoundException('Trip not found');
     }
-    
+
     if (trip.state !== TripState.IN_PROGRESS) {
-      throw new BadRequestException('Can only track locations for trips in progress');
+      throw new BadRequestException(
+        'Can only track locations for trips in progress',
+      );
     }
 
     const location = this.gpsLocationRepository.create({
       tripId,
       ...locationDto,
-      metadata: locationDto.metadata ? JSON.stringify(locationDto.metadata) : undefined,
+      metadata: locationDto.metadata
+        ? JSON.stringify(locationDto.metadata)
+        : undefined,
     });
 
     return this.gpsLocationRepository.save(location);
   }
 
-  async saveBulkLocations(tripId: string, locationsDto: UpdateLocationDto[]): Promise<GpsLocation[]> {
+  async saveBulkLocations(
+    tripId: string,
+    locationsDto: UpdateLocationDto[],
+  ): Promise<GpsLocation[]> {
     // Verify trip exists
     const trip = await this.tripRepository.findOne({ where: { id: tripId } });
-    
+
     if (!trip) {
       throw new NotFoundException('Trip not found');
     }
 
-    const locations = locationsDto.map(dto =>
+    const locations = locationsDto.map((dto) =>
       this.gpsLocationRepository.create({
         tripId,
         ...dto,
@@ -54,7 +68,10 @@ export class TrackingService {
     return this.gpsLocationRepository.save(locations);
   }
 
-  async getRecentLocations(tripId: string, limit: number = 50): Promise<GpsLocation[]> {
+  async getRecentLocations(
+    tripId: string,
+    limit: number = 50,
+  ): Promise<GpsLocation[]> {
     return this.gpsLocationRepository.find({
       where: { tripId },
       order: { timestamp: 'DESC' },
@@ -109,15 +126,18 @@ export class TrackingService {
     }
 
     // Calculate speeds
-    const speeds = locations.filter(l => l.speed !== null).map(l => l.speed);
-    const averageSpeed = speeds.length > 0 
-      ? speeds.reduce((a, b) => a + b, 0) / speeds.length 
-      : 0;
+    const speeds = locations
+      .filter((l) => l.speed !== null)
+      .map((l) => l.speed);
+    const averageSpeed =
+      speeds.length > 0 ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0;
     const maxSpeed = speeds.length > 0 ? Math.max(...speeds) : 0;
 
     // Calculate duration
     const startTime = new Date(locations[0].timestamp).getTime();
-    const endTime = new Date(locations[locations.length - 1].timestamp).getTime();
+    const endTime = new Date(
+      locations[locations.length - 1].timestamp,
+    ).getTime();
     const duration = (endTime - startTime) / 1000 / 60; // minutes
 
     return {
@@ -141,7 +161,11 @@ export class TrackingService {
   async getLiveVehicleLocations() {
     const activeTrips = await this.tripRepository.find({
       where: { state: TripState.IN_PROGRESS },
-      relations: ['allocatedVehicle', 'allocatedDriver', 'allocatedDriver.user'],
+      relations: [
+        'allocatedVehicle',
+        'allocatedDriver',
+        'allocatedDriver.user',
+      ],
       order: { updatedAt: 'DESC' },
     });
 
@@ -162,7 +186,9 @@ export class TrackingService {
           latitude: Number(latestLocation.latitude),
           longitude: Number(latestLocation.longitude),
           speed: latestLocation.speed ? Number(latestLocation.speed) : 0,
-          heading: latestLocation.heading ? Number(latestLocation.heading) : null,
+          heading: latestLocation.heading
+            ? Number(latestLocation.heading)
+            : null,
           timestamp: latestLocation.timestamp,
         };
       }),
@@ -185,18 +211,23 @@ export class TrackingService {
   }
 
   // Haversine formula to calculate distance between two GPS coordinates
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const R = 6371; // Earth's radius in km
     const dLat = this.toRadians(lat2 - lat1);
     const dLon = this.toRadians(lon2 - lon1);
-    
+
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(this.toRadians(lat1)) *
         Math.cos(this.toRadians(lat2)) *
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
-    
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }

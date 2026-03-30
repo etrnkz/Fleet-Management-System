@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { vehicleApi, driverApi } from '../../lib/api'
+import { vehicleApi, driverApi } from '@/lib/api'
 
 export default function VehiclesPage() {
   const [selectedTab, setSelectedTab] = useState('all')

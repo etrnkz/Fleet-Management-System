@@ -90,7 +90,8 @@ export default function DashboardPage() {
       setStatistics(statsData)
       
       // Transform audit logs to recent activity
-      const activities = (auditData.data || []).map((log: any) => {
+      const auditPayload = auditData as { data?: any[] }
+      const activities = (auditPayload.data || []).map((log: any) => {
         const timeAgo = getTimeAgo(new Date(log.createdAt))
         const userName = log.user?.name || 'Unknown User'
         

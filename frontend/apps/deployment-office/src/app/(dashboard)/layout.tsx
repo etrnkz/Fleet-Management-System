@@ -18,7 +18,7 @@ export default function DashboardLayout({
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
   const [userData, setUserData] = useState<any>(null)
-  const [notifications, setNotifications] = useState([])
+  const [notifications, setNotifications] = useState<any[]>([])
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',

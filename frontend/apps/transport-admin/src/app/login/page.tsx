@@ -63,6 +63,7 @@ export default function LoginPage() {
 
       // Save tokens and user data
       localStorage.setItem('accessToken', data.access_token)
+      localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('refreshToken', data.refresh_token)
       localStorage.setItem('user', JSON.stringify(data.user))
       
@@ -195,14 +196,13 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Sign In Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Have an account?{' '}
-              <Link href="/" className="text-emerald-500 hover:text-emerald-600 font-medium">
-                Sign in
-              </Link>
-            </p>
+          <div className="mt-8 text-center border-t border-gray-100 pt-6">
+            <Link
+              href="/"
+              className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors"
+            >
+              ← Back to portal overview
+            </Link>
           </div>
         </div>
       </div>

@@ -1,8 +1,15 @@
-import { IsNumber, IsOptional, IsBoolean, IsObject, Min, Max } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  IsObject,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateLocationDto {
-  @ApiProperty({ example: 9.0320, description: 'Latitude coordinate' })
+  @ApiProperty({ example: 9.032, description: 'Latitude coordinate' })
   @IsNumber()
   @Min(-90)
   @Max(90)
@@ -20,7 +27,10 @@ export class UpdateLocationDto {
   @Min(0)
   speed?: number;
 
-  @ApiPropertyOptional({ example: 180, description: 'Heading in degrees (0-360)' })
+  @ApiPropertyOptional({
+    example: 180,
+    description: 'Heading in degrees (0-360)',
+  })
   @IsNumber()
   @IsOptional()
   @Min(0)

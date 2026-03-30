@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
-import { AuditLog, AuditAction, AuditEntity } from './entities/audit-log.entity';
+import { Repository } from 'typeorm';
+import {
+  AuditLog,
+  AuditAction,
+  AuditEntity,
+} from './entities/audit-log.entity';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
@@ -48,8 +52,14 @@ export class AuditService {
       startDate?: Date;
       endDate?: Date;
     },
-  ): Promise<{ data: AuditLog[]; total: number; page: number; totalPages: number }> {
-    const query = this.auditRepository.createQueryBuilder('audit')
+  ): Promise<{
+    data: AuditLog[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const query = this.auditRepository
+      .createQueryBuilder('audit')
       .leftJoinAndSelect('audit.user', 'user')
       .orderBy('audit.createdAt', 'DESC');
 
@@ -62,7 +72,9 @@ export class AuditService {
     }
 
     if (filters?.entityType) {
-      query.andWhere('audit.entityType = :entityType', { entityType: filters.entityType });
+      query.andWhere('audit.entityType = :entityType', {
+        entityType: filters.entityType,
+      });
     }
 
     if (filters?.startDate && filters?.endDate) {
@@ -86,7 +98,10 @@ export class AuditService {
     };
   }
 
-  async findByEntity(entityType: AuditEntity, entityId: string): Promise<AuditLog[]> {
+  async findByEntity(
+    entityType: AuditEntity,
+    entityId: string,
+  ): Promise<AuditLog[]> {
     return this.auditRepository.find({
       where: { entityType, entityId },
       relations: ['user'],

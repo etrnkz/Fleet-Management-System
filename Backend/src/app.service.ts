@@ -7,7 +7,8 @@ export class AppService {
   getApiInfo() {
     return {
       service: 'Fleet Management System API',
-      description: 'Backend service for managing fleet vehicles, trips, drivers, and maintenance',
+      description:
+        'Backend service for managing fleet vehicles, trips, drivers, and maintenance',
       version: process.env.npm_package_version || '1.0.0',
       environment: process.env.NODE_ENV || 'development',
       timestamp: new Date().toISOString(),
@@ -16,13 +17,13 @@ export class AppService {
         health: '/health',
         status: '/status',
         auth: '/auth',
-      }
+      },
     };
   }
 
   getHealthStatus() {
     const memoryUsage = process.memoryUsage();
-    
+
     return {
       status: 'OK',
       uptime: process.uptime(),

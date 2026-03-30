@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collegeApi, departmentApi } from '../../lib/api'
+import { collegeApi, departmentApi } from '@/lib/api'
 
 export default function DepartmentsPage() {
   const [expandedCollege, setExpandedCollege] = useState<string | null>(null)
@@ -157,7 +157,7 @@ export default function DepartmentsPage() {
               <div className="p-4 md:p-6 bg-gray-50 border-t border-gray-200">
                 <h4 className="text-sm md:text-base font-bold text-gray-800 mb-4">Departments</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                  {college.departments.map((dept) => (
+                  {college.departments.map((dept: any) => (
                     <div key={dept.name} className="bg-white rounded-lg shadow p-3 md:p-4 hover:shadow-md transition-shadow">
                       <h5 className="text-sm md:text-base font-bold text-gray-800 mb-3">{dept.name}</h5>
                       

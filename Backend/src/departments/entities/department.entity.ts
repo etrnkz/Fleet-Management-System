@@ -23,7 +23,7 @@ export class Department {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToOne(() => College, college => college.departments)
+  @ManyToOne(() => College, (college) => college.departments)
   college: College;
 
   @ManyToOne(() => User, { nullable: true })

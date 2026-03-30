@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Department } from './entities/department.entity';
@@ -24,7 +28,9 @@ export class DepartmentsService {
     const department = this.departmentRepository.create({
       ...createDepartmentDto,
       college: { id: createDepartmentDto.collegeId } as any,
-      head: createDepartmentDto.headId ? { id: createDepartmentDto.headId } as any : null,
+      head: createDepartmentDto.headId
+        ? ({ id: createDepartmentDto.headId } as any)
+        : null,
     });
 
     return this.departmentRepository.save(department);
@@ -58,10 +64,16 @@ export class DepartmentsService {
     return department;
   }
 
-  async update(id: string, updateDepartmentDto: UpdateDepartmentDto): Promise<Department> {
+  async update(
+    id: string,
+    updateDepartmentDto: UpdateDepartmentDto,
+  ): Promise<Department> {
     const department = await this.findOne(id);
 
-    if (updateDepartmentDto.code && updateDepartmentDto.code !== department.code) {
+    if (
+      updateDepartmentDto.code &&
+      updateDepartmentDto.code !== department.code
+    ) {
       const existing = await this.departmentRepository.findOne({
         where: { code: updateDepartmentDto.code },
       });

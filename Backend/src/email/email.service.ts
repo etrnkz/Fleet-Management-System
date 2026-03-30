@@ -46,7 +46,10 @@ export class EmailService {
   async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
       const mailOptions = {
-        from: this.configService.get('email.from', 'Fleet Management <noreply@fleet.school.edu>'),
+        from: this.configService.get(
+          'email.from',
+          'Fleet Management <noreply@fleet.school.edu>',
+        ),
         to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
         subject: options.subject,
         text: options.text,
@@ -88,7 +91,11 @@ export class EmailService {
     });
   }
 
-  async sendTripApprovedEmail(to: string, tripDetails: any, approverName: string): Promise<boolean> {
+  async sendTripApprovedEmail(
+    to: string,
+    tripDetails: any,
+    approverName: string,
+  ): Promise<boolean> {
     const html = `
       <h2>Trip Request Approved</h2>
       <p>Your trip request has been approved by ${approverName}.</p>
@@ -109,7 +116,12 @@ export class EmailService {
     });
   }
 
-  async sendTripRejectedEmail(to: string, tripDetails: any, rejectorName: string, reason: string): Promise<boolean> {
+  async sendTripRejectedEmail(
+    to: string,
+    tripDetails: any,
+    rejectorName: string,
+    reason: string,
+  ): Promise<boolean> {
     const html = `
       <h2>Trip Request Rejected</h2>
       <p>Unfortunately, your trip request has been rejected by ${rejectorName}.</p>
@@ -131,7 +143,12 @@ export class EmailService {
     });
   }
 
-  async sendTripAllocatedEmail(to: string, tripDetails: any, vehicleInfo: any, driverInfo: any): Promise<boolean> {
+  async sendTripAllocatedEmail(
+    to: string,
+    tripDetails: any,
+    vehicleInfo: any,
+    driverInfo: any,
+  ): Promise<boolean> {
     const html = `
       <h2>Vehicle and Driver Allocated</h2>
       <p>A vehicle and driver have been assigned to your trip.</p>
@@ -162,7 +179,11 @@ export class EmailService {
     });
   }
 
-  async sendPendingApprovalEmail(to: string, tripDetails: any, requesterName: string): Promise<boolean> {
+  async sendPendingApprovalEmail(
+    to: string,
+    tripDetails: any,
+    requesterName: string,
+  ): Promise<boolean> {
     const html = `
       <h2>Trip Approval Required</h2>
       <p>A trip request from ${requesterName} requires your approval.</p>
@@ -185,7 +206,11 @@ export class EmailService {
     });
   }
 
-  async sendTimeoutWarningEmail(to: string, tripDetails: any, hoursRemaining: number): Promise<boolean> {
+  async sendTimeoutWarningEmail(
+    to: string,
+    tripDetails: any,
+    hoursRemaining: number,
+  ): Promise<boolean> {
     const html = `
       <h2>⚠️ Trip Approval Timeout Warning</h2>
       <p>A trip request requires your approval within the next ${hoursRemaining} hours.</p>
@@ -208,7 +233,11 @@ export class EmailService {
   }
 
   // Maintenance-related emails
-  async sendMaintenanceRequestEmail(to: string, maintenanceDetails: any, vehicleInfo: any): Promise<boolean> {
+  async sendMaintenanceRequestEmail(
+    to: string,
+    maintenanceDetails: any,
+    vehicleInfo: any,
+  ): Promise<boolean> {
     const html = `
       <h2>Maintenance Request Submitted</h2>
       <p>A new maintenance request has been submitted.</p>
@@ -231,7 +260,11 @@ export class EmailService {
   }
 
   // Fuel-related emails
-  async sendLowFuelAlertEmail(to: string, vehicleInfo: any, fuelLevel: number): Promise<boolean> {
+  async sendLowFuelAlertEmail(
+    to: string,
+    vehicleInfo: any,
+    fuelLevel: number,
+  ): Promise<boolean> {
     const html = `
       <h2>⚠️ Low Fuel Alert</h2>
       <p>A vehicle has low fuel and requires refueling.</p>
@@ -252,7 +285,11 @@ export class EmailService {
   }
 
   // Generic notification email
-  async sendNotificationEmail(to: string, title: string, message: string): Promise<boolean> {
+  async sendNotificationEmail(
+    to: string,
+    title: string,
+    message: string,
+  ): Promise<boolean> {
     const html = `
       <h2>${title}</h2>
       <p>${message}</p>

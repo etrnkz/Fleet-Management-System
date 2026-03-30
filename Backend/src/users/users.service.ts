@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from './entities/user.entity';
@@ -16,7 +20,9 @@ export class UsersService {
     private readonly collegeRepository: Repository<College>,
   ) {}
 
-  async create(userData: Partial<User> & { departmentId?: string; collegeId?: string }): Promise<User> {
+  async create(
+    userData: Partial<User> & { departmentId?: string; collegeId?: string },
+  ): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       where: { email: userData.email },
     });
@@ -26,7 +32,7 @@ export class UsersService {
     }
 
     const user = this.userRepository.create(userData);
-    
+
     // Set department if departmentId is provided
     if (userData.departmentId) {
       const department = await this.departmentRepository.findOne({
@@ -36,7 +42,7 @@ export class UsersService {
         user.department = department;
       }
     }
-    
+
     // Set college if collegeId is provided
     if (userData.collegeId) {
       const college = await this.collegeRepository.findOne({
@@ -46,19 +52,19 @@ export class UsersService {
         user.college = college;
       }
     }
-    
+
     return this.userRepository.save(user);
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ 
+    return this.userRepository.findOne({
       where: { email },
       relations: ['department', 'college'],
     });
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ 
+    return this.userRepository.findOne({
       where: { id },
       relations: ['department', 'college'],
     });
@@ -93,10 +99,10 @@ export class UsersService {
 
   async findDepartmentHead(departmentId: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { 
+      where: {
         department: { id: departmentId },
         role: UserRole.DepartmentHead,
-        isActive: true 
+        isActive: true,
       },
       relations: ['department', 'college'],
     });
@@ -117,13 +123,16 @@ export class UsersService {
     return this.userRepository.findOne({
       where: {
         role: UserRole.President,
-        isActive: true 
+        isActive: true,
       },
       relations: ['department', 'college'],
     });
   }
 
-  async update(id: string, userData: Partial<User> & { departmentId?: string; collegeId?: string }): Promise<User> {
+  async update(
+    id: string,
+    userData: Partial<User> & { departmentId?: string; collegeId?: string },
+  ): Promise<User> {
     const user = await this.findById(id);
     if (!user) {
       throw new NotFoundException('User not found');

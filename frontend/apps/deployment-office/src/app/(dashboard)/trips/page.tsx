@@ -24,9 +24,9 @@ export default function TripsPage() {
     urgency: 'normal',
     notes: ''
   })
-  const [tripsList, setTripsList] = useState([])
-  const [availableVehicles, setAvailableVehicles] = useState([])
-  const [availableDrivers, setAvailableDrivers] = useState([])
+  const [tripsList, setTripsList] = useState<any[]>([])
+  const [availableVehicles, setAvailableVehicles] = useState<any[]>([])
+  const [availableDrivers, setAvailableDrivers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

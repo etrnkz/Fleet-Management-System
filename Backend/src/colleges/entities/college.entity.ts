@@ -27,7 +27,7 @@ export class College {
   @ManyToOne(() => User, { nullable: true })
   head: User;
 
-  @OneToMany(() => Department, department => department.college)
+  @OneToMany(() => Department, (department) => department.college)
   departments: Department[];
 
   @Column({ default: true })

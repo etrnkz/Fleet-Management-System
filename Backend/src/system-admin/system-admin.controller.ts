@@ -11,7 +11,13 @@ import {
   Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { SystemAdminService } from './system-admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/guards/roles.guard';
@@ -30,28 +36,36 @@ export class SystemAdminController {
 
   // User Management
   @Get('users')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all users with advanced filtering',
-    description: 'System admins can view and manage all users in the system'
+    description: 'System admins can view and manage all users in the system',
   })
   @ApiQuery({ name: 'role', required: false })
   @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @ApiQuery({ name: 'department', required: false })
   @ApiQuery({ name: 'college', required: false })
-  @ApiResponse({ status: 200, description: 'List of users with detailed information' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of users with detailed information',
+  })
   async getAllUsers(
     @Query('role') role?: string,
     @Query('isActive') isActive?: boolean,
     @Query('department') department?: string,
     @Query('college') college?: string,
   ) {
-    return this.systemAdminService.getAllUsers({ role, isActive, department, college });
+    return this.systemAdminService.getAllUsers({
+      role,
+      isActive,
+      department,
+      college,
+    });
   }
 
   @Post('users')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create system user',
-    description: 'Create users with any role including administrative roles'
+    description: 'Create users with any role including administrative roles',
   })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   async createSystemUser(@Body() createUserDto: CreateSystemUserDto) {
@@ -59,9 +73,9 @@ export class SystemAdminController {
   }
 
   @Patch('users/:id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update any user',
-    description: 'System admins can update any user including role changes'
+    description: 'System admins can update any user including role changes',
   })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   async updateUser(
@@ -72,9 +86,9 @@ export class SystemAdminController {
   }
 
   @Delete('users/:id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Delete user',
-    description: 'Permanently delete a user (use with caution)'
+    description: 'Permanently delete a user (use with caution)',
   })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   async deleteUser(@Param('id', ParseUUIDPipe) id: string) {
@@ -94,9 +108,9 @@ export class SystemAdminController {
   }
 
   @Post('users/:id/reset-password')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Reset user password',
-    description: 'Generate new password for user and send via email'
+    description: 'Generate new password for user and send via email',
   })
   async resetUserPassword(@Param('id', ParseUUIDPipe) id: string) {
     return this.systemAdminService.resetUserPassword(id);
@@ -104,9 +118,9 @@ export class SystemAdminController {
 
   // System Statistics and Monitoring
   @Get('statistics/overview')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get comprehensive system statistics',
-    description: 'Overview of all system metrics and KPIs'
+    description: 'Overview of all system metrics and KPIs',
   })
   @ApiResponse({ status: 200, description: 'System overview statistics' })
   async getSystemOverview() {
@@ -139,18 +153,18 @@ export class SystemAdminController {
 
   // System Configuration
   @Get('config')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get system configuration',
-    description: 'Retrieve current system settings and configuration'
+    description: 'Retrieve current system settings and configuration',
   })
   async getSystemConfig() {
     return this.systemAdminService.getSystemConfig();
   }
 
   @Patch('config')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update system configuration',
-    description: 'Update system-wide settings and parameters'
+    description: 'Update system-wide settings and parameters',
   })
   async updateSystemConfig(@Body() configDto: SystemConfigDto) {
     return this.systemAdminService.updateSystemConfig(configDto);
@@ -158,9 +172,9 @@ export class SystemAdminController {
 
   // Audit and Logs
   @Get('audit-logs')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get system audit logs',
-    description: 'Retrieve comprehensive audit trail of system activities'
+    description: 'Retrieve comprehensive audit trail of system activities',
   })
   @ApiQuery({ name: 'startDate', required: false })
   @ApiQuery({ name: 'endDate', required: false })
@@ -184,9 +198,10 @@ export class SystemAdminController {
   }
 
   @Get('system-health')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get system health status',
-    description: 'Check system health, database connectivity, and service status'
+    description:
+      'Check system health, database connectivity, and service status',
   })
   async getSystemHealth() {
     return this.systemAdminService.getSystemHealth();
@@ -194,9 +209,9 @@ export class SystemAdminController {
 
   // Data Management
   @Post('backup')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create system backup',
-    description: 'Generate backup of system data'
+    description: 'Generate backup of system data',
   })
   async createBackup() {
     return this.systemAdminService.createBackup();
@@ -209,12 +224,18 @@ export class SystemAdminController {
   }
 
   @Post('maintenance-mode')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Enable maintenance mode',
-    description: 'Put system in maintenance mode for updates'
+    description: 'Put system in maintenance mode for updates',
   })
-  async enableMaintenanceMode(@Body() body: { reason: string; estimatedDuration?: number }) {
-    return this.systemAdminService.setMaintenanceMode(true, body.reason, body.estimatedDuration);
+  async enableMaintenanceMode(
+    @Body() body: { reason: string; estimatedDuration?: number },
+  ) {
+    return this.systemAdminService.setMaintenanceMode(
+      true,
+      body.reason,
+      body.estimatedDuration,
+    );
   }
 
   @Delete('maintenance-mode')
@@ -225,36 +246,41 @@ export class SystemAdminController {
 
   // Bulk Operations
   @Post('bulk/users/import')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Bulk import users',
-    description: 'Import multiple users from CSV or JSON data'
+    description: 'Import multiple users from CSV or JSON data',
   })
   async bulkImportUsers(@Body() data: { users: CreateSystemUserDto[] }) {
     return this.systemAdminService.bulkImportUsers(data.users);
   }
 
   @Post('bulk/users/export')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Export users data',
-    description: 'Export user data in various formats'
+    description: 'Export user data in various formats',
   })
-  async exportUsers(@Body() options: { format: 'csv' | 'json'; filters?: any }) {
+  async exportUsers(
+    @Body() options: { format: 'csv' | 'json'; filters?: any },
+  ) {
     return this.systemAdminService.exportUsers(options);
   }
 
   // System Notifications
   @Post('notifications/broadcast')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Send system-wide notification',
-    description: 'Send notification to all users or specific user groups'
+    description: 'Send notification to all users or specific user groups',
   })
-  async broadcastNotification(@Body() notification: {
-    title: string;
-    message: string;
-    type: string;
-    targetRoles?: string[];
-    targetUsers?: string[];
-  }) {
+  async broadcastNotification(
+    @Body()
+    notification: {
+      title: string;
+      message: string;
+      type: string;
+      targetRoles?: string[];
+      targetUsers?: string[];
+    },
+  ) {
     return this.systemAdminService.broadcastNotification(notification);
   }
 }

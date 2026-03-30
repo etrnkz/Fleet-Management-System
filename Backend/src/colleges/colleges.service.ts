@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { College } from './entities/college.entity';
@@ -23,7 +27,9 @@ export class CollegesService {
 
     const college = this.collegeRepository.create({
       ...createCollegeDto,
-      head: createCollegeDto.headId ? { id: createCollegeDto.headId } as any : null,
+      head: createCollegeDto.headId
+        ? ({ id: createCollegeDto.headId } as any)
+        : null,
     });
 
     return this.collegeRepository.save(college);
@@ -49,7 +55,10 @@ export class CollegesService {
     return college;
   }
 
-  async update(id: string, updateCollegeDto: UpdateCollegeDto): Promise<College> {
+  async update(
+    id: string,
+    updateCollegeDto: UpdateCollegeDto,
+  ): Promise<College> {
     const college = await this.findOne(id);
 
     if (updateCollegeDto.code && updateCollegeDto.code !== college.code) {

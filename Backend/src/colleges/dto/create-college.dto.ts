@@ -1,10 +1,17 @@
-import { IsString, IsNotEmpty, IsOptional, IsUUID, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsUUID,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCollegeDto {
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'College of Engineering',
-    description: 'College name'
+    description: 'College name',
   })
   @IsString()
   @IsNotEmpty()
@@ -12,9 +19,9 @@ export class CreateCollegeDto {
   @MaxLength(100)
   name: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'COE',
-    description: 'Unique college code'
+    description: 'Unique college code',
   })
   @IsString()
   @IsNotEmpty()
@@ -22,17 +29,17 @@ export class CreateCollegeDto {
   @MaxLength(10)
   code: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'Engineering and technology programs',
-    description: 'College description'
+    description: 'College description',
   })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'uuid-of-college-head',
-    description: 'User ID of college head'
+    description: 'User ID of college head',
   })
   @IsUUID()
   @IsOptional()

@@ -28,12 +28,17 @@ import { UpdateLocationDto } from './dto/update-location.dto';
   },
   namespace: '/tracking',
 })
-export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class TrackingGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
   private readonly logger = new Logger(TrackingGateway.name);
-  private activeConnections = new Map<string, { tripId: string; userId: string }>();
+  private activeConnections = new Map<
+    string,
+    { tripId: string; userId: string }
+  >();
 
   constructor(private readonly trackingService: TrackingService) {}
 
@@ -52,17 +57,20 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() client: Socket,
   ) {
     const { tripId, userId } = data;
-    
+
     // Join the trip room
     client.join(`trip-${tripId}`);
     this.activeConnections.set(client.id, { tripId, userId });
-    
+
     this.logger.log(`User ${userId} joined trip ${tripId}`);
-    
+
     // Send recent locations to the newly joined client
-    const recentLocations = await this.trackingService.getRecentLocations(tripId, 50);
+    const recentLocations = await this.trackingService.getRecentLocations(
+      tripId,
+      50,
+    );
     client.emit('location-history', recentLocations);
-    
+
     return { success: true, message: 'Joined trip tracking' };
   }
 
@@ -74,9 +82,9 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
     const { tripId } = data;
     client.leave(`trip-${tripId}`);
     this.activeConnections.delete(client.id);
-    
+
     this.logger.log(`Client ${client.id} left trip ${tripId}`);
-    
+
     return { success: true, message: 'Left trip tracking' };
   }
 
@@ -86,19 +94,22 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() client: Socket,
   ) {
     const { tripId, location } = data;
-    
+
     try {
       // Save location to database
-      const savedLocation = await this.trackingService.saveLocation(tripId, location);
-      
+      const savedLocation = await this.trackingService.saveLocation(
+        tripId,
+        location,
+      );
+
       // Broadcast to all clients watching this trip
       this.server.to(`trip-${tripId}`).emit('location-update', {
         tripId,
         location: savedLocation,
       });
-      
+
       this.logger.debug(`Location updated for trip ${tripId}`);
-      
+
       return { success: true, location: savedLocation };
     } catch (error) {
       this.logger.error(`Failed to update location: ${error.message}`);
@@ -112,19 +123,24 @@ export class TrackingGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() client: Socket,
   ) {
     const { tripId, locations } = data;
-    
+
     try {
       // Save all offline locations
-      const savedLocations = await this.trackingService.saveBulkLocations(tripId, locations);
-      
+      const savedLocations = await this.trackingService.saveBulkLocations(
+        tripId,
+        locations,
+      );
+
       // Broadcast to all clients
       this.server.to(`trip-${tripId}`).emit('location-bulk-update', {
         tripId,
         locations: savedLocations,
       });
-      
-      this.logger.log(`Bulk update: ${locations.length} locations for trip ${tripId}`);
-      
+
+      this.logger.log(
+        `Bulk update: ${locations.length} locations for trip ${tripId}`,
+      );
+
       return { success: true, count: savedLocations.length };
     } catch (error) {
       this.logger.error(`Failed to bulk update locations: ${error.message}`);

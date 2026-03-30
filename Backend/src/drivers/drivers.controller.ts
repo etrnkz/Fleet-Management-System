@@ -10,7 +10,13 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
@@ -29,8 +35,14 @@ export class DriversController {
   @Post()
   @Roles(UserRole.Developer, UserRole.TransportOffice, UserRole.DeploymentTeam)
   @ApiOperation({ summary: 'Create driver profile' })
-  @ApiResponse({ status: 201, description: 'Driver profile created successfully' })
-  @ApiResponse({ status: 409, description: 'Driver profile or license already exists' })
+  @ApiResponse({
+    status: 201,
+    description: 'Driver profile created successfully',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Driver profile or license already exists',
+  })
   create(@Body() createDriverDto: CreateDriverDto) {
     return this.driversService.create(createDriverDto);
   }

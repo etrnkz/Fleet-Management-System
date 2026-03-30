@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { authApi, tripApi, vehicleApi, statsApi, maintenanceApi } from '../lib/api'
+import { authApi, tripApi, vehicleApi, statsApi, maintenanceApi } from '@/lib/api'
 
 export default function DriverDashboard() {
   const router = useRouter()
@@ -12,10 +12,10 @@ export default function DriverDashboard() {
   const [userData, setUserData] = useState<any>(null)
   const [assignedVehicle, setAssignedVehicle] = useState<any>(null)
   const [stats, setStats] = useState<any>(null)
-  const [assignedTrips, setAssignedTrips] = useState([])
-  const [activeTrips, setActiveTrips] = useState([])
-  const [completedTrips, setCompletedTrips] = useState([])
-  const [maintenanceRequests, setMaintenanceRequests] = useState([])
+  const [assignedTrips, setAssignedTrips] = useState<any[]>([])
+  const [activeTrips, setActiveTrips] = useState<any[]>([])
+  const [completedTrips, setCompletedTrips] = useState<any[]>([])
+  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   
@@ -52,10 +52,10 @@ export default function DriverDashboard() {
       setUserData(user)
       setAssignedVehicle(vehicle)
       setStats(driverStats)
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to load user data:', error)
-      // If token is invalid, redirect to login
-      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
+      const msg = error instanceof Error ? error.message : ''
+      if (msg.includes('token') || msg.includes('Unauthorized')) {
         router.push('/login')
       }
     } finally {
@@ -305,7 +305,7 @@ export default function DriverDashboard() {
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
                 <span className="text-emerald-600 font-bold text-sm">
-                  {userData?.fullName?.split(' ').map(n => n[0]).join('') || 'D'}
+                  {userData?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'D'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
@@ -812,7 +812,7 @@ export default function DriverDashboard() {
                 ) : (
                   maintenanceRequests.map((request: any) => {
                     const getStatusColor = (status: string) => {
-                      const colors = {
+                      const colors: Record<string, string> = {
                         'Submitted': 'bg-blue-100 text-blue-700',
                         'EstimateProvided': 'bg-purple-100 text-purple-700',
                         'BudgetApproved': 'bg-green-100 text-green-700',
@@ -824,7 +824,7 @@ export default function DriverDashboard() {
                     }
 
                     const getPriorityColor = (priority: string) => {
-                      const colors = {
+                      const colors: Record<string, string> = {
                         'Low': 'bg-gray-100 text-gray-700',
                         'Medium': 'bg-yellow-100 text-yellow-700',
                         'High': 'bg-orange-100 text-orange-700',

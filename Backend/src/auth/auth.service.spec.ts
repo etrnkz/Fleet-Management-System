@@ -73,15 +73,15 @@ describe('AuthService', () => {
 
     it('should throw ConflictException for duplicate email', async () => {
       await service.register(mockRegisterDto);
-      
+
       await expect(service.register(mockRegisterDto)).rejects.toThrow(
-        ConflictException
+        ConflictException,
       );
     });
 
     it('should store hashed password, not plain text', async () => {
       await service.register(mockRegisterDto);
-      
+
       expect(bcrypt.hash).toHaveBeenCalled();
       // Password should be hashed, not stored as plain text
     });
@@ -100,7 +100,7 @@ describe('AuthService', () => {
     beforeEach(async () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockJwtService.sign.mockReturnValue('mock-token');
-      
+
       // Pre-register a user
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
       await service.register(mockRegisterDto);
@@ -120,7 +120,7 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(service.login(mockLoginDto)).rejects.toThrow(
-        UnauthorizedException
+        UnauthorizedException,
       );
     });
 
@@ -131,15 +131,18 @@ describe('AuthService', () => {
       };
 
       await expect(service.login(nonExistentLogin)).rejects.toThrow(
-        UnauthorizedException
+        UnauthorizedException,
       );
     });
 
     it('should throw UnauthorizedException for inactive account', async () => {
       // Register an inactive user
-      const inactiveUserDto = { ...mockRegisterDto, email: 'inactive@example.com' };
+      const inactiveUserDto = {
+        ...mockRegisterDto,
+        email: 'inactive@example.com',
+      };
       await service.register(inactiveUserDto);
-      
+
       // Manually deactivate (in real impl, you'd need a method for this)
       // This test would need adjustment based on actual implementation
       expect(true).toBe(true);
@@ -148,7 +151,7 @@ describe('AuthService', () => {
     it('should update lastLoginAt on successful login', async () => {
       const beforeLogin = new Date();
       await service.login(mockLoginDto);
-      
+
       // Verify lastLoginAt was updated (would need access to user object)
       expect(true).toBe(true);
     });
@@ -158,9 +161,11 @@ describe('AuthService', () => {
     it('should return new access token for valid refresh token', async () => {
       const mockPayload = { sub: 'user-id' };
       const mockUser = { id: 'user-id', isActive: true } as any;
-      
+
       mockJwtService.verify.mockReturnValue(mockPayload);
-      jest.spyOn(service as any, 'validateUserById').mockResolvedValue(mockUser);
+      jest
+        .spyOn(service as any, 'validateUserById')
+        .mockResolvedValue(mockUser);
       mockJwtService.sign.mockReturnValue('new-access-token');
 
       const result = await service.refreshToken('valid-refresh-token');
@@ -177,15 +182,15 @@ describe('AuthService', () => {
       });
 
       await expect(service.refreshToken('invalid-token')).rejects.toThrow(
-        UnauthorizedException
+        UnauthorizedException,
       );
     });
 
     it('should throw UnauthorizedException for non-existent user', async () => {
       mockJwtService.verify.mockReturnValue({ sub: 'non-existent-id' });
-      
+
       await expect(service.refreshToken('valid-token')).rejects.toThrow(
-        UnauthorizedException
+        UnauthorizedException,
       );
     });
   });
@@ -193,10 +198,10 @@ describe('AuthService', () => {
   describe('validateUserById', () => {
     it('should return user for valid ID', async () => {
       await service.register(mockRegisterDto);
-      
+
       // Get the user ID (in real test, you'd store it from registration)
       const result = await service.validateUserById('mocked-uuid');
-      
+
       expect(result).toBeDefined();
       expect(result?.email).toBe(mockRegisterDto.email);
     });
@@ -210,7 +215,7 @@ describe('AuthService', () => {
   describe('security measures', () => {
     it('should use bcrypt with appropriate salt rounds', async () => {
       await service.register(mockRegisterDto);
-      
+
       expect(bcrypt.hash).toHaveBeenCalledWith(mockRegisterDto.password, 12);
     });
 
@@ -226,7 +231,7 @@ describe('AuthService', () => {
       (bcrypt.hash as jest.Mock).mockRejectedValue(new Error('Hash error'));
 
       await expect(service.register(mockRegisterDto)).rejects.toThrow(
-        'Hash error'
+        'Hash error',
       );
     });
   });

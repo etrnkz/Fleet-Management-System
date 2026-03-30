@@ -11,7 +11,13 @@ import {
   Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -29,12 +35,13 @@ export class UsersController {
 
   @Post()
   @Roles(UserRole.Developer, UserRole.Dean)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create a new user',
-    description: 'Create a new user account. Only Developer and Dean roles can create users.'
+    description:
+      'Create a new user account. Only Developer and Dean roles can create users.',
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'User created successfully',
     schema: {
       example: {
@@ -43,16 +50,16 @@ export class UsersController {
         email: 'john.doe@school.edu',
         role: 'Driver',
         isActive: true,
-        createdAt: '2024-01-15T10:00:00Z'
-      }
-    }
+        createdAt: '2024-01-15T10:00:00Z',
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   async create(@Body() createUserDto: CreateUserDto) {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     const { password, ...userData } = createUserDto;
-    
+
     return this.usersService.create({
       ...userData,
       password: hashedPassword,
@@ -60,12 +67,12 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all users',
-    description: 'Retrieve a list of all users in the system'
+    description: 'Retrieve a list of all users in the system',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'List of users',
     schema: {
       example: [
@@ -77,22 +84,22 @@ export class UsersController {
           isActive: true,
           departmentId: 'uuid',
           collegeId: 'uuid',
-          createdAt: '2024-01-15T10:00:00Z'
-        }
-      ]
-    }
+          createdAt: '2024-01-15T10:00:00Z',
+        },
+      ],
+    },
   })
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get('me')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get current user profile',
-    description: 'Get the profile of the currently authenticated user'
+    description: 'Get the profile of the currently authenticated user',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Current user profile',
     schema: {
       example: {
@@ -104,28 +111,28 @@ export class UsersController {
         department: {
           id: 'uuid',
           name: 'Computer Science',
-          code: 'CS'
+          code: 'CS',
         },
         college: {
           id: 'uuid',
           name: 'College of Engineering',
-          code: 'COE'
+          code: 'COE',
         },
-        createdAt: '2024-01-15T10:00:00Z'
-      }
-    }
+        createdAt: '2024-01-15T10:00:00Z',
+      },
+    },
   })
   getProfile(@Request() req) {
     return this.usersService.findById(req.user.id);
   }
 
   @Patch('me')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update current user profile',
-    description: 'Update the profile of the currently authenticated user'
+    description: 'Update the profile of the currently authenticated user',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Profile updated successfully',
     schema: {
       example: {
@@ -135,15 +142,12 @@ export class UsersController {
         phoneNumber: '+251912345678',
         role: 'Driver',
         isActive: true,
-        updatedAt: '2024-01-16T10:00:00Z'
-      }
-    }
+        updatedAt: '2024-01-16T10:00:00Z',
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  updateProfile(
-    @Request() req,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
+  updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     // Users can only update their own name, email, and phone
     const allowedFields = {
       name: updateUserDto.name,
@@ -153,12 +157,12 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get user by ID',
-    description: 'Retrieve a specific user by their ID'
+    description: 'Retrieve a specific user by their ID',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'User details',
     schema: {
       example: {
@@ -167,9 +171,9 @@ export class UsersController {
         email: 'john.doe@school.edu',
         role: 'Driver',
         isActive: true,
-        createdAt: '2024-01-15T10:00:00Z'
-      }
-    }
+        createdAt: '2024-01-15T10:00:00Z',
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
@@ -178,12 +182,13 @@ export class UsersController {
 
   @Patch(':id')
   @Roles(UserRole.Developer, UserRole.Dean)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Update user',
-    description: 'Update user information. Only Developer and Dean roles can update users.'
+    description:
+      'Update user information. Only Developer and Dean roles can update users.',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'User updated successfully',
     schema: {
       example: {
@@ -192,9 +197,9 @@ export class UsersController {
         email: 'john.doe@school.edu',
         role: 'Driver',
         isActive: true,
-        updatedAt: '2024-01-16T10:00:00Z'
-      }
-    }
+        updatedAt: '2024-01-16T10:00:00Z',
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   update(
@@ -206,9 +211,9 @@ export class UsersController {
 
   @Patch(':id/deactivate')
   @Roles(UserRole.Developer, UserRole.Dean)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Deactivate user',
-    description: 'Deactivate a user account (soft delete)'
+    description: 'Deactivate a user account (soft delete)',
   })
   @ApiResponse({ status: 200, description: 'User deactivated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -219,9 +224,9 @@ export class UsersController {
 
   @Patch(':id/activate')
   @Roles(UserRole.Developer, UserRole.Dean)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Activate user',
-    description: 'Reactivate a deactivated user account'
+    description: 'Reactivate a deactivated user account',
   })
   @ApiResponse({ status: 200, description: 'User activated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -232,9 +237,10 @@ export class UsersController {
 
   @Delete(':id')
   @Roles(UserRole.Developer)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Delete user',
-    description: 'Permanently delete a user. Only Developer role can delete users.'
+    description:
+      'Permanently delete a user. Only Developer role can delete users.',
   })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -245,12 +251,12 @@ export class UsersController {
 
   @Get('statistics/overview')
   @Roles(UserRole.Developer, UserRole.Dean, UserRole.TransportOffice)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get user statistics',
-    description: 'Get comprehensive statistics about users in the system'
+    description: 'Get comprehensive statistics about users in the system',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'User statistics',
     schema: {
       example: {
@@ -266,23 +272,23 @@ export class UsersController {
           TransportOffice: 4,
           MaintenanceTeam: 10,
           Driver: 20,
-          Developer: 5
-        }
-      }
-    }
+          Developer: 5,
+        },
+      },
+    },
   })
   async getStatistics() {
     const users = await this.usersService.findAll();
-    
+
     const stats = {
       total: users.length,
-      active: users.filter(u => u.isActive).length,
-      inactive: users.filter(u => !u.isActive).length,
+      active: users.filter((u) => u.isActive).length,
+      inactive: users.filter((u) => !u.isActive).length,
       byRole: {} as Record<string, number>,
     };
 
     // Count by role
-    users.forEach(user => {
+    users.forEach((user) => {
       stats.byRole[user.role] = (stats.byRole[user.role] || 0) + 1;
     });
 

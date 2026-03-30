@@ -10,7 +10,7 @@ export class AllocateTripDto {
   @IsUUID()
   driverId: string;
 
-  @ApiProperty({ example: 50.00 })
+  @ApiProperty({ example: 50.0 })
   @IsNumber()
   @Min(0)
   estimatedFuelCost: number;

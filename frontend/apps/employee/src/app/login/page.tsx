@@ -47,6 +47,7 @@ export default function LoginPage() {
 
       // Save tokens and user data (backend returns access_token, refresh_token, user)
       localStorage.setItem('accessToken', data.access_token)
+      localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('refreshToken', data.refresh_token)
       localStorage.setItem('user', JSON.stringify(data.user))
       
