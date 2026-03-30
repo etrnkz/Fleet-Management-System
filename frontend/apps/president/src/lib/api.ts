@@ -1,9 +1,9 @@
-const API_BASE_URL = 'http://localhost:3000/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 // Get auth token from localStorage
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('access_token')
+    return localStorage.getItem('accessToken')
   }
   return null
 }
@@ -38,8 +38,27 @@ export const authApi = {
   },
 
   getCurrentUser: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
       headers: createHeaders()
+    })
+    return handleResponse(response)
+  }
+}
+
+// User API
+export const userApi = {
+  getProfile: async () => {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  updateProfile: async (data: any) => {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
+      method: 'PATCH',
+      headers: createHeaders(),
+      body: JSON.stringify(data)
     })
     return handleResponse(response)
   }
@@ -48,7 +67,7 @@ export const authApi = {
 // Trip API
 export const tripApi = {
   getPendingApprovals: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips/pending-approvals`, {
+    const response = await fetch(`${API_BASE_URL}/trips/pending/approvals`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -56,6 +75,14 @@ export const tripApi = {
 
   getAllTrips: async () => {
     const response = await fetch(`${API_BASE_URL}/trips`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  getAll: async (filters?: any) => {
+    const queryParams = filters ? new URLSearchParams(filters).toString() : ''
+    const response = await fetch(`${API_BASE_URL}/trips${queryParams ? `?${queryParams}` : ''}`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -82,22 +109,22 @@ export const tripApi = {
 
 // Statistics API
 export const statsApi = {
-  getOverallStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/statistics/overall`, {
+  getDashboardStats: async () => {
+    const response = await fetch(`${API_BASE_URL}/trips/statistics/overview`, {
       headers: createHeaders()
     })
     return handleResponse(response)
   },
 
-  getBudgetStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/statistics/budget`, {
+  getVehicleStats: async () => {
+    const response = await fetch(`${API_BASE_URL}/vehicles/statistics`, {
       headers: createHeaders()
     })
     return handleResponse(response)
   },
 
-  getComplianceStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/statistics/compliance`, {
+  getFleetUtilization: async () => {
+    const response = await fetch(`${API_BASE_URL}/statistics/fleet-utilization`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -139,6 +166,13 @@ export const departmentApi = {
       headers: createHeaders()
     })
     return handleResponse(response)
+  },
+
+  getByCollege: async (collegeId: string) => {
+    const response = await fetch(`${API_BASE_URL}/departments?collegeId=${collegeId}`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
   }
 }
 
@@ -161,8 +195,32 @@ export const vehicleApi = {
     return handleResponse(response)
   },
 
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/vehicles`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
+
   getVehicleStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/stats`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/statistics`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  }
+}
+
+// Drivers API
+export const driverApi = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/drivers`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  getById: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/drivers/${id}`, {
       headers: createHeaders()
     })
     return handleResponse(response)

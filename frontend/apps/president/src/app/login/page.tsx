@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
+
 export default function Login() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -44,7 +46,7 @@ export default function Login() {
     setError('')
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -52,16 +54,32 @@ export default function Login() {
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Login failed')
 
+      localStorage.setItem('accessToken', data.access_token)
       localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
+
       if (rememberMe) {
         localStorage.setItem('presidentRememberedUser', JSON.stringify({ email, password }))
       } else {
         localStorage.removeItem('presidentRememberedUser')
       }
+
+      try {
+        const profileResponse = await fetch(`${API_BASE_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        })
+        if (profileResponse.ok) {
+          const userProfile = await profileResponse.json()
+          localStorage.setItem('presidentUser', JSON.stringify(userProfile))
+        }
+      } catch {
+        /* optional profile enrichment */
+      }
+
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Invalid email or password')
+    } finally {
       setIsLoading(false)
     }
   }

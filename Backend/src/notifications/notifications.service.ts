@@ -28,7 +28,26 @@ export class NotificationsService {
       data,
     });
 
-    return this.notificationRepository.save(notification);
+    const savedNotification = await this.notificationRepository.save(notification);
+
+    // Send real-time notification if gateway is available
+    // if (this.notificationsGateway) {
+    //   try {
+    //     await this.notificationsGateway.sendNotificationToUser(recipient.id, {
+    //       id: savedNotification.id,
+    //       type: savedNotification.type,
+    //       title: savedNotification.title,
+    //       message: savedNotification.message,
+    //       data: savedNotification.data,
+    //       sentAt: savedNotification.sentAt,
+    //       isRead: savedNotification.isRead,
+    //     });
+    //   } catch (error) {
+    //     console.error('Failed to send real-time notification:', error);
+    //   }
+    // }
+
+    return savedNotification;
   }
 
   async findByUser(userId: string, isRead?: boolean): Promise<Notification[]> {
@@ -91,15 +110,36 @@ export class NotificationsService {
       })
     );
 
-    return this.notificationRepository.save(notifications);
+    const savedNotifications = await this.notificationRepository.save(notifications);
+
+    // Send real-time notifications if gateway is available
+    // if (this.notificationsGateway) {
+    //   try {
+    //     for (const notification of savedNotifications) {
+    //       await this.notificationsGateway.sendNotificationToUser(notification.recipient.id, {
+    //         id: notification.id,
+    //         type: notification.type,
+    //         title: notification.title,
+    //         message: notification.message,
+    //         data: notification.data,
+    //         sentAt: notification.sentAt,
+    //         isRead: notification.isRead,
+    //       });
+    //     }
+    //   } catch (error) {
+    //     console.error('Failed to send bulk real-time notifications:', error);
+    //   }
+    // }
+
+    return savedNotifications;
   }
 
   // Get all stakeholders for a trip
   async getTripStakeholders(trip: any): Promise<{
     requester: User;
-    departmentHead?: User;
-    dean?: User;
-    president?: User;
+    departmentHead?: User | null;
+    dean?: User | null;
+    president?: User | null;
     deploymentTeam: User[];
     transportOffice: User[];
     driver?: User;
@@ -107,9 +147,9 @@ export class NotificationsService {
   }> {
     const stakeholders = {
       requester: trip.requester,
-      departmentHead: undefined as User | undefined,
-      dean: undefined as User | undefined,
-      president: undefined as User | undefined,
+      departmentHead: null as User | null,
+      dean: null as User | null,
+      president: null as User | null,
       deploymentTeam: [] as User[],
       transportOffice: [] as User[],
       driver: undefined as User | undefined,
@@ -313,7 +353,9 @@ export class NotificationsService {
     }
 
     // Notify other admins
-    const otherAdmins = [stakeholders.departmentHead, stakeholders.dean, stakeholders.president].filter((u): u is User => !!u);
+    const otherAdmins = [stakeholders.departmentHead, stakeholders.dean, stakeholders.president].filter(
+      (u): u is User => !!u,
+    );
     if (otherAdmins.length > 0) {
       await this.createBulkNotifications(
         otherAdmins,

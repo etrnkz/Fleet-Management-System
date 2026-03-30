@@ -110,13 +110,8 @@ export default function LoginPage() {
             <p className="text-gray-600">Enter your Credentials to access your account</p>
           </div>
 
-          {/* Demo Credentials Box */}
           <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <p className="text-sm font-semibold text-emerald-800 mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-sm text-emerald-700">
-              <p><span className="font-medium">Email:</span> driver@hu.edu.et</p>
-              <p><span className="font-medium">Password:</span> driver123</p>
-            </div>
+            <p className="text-sm text-emerald-800">Use your assigned driver account credentials.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">

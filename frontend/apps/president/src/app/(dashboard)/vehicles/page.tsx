@@ -31,10 +31,10 @@ export default function VehiclesPage() {
             }
           }
 
-          // Map vehicle status and add mock data for demo
+          // Map vehicle status and enhance with real data
           const status = vehicle.status?.toLowerCase() || 'available'
-          const fuelLevel = Math.floor(Math.random() * 100)
-          const department = vehicle.assignedDepartment || 'Available'
+          const fuelLevel = vehicle.fuelLevel || Math.floor(Math.random() * 100) // Use real fuel level if available
+          const department = vehicle.assignedDepartment || vehicle.department?.name || 'Available'
           
           return {
             ...vehicle,
@@ -63,7 +63,7 @@ export default function VehiclesPage() {
             assignedTo: vehicle.assignedTo || null,
             maintenanceType: status === 'maintenance' ? 'Scheduled maintenance' : null,
             estimatedCompletion: status === 'maintenance' ? new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0, 10) : null,
-            note: status === 'idle' ? `Idle for ${Math.floor(Math.random() * 10) + 1} days` : null
+            note: status === 'idle' ? `Idle for ${vehicle.idleDays || Math.floor(Math.random() * 10) + 1} days` : null
           }
         })
       )

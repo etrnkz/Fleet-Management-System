@@ -1,6 +1,7 @@
 import { 
   Body, 
   Controller, 
+  Get,
   Post, 
   HttpCode, 
   HttpStatus, 
@@ -17,6 +18,8 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiHeader } from '@nestjs/swagger';
+import { CollegesService } from '../colleges/colleges.service';
+import { DepartmentsService } from '../departments/departments.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -24,7 +27,38 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiHeader } from '@nestjs/
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly collegesService: CollegesService,
+    private readonly departmentsService: DepartmentsService,
+  ) {}
+
+  @Get('signup-metadata')
+  @ApiOperation({
+    summary: 'Public signup metadata',
+    description: 'Returns colleges and departments for signup forms without authentication.',
+  })
+  async getSignupMetadata() {
+    const [colleges, departments] = await Promise.all([
+      this.collegesService.findAll(),
+      this.departmentsService.findAll(),
+    ]);
+
+    return {
+      colleges: colleges.map((college) => ({
+        id: college.id,
+        name: college.name,
+        code: college.code,
+      })),
+      departments: departments.map((department) => ({
+        id: department.id,
+        name: department.name,
+        code: department.code,
+        collegeId: department.college?.id || null,
+        collegeName: department.college?.name || null,
+      })),
+    };
+  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)

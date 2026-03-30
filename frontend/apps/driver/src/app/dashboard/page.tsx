@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { authApi, tripApi, vehicleApi, statsApi } from '../lib/api'
+import { authApi, tripApi, vehicleApi, statsApi, maintenanceApi } from '../lib/api'
 
 export default function DriverDashboard() {
   const router = useRouter()
@@ -15,7 +15,15 @@ export default function DriverDashboard() {
   const [assignedTrips, setAssignedTrips] = useState([])
   const [activeTrips, setActiveTrips] = useState([])
   const [completedTrips, setCompletedTrips] = useState([])
+  const [maintenanceRequests, setMaintenanceRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  
+  // Maintenance form state
+  const [maintenanceForm, setMaintenanceForm] = useState({
+    issueDescription: '',
+    priority: 'Medium'
+  })
 
   useEffect(() => {
     loadUserData()
@@ -28,6 +36,8 @@ export default function DriverDashboard() {
       loadActiveTrips()
     } else if (activeSection === 'trip-history') {
       loadCompletedTrips()
+    } else if (activeSection === 'maintenance') {
+      loadMaintenanceRequests()
     }
   }, [activeSection])
 
@@ -80,6 +90,46 @@ export default function DriverDashboard() {
     }
   }
 
+  const loadMaintenanceRequests = async () => {
+    try {
+      const requests = await maintenanceApi.getAll()
+      setMaintenanceRequests(requests)
+    } catch (error) {
+      console.error('Failed to load maintenance requests:', error)
+    }
+  }
+
+  const handleMaintenanceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!assignedVehicle?.id) {
+      setToast({ message: 'No vehicle assigned', type: 'error' })
+      return
+    }
+
+    try {
+      const maintenanceData = {
+        vehicleId: assignedVehicle.id,
+        issueDescription: maintenanceForm.issueDescription,
+        priority: maintenanceForm.priority
+      }
+
+      await maintenanceApi.create(maintenanceData)
+      setToast({ message: 'Maintenance request submitted successfully', type: 'success' })
+      
+      // Reset form
+      setMaintenanceForm({
+        issueDescription: '',
+        priority: 'Medium'
+      })
+      
+      // Reload maintenance requests
+      loadMaintenanceRequests()
+    } catch (error: any) {
+      setToast({ message: error.message || 'Failed to submit maintenance request', type: 'error' })
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('userData')
@@ -100,6 +150,33 @@ export default function DriverDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span>{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              className="ml-2 text-white hover:text-gray-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
       {/* Sidebar - Fixed Position */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -670,32 +747,20 @@ export default function DriverDashboard() {
             {/* Report Maintenance Issue */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Report Maintenance Issue</h3>
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Issue Type
-                  </label>
-                  <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                    <option>Select issue type</option>
-                    <option>Engine Problem</option>
-                    <option>Brake Issue</option>
-                    <option>Tire Problem</option>
-                    <option>Electrical Issue</option>
-                    <option>Body Damage</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-
+              <form onSubmit={handleMaintenanceSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Priority Level
                   </label>
-                  <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                    <option>Select priority</option>
-                    <option>Low - Can wait</option>
-                    <option>Medium - Schedule soon</option>
-                    <option>High - Urgent</option>
-                    <option>Critical - Immediate attention</option>
+                  <select 
+                    value={maintenanceForm.priority}
+                    onChange={(e) => setMaintenanceForm({...maintenanceForm, priority: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  >
+                    <option value="Low">Low - Can wait</option>
+                    <option value="Medium">Medium - Schedule soon</option>
+                    <option value="High">High - Urgent</option>
+                    <option value="Critical">Critical - Immediate attention</option>
                   </select>
                 </div>
 
@@ -704,21 +769,23 @@ export default function DriverDashboard() {
                     Description
                   </label>
                   <textarea
+                    required
                     rows={4}
+                    value={maintenanceForm.issueDescription}
+                    onChange={(e) => setMaintenanceForm({...maintenanceForm, issueDescription: e.target.value})}
                     placeholder="Describe the issue in detail..."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   ></textarea>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Odometer Reading
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="45,230"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  />
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 mb-2">Vehicle Information</p>
+                  <p className="font-medium text-gray-900">
+                    {assignedVehicle?.make} {assignedVehicle?.model} - {assignedVehicle?.plateNumber}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Current Mileage: {assignedVehicle?.currentMileage || 'N/A'} km
+                  </p>
                 </div>
 
                 <button
@@ -732,61 +799,103 @@ export default function DriverDashboard() {
 
             {/* Maintenance History */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Maintenance History</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">My Maintenance Requests</h3>
               <div className="space-y-4">
-                <div className="flex items-start gap-4 pb-4 border-b border-gray-200">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                {maintenanceRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
+                    <p className="text-gray-500 font-medium">No maintenance requests found</p>
+                    <p className="text-sm text-gray-400 mt-1">Submit your first maintenance request above</p>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">Oil Change</h4>
-                      <span className="text-sm text-gray-500">2025-01-05</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">Regular maintenance - Oil and filter replaced</p>
-                    <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                      Completed
-                    </span>
-                  </div>
-                </div>
+                ) : (
+                  maintenanceRequests.map((request: any) => {
+                    const getStatusColor = (status: string) => {
+                      const colors = {
+                        'Submitted': 'bg-blue-100 text-blue-700',
+                        'EstimateProvided': 'bg-purple-100 text-purple-700',
+                        'BudgetApproved': 'bg-green-100 text-green-700',
+                        'InProgress': 'bg-orange-100 text-orange-700',
+                        'Completed': 'bg-gray-100 text-gray-700',
+                        'Rejected': 'bg-red-100 text-red-700'
+                      }
+                      return colors[status] || 'bg-gray-100 text-gray-700'
+                    }
 
-                <div className="flex items-start gap-4 pb-4 border-b border-gray-200">
-                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">Brake Inspection</h4>
-                      <span className="text-sm text-gray-500">2025-01-12</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">Scheduled for brake pad inspection</p>
-                    <span className="inline-block mt-2 px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">
-                      Scheduled
-                    </span>
-                  </div>
-                </div>
+                    const getPriorityColor = (priority: string) => {
+                      const colors = {
+                        'Low': 'bg-gray-100 text-gray-700',
+                        'Medium': 'bg-yellow-100 text-yellow-700',
+                        'High': 'bg-orange-100 text-orange-700',
+                        'Critical': 'bg-red-100 text-red-700'
+                      }
+                      return colors[priority] || 'bg-gray-100 text-gray-700'
+                    }
 
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">Tire Rotation</h4>
-                      <span className="text-sm text-gray-500">2024-12-20</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">All four tires rotated and balanced</p>
-                    <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                      Completed
-                    </span>
-                  </div>
-                </div>
+                    return (
+                      <div key={request.id} className="flex items-start gap-4 pb-4 border-b border-gray-200 last:border-b-0">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          request.status === 'Completed' ? 'bg-green-100' : 
+                          request.status === 'Rejected' ? 'bg-red-100' :
+                          request.status === 'InProgress' ? 'bg-orange-100' : 'bg-blue-100'
+                        }`}>
+                          {request.status === 'Completed' ? (
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : request.status === 'Rejected' ? (
+                            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          ) : request.status === 'InProgress' ? (
+                            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-medium text-gray-900">{request.requestNumber}</h4>
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{request.issueDescription}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(request.status)}`}>
+                                  {request.status}
+                                </span>
+                                <span className={`px-2 py-1 text-xs rounded-full ${getPriorityColor(request.priority)}`}>
+                                  {request.priority}
+                                </span>
+                              </div>
+                              {request.estimatedCost && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Estimated Cost: ETB {request.estimatedCost.toLocaleString()}
+                                </p>
+                              )}
+                              {request.actualCost && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Actual Cost: ETB {request.actualCost.toLocaleString()}
+                                </p>
+                              )}
+                              {request.rejectionReason && (
+                                <p className="text-sm text-red-600 mt-1">
+                                  Rejection Reason: {request.rejectionReason}
+                                </p>
+                              )}
+                            </div>
+                            <span className="text-sm text-gray-500 flex-shrink-0">
+                              {new Date(request.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
               </div>
             </div>
           </div>

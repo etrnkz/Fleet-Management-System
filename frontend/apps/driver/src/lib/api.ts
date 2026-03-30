@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -109,10 +109,13 @@ export const vehicleApi = {
       headers: createHeaders()
     })
     return handleResponse(response)
-  },
+  }
+}
 
-  reportMaintenance: async (vehicleId: string, data: any) => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/maintenance`, {
+// Maintenance API
+export const maintenanceApi = {
+  create: async (data: any) => {
+    const response = await fetch(`${API_BASE_URL}/maintenance`, {
       method: 'POST',
       headers: createHeaders(),
       body: JSON.stringify(data)
@@ -120,8 +123,22 @@ export const vehicleApi = {
     return handleResponse(response)
   },
 
-  getMaintenanceHistory: async (vehicleId: string) => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}/maintenance`, {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/maintenance`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  getById: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/maintenance/${id}`, {
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  getStatistics: async () => {
+    const response = await fetch(`${API_BASE_URL}/maintenance/statistics`, {
       headers: createHeaders()
     })
     return handleResponse(response)

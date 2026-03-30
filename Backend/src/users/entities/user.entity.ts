@@ -24,6 +24,7 @@ export enum UserRole {
   MaintenanceTeam = 'MaintenanceTeam',
   Driver = 'Driver',
   Developer = 'Developer',
+  SystemAdmin = 'SystemAdmin',
 }
 
 @Entity('users')
@@ -48,10 +49,10 @@ export class User {
   phoneNumber: string;
 
   @ManyToOne(() => Department, { nullable: true })
-  department: Department;
+  department: Department | null;
 
   @ManyToOne(() => College, { nullable: true })
-  college: College;
+  college: College | null;
 
   @Column({ default: true })
   isActive: boolean;

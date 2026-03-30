@@ -192,4 +192,14 @@ export class TrackingController {
       activeViewers: this.trackingGateway.getActiveViewers(tripId),
     };
   }
+
+  @Get('live')
+  @ApiOperation({
+    summary: 'Get live vehicle locations',
+    description: 'Returns latest GPS positions for vehicles on active trips',
+  })
+  @ApiResponse({ status: 200, description: 'Live vehicle locations' })
+  getLiveVehicleLocations() {
+    return this.trackingService.getLiveVehicleLocations();
+  }
 }

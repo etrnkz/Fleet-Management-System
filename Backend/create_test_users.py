@@ -149,7 +149,7 @@ def main():
             "role": "User",
             "phoneNumber": "+251911234567",
             "departmentId": department_id,
-            "app": "http://localhost:3001 (Employee App)"
+            "app": "http://localhost:3008 (Employee portal)"
         },
         {
             "name": "Department Head",
@@ -158,16 +158,16 @@ def main():
             "role": "DepartmentHead",
             "phoneNumber": "+251911234568",
             "departmentId": department_id,
-            "app": "http://localhost:3002 (Department App)"
+            "app": "http://localhost:3003 (Department head portal)"
         },
         {
-            "name": "Dean (College Head)",
+            "name": "College Dean",
             "email": "dean@test.com",
             "password": "password123",
             "role": "Dean",
             "phoneNumber": "+251911234569",
             "collegeId": college_id,
-            "app": "http://localhost:3003 (Dean App)"
+            "app": "http://localhost:3002 (College dean portal)"
         },
         {
             "name": "University President",
@@ -175,7 +175,7 @@ def main():
             "password": "password123",
             "role": "President",
             "phoneNumber": "+251911234570",
-            "app": "http://localhost:3004 (President App)"
+            "app": "http://localhost:3006 (President portal)"
         },
         {
             "name": "Deployment Team",
@@ -183,7 +183,7 @@ def main():
             "password": "password123",
             "role": "DeploymentTeam",
             "phoneNumber": "+251911234571",
-            "app": "http://localhost:3000 (Admin App)"
+            "app": "http://localhost:3005 (Deployment office portal)"
         },
         {
             "name": "Transport Office",
@@ -191,7 +191,7 @@ def main():
             "password": "password123",
             "role": "TransportOffice",
             "phoneNumber": "+251911234572",
-            "app": "http://localhost:3000 (Admin App)"
+            "app": "http://localhost:3001 (Transport admin portal)"
         }
     ]
 
@@ -244,9 +244,9 @@ def main():
     print_colored("Test Users (All passwords: password123):", Colors.YELLOW)
     print()
     
-    print_colored("0. Developer (System Admin)", Colors.WHITE)
+    print_colored("0. Developer (API / full access seed user)", Colors.WHITE)
     print_colored("   Email: developer@test.com", Colors.GRAY)
-    print_colored("   App: http://localhost:3000 (Admin App)", Colors.GRAY)
+    print_colored("   Note: Use the API (e.g. :3000) or Transport admin (:3001) as appropriate", Colors.GRAY)
     print()
     
     for i, user in enumerate(created_users, 1):
@@ -261,7 +261,7 @@ def main():
     print_colored("3. Login as dean@test.com to approve at college level (Dean = College Head)", Colors.WHITE)
     print_colored("4. Login as deployment@test.com to allocate vehicle and driver", Colors.WHITE)
     print_colored("", Colors.WHITE)
-    print_colored("Note: Dean role serves as the College Head in this system", Colors.YELLOW)
+    print_colored("Note: API role \"Dean\" maps to the College Dean workflow in this system.", Colors.YELLOW)
     print()
 
 if __name__ == "__main__":

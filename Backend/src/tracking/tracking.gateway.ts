@@ -14,7 +14,17 @@ import { UpdateLocationDto } from './dto/update-location.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: [
+      'http://localhost:3001', // Transport Admin
+      'http://localhost:3002', // College Dean
+      'http://localhost:3003', // Department
+      'http://localhost:3004', // Driver
+      'http://localhost:3005', // Deployment Office
+      'http://localhost:3006', // President
+      'http://localhost:3007', // System Admin
+      'http://localhost:3008', // Employee
+    ],
+    credentials: true,
   },
   namespace: '/tracking',
 })

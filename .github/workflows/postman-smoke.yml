@@ -1,0 +1,41 @@
+name: Postman API smoke (Newman)
+
+on:
+  push:
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/postman-smoke.yml'
+  pull_request:
+    paths:
+      - 'Backend/**'
+      - '.github/workflows/postman-smoke.yml'
+
+jobs:
+  newman:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Start API and wait for health
+        run: |
+          npm run start:prod &
+          npx wait-on http://127.0.0.1:3000/api/v1/health -t 120000
+
+      - name: Run Newman smoke collection
+        run: npm run test:postman

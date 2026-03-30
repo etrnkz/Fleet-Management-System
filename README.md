@@ -37,19 +37,22 @@ A production-grade Fleet Management System for school transportation with strict
 - **Authentication**: JWT with Passport
 - **Documentation**: Swagger/OpenAPI
 
-## 📁 Project Structure
+## 📁 Project structure
 
 ```
 Fleet-Management-System/
-├── Backend/              # NestJS backend application
-│   ├── src/             # Source code
-│   ├── test/            # Test files
-│   ├── scripts/         # Utility scripts
-│   ├── *.md             # Backend documentation
-│   └── package.json     # Backend dependencies
-├── Frontend/            # Frontend application (TBD)
-├── .gitignore          # Git ignore rules
-└── README.md           # This file
+├── Backend/                 # NestJS API
+├── Frontend/apps/           # Role-based Next.js apps (see app `package.json` for ports)
+│   ├── transport-admin/     # Transport office / fleet administration (default :3001)
+│   ├── college-dean/        # College dean approvals (default :3002)
+│   ├── department/          # Department head (:3003)
+│   ├── driver/              # Driver (:3004)
+│   ├── deployment-office/   # Deployment team (:3005)
+│   ├── president/           # President (:3006)
+│   ├── system-admin/        # System administration (:3007)
+│   └── employee/            # Staff / trip requesters (:3008)
+├── .gitignore
+└── README.md
 ```
 
 ## 🚦 Quick Start
@@ -88,31 +91,32 @@ Visit `http://localhost:3000/api/docs` for API documentation.
 
 For detailed setup instructions, see [Backend/QUICKSTART.md](./Backend/QUICKSTART.md).
 
-## 👥 User Roles
+## 👥 Roles and portals
 
-1. **User** - Submit trip requests
-2. **Department Head** - Approve department-level requests
-3. **College Head** - Approve college-level requests
-4. **Dean** - Final approval, initiate VIP requests
-5. **Deployment Team** - Allocate vehicles and drivers
-6. **Transport Office** - Manage fuel and final confirmation
-7. **Maintenance Team** - Handle vehicle maintenance
-8. **Driver** - Execute trips, submit maintenance requests
-9. **Developer** - Super-admin with full system access
+1. **User (Employee)** — Submit trip requests (`employee` app)
+2. **Department Head** — Department-level approvals (`department` app)
+3. **Dean (College Dean)** — College-level approvals; maps to API role `Dean` (`college-dean` app)
+4. **President** — Executive approvals and oversight (`president` app)
+5. **Deployment Team** — Vehicle and driver allocation (`deployment-office` app)
+6. **Transport Office** — Fleet operations, fuel, transport confirmation (`transport-admin` app)
+7. **Maintenance Team** — Vehicle maintenance workflows
+8. **Driver** — Trip execution and field updates (`driver` app)
+9. **Developer** — Technical full-access seed role for API administration
+10. **System Admin** — Institution-wide users and configuration (`system-admin` app; separate from transport admin)
 
 ## 🔄 Workflow
 
-### Normal Trip Flow
+### Normal trip flow
 ```
-User Request → Department Approval (48h) → College Approval (48h) → 
-Dean Approval (48h) → Vehicle Allocation → Transport Confirmation → 
-Trip Execution → Completion
+Trip request → Department head (48h) → College dean (48h) →
+Deployment allocation → Transport office confirmation → Trip execution → Completion
 ```
+(Timing and gates follow your workflow configuration.)
 
-### VIP Trip Flow
+### VIP trip flow (illustrative)
 ```
-President Request → Dean Approval (48h) → Vehicle Allocation → 
-Transport Confirmation → Trip Execution → Completion
+Trip request → College dean (48h) → Deployment allocation →
+Transport office confirmation → Trip execution → Completion
 ```
 
 ## 📊 Key Business Rules

@@ -138,6 +138,39 @@ export class TrackingService {
     });
   }
 
+  async getLiveVehicleLocations() {
+    const activeTrips = await this.tripRepository.find({
+      where: { state: TripState.IN_PROGRESS },
+      relations: ['allocatedVehicle', 'allocatedDriver', 'allocatedDriver.user'],
+      order: { updatedAt: 'DESC' },
+    });
+
+    const liveLocations = await Promise.all(
+      activeTrips.map(async (trip) => {
+        const latestLocation = await this.getCurrentLocation(trip.id);
+        if (!latestLocation || !trip.allocatedVehicle) {
+          return null;
+        }
+
+        return {
+          tripId: trip.id,
+          vehicleId: trip.allocatedVehicle.id,
+          plateNumber: trip.allocatedVehicle.plateNumber,
+          make: trip.allocatedVehicle.make,
+          model: trip.allocatedVehicle.model,
+          driverName: trip.allocatedDriver?.user?.name || null,
+          latitude: Number(latestLocation.latitude),
+          longitude: Number(latestLocation.longitude),
+          speed: latestLocation.speed ? Number(latestLocation.speed) : 0,
+          heading: latestLocation.heading ? Number(latestLocation.heading) : null,
+          timestamp: latestLocation.timestamp,
+        };
+      }),
+    );
+
+    return liveLocations.filter(Boolean);
+  }
+
   async deleteOldLocations(daysOld: number = 90): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
