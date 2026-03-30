@@ -1,0 +1,119 @@
+{
+	"info": {
+		"_postman_id": "fleet-management-api-test",
+		"name": "Fleet Management API — Smoke (Newman)",
+		"description": "Lightweight checks for CI and local automation. Requires API running (default http://localhost:3000). Run: npm run test:postman from Backend after start:dev.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET /api/v1/health",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Body has status OK\", function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property(\"status\", \"OK\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/health",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"health"
+					]
+				}
+			}
+		},
+		{
+			"name": "GET /api/v1 (root info)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Fleet service name present\", function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property(\"service\");",
+							"    pm.expect(json.service).to.include(\"Fleet\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1"
+					]
+				}
+			}
+		},
+		{
+			"name": "GET /api/v1/auth/signup-metadata",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Returns colleges and departments\", function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property(\"colleges\");",
+							"    pm.expect(json).to.have.property(\"departments\");",
+							"    pm.expect(json.colleges).to.be.an(\"array\");",
+							"    pm.expect(json.departments).to.be.an(\"array\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/auth/signup-metadata",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"signup-metadata"
+					]
+				}
+			}
+		}
+	]
+}

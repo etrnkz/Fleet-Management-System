@@ -23,11 +23,11 @@ export default function DepartmentsPage() {
           try {
             const departments = await departmentApi.getByCollege(college.id)
             
-            // Calculate aggregate stats (placeholder values for now)
-            const totalVehicles = departments.length * 2 // Estimate
-            const totalTrips = Math.floor(Math.random() * 200) + 50
-            const totalCost = totalTrips * 8500 // Estimate cost per trip
-            const utilization = Math.floor(Math.random() * 40) + 50
+            // Calculate real stats from actual data
+            const totalVehicles = departments.reduce((sum: number, dept: any) => sum + (dept.vehicleCount || 0), 0)
+            const totalTrips = departments.reduce((sum: number, dept: any) => sum + (dept.tripCount || 0), 0)
+            const totalCost = departments.reduce((sum: number, dept: any) => sum + (dept.totalCost || 0), 0)
+            const utilization = totalVehicles > 0 ? Math.round((totalTrips / totalVehicles) * 10) : 0
             
             return {
               ...college,
@@ -40,10 +40,10 @@ export default function DepartmentsPage() {
               utilization,
               departments: departments.map((dept: any) => ({
                 name: dept.name,
-                vehicles: Math.floor(Math.random() * 3) + 1,
-                trips: Math.floor(Math.random() * 50) + 10,
-                cost: Math.floor(Math.random() * 300000) + 100000,
-                utilization: Math.floor(Math.random() * 40) + 50,
+                vehicles: dept.vehicleCount || 0,
+                trips: dept.tripCount || 0,
+                cost: dept.totalCost || 0,
+                utilization: dept.utilization || 0,
               }))
             }
           } catch (error) {
@@ -142,7 +142,7 @@ export default function DepartmentsPage() {
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs md:text-sm text-gray-600">
-                    <span>Dean: {college.dean}</span>
+                    <span>College dean: {college.dean}</span>
                     <span className="hidden sm:inline">•</span>
                     <span>{college.phone}</span>
                     <span className="hidden sm:inline">•</span>

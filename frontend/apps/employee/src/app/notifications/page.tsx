@@ -2,20 +2,28 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { notificationApi, getCurrentUser } from '../../lib/api'
+import { getCurrentUser } from '../../lib/api'
+import { useNotifications } from '../../hooks/useNotifications'
 import Toast from '../../components/Toast'
 
 export default function NotificationsPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false,
     message: '',
     type: 'success'
   })
+
+  const {
+    notifications,
+    unreadCount,
+    isConnected,
+    markAsRead,
+    markAllAsRead,
+    refreshNotifications,
+  } = useNotifications()
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -24,42 +32,19 @@ export default function NotificationsPage() {
       return
     }
     setUser(currentUser)
-    loadNotifications()
   }, [])
-
-  const loadNotifications = async () => {
-    try {
-      setLoading(true)
-      const data = await notificationApi.getAll()
-      setNotifications(Array.isArray(data) ? data : [])
-    } catch (error: any) {
-      showToast(error.message || 'Failed to load notifications', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type })
   }
 
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      await notificationApi.markAsRead(id)
-      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n))
-    } catch (error: any) {
-      showToast(error.message || 'Failed to mark as read', 'error')
-    }
+  const handleMarkAsRead = (id: string) => {
+    markAsRead(id)
   }
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      await notificationApi.markAllAsRead()
-      setNotifications(notifications.map(n => ({ ...n, isRead: true })))
-      showToast('All notifications marked as read', 'success')
-    } catch (error: any) {
-      showToast(error.message || 'Failed to mark all as read', 'error')
-    }
+  const handleMarkAllAsRead = () => {
+    markAllAsRead()
+    showToast('All notifications marked as read', 'success')
   }
 
   const filteredNotifications = notifications.filter(n => {
@@ -68,16 +53,6 @@ export default function NotificationsPage() {
     if (filter === 'read') return n.isRead
     return true
   })
-
-  const unreadCount = notifications.filter(n => !n.isRead).length
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,15 +79,28 @@ export default function NotificationsPage() {
                 {unreadCount} unread
               </span>
             )}
+            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} 
+                 title={isConnected ? 'Connected to real-time notifications' : 'Disconnected from real-time notifications'} />
           </div>
-          {unreadCount > 0 && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={handleMarkAllAsRead}
-              className="px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg"
+              onClick={refreshNotifications}
+              className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+              title="Refresh notifications"
             >
-              Mark all as read
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
             </button>
-          )}
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllAsRead}
+                className="px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg"
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -173,7 +161,7 @@ export default function NotificationsPage() {
                             {notification.message}
                           </p>
                           <p className="text-xs text-gray-400">
-                            {new Date(notification.sentAt || notification.createdAt).toLocaleString()}
+                            {new Date(notification.sentAt).toLocaleString()}
                           </p>
                         </div>
                         {!notification.isRead && (

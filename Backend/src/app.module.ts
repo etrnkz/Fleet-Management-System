@@ -19,6 +19,7 @@ import { AuditModule } from './audit/audit.module';
 import { FuelModule } from './fuel/fuel.module';
 import { EmailModule } from './email/email.module';
 import { TrackingModule } from './tracking/tracking.module';
+import { SystemAdminModule } from './system-admin/system-admin.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -62,6 +63,7 @@ import configuration from './config/configuration';
     FuelModule,
     // EmailModule, // Temporarily disabled - optional feature
     TrackingModule,
+    SystemAdminModule,
     AuthModule,
   ],
   controllers: [AppController],

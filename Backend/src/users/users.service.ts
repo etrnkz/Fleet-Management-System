@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
 import { College } from '../colleges/entities/college.entity';
 
@@ -70,7 +70,7 @@ export class UsersService {
     });
   }
 
-  async findByRole(role: string): Promise<User[]> {
+  async findByRole(role: UserRole): Promise<User[]> {
     return this.userRepository.find({
       where: { role: role as any, isActive: true },
       relations: ['department', 'college'],
@@ -94,8 +94,8 @@ export class UsersService {
   async findDepartmentHead(departmentId: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { 
-        department: { id: departmentId }, 
-        role: 'DepartmentHead' as any,
+        department: { id: departmentId },
+        role: UserRole.DepartmentHead,
         isActive: true 
       },
       relations: ['department', 'college'],
@@ -104,10 +104,10 @@ export class UsersService {
 
   async findCollegeHead(collegeId: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { 
-        college: { id: collegeId }, 
-        role: 'Dean' as any,
-        isActive: true 
+      where: {
+        college: { id: collegeId },
+        role: UserRole.Dean,
+        isActive: true,
       },
       relations: ['department', 'college'],
     });
@@ -115,8 +115,8 @@ export class UsersService {
 
   async findPresident(): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { 
-        role: 'President' as any,
+      where: {
+        role: UserRole.President,
         isActive: true 
       },
       relations: ['department', 'college'],

@@ -8,8 +8,22 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [
+      'http://localhost:3001', // Transport Admin
+      'http://localhost:3002', // College Dean
+      'http://localhost:3003', // Department
+      'http://localhost:3004', // Driver
+      'http://localhost:3005', // Deployment Office
+      'http://localhost:3006', // President
+      'http://localhost:3007', // System Admin
+      'http://localhost:3008', // Employee
+    ],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    exposedHeaders: ['Authorization'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   // Global prefix
@@ -139,7 +153,7 @@ VIP Trip: User → Dean → Allocation → Transport → Execution`,
   console.log(`
     🚀 Application is running on: http://localhost:${port}
     📚 API Documentation: http://localhost:${port}/api/docs
-    🔍 Health Check: http://localhost:${port}/api/health
+    🔍 Health Check: http://localhost:${port}/api/v1/health
   `);
 }
 bootstrap();

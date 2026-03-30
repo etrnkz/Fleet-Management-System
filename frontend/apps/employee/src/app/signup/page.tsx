@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -27,81 +29,45 @@ export default function SignupPage() {
     agreeToTerms: false
   })
 
-  // College and Department data
-  const collegeData = {
-    'College of Computing and Informatics': [
-      'Computer Science',
-      'Information Technology',
-      'Software Engineering',
-      'Information Systems'
-    ],
-    'College of Natural and Computational Sciences': [
-      'Mathematics',
-      'Physics',
-      'Chemistry',
-      'Biology',
-      'Statistics'
-    ],
-    'College of Agriculture and Environmental Sciences': [
-      'Plant Sciences',
-      'Animal Sciences',
-      'Agricultural Economics',
-      'Natural Resource Management'
-    ],
-    'College of Business and Economics': [
-      'Accounting and Finance',
-      'Management',
-      'Economics',
-      'Marketing Management'
-    ],
-    'College of Social Sciences and Humanities': [
-      'English Language and Literature',
-      'History',
-      'Geography',
-      'Sociology',
-      'Psychology'
-    ],
-    'College of Education and Behavioral Sciences': [
-      'Educational Planning and Management',
-      'Curriculum and Instruction',
-      'Special Needs Education'
-    ],
-    'College of Health Sciences': [
-      'Public Health',
-      'Nursing',
-      'Medical Laboratory Sciences'
-    ],
-    'College of Law': [
-      'Law'
-    ]
-  }
+  const [colleges, setColleges] = useState<{ id: string; name: string }[]>([])
+  const [departments, setDepartments] = useState<{ id: string; name: string; collegeId: string | null }[]>([])
+  const [administrativeOffices, setAdministrativeOffices] = useState<string[]>([])
+  const [availableDepartments, setAvailableDepartments] = useState<{ id: string; name: string }[]>([])
 
-  // Administrative Offices and Other Departments
-  const administrativeOffices = [
-    'Office of the President',
-    'Office of the Vice President for Academic Affairs',
-    'Office of the Vice President for Research and Technology Transfer',
-    'Office of the Vice President for Administration and Development',
-    'Main Registrar Office',
-    'Human Resource Management Office',
-    'Finance Office',
-    'Procurement Office',
-    'Internal Audit Office',
-    'Legal Affairs Office',
-    'Public Relations and Communications Office',
-    'ICT Directorate',
-    'Library Services',
-    'Student Services Office',
-    'Quality Assurance Office',
-    'Planning and Development Office',
-    'Transport and Logistics Office',
-    'Facility Management Office',
-    'Security Office',
-    'Health Center',
-    'Other'
-  ]
+  useEffect(() => {
+    const loadSignupMetadata = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/signup-metadata`)
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to load signup metadata')
+        }
 
-  const [availableDepartments, setAvailableDepartments] = useState<string[]>([])
+        setColleges(Array.isArray(data.colleges) ? data.colleges : [])
+        const departmentsData = Array.isArray(data.departments) ? data.departments : []
+        setDepartments(departmentsData)
+        setAdministrativeOffices(
+          departmentsData
+            .filter((dept: any) => !dept.collegeId)
+            .map((dept: any) => dept.name),
+        )
+      } catch {
+        // Fallback list when metadata endpoint is unavailable
+        setAdministrativeOffices([
+          'Office of the President',
+          'Main Registrar Office',
+          'Human Resource Management Office',
+          'Finance Office',
+          'Transport and Logistics Office',
+          'ICT Directorate',
+          'Library Services',
+          'Other',
+        ])
+      }
+    }
+
+    loadSignupMetadata()
+  }, [])
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ show: true, message, type })
@@ -119,11 +85,15 @@ export default function SignupPage() {
     }))
     
     // Update available departments based on selected college
-    if (selectedCollege && collegeData[selectedCollege as keyof typeof collegeData]) {
-      setAvailableDepartments(collegeData[selectedCollege as keyof typeof collegeData])
-    } else {
-      setAvailableDepartments([])
+    if (selectedCollege) {
+      setAvailableDepartments(
+        departments
+          .filter((dept) => dept.collegeId === selectedCollege)
+          .map((dept) => ({ id: dept.id, name: dept.name })),
+      )
+      return
     }
+    setAvailableDepartments([])
   }
 
   const handleOrganizationTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -166,7 +136,7 @@ export default function SignupPage() {
 
     try {
       // Call backend API
-      const response = await fetch('http://localhost:3000/api/v1/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -415,8 +385,8 @@ export default function SignupPage() {
                     required
                   >
                     <option value="" disabled className="text-gray-400">Select your college</option>
-                    {Object.keys(collegeData).map((college) => (
-                      <option key={college} value={college}>{college}</option>
+                    {colleges.map((college) => (
+                      <option key={college.id} value={college.id}>{college.name}</option>
                     ))}
                   </select>
                 </div>
@@ -440,7 +410,7 @@ export default function SignupPage() {
                       {formData.college ? 'Select your department' : 'Please select a college first'}
                     </option>
                     {availableDepartments.map((dept) => (
-                      <option key={dept} value={dept}>{dept}</option>
+                      <option key={dept.id} value={dept.id}>{dept.name}</option>
                     ))}
                   </select>
                 </div>

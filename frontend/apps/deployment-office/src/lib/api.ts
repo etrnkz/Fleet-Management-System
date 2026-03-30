@@ -1,9 +1,9 @@
-const API_BASE_URL = 'http://localhost:3000/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 // Get auth token from localStorage
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('access_token')
+    return localStorage.getItem('accessToken') || localStorage.getItem('access_token')
   }
   return null
 }
@@ -38,7 +38,7 @@ export const authApi = {
   },
 
   getCurrentUser: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -48,10 +48,13 @@ export const authApi = {
 // Trip API - Deployment Office manages approved trips
 export const tripApi = {
   getApprovedTrips: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips?state=APPROVED`, {
+    const response = await fetch(`${API_BASE_URL}/trips`, {
       headers: createHeaders()
     })
-    return handleResponse(response)
+    const trips = await handleResponse(response)
+    return Array.isArray(trips)
+      ? trips.filter((trip: any) => trip.state === 'APPROVED_FOR_ALLOCATION')
+      : []
   },
 
   getAllTrips: async () => {
@@ -71,7 +74,8 @@ export const tripApi = {
   },
 
   updateTripStatus: async (tripId: string, status: string, notes?: string) => {
-    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/status`, {
+    const endpoint = status === 'IN_PROGRESS' ? 'start' : 'complete'
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/${endpoint}`, {
       method: 'POST',
       headers: createHeaders(),
       body: JSON.stringify({ status, notes })
@@ -90,7 +94,7 @@ export const vehicleApi = {
   },
 
   getAvailableVehicles: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles?status=Active`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/available`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -107,7 +111,7 @@ export const vehicleApi = {
 
   updateVehicle: async (vehicleId: string, vehicleData: any) => {
     const response = await fetch(`${API_BASE_URL}/vehicles/${vehicleId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: createHeaders(),
       body: JSON.stringify(vehicleData)
     })
@@ -123,7 +127,7 @@ export const vehicleApi = {
   },
 
   getVehicleStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/stats`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/statistics`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -140,7 +144,7 @@ export const driverApi = {
   },
 
   getAvailableDrivers: async () => {
-    const response = await fetch(`${API_BASE_URL}/drivers?status=Available`, {
+    const response = await fetch(`${API_BASE_URL}/drivers/available`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -157,7 +161,7 @@ export const driverApi = {
 
   updateDriver: async (driverId: string, driverData: any) => {
     const response = await fetch(`${API_BASE_URL}/drivers/${driverId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: createHeaders(),
       body: JSON.stringify(driverData)
     })
@@ -192,8 +196,8 @@ export const maintenanceApi = {
   },
 
   updateMaintenanceRequest: async (requestId: string, data: any) => {
-    const response = await fetch(`${API_BASE_URL}/maintenance/${requestId}`, {
-      method: 'PUT',
+    const response = await fetch(`${API_BASE_URL}/maintenance/${requestId}/inspect`, {
+      method: 'POST',
       headers: createHeaders(),
       body: JSON.stringify(data)
     })
@@ -201,8 +205,33 @@ export const maintenanceApi = {
   }
 }
 
-// Statistics API - removed: /statistics/deployment and /statistics/fleet-utilization do not exist on the backend
-// Stats are derived from list endpoints (vehicles, trips, maintenance) instead
+// Statistics: no /statistics/deployment on backend; derive from list endpoints when needed.
+export const statsApi = {
+  getDeploymentStats: async () => {
+    const [vehicles, trips, maintenance] = await Promise.all([
+      vehicleApi.getAllVehicles().catch(() => []),
+      tripApi.getAllTrips().catch(() => []),
+      maintenanceApi.getAllMaintenanceRequests().catch(() => []),
+    ])
+    const vehiclesArr = Array.isArray(vehicles) ? vehicles : []
+    const tripsArr = Array.isArray(trips) ? trips : []
+    const maintenanceArr = Array.isArray(maintenance) ? maintenance : []
+    return {
+      totalFleet: vehiclesArr.length,
+      available: vehiclesArr.filter((v: any) => v.status === 'Active').length,
+      inUse: tripsArr.filter((t: any) => t.state === 'IN_PROGRESS').length,
+      maintenance: maintenanceArr.filter((m: any) => m.status !== 'Completed').length,
+      activeTrips: tripsArr.filter((t: any) => t.state === 'IN_PROGRESS').length,
+      pendingAllocation: tripsArr.filter((t: any) => t.state === 'APPROVED_FOR_ALLOCATION').length,
+    }
+  },
+  getFleetUtilization: async () => {
+    const response = await fetch(`${API_BASE_URL}/vehicles/statistics`, {
+      headers: createHeaders(),
+    })
+    return handleResponse(response)
+  },
+}
 
 // Notifications API
 export const notificationApi = {

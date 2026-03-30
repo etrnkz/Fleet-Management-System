@@ -1,43 +1,198 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { tripApi, vehicleApi, statsApi, userApi } from '../../../lib/api'
+
+interface DashboardStats {
+  totalVehicles: number
+  activeTrips: number
+  pendingApprovals: number
+  fleetEfficiency: number
+}
+
+interface VehicleStatus {
+  status: string
+  count: number
+  percentage: number
+  color: string
+}
+
+interface MonthlyTrip {
+  month: string
+  trips: number
+}
+
+interface FleetUtilization {
+  department: string
+  percentage: number
+  color: string
+}
+
+interface PendingRequest {
+  id: string
+  department: string
+  purpose: string
+  requestedDate: string
+  status: string
+  requesterName: string
+}
 
 export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
+  const [loading, setLoading] = useState(true)
+  const [trips, setTrips] = useState<any[]>([])
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    totalVehicles: 0,
+    activeTrips: 0,
+    pendingApprovals: 0,
+    fleetEfficiency: 0
+  })
+  const [vehicleStatus, setVehicleStatus] = useState<VehicleStatus[]>([])
+  const [monthlyTrips, setMonthlyTrips] = useState<MonthlyTrip[]>([])
+  const [fleetUtilization, setFleetUtilization] = useState<FleetUtilization[]>([])
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([])
 
-  // Mock data for charts
-  const fleetUtilization = [
-    { department: 'Engineering', percentage: 85, color: 'bg-blue-500' },
-    { department: 'Medicine', percentage: 72, color: 'bg-green-500' },
-    { department: 'Business', percentage: 68, color: 'bg-purple-500' },
-    { department: 'Science', percentage: 55, color: 'bg-yellow-500' },
-    { department: 'Arts', percentage: 45, color: 'bg-pink-500' },
-  ]
+  useEffect(() => {
+    loadDashboardData()
+  }, [selectedPeriod])
 
-  const vehicleStatus = [
-    { status: 'Active', count: 28, percentage: 70, color: '#10b981' },
-    { status: 'Maintenance', count: 8, percentage: 20, color: '#f59e0b' },
-    { status: 'Idle', count: 4, percentage: 10, color: '#6b7280' },
-  ]
+  const loadDashboardData = async () => {
+    setLoading(true)
+    try {
+      // Load all dashboard data in parallel
+      const [
+        vehicles,
+        trips,
+        pendingTrips,
+        tripStats
+      ] = await Promise.all([
+        vehicleApi.getAllVehicles(),
+        tripApi.getAllTrips(),
+        tripApi.getPendingApprovals(),
+        statsApi.getDashboardStats().catch(() => null) // Optional endpoint
+      ])
 
-  const monthlyTrips = [
-    { month: 'Jan', trips: 145 },
-    { month: 'Feb', trips: 168 },
-    { month: 'Mar', trips: 192 },
-    { month: 'Apr', trips: 178 },
-    { month: 'May', trips: 205 },
-    { month: 'Jun', trips: 220 },
-  ]
+      // Calculate dashboard stats
+      const totalVehicles = vehicles?.length || 0
+      const activeTrips = trips?.filter((trip: any) => trip.status === 'in_progress')?.length || 0
+      const pendingApprovals = pendingTrips?.length || 0
+      
+      // Calculate fleet efficiency (active vehicles / total vehicles)
+      const activeVehicles = vehicles?.filter((v: any) => v.status === 'active')?.length || 0
+      const fleetEfficiency = totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0
 
-  const ganttData = [
-    { vehicle: 'Toyota Coaster - ABC 1234', task: 'Engineering Dept Trip', start: 10, duration: 30, color: 'bg-blue-500' },
-    { vehicle: 'Isuzu NPR - XYZ 5678', task: 'Medical Supplies', start: 25, duration: 40, color: 'bg-green-500' },
-    { vehicle: 'Toyota Hiace - DEF 9012', task: 'Business Conference', start: 45, duration: 25, color: 'bg-purple-500' },
-    { vehicle: 'Mitsubishi Rosa - GHI 3456', task: 'Science Lab Equipment', start: 15, duration: 35, color: 'bg-yellow-500' },
-    { vehicle: 'Nissan Civilian - JKL 7890', task: 'Arts Exhibition', start: 55, duration: 30, color: 'bg-pink-500' },
-  ]
+      setDashboardStats({
+        totalVehicles,
+        activeTrips,
+        pendingApprovals,
+        fleetEfficiency
+      })
 
-  const maxValue = Math.max(...monthlyTrips.map(m => m.trips))
+      // Process vehicle status data
+      if (vehicles) {
+        const statusCounts = vehicles.reduce((acc: any, vehicle: any) => {
+          const status = vehicle.status || 'idle'
+          acc[status] = (acc[status] || 0) + 1
+          return acc
+        }, {})
+
+        const statusData = [
+          { status: 'Active', count: statusCounts.active || 0, color: '#10b981' },
+          { status: 'Maintenance', count: statusCounts.maintenance || 0, color: '#f59e0b' },
+          { status: 'Idle', count: statusCounts.idle || 0, color: '#6b7280' },
+        ].map(item => ({
+          ...item,
+          percentage: totalVehicles > 0 ? Math.round((item.count / totalVehicles) * 100) : 0
+        }))
+
+        setVehicleStatus(statusData)
+      }
+
+      // Process monthly trips data
+      if (trips) {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const currentYear = new Date().getFullYear()
+        const monthlyData = monthNames.map(month => {
+          const monthIndex = monthNames.indexOf(month)
+          const monthTrips = trips.filter((trip: any) => {
+            const tripDate = new Date(trip.createdAt)
+            return tripDate.getFullYear() === currentYear && tripDate.getMonth() === monthIndex
+          })
+          return { month, trips: monthTrips.length }
+        }).slice(0, 6) // Show last 6 months
+
+        setMonthlyTrips(monthlyData)
+      }
+
+      // Store trips data for other components
+      setTrips(trips || [])
+      if (pendingTrips) {
+        const requestsData = pendingTrips.slice(0, 5).map((trip: any) => ({
+          id: trip.id,
+          department: trip.requester?.department?.name || 'Unknown',
+          purpose: trip.purpose || 'No purpose specified',
+          requestedDate: new Date(trip.createdAt).toLocaleDateString(),
+          status: trip.status,
+          requesterName: trip.requester?.name || 'Unknown'
+        }))
+        setPendingRequests(requestsData)
+      }
+
+      // Process fleet utilization by department
+      if (trips && vehicles) {
+        // Get departments from trips and calculate utilization
+        const departmentUsage = trips.reduce((acc: any, trip: any) => {
+          const deptName = trip.requester?.department?.name || 'Unknown'
+          if (!acc[deptName]) {
+            acc[deptName] = { trips: 0, vehicles: new Set() }
+          }
+          acc[deptName].trips += 1
+          if (trip.vehicle?.id) {
+            acc[deptName].vehicles.add(trip.vehicle.id)
+          }
+          return acc
+        }, {})
+
+        const utilizationData = Object.entries(departmentUsage)
+          .map(([dept, data]: [string, any], index) => {
+            const uniqueVehicles = data.vehicles.size
+            const utilizationRate = totalVehicles > 0 ? Math.round((uniqueVehicles / totalVehicles) * 100) : 0
+            const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500']
+            
+            return {
+              department: dept,
+              percentage: Math.max(utilizationRate, Math.floor(data.trips / 10 * 100)), // Fallback calculation
+              color: colors[index % colors.length]
+            }
+          })
+          .slice(0, 5) // Show top 5 departments
+
+        setFleetUtilization(utilizationData)
+      }
+
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const maxValue = Math.max(...monthlyTrips.map(m => m.trips), 1) // Avoid division by zero
+
+  if (loading) {
+    return (
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
@@ -84,7 +239,7 @@ export default function Dashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
             </svg>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">40</p>
+          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.totalVehicles}</p>
           <p className="text-xs md:text-sm opacity-80 mt-1">Vehicles</p>
         </div>
 
@@ -95,7 +250,7 @@ export default function Dashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">18</p>
+          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.activeTrips}</p>
           <p className="text-xs md:text-sm opacity-80 mt-1">In Progress</p>
         </div>
 
@@ -106,7 +261,7 @@ export default function Dashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">12</p>
+          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.pendingApprovals}</p>
           <p className="text-xs md:text-sm opacity-80 mt-1">Awaiting Review</p>
         </div>
 
@@ -117,7 +272,7 @@ export default function Dashboard() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">87%</p>
+          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.fleetEfficiency}%</p>
           <p className="text-xs md:text-sm opacity-80 mt-1">Utilization Rate</p>
         </div>
       </div>
@@ -131,43 +286,31 @@ export default function Dashboard() {
             {/* Pie Chart */}
             <div className="relative w-40 h-40 sm:w-48 sm:h-48">
               <svg viewBox="0 0 100 100" className="transform -rotate-90">
-                {/* Active - 70% */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="20"
-                  strokeDasharray="251.2"
-                  strokeDashoffset="0"
-                />
-                {/* Maintenance - 20% */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="#f59e0b"
-                  strokeWidth="20"
-                  strokeDasharray="50.24 200.96"
-                  strokeDashoffset="-175.84"
-                />
-                {/* Idle - 10% */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="#6b7280"
-                  strokeWidth="20"
-                  strokeDasharray="25.12 225.08"
-                  strokeDashoffset="-226.08"
-                />
+                {vehicleStatus.map((item, index) => {
+                  const circumference = 2 * Math.PI * 40
+                  const strokeDasharray = circumference
+                  const strokeDashoffset = circumference - (item.percentage / 100) * circumference
+                  const rotation = vehicleStatus.slice(0, index).reduce((acc, prev) => acc + (prev.percentage / 100) * 360, 0)
+                  
+                  return (
+                    <circle
+                      key={item.status}
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke={item.color}
+                      strokeWidth="20"
+                      strokeDasharray={strokeDasharray}
+                      strokeDashoffset={strokeDashoffset}
+                      style={{ transform: `rotate(${rotation}deg)`, transformOrigin: '50% 50%' }}
+                    />
+                  )
+                })}
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-xl md:text-2xl font-bold text-gray-800">40</p>
+                  <p className="text-xl md:text-2xl font-bold text-gray-800">{dashboardStats.totalVehicles}</p>
                   <p className="text-xs text-gray-600">Total</p>
                 </div>
               </div>
@@ -212,46 +355,66 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Gantt Chart */}
+      {/* Active Trips Schedule */}
       <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-        <h3 className="text-base md:text-lg font-bold text-gray-800 mb-4 md:mb-6">Active Fleet Schedule (Gantt Chart)</h3>
+        <h3 className="text-base md:text-lg font-bold text-gray-800 mb-4 md:mb-6">Active Fleet Schedule</h3>
         <div className="overflow-x-auto">
-          <div className="min-w-[600px]">
-            {/* Time Header */}
-            <div className="flex items-center mb-4">
-              <div className="w-40 md:w-48 text-xs md:text-sm font-medium text-gray-700">Vehicle / Task</div>
-              <div className="flex-1 flex">
-                {[0, 6, 12, 18, 24].map((hour) => (
-                  <div key={hour} className="flex-1 text-center text-xs text-gray-500">
-                    {hour}:00
-                  </div>
-                ))}
+          {trips && trips.filter((trip: any) => trip.status === 'in_progress').length > 0 ? (
+            <div className="min-w-[600px]">
+              {/* Time Header */}
+              <div className="flex items-center mb-4">
+                <div className="w-40 md:w-48 text-xs md:text-sm font-medium text-gray-700">Vehicle / Trip</div>
+                <div className="flex-1 flex">
+                  {[0, 6, 12, 18, 24].map((hour) => (
+                    <div key={hour} className="flex-1 text-center text-xs text-gray-500">
+                      {hour}:00
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active Trips */}
+              <div className="space-y-3">
+                {trips.filter((trip: any) => trip.status === 'in_progress').slice(0, 5).map((trip: any, index: number) => {
+                  const startTime = new Date(trip.startDateTime)
+                  const endTime = new Date(trip.endDateTime)
+                  const startHour = startTime.getHours()
+                  const endHour = endTime.getHours()
+                  const startPercent = (startHour / 24) * 100
+                  const durationPercent = ((endHour - startHour) / 24) * 100
+                  const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500']
+                  
+                  return (
+                    <div key={trip.id} className="flex items-center">
+                      <div className="w-40 md:w-48 pr-3 md:pr-4">
+                        <p className="text-xs md:text-sm font-medium text-gray-800 truncate">
+                          {trip.vehicle?.plateNumber || 'Vehicle TBD'}
+                        </p>
+                        <p className="text-xs text-gray-600 truncate">{trip.purpose}</p>
+                      </div>
+                      <div className="flex-1 relative h-10 md:h-12 bg-gray-100 rounded">
+                        <div
+                          className={`absolute top-1 bottom-1 ${colors[index % colors.length]} rounded shadow-md flex items-center px-2`}
+                          style={{
+                            left: `${startPercent}%`,
+                            width: `${Math.max(durationPercent, 8)}%`,
+                          }}
+                        >
+                          <span className="text-xs text-white font-medium truncate">
+                            {trip.purpose.substring(0, 20)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
-
-            {/* Gantt Rows */}
-            <div className="space-y-3">
-              {ganttData.map((item, index) => (
-                <div key={index} className="flex items-center">
-                  <div className="w-40 md:w-48 pr-3 md:pr-4">
-                    <p className="text-xs md:text-sm font-medium text-gray-800 truncate">{item.vehicle}</p>
-                    <p className="text-xs text-gray-600 truncate">{item.task}</p>
-                  </div>
-                  <div className="flex-1 relative h-10 md:h-12 bg-gray-100 rounded">
-                    <div
-                      className={`absolute top-1 bottom-1 ${item.color} rounded shadow-md flex items-center px-2`}
-                      style={{
-                        left: `${item.start}%`,
-                        width: `${item.duration}%`,
-                      }}
-                    >
-                      <span className="text-xs text-white font-medium truncate">{item.task}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No active trips at the moment</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -285,56 +448,63 @@ export default function Dashboard() {
         <h3 className="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4">High-Priority Approval Requests</h3>
         <div className="overflow-x-auto -mx-4 md:mx-0">
           <div className="inline-block min-w-full align-middle">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Request ID</th>
-                  <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Department</th>
-                  <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Purpose</th>
-                  <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Date</th>
-                  <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Status</th>
-                  <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">#REQ-1245</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">Engineering</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600">International Conference</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">Jun 15, 2024</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4">
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full whitespace-nowrap">Pending</span>
-                  </td>
-                  <td className="py-2 md:py-3 px-3 md:px-4">
-                    <button className="text-emerald-600 hover:text-emerald-700 text-xs md:text-sm font-medium whitespace-nowrap">Review</button>
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">#REQ-1246</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">Medicine</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600">Medical Equipment Transport</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">Jun 16, 2024</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4">
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full whitespace-nowrap">Pending</span>
-                  </td>
-                  <td className="py-2 md:py-3 px-3 md:px-4">
-                    <button className="text-emerald-600 hover:text-emerald-700 text-xs md:text-sm font-medium whitespace-nowrap">Review</button>
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">#REQ-1243</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">Business</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600">Executive Meeting</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">Jun 14, 2024</td>
-                  <td className="py-2 md:py-3 px-3 md:px-4">
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full whitespace-nowrap">Approved</span>
-                  </td>
-                  <td className="py-2 md:py-3 px-3 md:px-4">
-                    <button className="text-gray-400 text-xs md:text-sm font-medium whitespace-nowrap">View</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            {pendingRequests.length > 0 ? (
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Request ID</th>
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Department</th>
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Purpose</th>
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Date</th>
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Requester</th>
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Status</th>
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingRequests.map((request) => (
+                    <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">
+                        #{request.id.substring(0, 8)}
+                      </td>
+                      <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-800 whitespace-nowrap">
+                        {request.department}
+                      </td>
+                      <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600">
+                        {request.purpose}
+                      </td>
+                      <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                        {request.requestedDate}
+                      </td>
+                      <td className="py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm text-gray-600 whitespace-nowrap">
+                        {request.requesterName}
+                      </td>
+                      <td className="py-2 md:py-3 px-3 md:px-4">
+                        <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
+                          request.status === 'pending_dean' 
+                            ? 'bg-yellow-100 text-yellow-700' 
+                            : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {request.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
+                      </td>
+                      <td className="py-2 md:py-3 px-3 md:px-4">
+                        <button 
+                          className="text-emerald-600 hover:text-emerald-700 text-xs md:text-sm font-medium whitespace-nowrap"
+                          onClick={() => window.location.href = `/approvals?trip=${request.id}`}
+                        >
+                          Review
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No pending approval requests</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,0 +1,10 @@
+{
+  "workspaceId": "",
+  "collectionId": "",
+  "environmentId": "",
+  "collectionName": "Fleet Management - Complete Trip Workflow",
+  "workspaceName": "Fleet Management System",
+  "environmentName": "Local Development",
+  "baseUrl": "http://localhost:3000",
+  "description": "Fleet Management System API testing configuration"
+}

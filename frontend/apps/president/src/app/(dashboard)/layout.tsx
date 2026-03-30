@@ -39,7 +39,7 @@ export default function DashboardLayout({
   const [photoPreview, setPhotoPreview] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('accessToken')
     if (!token) {
       router.push('/login')
       return
@@ -77,44 +77,37 @@ export default function DashboardLayout({
     try {
       const notificationsData = await notificationApi.getAll()
       
-      // Transform notifications to include mock details for demo
-      const enhancedNotifications = notificationsData.map((notif: any, index: number) => {
-        const mockDetails = [
-          {
-            requestId: 'REQ-2024-1245',
-            department: 'College of Engineering',
-            requestedBy: 'Dr. Abebe Kebede',
-            purpose: 'International Conference on Sustainable Engineering',
-            destination: 'Nairobi, Kenya',
-            duration: '5 days (June 20-24, 2024)',
-            vehicleType: 'Toyota Coaster (40 seats)',
-            passengers: '35 faculty members and students',
-            estimatedCost: 'ETB 125,000',
-            deanApproval: 'Approved on June 10, 2024',
-            budgetStatus: 'Funds available in department budget',
-            urgency: 'Conference registration deadline: June 15, 2024'
-          },
-          {
-            alertType: 'Budget Overrun',
-            period: 'Current Month',
-            budgetAllocated: 'ETB 500,000',
-            actualExpense: 'ETB 560,000',
-            variance: '+ETB 60,000 (12% over budget)',
-            mainCauses: [
-              'Increased fuel prices (8% increase)',
-              'Higher trip frequency (15% more trips)',
-              'Emergency medical transports (5 unplanned trips)'
-            ],
-            affectedDepartments: 'All departments',
-            recommendation: 'Review fuel consumption policies and consider trip consolidation',
-            actionRequired: 'Approve budget adjustment or implement cost control measures'
-          }
-        ]
+      // Transform notifications to use real data where available
+      const enhancedNotifications = notificationsData.map((notif: any) => {
+        // Extract real details from notification data
+        const details = notif.metadata || notif.data || {}
         
         return {
           ...notif,
           category: notif.type || 'General',
-          details: mockDetails[index % mockDetails.length] || {}
+          details: {
+            requestId: details.requestId || details.tripId || 'N/A',
+            department: details.department || details.requesterDepartment || 'N/A',
+            requestedBy: details.requestedBy || details.requesterName || 'N/A',
+            purpose: details.purpose || details.reason || notif.message || 'N/A',
+            destination: details.destination || 'N/A',
+            duration: details.duration || 'N/A',
+            vehicleType: details.vehicleType || details.vehicle || 'N/A',
+            passengers: details.passengers || details.passengerCount || 'N/A',
+            estimatedCost: details.estimatedCost || details.cost || 'N/A',
+            deanApproval: details.deanApproval || details.approvalStatus || 'N/A',
+            budgetStatus: details.budgetStatus || 'N/A',
+            urgency: details.urgency || details.priority || 'Normal',
+            alertType: details.alertType || notif.type || 'General',
+            period: details.period || 'Current',
+            budgetAllocated: details.budgetAllocated || 'N/A',
+            actualExpense: details.actualExpense || 'N/A',
+            variance: details.variance || 'N/A',
+            mainCauses: details.mainCauses || [],
+            affectedDepartments: details.affectedDepartments || 'N/A',
+            recommendation: details.recommendation || 'N/A',
+            actionRequired: details.actionRequired || 'Review required'
+          }
         }
       })
       
@@ -140,8 +133,9 @@ export default function DashboardLayout({
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('user')
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('presidentUser')
+    localStorage.removeItem('presidentLoggedIn')
     router.push('/')
   }
 
