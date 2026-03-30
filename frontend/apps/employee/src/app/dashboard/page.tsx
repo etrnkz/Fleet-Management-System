@@ -74,7 +74,6 @@ export default function DashboardPage() {
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section)
-    setSidebarOpen(false)
   }
 
   const handleOpenProfileModal = () => {
@@ -91,6 +90,16 @@ export default function DashboardPage() {
   }
 
   const unreadCount = notifications.filter((n: any) => !n.isRead).length
+
+  // Poll notifications every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      notificationApi.getAll().then((data: any) => {
+        setNotifications(Array.isArray(data) ? data : [])
+      }).catch(() => {})
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Request Trip Form Component
   const RequestTripForm = () => {
@@ -403,58 +412,147 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm h-16">
+        <div className="h-full px-4 sm:px-6 flex items-center justify-between">
+          {/* Left: hamburger + logo */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="text-xl font-bold text-gray-900">HUFMS</h1>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4h1l1.5 7h9L17 4h1" />
+                </svg>
+              </div>
+              <span className="text-lg font-bold text-gray-900 hidden sm:block">HUFMS</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4">
+
+          {/* Right: notification + profile + logout */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Notification Bell */}
+            <div
+              className="relative"
+              onMouseEnter={() => setShowNotifications(true)}
+              onMouseLeave={() => setShowNotifications(false)}
+            >
               <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 hover:bg-gray-100 rounded-lg"
+                className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-colors group"
+                title="Notifications"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-600 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {unreadCount}
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm bg-red-500">
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
-              <button
-                onClick={handleOpenProfileModal}
-                className="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2"
-              >
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-xs text-gray-500">{user?.role}</p>
-                </div>
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  {profileImage ? (
-                    <img src={profileImage} alt="Profile" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <span className="text-emerald-600 font-semibold">{user?.name?.charAt(0)}</span>
-                  )}
-                </div>
-              </button>
-              <button onClick={handleLogout} className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg">
-                Logout
-              </button>
+
+              {/* Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${unreadCount > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {unreadCount} New
+                      </span>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="py-10 text-center text-gray-400">
+                          <svg className="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
+                          <p className="text-sm">No notifications</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-100">
+                          {notifications.map((notification: any) => (
+                            <div
+                              key={notification.id}
+                              onClick={() => handleMarkNotificationAsRead(notification.id)}
+                              className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                                !notification.isRead
+                                  ? notification.type?.toLowerCase().includes('reject')
+                                    ? 'bg-red-50 border-l-4 border-red-400'
+                                    : 'bg-blue-50 border-l-4 border-blue-400'
+                                  : ''
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                  !notification.isRead
+                                    ? notification.type?.toLowerCase().includes('reject') ? 'bg-red-500' : 'bg-blue-500'
+                                    : 'bg-gray-300'
+                                }`} />
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm font-medium truncate ${notification.type?.toLowerCase().includes('reject') ? 'text-red-700' : 'text-gray-900'}`}>
+                                    {notification.title || notification.type}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notification.message}</p>
+                                  <p className="text-xs text-gray-400 mt-1">{new Date(notification.sentAt || notification.createdAt).toLocaleString()}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+              )}
             </div>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+
+            {/* Profile */}
+            <button
+              onClick={handleOpenProfileModal}
+              className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-colors group"
+              title="Edit Profile"
+            >
+              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all overflow-hidden">
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white text-sm font-semibold">{user?.name?.charAt(0)?.toUpperCase()}</span>
+                )}
+              </div>
+              <div className="text-left hidden sm:block">
+                <p className="text-sm font-semibold text-gray-800 leading-tight">{user?.name}</p>
+                <p className="text-xs text-emerald-600 leading-tight">{user?.role}</p>
+              </div>
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors group"
+              title="Logout"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:block">Logout</span>
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex pt-16">
         {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'block' : 'hidden'} lg:block w-64 bg-white shadow-sm min-h-screen`}>
+        <aside className={`fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-sm z-30 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
           <nav className="p-4 space-y-2">
             {[
               { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', type: 'section' },
@@ -486,7 +584,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 lg:ml-64">
           {activeSection === 'overview' && <Overview />}
           {activeSection === 'request' && <RequestTripForm />}
           {activeSection === 'vehicles' && <AvailableVehicles />}
@@ -494,51 +592,9 @@ export default function DashboardPage() {
         </main>
       </div>
 
-      {/* Notifications Panel */}
-      {showNotifications && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center sm:justify-end z-50 p-4">
-          <div className="bg-white rounded-lg w-full sm:w-96 max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-              <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <p>No notifications</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200">
-                  {notifications.map((notification: any) => (
-                    <div
-                      key={notification.id}
-                      onClick={() => handleMarkNotificationAsRead(notification.id)}
-                      className={`p-4 hover:bg-gray-50 cursor-pointer ${!notification.isRead ? 'bg-blue-50' : ''}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-2 ${!notification.isRead ? 'bg-blue-500' : 'bg-gray-300'}`} />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{notification.title || notification.type}</p>
-                          <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                          <p className="text-xs text-gray-400 mt-2">
-                            {new Date(notification.sentAt || notification.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
     </div>
   )

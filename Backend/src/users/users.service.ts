@@ -72,7 +72,7 @@ export class UsersService {
 
   async findByRole(role: string): Promise<User[]> {
     return this.userRepository.find({
-      where: { role, isActive: true },
+      where: { role: role as any, isActive: true },
       relations: ['department', 'college'],
     });
   }
@@ -95,7 +95,7 @@ export class UsersService {
     return this.userRepository.findOne({
       where: { 
         department: { id: departmentId }, 
-        role: 'DepartmentHead',
+        role: 'DepartmentHead' as any,
         isActive: true 
       },
       relations: ['department', 'college'],
@@ -106,7 +106,7 @@ export class UsersService {
     return this.userRepository.findOne({
       where: { 
         college: { id: collegeId }, 
-        role: 'Dean',
+        role: 'Dean' as any,
         isActive: true 
       },
       relations: ['department', 'college'],
@@ -116,7 +116,7 @@ export class UsersService {
   async findPresident(): Promise<User | null> {
     return this.userRepository.findOne({
       where: { 
-        role: 'President',
+        role: 'President' as any,
         isActive: true 
       },
       relations: ['department', 'college'],
@@ -139,7 +139,7 @@ export class UsersService {
           user.department = department;
         }
       } else {
-        user.department = null;
+        user.department = null as any;
       }
       delete userData.departmentId; // Remove from userData to avoid TypeORM issues
     }
@@ -154,7 +154,7 @@ export class UsersService {
           user.college = college;
         }
       } else {
-        user.college = null;
+        user.college = null as any;
       }
       delete userData.collegeId; // Remove from userData to avoid TypeORM issues
     }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { tripApi, vehicleApi, driverApi } from '../../lib/api'
+import { tripApi, vehicleApi, driverApi } from '@/lib/api'
 
 export default function TripsPage() {
   const router = useRouter()
@@ -41,58 +41,18 @@ export default function TripsPage() {
         driverApi.getAvailableDrivers()
       ])
       
-      setTripsList(trips)
-      setAvailableVehicles(vehicles)
-      setAvailableDrivers(drivers)
-    } catch (error) {
+      setTripsList(Array.isArray(trips) ? trips : [])
+      setAvailableVehicles(Array.isArray(vehicles) ? vehicles : [])
+      setAvailableDrivers(Array.isArray(drivers) ? drivers : [])
+    } catch (error: any) {
       console.error('Failed to load trips data:', error)
-      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
+      if (error?.message?.includes('token') || error?.message?.includes('Unauthorized')) {
         router.push('/login')
       }
     } finally {
       setLoading(false)
     }
   }
-      id: 'TRP-2024-004',
-      requestedBy: 'Dr. Yohannes Tesfaye',
-      department: 'Business School',
-      purpose: 'Industry Partnership Meeting',
-      destination: 'Hawassa',
-      startDate: '2024-03-25',
-      endDate: '2024-03-26',
-      duration: '1 day',
-      passengers: 3,
-      status: 'In Progress',
-      statusColor: 'bg-blue-100 text-blue-700',
-      approvals: [
-        { role: 'Department Head', approver: 'Prof. Dawit Kebede', status: 'Approved', date: '2024-03-07' },
-        { role: 'College Dean', approver: 'Dr. Michael Brown', status: 'Approved', date: '2024-03-08' },
-        { role: 'President', approver: 'Dr. Elizabeth Wilson', status: 'Approved', date: '2024-03-09' }
-      ],
-      vehicle: { id: 'V-005', name: 'Nissan Patrol', plate: 'AA-56789', fuelLevel: 70 } as any,
-      driver: { id: 'D-005', name: 'Yohannes Tesfaye', phone: '+251 911 567 890' } as any
-    },
-    {
-      id: 'TRP-2024-005',
-      requestedBy: 'Prof. Solomon Haile',
-      department: 'Agriculture',
-      purpose: 'Farm Visit and Research',
-      destination: 'Debre Zeit',
-      startDate: '2024-03-28',
-      endDate: '2024-03-29',
-      duration: '1 day',
-      passengers: 5,
-      status: 'Completed',
-      statusColor: 'bg-gray-100 text-gray-700',
-      approvals: [
-        { role: 'Department Head', approver: 'Dr. Getachew Alemu', status: 'Approved', date: '2024-03-05' },
-        { role: 'College Dean', approver: 'Dr. Sarah Johnson', status: 'Approved', date: '2024-03-06' },
-        { role: 'President', approver: 'Dr. Elizabeth Wilson', status: 'Approved', date: '2024-03-07' }
-      ],
-      vehicle: { id: 'V-008', name: 'Toyota Coaster', plate: 'AA-89012', fuelLevel: 55 } as any,
-      driver: { id: 'D-008', name: 'Getachew Alemu', phone: '+251 911 890 123' } as any
-    }
-  ])
 
   // Toast notification handler
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
@@ -110,34 +70,41 @@ export default function TripsPage() {
   }
 
   // Handle Save Assignment
-  const handleSaveAssignment = () => {
+  const handleSaveAssignment = async () => {
     if (!assignmentData.vehicleId || !assignmentData.driverId) {
       showNotification('Please select both vehicle and driver', 'error')
       return
     }
 
-    const selectedVehicle = availableVehicles.find(v => v.id === assignmentData.vehicleId)
-    const selectedDriver = availableDrivers.find(d => d.id === assignmentData.driverId)
+    try {
+      await tripApi.assignVehicleAndDriver(
+        selectedTrip.id,
+        assignmentData.vehicleId,
+        assignmentData.driverId
+      )
 
-    setTripsList(tripsList.map(trip => 
-      trip.id === selectedTrip.id 
-        ? {
-            ...trip,
-            status: 'Assigned',
-            statusColor: 'bg-emerald-100 text-emerald-700',
-            vehicle: selectedVehicle ? { id: selectedVehicle.id, name: selectedVehicle.name, plate: selectedVehicle.plate, fuelLevel: selectedVehicle.fuelLevel } : null,
-            driver: selectedDriver ? { id: selectedDriver.id, name: selectedDriver.name, phone: selectedDriver.phone } : null
-          }
-        : trip
-    ))
+      const selectedVehicle = availableVehicles.find((v: any) => v.id === assignmentData.vehicleId)
+      const selectedDriver = availableDrivers.find((d: any) => d.id === assignmentData.driverId)
 
-    // Close modal first
-    setShowAssignModal(false)
-    setSelectedTrip(null)
-    setAssignmentData({ vehicleId: '', driverId: '' })
-    
-    // Show notification
-    showNotification(`Vehicle and driver assigned successfully to ${selectedTrip.id}!`)
+      setTripsList((tripsList as any[]).map((trip: any) =>
+        trip.id === selectedTrip.id
+          ? {
+              ...trip,
+              status: 'Assigned',
+              statusColor: 'bg-emerald-100 text-emerald-700',
+              vehicle: selectedVehicle ? { id: selectedVehicle.id, name: selectedVehicle.model || selectedVehicle.name, plate: selectedVehicle.plateNumber || selectedVehicle.plate, fuelLevel: selectedVehicle.fuelLevel || 100 } : null,
+              driver: selectedDriver ? { id: selectedDriver.id, name: selectedDriver.name, phone: selectedDriver.phone } : null
+            }
+          : trip
+      ))
+
+      setShowAssignModal(false)
+      setSelectedTrip(null)
+      setAssignmentData({ vehicleId: '', driverId: '' })
+      showNotification(`Vehicle and driver assigned successfully to ${selectedTrip.id}!`)
+    } catch (error: any) {
+      showNotification(error?.message || 'Failed to assign vehicle and driver', 'error')
+    }
   }
 
   // Handle View Details

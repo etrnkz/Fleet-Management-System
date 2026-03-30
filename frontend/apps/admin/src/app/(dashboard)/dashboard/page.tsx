@@ -23,6 +23,10 @@ export default function DashboardPage() {
     fuelUsage: 0,
   })
   const [alerts, setAlerts] = useState<any[]>([])
+  const [allVehicles, setAllVehicles] = useState<any[]>([])
+  const [allDrivers, setAllDrivers] = useState<any[]>([])
+  const [allTrips, setAllTrips] = useState<any[]>([])
+  const [allMaintenance, setAllMaintenance] = useState<any[]>([])
 
   // Load dashboard data
   useEffect(() => {
@@ -32,18 +36,26 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      const [vehicles, trips, maintenance, fuel] = await Promise.all([
+      const [vehicles, trips, maintenance, fuel, drivers, allTripsData] = await Promise.all([
         vehicleApi.getAll().catch(() => []),
         tripApi.getAll({ state: 'IN_PROGRESS' }).catch(() => []),
         maintenanceApi.getAll('Submitted,EstimateProvided').catch(() => []),
         fuelApi.getAll().catch(() => []),
+        driverApi.getAll().catch(() => []),
+        tripApi.getAll().catch(() => []),
       ])
 
-      // Calculate stats
       const vehiclesArray = Array.isArray(vehicles) ? vehicles : []
       const tripsArray = Array.isArray(trips) ? trips : []
       const maintenanceArray = Array.isArray(maintenance) ? maintenance : []
       const fuelArray = Array.isArray(fuel) ? fuel : []
+      const driversArray = Array.isArray(drivers) ? drivers : []
+      const allTripsArray = Array.isArray(allTripsData) ? allTripsData : []
+
+      setAllVehicles(vehiclesArray)
+      setAllDrivers(driversArray)
+      setAllTrips(allTripsArray)
+      setAllMaintenance(maintenanceArray)
 
       setStats({
         totalVehicles: vehiclesArray.length,
@@ -327,6 +339,164 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Charts Row - Trip Status + Fleet Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Trip Status Donut */}
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <h2 className="text-base font-bold text-gray-900 mb-4">Trip Status</h2>
+              {(() => {
+                const pending = allTrips.filter(t => t.state?.includes('PENDING')).length
+                const approved = allTrips.filter(t => t.state === 'APPROVED_FOR_ALLOCATION' || t.state === 'CAR_ALLOCATED' || t.state === 'READY').length
+                const inProgress = allTrips.filter(t => t.state === 'IN_PROGRESS').length
+                const completed = allTrips.filter(t => t.state === 'COMPLETED').length
+                const total = Math.max(pending + approved + inProgress + completed, 1)
+                const circ = 2 * Math.PI * 38
+                const segments = [
+                  { label: 'Pending', count: pending, color: '#eab308', bg: 'bg-yellow-400' },
+                  { label: 'Approved', count: approved, color: '#10b981', bg: 'bg-emerald-500' },
+                  { label: 'In Progress', count: inProgress, color: '#3b82f6', bg: 'bg-blue-500' },
+                  { label: 'Completed', count: completed, color: '#6366f1', bg: 'bg-indigo-500' },
+                ]
+                let off = 0
+                return (
+                  <div className="flex items-center gap-4">
+                    <svg width="90" height="90" viewBox="0 0 100 100" className="flex-shrink-0">
+                      <circle cx="50" cy="50" r="38" fill="none" stroke="#f3f4f6" strokeWidth="16"/>
+                      {segments.map((s, i) => {
+                        const dash = (s.count / total) * circ
+                        const seg = <circle key={i} cx="50" cy="50" r="38" fill="none" stroke={s.color} strokeWidth="16"
+                          strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-off} transform="rotate(-90 50 50)"/>
+                        off += dash
+                        return seg
+                      })}
+                      <text x="50" y="46" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#111827">{allTrips.length}</text>
+                      <text x="50" y="59" textAnchor="middle" fontSize="7" fill="#6b7280">Total</text>
+                    </svg>
+                    <div className="space-y-2 flex-1 text-xs">
+                      {segments.map(s => (
+                        <div key={s.label} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2"><div className={`w-2.5 h-2.5 rounded-full ${s.bg}`}></div><span className="text-gray-600">{s.label}</span></div>
+                          <span className="font-bold text-gray-800">{s.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* Fleet Status Donut */}
+            <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <h2 className="text-base font-bold text-gray-900 mb-4">Fleet Status</h2>
+              {(() => {
+                const active = allVehicles.filter(v => v.status === 'Active').length
+                const maintenance = allVehicles.filter(v => v.status === 'UnderMaintenance').length
+                const inactive = allVehicles.filter(v => v.status === 'Inactive').length
+                const total = Math.max(active + maintenance + inactive, 1)
+                const circ = 2 * Math.PI * 38
+                const segments = [
+                  { label: 'Active', count: active, color: '#10b981', bg: 'bg-emerald-500' },
+                  { label: 'Maintenance', count: maintenance, color: '#f97316', bg: 'bg-orange-500' },
+                  { label: 'Inactive', count: inactive, color: '#ef4444', bg: 'bg-red-500' },
+                ]
+                let off = 0
+                return (
+                  <div className="flex items-center gap-4">
+                    <svg width="90" height="90" viewBox="0 0 100 100" className="flex-shrink-0">
+                      <circle cx="50" cy="50" r="38" fill="none" stroke="#f3f4f6" strokeWidth="16"/>
+                      {segments.map((s, i) => {
+                        const dash = (s.count / total) * circ
+                        const seg = <circle key={i} cx="50" cy="50" r="38" fill="none" stroke={s.color} strokeWidth="16"
+                          strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={-off} transform="rotate(-90 50 50)"/>
+                        off += dash
+                        return seg
+                      })}
+                      <text x="50" y="46" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#111827">{allVehicles.length}</text>
+                      <text x="50" y="59" textAnchor="middle" fontSize="7" fill="#6b7280">Total</text>
+                    </svg>
+                    <div className="space-y-2 flex-1 text-xs">
+                      {segments.map(s => (
+                        <div key={s.label} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2"><div className={`w-2.5 h-2.5 rounded-full ${s.bg}`}></div><span className="text-gray-600">{s.label}</span></div>
+                          <span className="font-bold text-gray-800">{s.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+
+          {/* Monthly Trips Trend */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Monthly Trip Requests</h2>
+                <p className="text-xs text-gray-500">Last 6 months</p>
+              </div>
+            </div>
+            {(() => {
+              const now = new Date()
+              const months = Array.from({ length: 6 }, (_, i) => {
+                const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+                return { label: d.toLocaleString('default', { month: 'short' }), year: d.getFullYear(), month: d.getMonth() }
+              })
+              const counts = months.map(m => allTrips.filter(t => {
+                const d = new Date(t.createdAt)
+                return d.getFullYear() === m.year && d.getMonth() === m.month
+              }).length)
+              const maxVal = Math.max(...counts, 1)
+              return (
+                <div>
+                  <div className="flex items-end gap-2 h-28 border-b border-gray-100 pb-2">
+                    {months.map((m, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                        <div className="relative w-full">
+                          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{counts[i]} trips</div>
+                          <div className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t hover:from-emerald-700 hover:to-emerald-500 transition-colors"
+                            style={{ height: `${(counts[i] / maxVal) * 100}px`, minHeight: counts[i] > 0 ? '4px' : '0' }}></div>
+                        </div>
+                        <span className="text-xs text-gray-400">{m.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Pending Approvals by Level */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <h2 className="text-base font-bold text-gray-900 mb-4">Pending Approvals by Level</h2>
+            {(() => {
+              const levels = [
+                { level: 'Department Head', state: 'PENDING_DEPARTMENT', color: 'bg-yellow-400' },
+                { level: 'College Head', state: 'PENDING_COLLEGE', color: 'bg-orange-400' },
+                { level: 'Dean', state: 'PENDING_DEAN', color: 'bg-red-400' },
+                { level: 'Deployment Team', state: 'APPROVED_FOR_ALLOCATION', color: 'bg-blue-400' },
+                { level: 'Transport Office', state: 'CAR_ALLOCATED', color: 'bg-purple-400' },
+              ].map(l => ({ ...l, count: allTrips.filter(t => t.state === l.state).length }))
+              const maxCount = Math.max(...levels.map(l => l.count), 1)
+              return (
+                <div className="space-y-3">
+                  {levels.map(item => (
+                    <div key={item.level}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-gray-600 font-medium">{item.level}</span>
+                        <span className="font-bold text-gray-800">{item.count}</span>
+                      </div>
+                      <div className="h-5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full ${item.color} rounded-full transition-all duration-700`}
+                          style={{ width: `${(item.count / maxCount) * 100}%`, minWidth: item.count > 0 ? '8px' : '0' }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </div>
         </div>
 
         {/* Right Column - Real-time Alerts */}
@@ -403,7 +573,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
                         {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                       </p>
-                      <p className="text-gray-900 font-semibold">{value}</p>
+                      <p className="text-gray-900 font-semibold">{String(value)}</p>
                     </div>
                   ))}
                 </div>
