@@ -6,10 +6,7 @@ import { FuelController } from './fuel.controller';
 import { VehiclesModule } from '../vehicles/vehicles.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([FuelRecord]),
-    VehiclesModule,
-  ],
+  imports: [TypeOrmModule.forFeature([FuelRecord]), VehiclesModule],
   controllers: [FuelController],
   providers: [FuelService],
   exports: [FuelService],

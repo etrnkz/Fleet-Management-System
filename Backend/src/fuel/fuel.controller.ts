@@ -9,7 +9,13 @@ import {
   Request,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { FuelService } from './fuel.service';
 import { CreateFuelRecordDto } from './dto/create-fuel-record.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,12 +32,12 @@ export class FuelController {
 
   @Post()
   @Roles(UserRole.TransportOffice, UserRole.Driver, UserRole.Developer)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Record fuel transaction',
-    description: 'Record a fuel refuel, trip consumption, or adjustment'
+    description: 'Record a fuel refuel, trip consumption, or adjustment',
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Fuel record created',
     schema: {
       example: {
@@ -39,14 +45,14 @@ export class FuelController {
         vehicleId: 'uuid',
         type: 'Refuel',
         quantity: 50.5,
-        pricePerLiter: 65.50,
+        pricePerLiter: 65.5,
         totalCost: 3307.75,
         mileageAtRefuel: 125000,
         station: 'Total Gas Station',
         receiptNumber: 'RCP-12345',
-        createdAt: '2026-02-24T10:00:00Z'
-      }
-    }
+        createdAt: '2026-02-24T10:00:00Z',
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'Vehicle not found' })
   create(@Body() createFuelRecordDto: CreateFuelRecordDto, @Request() req) {
@@ -54,16 +60,16 @@ export class FuelController {
   }
 
   @Get()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get all fuel records',
-    description: 'Retrieve fuel records with optional filtering'
+    description: 'Retrieve fuel records with optional filtering',
   })
   @ApiQuery({ name: 'vehicleId', required: false, type: String })
   @ApiQuery({ name: 'type', required: false, enum: FuelRecordType })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'List of fuel records',
     schema: {
       example: [
@@ -72,16 +78,16 @@ export class FuelController {
           vehicle: {
             plateNumber: 'ABC-1234',
             make: 'Toyota',
-            model: 'Hiace'
+            model: 'Hiace',
           },
           type: 'Refuel',
           quantity: 50.5,
           totalCost: 3307.75,
           mileageAtRefuel: 125000,
-          createdAt: '2026-02-24T10:00:00Z'
-        }
-      ]
-    }
+          createdAt: '2026-02-24T10:00:00Z',
+        },
+      ],
+    },
   })
   findAll(
     @Query('vehicleId') vehicleId?: string,
@@ -99,14 +105,14 @@ export class FuelController {
 
   @Get('statistics')
   @Roles(UserRole.TransportOffice, UserRole.Dean, UserRole.Developer)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get fuel statistics',
-    description: 'Get comprehensive fuel consumption and cost statistics'
+    description: 'Get comprehensive fuel consumption and cost statistics',
   })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Fuel statistics',
     schema: {
       example: {
@@ -117,17 +123,17 @@ export class FuelController {
         byType: {
           Refuel: 120,
           TripConsumption: 25,
-          Adjustment: 5
+          Adjustment: 5,
         },
         byVehicle: {
           'ABC-1234': {
             count: 45,
             totalCost: 148500,
-            totalQuantity: 2265
-          }
-        }
-      }
-    }
+            totalQuantity: 2265,
+          },
+        },
+      },
+    },
   })
   getStatistics(
     @Query('startDate') startDate?: string,
@@ -141,15 +147,15 @@ export class FuelController {
 
   @Get('cost-analysis')
   @Roles(UserRole.TransportOffice, UserRole.Dean, UserRole.Developer)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get fuel cost analysis',
-    description: 'Detailed cost analysis with monthly breakdown'
+    description: 'Detailed cost analysis with monthly breakdown',
   })
   @ApiQuery({ name: 'vehicleId', required: false, type: String })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Cost analysis',
     schema: {
       example: {
@@ -162,12 +168,12 @@ export class FuelController {
             cost: 82500,
             quantity: 1260,
             count: 25,
-            averageCostPerRefuel: 3300
-          }
+            averageCostPerRefuel: 3300,
+          },
         ],
-        vehicleId: 'uuid'
-      }
-    }
+        vehicleId: 'uuid',
+      },
+    },
   })
   getCostAnalysis(
     @Query('vehicleId') vehicleId?: string,
@@ -182,9 +188,9 @@ export class FuelController {
   }
 
   @Get('vehicle/:vehicleId/history')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get vehicle fuel history',
-    description: 'Get complete fuel history for a specific vehicle'
+    description: 'Get complete fuel history for a specific vehicle',
   })
   @ApiResponse({ status: 200, description: 'Vehicle fuel history' })
   @ApiResponse({ status: 404, description: 'Vehicle not found' })
@@ -193,12 +199,13 @@ export class FuelController {
   }
 
   @Get('vehicle/:vehicleId/efficiency')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Calculate fuel efficiency',
-    description: 'Calculate fuel efficiency (km/liter) for a vehicle based on refuel records'
+    description:
+      'Calculate fuel efficiency (km/liter) for a vehicle based on refuel records',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Fuel efficiency data',
     schema: {
       example: {
@@ -213,20 +220,20 @@ export class FuelController {
             distance: 510,
             fuel: 60,
             efficiency: 8.5,
-            mileage: 125510
-          }
-        ]
-      }
-    }
+            mileage: 125510,
+          },
+        ],
+      },
+    },
   })
   calculateEfficiency(@Param('vehicleId', ParseUUIDPipe) vehicleId: string) {
     return this.fuelService.calculateFuelEfficiency(vehicleId);
   }
 
   @Get(':id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get fuel record by ID',
-    description: 'Retrieve a specific fuel record'
+    description: 'Retrieve a specific fuel record',
   })
   @ApiResponse({ status: 200, description: 'Fuel record details' })
   @ApiResponse({ status: 404, description: 'Fuel record not found' })

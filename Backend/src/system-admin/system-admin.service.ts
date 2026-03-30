@@ -1,10 +1,17 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
 import { User, UserRole } from '../users/entities/user.entity';
 import { TripRequest, TripState } from '../trips/entities/trip-request.entity';
 import { Vehicle, VehicleStatus } from '../vehicles/entities/vehicle.entity';
-import { MaintenanceRequest, MaintenanceStatus } from '../maintenance/entities/maintenance-request.entity';
+import {
+  MaintenanceRequest,
+  MaintenanceStatus,
+} from '../maintenance/entities/maintenance-request.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { AuditLog } from '../audit/entities/audit-log.entity';
 import { CreateSystemUserDto } from './dto/create-system-user.dto';
@@ -54,7 +61,8 @@ export class SystemAdminService {
     department?: string;
     college?: string;
   }) {
-    const query = this.userRepository.createQueryBuilder('user')
+    const query = this.userRepository
+      .createQueryBuilder('user')
       .leftJoinAndSelect('user.department', 'department')
       .leftJoinAndSelect('user.college', 'college');
 
@@ -63,11 +71,15 @@ export class SystemAdminService {
     }
 
     if (filters.isActive !== undefined) {
-      query.andWhere('user.isActive = :isActive', { isActive: filters.isActive });
+      query.andWhere('user.isActive = :isActive', {
+        isActive: filters.isActive,
+      });
     }
 
     if (filters.department) {
-      query.andWhere('department.id = :departmentId', { departmentId: filters.department });
+      query.andWhere('department.id = :departmentId', {
+        departmentId: filters.department,
+      });
     }
 
     if (filters.college) {
@@ -75,9 +87,9 @@ export class SystemAdminService {
     }
 
     const users = await query.getMany();
-    
+
     // Remove password from response
-    return users.map(user => {
+    return users.map((user) => {
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
@@ -118,10 +130,10 @@ export class SystemAdminService {
 
     user.isActive = isActive;
     await this.userRepository.save(user);
-    
-    return { 
+
+    return {
       message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
-      user: { ...user, password: undefined }
+      user: { ...user, password: undefined },
     };
   }
 
@@ -134,15 +146,15 @@ export class SystemAdminService {
     // Generate new password
     const newPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     user.password = hashedPassword;
     await this.userRepository.save(user);
 
     // In a real system, you would send this via email
-    return { 
+    return {
       message: 'Password reset successfully',
       temporaryPassword: newPassword,
-      note: 'In production, this would be sent via email'
+      note: 'In production, this would be sent via email',
     };
   }
 
@@ -163,11 +175,15 @@ export class SystemAdminService {
       this.userRepository.count(),
       this.userRepository.count({ where: { isActive: true } }),
       this.tripRepository.count(),
-      this.tripRepository.count({ where: { state: TripState.PENDING_DEPARTMENT } }),
+      this.tripRepository.count({
+        where: { state: TripState.PENDING_DEPARTMENT },
+      }),
       this.vehicleRepository.count(),
       this.vehicleRepository.count({ where: { status: VehicleStatus.Active } }),
       this.maintenanceRepository.count(),
-      this.maintenanceRepository.count({ where: { status: MaintenanceStatus.Submitted } }),
+      this.maintenanceRepository.count({
+        where: { status: MaintenanceStatus.Submitted },
+      }),
       this.notificationRepository.count(),
       this.notificationRepository.count({ where: { isRead: false } }),
     ]);
@@ -294,17 +310,22 @@ export class SystemAdminService {
     action?: string;
     limit: number;
   }) {
-    const query = this.auditRepository.createQueryBuilder('audit')
+    const query = this.auditRepository
+      .createQueryBuilder('audit')
       .leftJoinAndSelect('audit.user', 'user')
       .orderBy('audit.timestamp', 'DESC')
       .limit(filters.limit);
 
     if (filters.startDate) {
-      query.andWhere('audit.timestamp >= :startDate', { startDate: new Date(filters.startDate) });
+      query.andWhere('audit.timestamp >= :startDate', {
+        startDate: new Date(filters.startDate),
+      });
     }
 
     if (filters.endDate) {
-      query.andWhere('audit.timestamp <= :endDate', { endDate: new Date(filters.endDate) });
+      query.andWhere('audit.timestamp <= :endDate', {
+        endDate: new Date(filters.endDate),
+      });
     }
 
     if (filters.userId) {
@@ -312,7 +333,9 @@ export class SystemAdminService {
     }
 
     if (filters.action) {
-      query.andWhere('audit.action ILIKE :action', { action: `%${filters.action}%` });
+      query.andWhere('audit.action ILIKE :action', {
+        action: `%${filters.action}%`,
+      });
     }
 
     return query.getMany();
@@ -323,7 +346,7 @@ export class SystemAdminService {
     try {
       // Check database connectivity
       await this.dataSource.query('SELECT 1');
-      
+
       // Check system resources (simplified)
       const memoryUsage = process.memoryUsage();
       const uptime = process.uptime();
@@ -352,7 +375,7 @@ export class SystemAdminService {
   async createBackup() {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupName = `backup-${timestamp}`;
-    
+
     // In a real system, you would create actual database backup
     return {
       message: 'Backup created successfully',
@@ -382,9 +405,13 @@ export class SystemAdminService {
   }
 
   // Maintenance Mode
-  async setMaintenanceMode(enabled: boolean, reason?: string, estimatedDuration?: number) {
+  async setMaintenanceMode(
+    enabled: boolean,
+    reason?: string,
+    estimatedDuration?: number,
+  ) {
     this.systemConfig.maintenanceMode = enabled;
-    
+
     if (enabled) {
       this.systemConfig.maintenanceReason = reason || 'System maintenance';
       this.systemConfig.estimatedDuration = estimatedDuration || 60;
@@ -424,7 +451,7 @@ export class SystemAdminService {
 
   async exportUsers(options: { format: 'csv' | 'json'; filters?: any }) {
     const users = await this.getAllUsers(options.filters || {});
-    
+
     if (options.format === 'json') {
       return {
         format: 'json',
@@ -433,11 +460,15 @@ export class SystemAdminService {
       };
     } else {
       // CSV format
-      const csvHeaders = 'ID,Name,Email,Role,Department,College,Active,Created\n';
-      const csvData = users.map(user => 
-        `${user.id},${user.name},${user.email},${user.role},${user.department?.name || ''},${user.college?.name || ''},${user.isActive},${user.createdAt}`
-      ).join('\n');
-      
+      const csvHeaders =
+        'ID,Name,Email,Role,Department,College,Active,Created\n';
+      const csvData = users
+        .map(
+          (user) =>
+            `${user.id},${user.name},${user.email},${user.role},${user.department?.name || ''},${user.college?.name || ''},${user.isActive},${user.createdAt}`,
+        )
+        .join('\n');
+
       return {
         format: 'csv',
         data: csvHeaders + csvData,
@@ -458,11 +489,19 @@ export class SystemAdminService {
 
     if (notification.targetUsers && notification.targetUsers.length > 0) {
       // Send to specific users
-      recipients = await this.userRepository.findByIds(notification.targetUsers);
-    } else if (notification.targetRoles && notification.targetRoles.length > 0) {
+      recipients = await this.userRepository.findByIds(
+        notification.targetUsers,
+      );
+    } else if (
+      notification.targetRoles &&
+      notification.targetRoles.length > 0
+    ) {
       // Send to users with specific roles
       recipients = await this.userRepository.find({
-        where: { role: In(notification.targetRoles as UserRole[]), isActive: true },
+        where: {
+          role: In(notification.targetRoles as UserRole[]),
+          isActive: true,
+        },
       });
     } else {
       // Send to all active users

@@ -10,12 +10,12 @@ export class AppController {
 
   @Public()
   @Get()
-  @ApiOperation({ 
-    summary: 'API Root', 
-    description: 'Returns basic API information' 
+  @ApiOperation({
+    summary: 'API Root',
+    description: 'Returns basic API information',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'API information',
     schema: {
       example: {
@@ -23,9 +23,9 @@ export class AppController {
         description: 'Backend service for fleet operations',
         version: '1.0.0',
         environment: 'development',
-        timestamp: '2024-01-01T00:00:00.000Z'
-      }
-    }
+        timestamp: '2024-01-01T00:00:00.000Z',
+      },
+    },
   })
   getRoot() {
     return this.appService.getApiInfo();
@@ -34,12 +34,12 @@ export class AppController {
   @Public()
   @Get('health')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Health Check', 
-    description: 'Check API health and uptime' 
+  @ApiOperation({
+    summary: 'Health Check',
+    description: 'Check API health and uptime',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'API is healthy',
     schema: {
       example: {
@@ -49,10 +49,10 @@ export class AppController {
         database: 'connected',
         memoryUsage: {
           heapUsed: '45.2 MB',
-          heapTotal: '78.4 MB'
-        }
-      }
-    }
+          heapTotal: '78.4 MB',
+        },
+      },
+    },
   })
   getHealth() {
     return this.appService.getHealthStatus();
@@ -60,9 +60,9 @@ export class AppController {
 
   @Public()
   @Get('status')
-  @ApiOperation({ 
-    summary: 'System Status', 
-    description: 'Detailed system status and metrics' 
+  @ApiOperation({
+    summary: 'System Status',
+    description: 'Detailed system status and metrics',
   })
   getStatus() {
     return this.appService.getSystemStatus();
@@ -70,9 +70,9 @@ export class AppController {
 
   @Public()
   @Get('version')
-  @ApiOperation({ 
-    summary: 'API Version', 
-    description: 'Get current API version information' 
+  @ApiOperation({
+    summary: 'API Version',
+    description: 'Get current API version information',
   })
   getVersion() {
     return this.appService.getVersionInfo();

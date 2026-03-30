@@ -30,7 +30,7 @@ export class Approval {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => TripRequest, tripRequest => tripRequest.approvals)
+  @ManyToOne(() => TripRequest, (tripRequest) => tripRequest.approvals)
   tripRequest: TripRequest;
 
   @Column()

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { FuelRecord, FuelRecordType } from './entities/fuel-record.entity';
@@ -13,15 +17,21 @@ export class FuelService {
     private readonly vehiclesService: VehiclesService,
   ) {}
 
-  async create(createFuelRecordDto: CreateFuelRecordDto, userId: string): Promise<FuelRecord> {
+  async create(
+    createFuelRecordDto: CreateFuelRecordDto,
+    userId: string,
+  ): Promise<FuelRecord> {
     // Verify vehicle exists
-    const vehicle = await this.vehiclesService.findOne(createFuelRecordDto.vehicleId);
+    const vehicle = await this.vehiclesService.findOne(
+      createFuelRecordDto.vehicleId,
+    );
     if (!vehicle) {
       throw new NotFoundException('Vehicle not found');
     }
 
     // Calculate total cost
-    const totalCost = createFuelRecordDto.quantity * createFuelRecordDto.pricePerLiter;
+    const totalCost =
+      createFuelRecordDto.quantity * createFuelRecordDto.pricePerLiter;
 
     const fuelRecord = this.fuelRecordRepository.create({
       ...createFuelRecordDto,
@@ -38,7 +48,8 @@ export class FuelService {
     startDate?: Date,
     endDate?: Date,
   ): Promise<FuelRecord[]> {
-    const query = this.fuelRecordRepository.createQueryBuilder('fuel')
+    const query = this.fuelRecordRepository
+      .createQueryBuilder('fuel')
       .leftJoinAndSelect('fuel.vehicle', 'vehicle')
       .leftJoinAndSelect('fuel.recordedBy', 'recordedBy')
       .leftJoinAndSelect('fuel.trip', 'trip');
@@ -97,7 +108,9 @@ export class FuelService {
       };
     }
 
-    const refuelRecords = records.filter(r => r.type === FuelRecordType.Refuel && r.mileageAtRefuel);
+    const refuelRecords = records.filter(
+      (r) => r.type === FuelRecordType.Refuel && r.mileageAtRefuel,
+    );
 
     if (refuelRecords.length < 2) {
       return {
@@ -164,25 +177,35 @@ export class FuelService {
 
     const totalRecords = records.length;
     const totalCost = records.reduce((sum, r) => sum + Number(r.totalCost), 0);
-    const totalQuantity = records.reduce((sum, r) => sum + Number(r.quantity), 0);
+    const totalQuantity = records.reduce(
+      (sum, r) => sum + Number(r.quantity),
+      0,
+    );
 
-    const byType = records.reduce((acc, record) => {
-      acc[record.type] = (acc[record.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const byType = records.reduce(
+      (acc, record) => {
+        acc[record.type] = (acc[record.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-    const byVehicle = records.reduce((acc, record) => {
-      const key = record.vehicle?.plateNumber || 'Unknown';
-      if (!acc[key]) {
-        acc[key] = { count: 0, totalCost: 0, totalQuantity: 0 };
-      }
-      acc[key].count++;
-      acc[key].totalCost += Number(record.totalCost);
-      acc[key].totalQuantity += Number(record.quantity);
-      return acc;
-    }, {} as Record<string, any>);
+    const byVehicle = records.reduce(
+      (acc, record) => {
+        const key = record.vehicle?.plateNumber || 'Unknown';
+        if (!acc[key]) {
+          acc[key] = { count: 0, totalCost: 0, totalQuantity: 0 };
+        }
+        acc[key].count++;
+        acc[key].totalCost += Number(record.totalCost);
+        acc[key].totalQuantity += Number(record.quantity);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
-    const averagePricePerLiter = totalQuantity > 0 ? totalCost / totalQuantity : 0;
+    const averagePricePerLiter =
+      totalQuantity > 0 ? totalCost / totalQuantity : 0;
 
     return {
       totalRecords,
@@ -195,8 +218,13 @@ export class FuelService {
     };
   }
 
-  async getCostAnalysis(vehicleId?: string, startDate?: Date, endDate?: Date): Promise<any> {
-    const query = this.fuelRecordRepository.createQueryBuilder('fuel')
+  async getCostAnalysis(
+    vehicleId?: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<any> {
+    const query = this.fuelRecordRepository
+      .createQueryBuilder('fuel')
       .leftJoinAndSelect('fuel.vehicle', 'vehicle');
 
     if (vehicleId) {
@@ -213,19 +241,25 @@ export class FuelService {
     const records = await query.getMany();
 
     const totalCost = records.reduce((sum, r) => sum + Number(r.totalCost), 0);
-    const totalQuantity = records.reduce((sum, r) => sum + Number(r.quantity), 0);
+    const totalQuantity = records.reduce(
+      (sum, r) => sum + Number(r.quantity),
+      0,
+    );
 
     // Group by month
-    const monthlyData = records.reduce((acc, record) => {
-      const month = new Date(record.createdAt).toISOString().slice(0, 7); // YYYY-MM
-      if (!acc[month]) {
-        acc[month] = { cost: 0, quantity: 0, count: 0 };
-      }
-      acc[month].cost += Number(record.totalCost);
-      acc[month].quantity += Number(record.quantity);
-      acc[month].count++;
-      return acc;
-    }, {} as Record<string, any>);
+    const monthlyData = records.reduce(
+      (acc, record) => {
+        const month = new Date(record.createdAt).toISOString().slice(0, 7); // YYYY-MM
+        if (!acc[month]) {
+          acc[month] = { cost: 0, quantity: 0, count: 0 };
+        }
+        acc[month].cost += Number(record.totalCost);
+        acc[month].quantity += Number(record.quantity);
+        acc[month].count++;
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     return {
       totalCost: parseFloat(totalCost.toFixed(2)),

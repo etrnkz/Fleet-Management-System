@@ -1,60 +1,70 @@
-import { IsString, IsNotEmpty, IsNumber, IsEnum, IsOptional, Min, Max, Matches, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  Min,
+  Max,
+  Matches,
+  IsDateString,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { FuelType, VehicleStatus } from '../entities/vehicle.entity';
 
 export class CreateVehicleDto {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'VEH-001',
-    description: 'Custom vehicle ID'
+    description: 'Custom vehicle ID',
   })
   @IsString()
   @IsOptional()
   vehicleId?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'ABC-1234',
-    description: 'Vehicle plate number (unique)'
+    description: 'Vehicle plate number (unique)',
   })
   @IsString()
   @IsNotEmpty()
   plateNumber: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'Truck',
-    description: 'Vehicle type (Truck, Van, Bus, Sedan, SUV)'
+    description: 'Vehicle type (Truck, Van, Bus, Sedan, SUV)',
   })
   @IsString()
   @IsOptional()
   vehicleType?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'Toyota',
-    description: 'Vehicle manufacturer'
+    description: 'Vehicle manufacturer',
   })
   @IsString()
   @IsNotEmpty()
   make: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 'Hiace',
-    description: 'Vehicle model'
+    description: 'Vehicle model',
   })
   @IsString()
   @IsNotEmpty()
   model: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     example: 2022,
-    description: 'Manufacturing year'
+    description: 'Manufacturing year',
   })
   @IsNumber()
   @Min(1990)
   @Max(new Date().getFullYear() + 1)
   year: number;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 15,
-    description: 'Passenger capacity'
+    description: 'Passenger capacity',
   })
   @IsNumber()
   @IsOptional()
@@ -62,84 +72,84 @@ export class CreateVehicleDto {
   @Max(100)
   capacity?: number;
 
-  @ApiProperty({ 
+  @ApiProperty({
     enum: FuelType,
     example: FuelType.Diesel,
-    description: 'Fuel type'
+    description: 'Fuel type',
   })
   @IsEnum(FuelType)
   fuelType: FuelType;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 80,
-    description: 'Fuel tank capacity in liters'
+    description: 'Fuel tank capacity in liters',
   })
   @IsNumber()
   @IsOptional()
   @Min(0)
   fuelCapacity?: number;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     enum: VehicleStatus,
     example: VehicleStatus.Active,
-    description: 'Vehicle status'
+    description: 'Vehicle status',
   })
   @IsEnum(VehicleStatus)
   @IsOptional()
   status?: VehicleStatus;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 125000,
-    description: 'Current mileage in kilometers'
+    description: 'Current mileage in kilometers',
   })
   @IsNumber()
   @IsOptional()
   @Min(0)
   currentMileage?: number;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: '2024-01-15',
-    description: 'Vehicle purchase date'
+    description: 'Vehicle purchase date',
   })
   @IsDateString()
   @IsOptional()
   purchaseDate?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: '2025-12-31',
-    description: 'Insurance expiry date'
+    description: 'Insurance expiry date',
   })
   @IsDateString()
   @IsOptional()
   insuranceExpiryDate?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: '2024-06-30',
-    description: 'Next scheduled service date'
+    description: 'Next scheduled service date',
   })
   @IsDateString()
   @IsOptional()
   nextServiceDate?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'White',
-    description: 'Vehicle color'
+    description: 'Vehicle color',
   })
   @IsString()
   @IsOptional()
   color?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: '1HGBH41JXMN109186',
-    description: 'Vehicle Identification Number'
+    description: 'Vehicle Identification Number',
   })
   @IsString()
   @IsOptional()
   vinNumber?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 'School bus for student transportation',
-    description: 'Additional notes'
+    description: 'Additional notes',
   })
   @IsString()
   @IsOptional()

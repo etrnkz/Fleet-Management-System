@@ -106,7 +106,9 @@ export class TripRequest {
   @Column({ type: 'datetime', nullable: true })
   completedAt: Date;
 
-  @OneToMany(() => Approval, approval => approval.tripRequest, { cascade: true })
+  @OneToMany(() => Approval, (approval) => approval.tripRequest, {
+    cascade: true,
+  })
   approvals: Approval[];
 
   @CreateDateColumn()

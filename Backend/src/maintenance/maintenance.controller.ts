@@ -8,7 +8,13 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { MaintenanceService } from './maintenance.service';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { InspectMaintenanceDto } from './dto/inspect-maintenance.dto';
@@ -24,12 +30,13 @@ export class MaintenanceController {
   constructor(private readonly maintenanceService: MaintenanceService) {}
 
   @Post()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Submit maintenance request',
-    description: 'Driver submits a maintenance request for a vehicle. Vehicle status is automatically set to UnderMaintenance.'
+    description:
+      'Driver submits a maintenance request for a vehicle. Vehicle status is automatically set to UnderMaintenance.',
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Maintenance request created',
     schema: {
       example: {
@@ -39,9 +46,9 @@ export class MaintenanceController {
         priority: 'High',
         status: 'Submitted',
         submittedBy: 'John Driver',
-        submittedAt: '2024-01-15T10:00:00Z'
-      }
-    }
+        submittedAt: '2024-01-15T10:00:00Z',
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 404, description: 'Vehicle not found' })
@@ -61,12 +68,12 @@ export class MaintenanceController {
   }
 
   @Get('statistics')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get maintenance statistics',
-    description: 'Get comprehensive statistics about maintenance requests'
+    description: 'Get comprehensive statistics about maintenance requests',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Maintenance statistics',
     schema: {
       example: {
@@ -77,14 +84,14 @@ export class MaintenanceController {
           EstimateProvided: 2,
           BudgetApproved: 1,
           InProgress: 4,
-          Completed: 30
+          Completed: 30,
         },
         totalEstimatedCost: 125000,
         totalActualCost: 118500,
         averageCost: 3950,
-        completionRate: 66.7
-      }
-    }
+        completionRate: 66.7,
+      },
+    },
   })
   getStatistics() {
     return this.maintenanceService.getStatistics();

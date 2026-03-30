@@ -1,7 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MaintenanceRequest, MaintenanceStatus } from './entities/maintenance-request.entity';
+import {
+  MaintenanceRequest,
+  MaintenanceStatus,
+} from './entities/maintenance-request.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { InspectMaintenanceDto } from './dto/inspect-maintenance.dto';
 import { CompleteMaintenanceDto } from './dto/complete-maintenance.dto';
@@ -17,9 +25,14 @@ export class MaintenanceService {
     private readonly vehiclesService: VehiclesService,
   ) {}
 
-  async create(createMaintenanceDto: CreateMaintenanceDto, user: User): Promise<MaintenanceRequest> {
+  async create(
+    createMaintenanceDto: CreateMaintenanceDto,
+    user: User,
+  ): Promise<MaintenanceRequest> {
     // Verify vehicle exists
-    const vehicle = await this.vehiclesService.findOne(createMaintenanceDto.vehicleId);
+    const vehicle = await this.vehiclesService.findOne(
+      createMaintenanceDto.vehicleId,
+    );
 
     // Generate request number
     const count = await this.maintenanceRepository.count();
@@ -68,11 +81,17 @@ export class MaintenanceService {
     return maintenance;
   }
 
-  async inspect(id: string, inspectDto: InspectMaintenanceDto, user: User): Promise<MaintenanceRequest> {
+  async inspect(
+    id: string,
+    inspectDto: InspectMaintenanceDto,
+    user: User,
+  ): Promise<MaintenanceRequest> {
     const maintenance = await this.findOne(id);
 
     if (maintenance.status !== MaintenanceStatus.Submitted) {
-      throw new BadRequestException('Can only inspect submitted maintenance requests');
+      throw new BadRequestException(
+        'Can only inspect submitted maintenance requests',
+      );
     }
 
     if (user.role !== UserRole.MaintenanceTeam) {
@@ -92,7 +111,9 @@ export class MaintenanceService {
     const maintenance = await this.findOne(id);
 
     if (maintenance.status !== MaintenanceStatus.EstimateProvided) {
-      throw new BadRequestException('Can only approve budget for estimated maintenance');
+      throw new BadRequestException(
+        'Can only approve budget for estimated maintenance',
+      );
     }
 
     if (user.role !== UserRole.TransportOffice) {
@@ -110,11 +131,15 @@ export class MaintenanceService {
     const maintenance = await this.findOne(id);
 
     if (maintenance.status !== MaintenanceStatus.BudgetApproved) {
-      throw new BadRequestException('Budget must be approved before starting maintenance');
+      throw new BadRequestException(
+        'Budget must be approved before starting maintenance',
+      );
     }
 
     if (user.role !== UserRole.MaintenanceTeam) {
-      throw new ForbiddenException('Only Maintenance Team can start maintenance');
+      throw new ForbiddenException(
+        'Only Maintenance Team can start maintenance',
+      );
     }
 
     maintenance.status = MaintenanceStatus.InProgress;
@@ -122,15 +147,23 @@ export class MaintenanceService {
     return this.maintenanceRepository.save(maintenance);
   }
 
-  async complete(id: string, completeDto: CompleteMaintenanceDto, user: User): Promise<MaintenanceRequest> {
+  async complete(
+    id: string,
+    completeDto: CompleteMaintenanceDto,
+    user: User,
+  ): Promise<MaintenanceRequest> {
     const maintenance = await this.findOne(id);
 
     if (maintenance.status !== MaintenanceStatus.InProgress) {
-      throw new BadRequestException('Maintenance must be in progress to complete');
+      throw new BadRequestException(
+        'Maintenance must be in progress to complete',
+      );
     }
 
     if (user.role !== UserRole.MaintenanceTeam) {
-      throw new ForbiddenException('Only Maintenance Team can complete maintenance');
+      throw new ForbiddenException(
+        'Only Maintenance Team can complete maintenance',
+      );
     }
 
     maintenance.actualCost = completeDto.actualCost;
@@ -139,42 +172,67 @@ export class MaintenanceService {
     maintenance.status = MaintenanceStatus.Completed;
 
     // Set vehicle back to active
-    await this.vehiclesService.setMaintenanceStatus(maintenance.vehicle.id, false);
+    await this.vehiclesService.setMaintenanceStatus(
+      maintenance.vehicle.id,
+      false,
+    );
 
     return this.maintenanceRepository.save(maintenance);
   }
 
-  async reject(id: string, reason: string, user: User): Promise<MaintenanceRequest> {
+  async reject(
+    id: string,
+    reason: string,
+    user: User,
+  ): Promise<MaintenanceRequest> {
     const maintenance = await this.findOne(id);
 
     if (maintenance.status === MaintenanceStatus.Completed) {
       throw new BadRequestException('Cannot reject completed maintenance');
     }
 
-    if (user.role !== UserRole.TransportOffice && user.role !== UserRole.MaintenanceTeam) {
-      throw new ForbiddenException('Only Transport Office or Maintenance Team can reject');
+    if (
+      user.role !== UserRole.TransportOffice &&
+      user.role !== UserRole.MaintenanceTeam
+    ) {
+      throw new ForbiddenException(
+        'Only Transport Office or Maintenance Team can reject',
+      );
     }
 
     maintenance.rejectionReason = reason;
     maintenance.status = MaintenanceStatus.Rejected;
 
     // Set vehicle back to active
-    await this.vehiclesService.setMaintenanceStatus(maintenance.vehicle.id, false);
+    await this.vehiclesService.setMaintenanceStatus(
+      maintenance.vehicle.id,
+      false,
+    );
 
     return this.maintenanceRepository.save(maintenance);
   }
 
   async getStatistics() {
     const total = await this.maintenanceRepository.count();
-    const submitted = await this.maintenanceRepository.count({ where: { status: MaintenanceStatus.Submitted } });
-    const inProgress = await this.maintenanceRepository.count({ where: { status: MaintenanceStatus.InProgress } });
-    const completed = await this.maintenanceRepository.count({ where: { status: MaintenanceStatus.Completed } });
-    const rejected = await this.maintenanceRepository.count({ where: { status: MaintenanceStatus.Rejected } });
+    const submitted = await this.maintenanceRepository.count({
+      where: { status: MaintenanceStatus.Submitted },
+    });
+    const inProgress = await this.maintenanceRepository.count({
+      where: { status: MaintenanceStatus.InProgress },
+    });
+    const completed = await this.maintenanceRepository.count({
+      where: { status: MaintenanceStatus.Completed },
+    });
+    const rejected = await this.maintenanceRepository.count({
+      where: { status: MaintenanceStatus.Rejected },
+    });
 
     const costResult = await this.maintenanceRepository
       .createQueryBuilder('maintenance')
       .select('SUM(maintenance.actualCost)', 'totalCost')
-      .where('maintenance.status = :status', { status: MaintenanceStatus.Completed })
+      .where('maintenance.status = :status', {
+        status: MaintenanceStatus.Completed,
+      })
       .getRawOne();
 
     return {

@@ -134,9 +134,12 @@ export default function DashboardLayout({
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
     localStorage.removeItem('presidentUser')
     localStorage.removeItem('presidentLoggedIn')
-    router.push('/')
+    localStorage.removeItem('presidentRememberedUser')
+    router.push('/login')
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1183,9 +1186,9 @@ export default function DashboardLayout({
                                 <li key={idx} className="flex items-start space-x-2">
                                   <span className="text-emerald-600 mt-1">•</span>
                                   <span className="text-gray-800 flex-1">
-                                    {typeof item === 'object' ? (
+                                    {typeof item === 'object' && item !== null ? (
                                       <div className="bg-gray-50 rounded-lg p-3 space-y-1">
-                                        {Object.entries(item).map(([k, v]) => (
+                                        {Object.entries(item as Record<string, unknown>).map(([k, v]) => (
                                           <div key={k} className="flex justify-between">
                                             <span className="text-sm text-gray-600 capitalize">
                                               {k.replace(/([A-Z])/g, ' $1').trim()}:
@@ -1203,14 +1206,14 @@ export default function DashboardLayout({
                             </ul>
                           </div>
                         )
-                      } else if (typeof value === 'object') {
+                      } else if (value !== null && typeof value === 'object') {
                         return (
                           <div key={key} className="border-b border-gray-100 pb-3">
                             <p className="text-sm font-semibold text-gray-600 mb-2 capitalize">
                               {key.replace(/([A-Z])/g, ' $1').trim()}
                             </p>
                             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                              {Object.entries(value).map(([k, v]) => (
+                              {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
                                 <div key={k} className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600 capitalize">
                                     {k.replace(/([A-Z])/g, ' $1').trim()}:

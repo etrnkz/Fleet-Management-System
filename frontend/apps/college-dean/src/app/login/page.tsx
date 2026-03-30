@@ -24,6 +24,7 @@ export default function LoginPage() {
       
       // Store tokens and user data
       localStorage.setItem('accessToken', response.access_token)
+      localStorage.setItem('access_token', response.access_token)
       localStorage.setItem('refreshToken', response.refresh_token)
       localStorage.setItem('user', JSON.stringify(response.user))
       
@@ -145,17 +146,18 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-emerald-500 text-white py-3 rounded-lg font-medium hover:bg-emerald-600 transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
-          {/* Sign Up Link */}
-          <p className="mt-8 text-center text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
-              Sign Up
+          <div className="mt-8 text-center border-t border-gray-100 pt-6">
+            <Link
+              href="/"
+              className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors"
+            >
+              ← Back to portal overview
             </Link>
-          </p>
+          </div>
         </div>
       </div>
 

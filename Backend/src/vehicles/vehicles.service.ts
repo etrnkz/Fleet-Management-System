@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { Vehicle, VehicleStatus } from './entities/vehicle.entity';
@@ -18,7 +22,9 @@ export class VehiclesService {
     });
 
     if (existing) {
-      throw new ConflictException('Vehicle with this plate number already exists');
+      throw new ConflictException(
+        'Vehicle with this plate number already exists',
+      );
     }
 
     const vehicle = this.vehicleRepository.create(createVehicleDto);
@@ -31,7 +37,10 @@ export class VehiclesService {
     });
   }
 
-  async findAvailable(startDateTime?: Date, endDateTime?: Date): Promise<Vehicle[]> {
+  async findAvailable(
+    startDateTime?: Date,
+    endDateTime?: Date,
+  ): Promise<Vehicle[]> {
     // For now, return all active vehicles not under maintenance
     // In Phase 3, we'll check against trip allocations
     return this.vehicleRepository.find({
@@ -73,19 +82,27 @@ export class VehiclesService {
     return vehicle;
   }
 
-  async update(id: string, updateVehicleDto: UpdateVehicleDto): Promise<Vehicle> {
+  async update(
+    id: string,
+    updateVehicleDto: UpdateVehicleDto,
+  ): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
 
-    if (updateVehicleDto.plateNumber && updateVehicleDto.plateNumber !== vehicle.plateNumber) {
+    if (
+      updateVehicleDto.plateNumber &&
+      updateVehicleDto.plateNumber !== vehicle.plateNumber
+    ) {
       const existing = await this.vehicleRepository.findOne({
-        where: { 
+        where: {
           plateNumber: updateVehicleDto.plateNumber,
           id: Not(id),
         },
       });
 
       if (existing) {
-        throw new ConflictException('Vehicle with this plate number already exists');
+        throw new ConflictException(
+          'Vehicle with this plate number already exists',
+        );
       }
     }
 
@@ -99,14 +116,19 @@ export class VehiclesService {
     return this.vehicleRepository.save(vehicle);
   }
 
-  async setMaintenanceStatus(id: string, underMaintenance: boolean): Promise<Vehicle> {
+  async setMaintenanceStatus(
+    id: string,
+    underMaintenance: boolean,
+  ): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
-    vehicle.status = underMaintenance ? VehicleStatus.Maintenance : VehicleStatus.Active;
-    
+    vehicle.status = underMaintenance
+      ? VehicleStatus.Maintenance
+      : VehicleStatus.Active;
+
     if (underMaintenance) {
       vehicle.lastMaintenanceDate = new Date();
     }
-    
+
     return this.vehicleRepository.save(vehicle);
   }
 
@@ -118,9 +140,15 @@ export class VehiclesService {
 
   async getStatistics() {
     const total = await this.vehicleRepository.count();
-    const active = await this.vehicleRepository.count({ where: { status: VehicleStatus.Active } });
-    const underMaintenance = await this.vehicleRepository.count({ where: { status: VehicleStatus.Maintenance } });
-    const inactive = await this.vehicleRepository.count({ where: { status: VehicleStatus.Inactive } });
+    const active = await this.vehicleRepository.count({
+      where: { status: VehicleStatus.Active },
+    });
+    const underMaintenance = await this.vehicleRepository.count({
+      where: { status: VehicleStatus.Maintenance },
+    });
+    const inactive = await this.vehicleRepository.count({
+      where: { status: VehicleStatus.Inactive },
+    });
 
     return {
       total,

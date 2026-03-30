@@ -7,7 +7,13 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -23,7 +29,8 @@ export class NotificationsController {
   @ApiQuery({ name: 'isRead', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'List of notifications' })
   findAll(@Request() req, @Query('isRead') isRead?: string) {
-    const isReadBool = isRead === 'true' ? true : isRead === 'false' ? false : undefined;
+    const isReadBool =
+      isRead === 'true' ? true : isRead === 'false' ? false : undefined;
     return this.notificationsService.findByUser(req.user.id, isReadBool);
   }
 

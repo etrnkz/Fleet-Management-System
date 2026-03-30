@@ -68,8 +68,8 @@ export default function LoginPage() {
     try {
       const response = await authApi.login(formData.email, formData.password)
       
-      // Store the token
       localStorage.setItem('access_token', response.access_token)
+      localStorage.setItem('accessToken', response.access_token)
       
       if (rememberMe) {
         const expiryDate = new Date()

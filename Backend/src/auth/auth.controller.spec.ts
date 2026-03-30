@@ -3,7 +3,11 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto, UserRole } from './dto/register.dto';
-import { BadRequestException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 describe('AuthController', () => {
@@ -54,9 +58,9 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    const loginDto: LoginDto = { 
-      email: 'test@example.com', 
-      password: 'Password123!' 
+    const loginDto: LoginDto = {
+      email: 'test@example.com',
+      password: 'Password123!',
     };
     const mockIp = '192.168.1.1';
     const mockUserAgent = 'Mozilla/5.0';
@@ -83,23 +87,23 @@ describe('AuthController', () => {
 
     it('should throw UnauthorizedException when login fails', async () => {
       mockAuthService.login.mockRejectedValue(
-        new UnauthorizedException('Invalid credentials')
+        new UnauthorizedException('Invalid credentials'),
       );
 
       await expect(
-        controller.login(loginDto, mockIp, mockUserAgent)
+        controller.login(loginDto, mockIp, mockUserAgent),
       ).rejects.toThrow(UnauthorizedException);
-      
+
       expect(authService.login).toHaveBeenCalledWith(loginDto);
     });
 
     it('should handle rate limiting', async () => {
       mockAuthService.login.mockResolvedValue(successfulResponse);
-    
+
       for (let i = 0; i < 5; i++) {
         await controller.login(loginDto, mockIp, mockUserAgent);
       }
-      
+
       expect(authService.login).toHaveBeenCalledTimes(5);
     });
   });
@@ -139,23 +143,24 @@ describe('AuthController', () => {
 
     it('should throw BadRequestException for duplicate email', async () => {
       mockAuthService.register.mockRejectedValue(
-        new BadRequestException('Email already exists')
+        new BadRequestException('Email already exists'),
       );
 
       await expect(
-        controller.register(registerDto, '192.168.1.1')
+        controller.register(registerDto, '192.168.1.1'),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw ForbiddenException when registration is closed', async () => {
-      mockAuthService.validateRegistrationOpen = jest.fn()
+      mockAuthService.validateRegistrationOpen = jest
+        .fn()
         .mockRejectedValue(new ForbiddenException('Registration is closed'));
     });
 
     it('should validate DTO correctly', async () => {
       const invalidDto = { ...registerDto, email: 'invalid-email' };
-      
-      expect(true).toBe(true); 
+
+      expect(true).toBe(true);
     });
   });
 
@@ -163,7 +168,7 @@ describe('AuthController', () => {
     it('should refresh token successfully', async () => {
       const refreshToken = 'valid-refresh-token';
       const newAccessToken = { access_token: 'new-jwt-token' };
-      
+
       mockAuthService.refreshToken.mockResolvedValue(newAccessToken);
 
       const result = await controller.refreshToken(`Bearer ${refreshToken}`);
@@ -173,15 +178,19 @@ describe('AuthController', () => {
     });
 
     it('should throw BadRequestException when no token provided', async () => {
-      await expect(controller.refreshToken('')).rejects.toThrow(BadRequestException);
-      await expect(controller.refreshToken(undefined)).rejects.toThrow(BadRequestException);
+      await expect(controller.refreshToken('')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(controller.refreshToken(undefined)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('logout', () => {
     it('should call AuthService.logout with token', async () => {
       const token = 'valid-jwt-token';
-      
+
       mockAuthService.logout.mockResolvedValue(undefined);
 
       const result = await controller.logout(`Bearer ${token}`);
@@ -201,23 +210,25 @@ describe('AuthController', () => {
   describe('Edge Cases', () => {
     it('should handle empty request body', async () => {
       const emptyDto = {} as LoginDto;
-      
+
       mockAuthService.login.mockRejectedValue(new BadRequestException());
-      
+
       await expect(
-        controller.login(emptyDto, '192.168.1.1', 'test-agent')
+        controller.login(emptyDto, '192.168.1.1', 'test-agent'),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should handle service throwing unexpected errors', async () => {
-      mockAuthService.login.mockRejectedValue(new Error('Database connection failed'));
-      
+      mockAuthService.login.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
+
       await expect(
         controller.login(
           { email: 'test@example.com', password: 'Password123!' },
           '192.168.1.1',
-          'test-agent'
-        )
+          'test-agent',
+        ),
       ).rejects.toThrow(Error);
     });
   });

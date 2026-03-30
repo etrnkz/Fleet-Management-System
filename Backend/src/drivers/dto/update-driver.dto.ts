@@ -5,18 +5,18 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { DriverStatus } from '../entities/driver.entity';
 
 export class UpdateDriverDto extends PartialType(CreateDriverDto) {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     enum: DriverStatus,
     example: DriverStatus.Available,
-    description: 'Driver status'
+    description: 'Driver status',
   })
   @IsEnum(DriverStatus)
   @IsOptional()
   status?: DriverStatus;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     example: 4.5,
-    description: 'Driver rating (0-5)'
+    description: 'Driver rating (0-5)',
   })
   @IsNumber()
   @IsOptional()

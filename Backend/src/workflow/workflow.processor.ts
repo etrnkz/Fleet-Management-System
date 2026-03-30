@@ -12,7 +12,7 @@ export class WorkflowProcessor {
   @Process('check-timeout')
   async handleTimeout(job: Job<{ tripId: string }>) {
     this.logger.log(`Processing timeout check for trip: ${job.data.tripId}`);
-    
+
     try {
       await this.workflowService.handleTimeout(job.data.tripId);
       this.logger.log(`Timeout check completed for trip: ${job.data.tripId}`);
@@ -28,7 +28,7 @@ export class WorkflowProcessor {
   @Process('timeout-warning')
   async handleTimeoutWarning(job: Job<{ tripId: string }>) {
     this.logger.log(`Processing timeout warning for trip: ${job.data.tripId}`);
-    
+
     try {
       await this.workflowService.handleTimeoutWarning(job.data.tripId);
       this.logger.log(`Timeout warning sent for trip: ${job.data.tripId}`);

@@ -6,7 +6,10 @@ export class ConfirmTransportDto {
   @IsBoolean()
   fuelApproved: boolean;
 
-  @ApiProperty({ example: 'Fuel allocated, ready for dispatch', required: false })
+  @ApiProperty({
+    example: 'Fuel allocated, ready for dispatch',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   comments?: string;

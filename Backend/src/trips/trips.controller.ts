@@ -8,7 +8,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TripsService } from './trips.service';
 import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
@@ -27,12 +32,13 @@ export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
 
   @Post()
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Create a new trip request',
-    description: 'Create a new trip request in DRAFT state. The trip must be submitted separately.'
+    description:
+      'Create a new trip request in DRAFT state. The trip must be submitted separately.',
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'Trip request created successfully',
     schema: {
       example: {
@@ -44,12 +50,15 @@ export class TripsController {
         endDateTime: '2024-01-20T17:00:00Z',
         passengerCount: 5,
         state: 'DRAFT',
-        createdAt: '2024-01-15T10:00:00Z'
-      }
-    }
+        createdAt: '2024-01-15T10:00:00Z',
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - invalid or missing token' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - invalid or missing token',
+  })
   create(@Body() createTripDto: CreateTripDto, @Request() req) {
     return this.tripsService.create(createTripDto, req.user);
   }
@@ -71,7 +80,10 @@ export class TripsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update trip request (draft only)' })
-  @ApiResponse({ status: 200, description: 'Trip request updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Trip request updated successfully',
+  })
   @ApiResponse({ status: 400, description: 'Can only update draft trips' })
   update(
     @Param('id') id: string,
@@ -82,35 +94,40 @@ export class TripsController {
   }
 
   @Post(':id/submit')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Submit trip request for approval',
-    description: 'Submit a DRAFT trip for approval. Validates 48-hour advance booking requirement and starts the approval workflow.'
+    description:
+      'Submit a DRAFT trip for approval. Validates 48-hour advance booking requirement and starts the approval workflow.',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Trip request submitted successfully',
     schema: {
       example: {
         id: 'uuid',
         state: 'PENDING_DEPARTMENT',
         message: 'Trip submitted for department approval',
-        timeoutAt: '2024-01-17T10:00:00Z'
-      }
-    }
+        timeoutAt: '2024-01-17T10:00:00Z',
+      },
+    },
   })
-  @ApiResponse({ status: 400, description: 'Trip already submitted or less than 48 hours advance' })
+  @ApiResponse({
+    status: 400,
+    description: 'Trip already submitted or less than 48 hours advance',
+  })
   @ApiResponse({ status: 404, description: 'Trip not found' })
   submit(@Param('id') id: string, @Request() req) {
     return this.tripsService.submit(id, req.user);
   }
 
   @Post(':id/approve')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Approve trip request at current level',
-    description: 'Approve trip at your authorization level (Department Head, College Head, or Dean). Moves trip to next approval level or to allocation.'
+    description:
+      'Approve trip at your authorization level (Department Head, College Head, or Dean). Moves trip to next approval level or to allocation.',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Trip request approved',
     schema: {
       example: {
@@ -118,11 +135,14 @@ export class TripsController {
         state: 'PENDING_COLLEGE',
         message: 'Trip approved by Department Head',
         approvedBy: 'John Doe',
-        approvedAt: '2024-01-16T14:30:00Z'
-      }
-    }
+        approvedAt: '2024-01-16T14:30:00Z',
+      },
+    },
   })
-  @ApiResponse({ status: 403, description: 'Insufficient permissions or not your turn to approve' })
+  @ApiResponse({
+    status: 403,
+    description: 'Insufficient permissions or not your turn to approve',
+  })
   @ApiResponse({ status: 404, description: 'Trip not found' })
   approve(
     @Param('id') id: string,
@@ -147,7 +167,10 @@ export class TripsController {
   @Post(':id/allocate')
   @ApiOperation({ summary: 'Allocate vehicle and driver to trip' })
   @ApiResponse({ status: 200, description: 'Resources allocated successfully' })
-  @ApiResponse({ status: 403, description: 'Only Deployment Team can allocate' })
+  @ApiResponse({
+    status: 403,
+    description: 'Only Deployment Team can allocate',
+  })
   allocate(
     @Param('id') id: string,
     @Body() allocateTripDto: AllocateTripDto,
@@ -167,20 +190,34 @@ export class TripsController {
   @Post(':id/confirm-transport')
   @ApiOperation({ summary: 'Transport office confirmation' })
   @ApiResponse({ status: 200, description: 'Transport confirmed successfully' })
-  @ApiResponse({ status: 403, description: 'Only Transport Office can confirm' })
+  @ApiResponse({
+    status: 403,
+    description: 'Only Transport Office can confirm',
+  })
   confirmTransport(
     @Param('id') id: string,
     @Body() confirmTransportDto: any,
     @Request() req,
   ) {
-    return this.tripsService.confirmTransport(id, confirmTransportDto, req.user);
+    return this.tripsService.confirmTransport(
+      id,
+      confirmTransportDto,
+      req.user,
+    );
   }
 
   @Post(':id/start')
   @ApiOperation({ summary: 'Start trip' })
   @ApiResponse({ status: 200, description: 'Trip started successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid state or validation failed' })
-  startTrip(@Param('id') id: string, @Body() startTripDto: any, @Request() req) {
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid state or validation failed',
+  })
+  startTrip(
+    @Param('id') id: string,
+    @Body() startTripDto: any,
+    @Request() req,
+  ) {
     return this.tripsService.startTrip(id, startTripDto, req.user);
   }
 
@@ -197,12 +234,13 @@ export class TripsController {
   }
 
   @Get('pending/approvals')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get pending approvals for current user',
-    description: 'Get all trips waiting for approval at your authorization level'
+    description:
+      'Get all trips waiting for approval at your authorization level',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'List of pending approvals',
     schema: {
       example: [
@@ -214,10 +252,10 @@ export class TripsController {
           startDateTime: '2024-01-20T09:00:00Z',
           state: 'PENDING_DEPARTMENT',
           submittedAt: '2024-01-15T10:00:00Z',
-          timeoutAt: '2024-01-17T10:00:00Z'
-        }
-      ]
-    }
+          timeoutAt: '2024-01-17T10:00:00Z',
+        },
+      ],
+    },
   })
   getPendingApprovals(@Request() req) {
     return this.tripsService.getPendingApprovals(req.user.id, req.user.role);
@@ -225,8 +263,14 @@ export class TripsController {
 
   @Post(':id/complete-early')
   @ApiOperation({ summary: 'Complete trip early (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Trip completed early successfully' })
-  @ApiResponse({ status: 403, description: 'Only Transport Office or Deployment Team can complete early' })
+  @ApiResponse({
+    status: 200,
+    description: 'Trip completed early successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Only Transport Office or Deployment Team can complete early',
+  })
   completeEarly(
     @Param('id') id: string,
     @Body() earlyCompleteTripDto: EarlyCompleteTripDto,
@@ -238,7 +282,10 @@ export class TripsController {
   @Post(':id/feedback')
   @ApiOperation({ summary: 'Submit trip feedback' })
   @ApiResponse({ status: 201, description: 'Feedback submitted successfully' })
-  @ApiResponse({ status: 400, description: 'Trip not completed or feedback already exists' })
+  @ApiResponse({
+    status: 400,
+    description: 'Trip not completed or feedback already exists',
+  })
   submitFeedback(
     @Param('id') id: string,
     @Body() createFeedbackDto: CreateFeedbackDto,
@@ -248,12 +295,12 @@ export class TripsController {
   }
 
   @Get('statistics/overview')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Get trip statistics',
-    description: 'Get comprehensive statistics about all trips in the system'
+    description: 'Get comprehensive statistics about all trips in the system',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Trip statistics',
     schema: {
       example: {
@@ -269,13 +316,13 @@ export class TripsController {
           IN_PROGRESS: 4,
           COMPLETED: 100,
           CANCELLED: 7,
-          REJECTED: 3
+          REJECTED: 3,
         },
         totalFuelCost: 45000,
         totalDistance: 12500,
-        completionRate: 66.7
-      }
-    }
+        completionRate: 66.7,
+      },
+    },
   })
   getStatistics() {
     return this.tripsService.getStatistics();
@@ -283,7 +330,10 @@ export class TripsController {
 
   @Get('feedback/statistics')
   @ApiOperation({ summary: 'Get feedback statistics' })
-  @ApiResponse({ status: 200, description: 'Feedback statistics and analytics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Feedback statistics and analytics',
+  })
   getFeedbackStatistics() {
     return this.tripsService.getFeedbackStatistics();
   }

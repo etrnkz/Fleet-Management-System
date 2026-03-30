@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { tripApi, maintenanceApi, vehicleApi } from '../../../lib/api'
+import { tripApi, maintenanceApi, vehicleApi } from '@/lib/api'
 
 export default function BudgetPage() {
   const [trips, setTrips] = useState<any[]>([])

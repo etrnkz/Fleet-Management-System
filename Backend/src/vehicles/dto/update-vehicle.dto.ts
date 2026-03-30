@@ -5,10 +5,10 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { VehicleStatus } from '../entities/vehicle.entity';
 
 export class UpdateVehicleDto extends PartialType(CreateVehicleDto) {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     enum: VehicleStatus,
     example: VehicleStatus.Active,
-    description: 'Vehicle status'
+    description: 'Vehicle status',
   })
   @IsEnum(VehicleStatus)
   @IsOptional()

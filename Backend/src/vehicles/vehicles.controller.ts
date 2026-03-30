@@ -10,7 +10,13 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -48,8 +54,16 @@ export class VehiclesController {
 
   @Get('available')
   @ApiOperation({ summary: 'Get available vehicles' })
-  @ApiQuery({ name: 'startDateTime', required: false, description: 'Start date/time for availability check' })
-  @ApiQuery({ name: 'endDateTime', required: false, description: 'End date/time for availability check' })
+  @ApiQuery({
+    name: 'startDateTime',
+    required: false,
+    description: 'Start date/time for availability check',
+  })
+  @ApiQuery({
+    name: 'endDateTime',
+    required: false,
+    description: 'End date/time for availability check',
+  })
   @ApiResponse({ status: 200, description: 'List of available vehicles' })
   findAvailable(
     @Query('startDateTime') startDateTime?: string,

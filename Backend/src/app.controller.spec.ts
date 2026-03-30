@@ -134,7 +134,7 @@ describe('AppController', () => {
 
     it('should return valid JSON structure even with missing env vars', () => {
       const originalEnv = process.env;
-      
+
       delete process.env.NODE_ENV;
       delete process.env.npm_package_version;
 
@@ -150,7 +150,7 @@ describe('AppController', () => {
 
       expect(result).toHaveProperty('version');
       expect(result).toHaveProperty('environment');
-      
+
       process.env = originalEnv;
     });
   });

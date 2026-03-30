@@ -83,6 +83,19 @@ export default function DashboardLayout({
 
   const unreadCount = notifications.filter((n: any) => !n.read).length
 
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('user')
+      localStorage.removeItem('rememberedEmail')
+    } catch {
+      /* ignore */
+    }
+    router.push('/login')
+  }
+
   const handleNotificationClick = (notification: any) => {
     setSelectedTrip(notification)
     setShowNotifications(false)
@@ -130,11 +143,6 @@ export default function DashboardLayout({
     } catch (error: any) {
       showToast(error.message || 'Failed to update profile', 'error')
     }
-  }
-
-  const handleLogout = () => {
-    localStorage.clear()
-    router.push('/login')
   }
 
   const isActive = (path: string) => pathname === path
@@ -610,10 +618,11 @@ export default function DashboardLayout({
                 New Report
               </button>
 
-              <button 
-                onClick={() => router.push('/')}
+              <button
+                type="button"
+                onClick={handleLogout}
                 className="flex items-center gap-2 px-3 md:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-                title="Logout"
+                title="Sign out"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

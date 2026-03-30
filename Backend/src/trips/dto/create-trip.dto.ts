@@ -1,4 +1,11 @@
-import { IsEnum, IsString, IsDateString, IsInt, Min, IsNotEmpty } from 'class-validator';
+import {
+  IsEnum,
+  IsString,
+  IsDateString,
+  IsInt,
+  Min,
+  IsNotEmpty,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { TripType } from '../entities/trip-request.entity';
 

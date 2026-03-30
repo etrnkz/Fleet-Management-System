@@ -7,7 +7,7 @@ export class InspectMaintenanceDto {
   @IsNotEmpty()
   inspectionNotes: string;
 
-  @ApiProperty({ example: 500.00 })
+  @ApiProperty({ example: 500.0 })
   @IsNumber()
   @Min(0)
   estimatedCost: number;

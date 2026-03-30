@@ -4,7 +4,11 @@ import { Repository } from 'typeorm';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { WorkflowConfiguration } from './entities/workflow-config.entity';
-import { TripRequest, TripType, TripState } from '../trips/entities/trip-request.entity';
+import {
+  TripRequest,
+  TripType,
+  TripState,
+} from '../trips/entities/trip-request.entity';
 import { Approval, ApprovalStatus } from '../trips/entities/approval.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
@@ -25,7 +29,9 @@ export class WorkflowService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async getActiveWorkflow(tripType: TripType): Promise<WorkflowConfiguration | null> {
+  async getActiveWorkflow(
+    tripType: TripType,
+  ): Promise<WorkflowConfiguration | null> {
     return this.workflowConfigRepo.findOne({
       where: { tripType, isActive: true },
     });
@@ -33,13 +39,15 @@ export class WorkflowService {
 
   async initializeWorkflow(trip: TripRequest): Promise<void> {
     const workflow = await this.getActiveWorkflow(trip.tripType);
-    
+
     if (!workflow) {
-      this.logger.warn(`No active workflow found for trip type: ${trip.tripType}`);
+      this.logger.warn(
+        `No active workflow found for trip type: ${trip.tripType}`,
+      );
       return;
     }
 
-    const firstStep = workflow.steps.find(s => s.order === 1);
+    const firstStep = workflow.steps.find((s) => s.order === 1);
     if (!firstStep) {
       this.logger.error('Workflow has no steps defined');
       return;
@@ -50,18 +58,18 @@ export class WorkflowService {
 
     // Schedule warning (24 hours before timeout if timeout > 24 hours)
     if (firstStep.timeoutHours > 24) {
-      await this.scheduleTimeoutWarning(
-        trip.id,
-        firstStep.timeoutHours - 24,
-      );
+      await this.scheduleTimeoutWarning(trip.id, firstStep.timeoutHours - 24);
     }
 
     this.logger.log(`Workflow initialized for trip ${trip.id}`);
   }
 
-  async scheduleTimeoutCheck(tripId: string, timeoutHours: number): Promise<void> {
+  async scheduleTimeoutCheck(
+    tripId: string,
+    timeoutHours: number,
+  ): Promise<void> {
     const delayMs = timeoutHours * 60 * 60 * 1000;
-    
+
     await this.workflowQueue.add(
       'check-timeout',
       { tripId },
@@ -73,12 +81,17 @@ export class WorkflowService {
       },
     );
 
-    this.logger.log(`Scheduled timeout check for trip ${tripId} in ${timeoutHours} hours`);
+    this.logger.log(
+      `Scheduled timeout check for trip ${tripId} in ${timeoutHours} hours`,
+    );
   }
 
-  async scheduleTimeoutWarning(tripId: string, delayHours: number): Promise<void> {
+  async scheduleTimeoutWarning(
+    tripId: string,
+    delayHours: number,
+  ): Promise<void> {
     const delayMs = delayHours * 60 * 60 * 1000;
-    
+
     await this.workflowQueue.add(
       'timeout-warning',
       { tripId },
@@ -90,7 +103,9 @@ export class WorkflowService {
       },
     );
 
-    this.logger.log(`Scheduled timeout warning for trip ${tripId} in ${delayHours} hours`);
+    this.logger.log(
+      `Scheduled timeout warning for trip ${tripId} in ${delayHours} hours`,
+    );
   }
 
   async handleTimeout(tripId: string): Promise<void> {
@@ -111,14 +126,14 @@ export class WorkflowService {
       TripState.PENDING_DEAN,
     ];
 
-    if (!pendingStates.includes(trip.state as TripState)) {
+    if (!pendingStates.includes(trip.state)) {
       this.logger.log(`Trip ${tripId} is no longer pending, skipping timeout`);
       return;
     }
 
     // Find the pending approval
     const pendingApproval = trip.approvals.find(
-      a => a.status === ApprovalStatus.Pending,
+      (a) => a.status === ApprovalStatus.Pending,
     );
 
     if (!pendingApproval) {
@@ -153,7 +168,9 @@ export class WorkflowService {
         { tripId: trip.id, requestNumber: trip.requestNumber },
       );
     } catch (error) {
-      this.logger.error(`Failed to send timeout notification: ${error.message}`);
+      this.logger.error(
+        `Failed to send timeout notification: ${error.message}`,
+      );
     }
 
     this.logger.log(`Trip ${tripId} auto-rejected due to timeout`);
@@ -176,12 +193,12 @@ export class WorkflowService {
       TripState.PENDING_DEAN,
     ];
 
-    if (!pendingStates.includes(trip.state as TripState)) {
+    if (!pendingStates.includes(trip.state)) {
       return;
     }
 
     const pendingApproval = trip.approvals.find(
-      a => a.status === ApprovalStatus.Pending,
+      (a) => a.status === ApprovalStatus.Pending,
     );
 
     if (!pendingApproval) {
@@ -198,7 +215,9 @@ export class WorkflowService {
         { tripId: trip.id, requestNumber: trip.requestNumber },
       );
     } catch (error) {
-      this.logger.error(`Failed to send warning notification: ${error.message}`);
+      this.logger.error(
+        `Failed to send warning notification: ${error.message}`,
+      );
     }
 
     this.logger.log(`Sent timeout warning for trip ${tripId}`);
@@ -207,7 +226,7 @@ export class WorkflowService {
   async cancelScheduledJobs(tripId: string): Promise<void> {
     // Get all jobs for this trip
     const jobs = await this.workflowQueue.getJobs(['delayed', 'waiting']);
-    
+
     for (const job of jobs) {
       if (job.data.tripId === tripId) {
         await job.remove();
@@ -227,13 +246,13 @@ export class WorkflowService {
       TripState.PENDING_DEAN,
     ];
 
-    if (pendingStates.includes(trip.state as TripState)) {
+    if (pendingStates.includes(trip.state)) {
       const workflow = await this.getActiveWorkflow(trip.tripType);
       if (workflow) {
-        const currentStep = workflow.steps.find(s => s.state === trip.state);
+        const currentStep = workflow.steps.find((s) => s.state === trip.state);
         if (currentStep) {
           await this.scheduleTimeoutCheck(trip.id, currentStep.timeoutHours);
-          
+
           if (currentStep.timeoutHours > 24) {
             await this.scheduleTimeoutWarning(
               trip.id,

@@ -6,10 +6,7 @@ import { MaintenanceRequest } from './entities/maintenance-request.entity';
 import { VehiclesModule } from '../vehicles/vehicles.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([MaintenanceRequest]),
-    VehiclesModule,
-  ],
+  imports: [TypeOrmModule.forFeature([MaintenanceRequest]), VehiclesModule],
   controllers: [MaintenanceController],
   providers: [MaintenanceService],
   exports: [MaintenanceService],
