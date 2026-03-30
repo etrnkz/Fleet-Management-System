@@ -62,7 +62,7 @@ export const tripApi = {
   },
 
   assignVehicleAndDriver: async (tripId: string, vehicleId: string, driverId: string) => {
-    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/assign`, {
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/allocate`, {
       method: 'POST',
       headers: createHeaders(),
       body: JSON.stringify({ vehicleId, driverId })
@@ -90,7 +90,7 @@ export const vehicleApi = {
   },
 
   getAvailableVehicles: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles?status=AVAILABLE`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles?status=Active`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -140,7 +140,7 @@ export const driverApi = {
   },
 
   getAvailableDrivers: async () => {
-    const response = await fetch(`${API_BASE_URL}/drivers?status=AVAILABLE`, {
+    const response = await fetch(`${API_BASE_URL}/drivers?status=Available`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -201,22 +201,8 @@ export const maintenanceApi = {
   }
 }
 
-// Statistics API
-export const statsApi = {
-  getDeploymentStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/statistics/deployment`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  getFleetUtilization: async () => {
-    const response = await fetch(`${API_BASE_URL}/statistics/fleet-utilization`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
-}
+// Statistics API - removed: /statistics/deployment and /statistics/fleet-utilization do not exist on the backend
+// Stats are derived from list endpoints (vehicles, trips, maintenance) instead
 
 // Notifications API
 export const notificationApi = {
@@ -229,7 +215,7 @@ export const notificationApi = {
 
   markAsRead: async (notificationId: string) => {
     const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
-      method: 'POST',
+      method: 'PATCH',
       headers: createHeaders()
     })
     return handleResponse(response)

@@ -2,661 +2,333 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { authApi, tripApi, vehicleApi, driverApi, maintenanceApi, statsApi } from '../../lib/api'
+import { tripApi, vehicleApi, driverApi, maintenanceApi } from '@/lib/api'
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [showAssignmentModal, setShowAssignmentModal] = useState(false)
-  const [selectedRequest, setSelectedRequest] = useState<any>(null)
   const [selectedPeriod, setSelectedPeriod] = useState('week')
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
-  const [showApprovalModal, setShowApprovalModal] = useState(false)
-  const [selectedApproval, setSelectedApproval] = useState<any>(null)
-  const [assignmentData, setAssignmentData] = useState({
-    vehicleId: '',
-    driverId: ''
-  })
-  const [userData, setUserData] = useState<any>(null)
-  const [approvedRequests, setApprovedRequests] = useState([])
-  const [availableVehicles, setAvailableVehicles] = useState([])
-  const [availableDrivers, setAvailableDrivers] = useState([])
-  const [pendingApprovals, setPendingApprovals] = useState([])
-  const [stats, setStats] = useState<any>(null)
+  const [approvedRequests, setApprovedRequests] = useState<any[]>([])
+  const [availableVehicles, setAvailableVehicles] = useState<any[]>([])
+  const [availableDrivers, setAvailableDrivers] = useState<any[]>([])
+  const [pendingMaintenance, setPendingMaintenance] = useState<any[]>([])
+  const [vehicleStats, setVehicleStats] = useState({ total: 0, available: 0, inUse: 0, maintenance: 0 })
   const [loading, setLoading] = useState(true)
+  const [selectedRequest, setSelectedRequest] = useState<any>(null)
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [assignmentData, setAssignmentData] = useState({ vehicleId: '', driverId: '' })
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
+  useEffect(() => { loadDashboardData() }, [])
 
   const loadDashboardData = async () => {
     try {
-      const [
-        user,
-        approvedTrips,
-        vehicles,
-        drivers,
-        maintenanceRequests,
-        deploymentStats
-      ] = await Promise.all([
-        authApi.getCurrentUser(),
-        tripApi.getApprovedTrips(),
-        vehicleApi.getAvailableVehicles(),
-        driverApi.getAvailableDrivers(),
-        maintenanceApi.getAllMaintenanceRequests(),
-        statsApi.getDeploymentStats()
+      const [approvedTrips, allVehicles, drivers, maintenance] = await Promise.all([
+        tripApi.getApprovedTrips().catch(() => []),
+        vehicleApi.getAllVehicles().catch(() => []),
+        driverApi.getAvailableDrivers().catch(() => []),
+        maintenanceApi.getAllMaintenanceRequests().catch(() => []),
       ])
-      
-      setUserData(user)
-      setApprovedRequests(approvedTrips.filter((trip: any) => !trip.vehicleId || !trip.driverId))
-      setAvailableVehicles(vehicles)
-      setAvailableDrivers(drivers)
-      setPendingApprovals(maintenanceRequests.filter((req: any) => req.status === 'PENDING').slice(0, 5))
-      setStats(deploymentStats)
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error)
-      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
-        router.push('/login')
-      }
+      const vehicles = Array.isArray(allVehicles) ? allVehicles : []
+      const trips = Array.isArray(approvedTrips) ? approvedTrips : []
+      const maint = Array.isArray(maintenance) ? maintenance : []
+      setApprovedRequests(trips)
+      setAvailableVehicles(vehicles.filter((v: any) => v.status === 'Active'))
+      setAvailableDrivers(Array.isArray(drivers) ? drivers : [])
+      setPendingMaintenance(maint.filter((m: any) => ['Submitted','UnderInspection'].includes(m.status)).slice(0, 5))
+      setVehicleStats({
+        total: vehicles.length,
+        available: vehicles.filter((v: any) => v.status === 'Active').length,
+        inUse: vehicles.filter((v: any) => v.status === 'In Use' || v.status === 'OnTrip').length,
+        maintenance: vehicles.filter((v: any) => v.status === 'UnderMaintenance' || v.status === 'Maintenance').length,
+      })
+    } catch (err) {
+      console.error(err)
     } finally {
       setLoading(false)
     }
   }
 
-  const unreadCount = approvedRequests.filter((req: any) => req.isNew).length
-
-  // Toast notification handler
-  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
-    setToastMessage(message)
-    setToastType(type)
-    setShowToast(true)
+  const showNotification = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToastMessage(msg); setToastType(type); setShowToast(true)
     setTimeout(() => setShowToast(false), 3000)
   }
 
-  // Handle View All Trips
-  const handleViewAllTrips = () => {
-    router.push('/trips')
-  }
-
-  // Handle Approval Actions
-  const handleApprove = (approval: any) => {
-    setPendingApprovals(prev => prev.filter(a => a.id !== approval.id))
-    showNotification(`${approval.type} approved successfully!`)
-  }
-
-  const handleViewDetails = (approval: any) => {
-    setSelectedApproval(approval)
-    setShowApprovalModal(true)
-  }
-
-  const handleOpenAssignment = (request: any) => {
-    setSelectedRequest(request)
-    setShowAssignmentModal(true)
-  }
-
-  const handleAssignVehicleDriver = async () => {
+  const handleAssign = async () => {
     if (!assignmentData.vehicleId || !assignmentData.driverId) {
-      showNotification('Please select both vehicle and driver', 'error')
-      return
+      showNotification('Please select both vehicle and driver', 'error'); return
     }
-
     try {
-      await tripApi.assignVehicleAndDriver(
-        selectedRequest.id,
-        assignmentData.vehicleId,
-        assignmentData.driverId
-      )
-
-      // Remove the assigned request from the list
-      setApprovedRequests(prev =>
-        prev.filter((req: any) => req.id !== selectedRequest.id)
-      )
-
-      setShowAssignmentModal(false)
-      setSelectedRequest(null)
-      setAssignmentData({ vehicleId: '', driverId: '' })
-
-      showNotification(`Vehicle and driver assigned successfully for ${selectedRequest.id}`)
-    } catch (error) {
-      console.error('Failed to assign vehicle and driver:', error)
-      showNotification('Failed to assign vehicle and driver', 'error')
+      await tripApi.assignVehicleAndDriver(selectedRequest.id, assignmentData.vehicleId, assignmentData.driverId)
+      setApprovedRequests(prev => prev.filter((r: any) => r.id !== selectedRequest.id))
+      setShowAssignModal(false); setSelectedRequest(null); setAssignmentData({ vehicleId: '', driverId: '' })
+      showNotification('Vehicle and driver assigned successfully!')
+    } catch (err: any) {
+      showNotification(err?.message || 'Failed to assign', 'error')
     }
   }
+
+  // Weekly trip counts by day
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+  const dayCounts = [1,2,3,4,5,6,0].map(d => approvedRequests.filter((t: any) => new Date(t.createdAt).getDay() === d).length)
+  const maxDay = Math.max(...dayCounts, 1)
+
+  // Donut
+  const circ = 2 * Math.PI * 40
+  const total = Math.max(vehicleStats.total, 1)
+  const availDash = (vehicleStats.available / total) * circ
+  const inUseDash = (vehicleStats.inUse / total) * circ
+  const maintDash = (vehicleStats.maintenance / total) * circ
+
+  const stateLabel: Record<string, { label: string; color: string }> = {
+    APPROVED_FOR_ALLOCATION: { label: 'APPROVED', color: 'bg-emerald-100 text-emerald-700' },
+    CAR_ALLOCATED: { label: 'ALLOCATED', color: 'bg-blue-100 text-blue-700' },
+    PENDING_TRANSPORT_CONFIRM: { label: 'CONFIRMING', color: 'bg-yellow-100 text-yellow-700' },
+    READY: { label: 'READY', color: 'bg-indigo-100 text-indigo-700' },
+    IN_PROGRESS: { label: 'ON ROUTE', color: 'bg-emerald-100 text-emerald-700' },
+  }
+  const gradients = ['from-cyan-400 to-blue-500','from-teal-400 to-cyan-500','from-blue-400 to-indigo-500','from-purple-400 to-pink-500']
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+    </div>
+  )
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
-      {loading && (
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-            ))}
-          </div>
-          <div className="h-64 bg-gray-200 rounded-xl"></div>
-        </div>
-      )}
-
-      {!loading && (
-        <>
-      {/* Toast Notification */}
+    <div className="p-4 md:p-6 space-y-6">
       {showToast && (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in">
-          <div className={`px-6 py-3 rounded-lg shadow-lg ${toastType === 'success' ? 'bg-emerald-600' : 'bg-red-600'} text-white`}>
-            {toastMessage}
-          </div>
+        <div className="fixed top-4 right-4 z-50">
+          <div className={`px-6 py-3 rounded-lg shadow-lg text-white ${toastType === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}>{toastMessage}</div>
         </div>
       )}
 
-      {/* Approval Details Modal */}
-      {showApprovalModal && selectedApproval && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">{selectedApproval.title}</h3>
-              <button
-                onClick={() => setShowApprovalModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="mb-6">
-              <p className="text-gray-600 mb-4">{selectedApproval.description}</p>
-              
-              {selectedApproval.type === 'Maintenance Request' && (
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Vehicle:</span>
-                    <span className="font-medium">Unit #V-901</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Service Type:</span>
-                    <span className="font-medium">Brake Inspection</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Estimated Cost:</span>
-                    <span className="font-medium">ETB 5,000</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Priority:</span>
-                    <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">High</span>
-                  </div>
-                </div>
-              )}
-              
-              {selectedApproval.type === 'Driver Onboarding' && (
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Driver Name:</span>
-                    <span className="font-medium">Robert Vance</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">License Type:</span>
-                    <span className="font-medium">Class A CDL</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Experience:</span>
-                    <span className="font-medium">8 years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Status:</span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">Pending Review</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowApprovalModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  handleApprove(selectedApproval)
-                  setShowApprovalModal(false)
-                }}
-                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-              >
-                Approve
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header with Period Selector */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Fleet Overview</h1>
-          <p className="text-sm text-gray-600 mt-1">Real-time fleet monitoring and deployment management</p>
+          <h1 className="text-2xl font-bold text-gray-800">Fleet Overview</h1>
+          <p className="text-sm text-gray-500 mt-1">Real-time fleet monitoring and deployment management</p>
         </div>
         <div className="flex gap-2">
-          {['day', 'week', 'month', 'year'].map((period) => (
-            <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
-                selectedPeriod === period
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {period.charAt(0).toUpperCase() + period.slice(1)}
+          {['day','week','month','year'].map(p => (
+            <button key={p} onClick={() => setSelectedPeriod(p)}
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors capitalize ${selectedPeriod === p ? 'bg-emerald-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
+              {p}
             </button>
           ))}
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        {/* Total Fleet */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <span className="text-xs md:text-sm text-gray-600">Total Fleet</span>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-              </svg>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Fleet', value: vehicleStats.total, icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z', bg: 'bg-emerald-100', color: 'text-emerald-600' },
+          { label: 'Available', value: vehicleStats.available, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', bg: 'bg-blue-100', color: 'text-blue-600' },
+          { label: 'In Use', value: vehicleStats.inUse, icon: 'M13 10V3L4 14h7v7l9-11h-7z', bg: 'bg-purple-100', color: 'text-purple-600' },
+          { label: 'Maintenance', value: vehicleStats.maintenance, icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', bg: 'bg-orange-100', color: 'text-orange-600' },
+        ].map(s => (
+          <div key={s.label} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-gray-600">{s.label}</span>
+              <div className={`w-10 h-10 ${s.bg} rounded-lg flex items-center justify-center`}>
+                <svg className={`w-5 h-5 ${s.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={s.icon} />
+                </svg>
+              </div>
             </div>
+            <p className="text-3xl font-bold text-gray-900">{s.value}</p>
           </div>
-          <div className="flex items-end gap-2">
-            <h3 className="text-2xl md:text-4xl font-bold text-gray-900">124</h3>
-            <span className="text-emerald-500 text-xs md:text-sm font-medium mb-1">↗5%</span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Since last month</p>
-        </div>
-
-        {/* Available */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <span className="text-xs md:text-sm text-gray-600">Available</span>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex items-end gap-2">
-            <h3 className="text-2xl md:text-4xl font-bold text-gray-900">82</h3>
-            <span className="text-gray-400 text-xs md:text-sm font-medium mb-1">→0%</span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Ready for deployment</p>
-        </div>
-
-        {/* In Use */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <span className="text-xs md:text-sm text-gray-600">In Use</span>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex items-end gap-2">
-            <h3 className="text-2xl md:text-4xl font-bold text-gray-900">32</h3>
-            <span className="text-emerald-500 text-xs md:text-sm font-medium mb-1">↗8%</span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">On active missions</p>
-        </div>
-
-        {/* Maintenance */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <span className="text-xs md:text-sm text-gray-600">Maintenance</span>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 md:w-6 md:h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex items-end gap-2">
-            <h3 className="text-2xl md:text-4xl font-bold text-gray-900">10</h3>
-            <span className="text-red-500 text-xs md:text-sm font-medium mb-1">↘1%</span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Out of service</p>
-        </div>
+        ))}
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* Fleet Utilization Chart */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-base md:text-lg font-bold text-gray-800">Fleet Utilization</h3>
-              <p className="text-xs md:text-sm text-gray-500">Vehicle usage over time</p>
-            </div>
-          </div>
-          
-          {/* Bar Chart */}
-          <div className="space-y-4">
-            {[
-              { day: 'Mon', value: 85, color: 'bg-emerald-500' },
-              { day: 'Tue', value: 72, color: 'bg-emerald-500' },
-              { day: 'Wed', value: 90, color: 'bg-emerald-500' },
-              { day: 'Thu', value: 68, color: 'bg-emerald-500' },
-              { day: 'Fri', value: 95, color: 'bg-emerald-500' },
-              { day: 'Sat', value: 45, color: 'bg-blue-400' },
-              { day: 'Sun', value: 30, color: 'bg-blue-400' },
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <span className="text-xs md:text-sm font-medium text-gray-600 w-10">{item.day}</span>
-                <div className="flex-1 bg-gray-100 rounded-full h-6 md:h-8 overflow-hidden">
-                  <div 
-                    className={`${item.color} h-full rounded-full flex items-center justify-end pr-2 md:pr-3 transition-all duration-500`}
-                    style={{ width: `${item.value}%` }}
-                  >
-                    <span className="text-xs md:text-sm font-medium text-white">{item.value}%</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Fleet Utilization */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <h2 className="text-base font-bold text-gray-900 mb-4">Trip Requests by Day</h2>
+          <div className="space-y-3">
+            {days.map((day, idx) => {
+              const pct = Math.round((dayCounts[idx] / maxDay) * 100)
+              return (
+                <div key={day} className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-gray-600 w-10">{day}</span>
+                  <div className="flex-1 bg-gray-100 rounded-full h-7 overflow-hidden">
+                    <div className="bg-emerald-500 h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
+                      style={{ width: `${pct}%`, minWidth: dayCounts[idx] > 0 ? '20px' : '0' }}>
+                      {dayCounts[idx] > 0 && <span className="text-xs font-medium text-white">{dayCounts[idx]}</span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
-        {/* Vehicle Status Distribution */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-base md:text-lg font-bold text-gray-800">Vehicle Status</h3>
-              <p className="text-xs md:text-sm text-gray-500">Current fleet distribution</p>
-            </div>
-          </div>
-
-          {/* Donut Chart Representation */}
-          <div className="flex items-center justify-center mb-6">
-            <div className="relative w-40 h-40 md:w-48 md:h-48">
-              {/* Donut segments */}
+        {/* Vehicle Status Donut */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <h2 className="text-base font-bold text-gray-900 mb-4">Vehicle Status</h2>
+          <div className="flex items-center gap-6">
+            <div className="relative w-40 h-40 flex-shrink-0">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                {/* Available - 66% */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="20"
-                  strokeDasharray="167 251"
-                  strokeDashoffset="0"
-                />
-                {/* In Use - 26% */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="20"
-                  strokeDasharray="65 251"
-                  strokeDashoffset="-167"
-                />
-                {/* Maintenance - 8% */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="#f97316"
-                  strokeWidth="20"
-                  strokeDasharray="20 251"
-                  strokeDashoffset="-232"
-                />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="20"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="20"
+                  strokeDasharray={`${availDash} ${circ - availDash}`} strokeDashoffset="0"/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#3b82f6" strokeWidth="20"
+                  strokeDasharray={`${inUseDash} ${circ - inUseDash}`} strokeDashoffset={-availDash}/>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#f97316" strokeWidth="20"
+                  strokeDasharray={`${maintDash} ${circ - maintDash}`} strokeDashoffset={-(availDash + inUseDash)}/>
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-gray-900">124</p>
+                  <p className="text-2xl font-bold text-gray-900">{vehicleStats.total}</p>
                   <p className="text-xs text-gray-500">Total</p>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Legend */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                <span className="text-xs md:text-sm text-gray-600">Available</span>
-              </div>
-              <span className="text-xs md:text-sm font-bold text-gray-900">82 (66%)</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-xs md:text-sm text-gray-600">In Use</span>
-              </div>
-              <span className="text-xs md:text-sm font-bold text-gray-900">32 (26%)</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                <span className="text-xs md:text-sm text-gray-600">Maintenance</span>
-              </div>
-              <span className="text-xs md:text-sm font-bold text-gray-900">10 (8%)</span>
+            <div className="space-y-3 flex-1">
+              {[
+                { label: 'Available', count: vehicleStats.available, color: 'bg-emerald-500' },
+                { label: 'In Use', count: vehicleStats.inUse, color: 'bg-blue-500' },
+                { label: 'Maintenance', count: vehicleStats.maintenance, color: 'bg-orange-500' },
+              ].map(s => (
+                <div key={s.label} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${s.color}`}></div>
+                    <span className="text-gray-600">{s.label}</span>
+                  </div>
+                  <span className="font-bold text-gray-900">{s.count} ({vehicleStats.total > 0 ? Math.round(s.count / vehicleStats.total * 100) : 0}%)</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Today's Active Trips */}
-        <div className="lg:col-span-2 bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h2 className="text-base md:text-lg font-bold text-gray-900">Today's Active Trips</h2>
-            <button 
-              onClick={handleViewAllTrips}
-              className="text-emerald-500 text-xs md:text-sm font-medium hover:text-emerald-600"
-            >
-              View All →
-            </button>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Active Trips */}
+        <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold text-gray-900">Trips Awaiting Allocation</h2>
+            <button onClick={() => router.push('/trips')} className="text-emerald-500 text-sm font-medium hover:text-emerald-600">View All →</button>
           </div>
-
           <div className="space-y-3">
-            {/* Trip 1 */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow">
-              <span className="text-xs text-gray-500 sm:w-20">#TRP-4521</span>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex-shrink-0"></div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm md:text-base">Marcus Miller</p>
-                <p className="text-xs md:text-sm text-gray-500 truncate">Volvo Marci#116 Thorn (AB-1234)</p>
+            {approvedRequests.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p className="text-sm">No trips awaiting allocation</p>
               </div>
-              <div className="text-center">
-                <span className="inline-block px-2 md:px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">ON ROUTE</span>
-              </div>
-              <div className="w-full sm:w-28">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 transition-all duration-500" style={{width: '75%'}}></div>
+            ) : approvedRequests.slice(0, 4).map((trip: any, idx: number) => {
+              const sl = stateLabel[trip.state] || { label: trip.state, color: 'bg-gray-100 text-gray-700' }
+              return (
+                <div key={trip.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow">
+                  <span className="text-xs text-gray-500 sm:w-24">{trip.requestNumber || trip.id?.slice(0,8)}</span>
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${gradients[idx % gradients.length]} flex-shrink-0 flex items-center justify-center`}>
+                    <span className="text-white font-bold">{trip.requester?.name?.charAt(0)?.toUpperCase() || 'T'}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 text-sm">{trip.requester?.name || 'Unknown'}</p>
+                    <p className="text-xs text-gray-500 truncate">→ {trip.destination}</p>
+                  </div>
+                  <span className={`px-3 py-1 ${sl.color} text-xs font-medium rounded-full`}>{sl.label}</span>
+                  <button onClick={() => { setSelectedRequest(trip); setShowAssignModal(true); setAssignmentData({ vehicleId: '', driverId: '' }) }}
+                    className="px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700 flex-shrink-0">
+                    Assign
+                  </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">75% Complete</p>
-              </div>
-            </div>
-
-            {/* Trip 2 */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow">
-              <span className="text-xs text-gray-500 sm:w-20">#TRP-4522</span>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex-shrink-0"></div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm md:text-base">Sarah Miller</p>
-                <p className="text-xs md:text-sm text-gray-500 truncate">Scania SarahR450 Miller (CD-5678)</p>
-              </div>
-              <div className="text-center">
-                <span className="inline-block px-2 md:px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">LOADING</span>
-              </div>
-              <div className="w-full sm:w-28">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-yellow-500 transition-all duration-500" style={{width: '25%'}}></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">25% Complete</p>
-              </div>
-            </div>
-
-            {/* Trip 3 */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow">
-              <span className="text-xs text-gray-500 sm:w-20">#TRP-4523</span>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex-shrink-0"></div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm md:text-base">James Wilson</p>
-                <p className="text-xs md:text-sm text-gray-500 truncate">Tesla JamesSemi Wilson (EL-9900)</p>
-              </div>
-              <div className="text-center">
-                <span className="inline-block px-2 md:px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">ON ROUTE</span>
-              </div>
-              <div className="w-full sm:w-28">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 transition-all duration-500" style={{width: '60%'}}></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">60% Complete</p>
-              </div>
-            </div>
-
-            {/* Trip 4 */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg hover:shadow-md transition-shadow">
-              <span className="text-xs text-gray-500 sm:w-20">#TRP-4524</span>
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex-shrink-0"></div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm md:text-base">Emma Davis</p>
-                <p className="text-xs md:text-sm text-gray-500 truncate">Mercedes Sprinter (FG-2468)</p>
-              </div>
-              <div className="text-center">
-                <span className="inline-block px-2 md:px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">DEPARTING</span>
-              </div>
-              <div className="w-full sm:w-28">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 transition-all duration-500" style={{width: '10%'}}></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">10% Complete</p>
-              </div>
-            </div>
+              )
+            })}
           </div>
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
-          {/* Pending Approvals */}
+          {/* Pending Maintenance Alerts */}
           <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Pending Approvals</h2>
-            
-            <div className="space-y-4">
-              {pendingApprovals.map((approval) => (
-                <div key={approval.id} className="flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    approval.icon === 'maintenance' ? 'bg-blue-100' : 'bg-purple-100'
-                  }`}>
-                    {approval.icon === 'maintenance' ? (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    )}
-                  </div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-900">Maintenance Alerts</h2>
+              {pendingMaintenance.length > 0 && (
+                <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded">{pendingMaintenance.length} NEW</span>
+              )}
+            </div>
+            <div className="space-y-3">
+              {pendingMaintenance.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">No pending alerts</p>
+              ) : pendingMaintenance.map((item: any) => (
+                <div key={item.id} className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900 text-sm">{approval.title}</p>
-                    <p className="text-xs text-gray-500">{approval.description}</p>
-                    <div className="flex gap-2 mt-2">
-                      <button 
-                        onClick={() => handleApprove(approval)}
-                        className="px-3 py-1 bg-emerald-500 text-white text-xs font-medium rounded hover:bg-emerald-600"
-                      >
-                        APPROVE
-                      </button>
-                      <button 
-                        onClick={() => handleViewDetails(approval)}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded hover:bg-gray-200"
-                      >
-                        DETAILS
-                      </button>
-                    </div>
+                    <p className="font-medium text-gray-900 text-sm">{item.issueDescription?.slice(0, 50) || 'Maintenance Required'}</p>
+                    <p className="text-xs text-gray-500">{item.vehicle?.plateNumber || 'Vehicle'} • {item.priority}</p>
+                    <p className="text-xs text-gray-400 mt-1">{item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}</p>
                   </div>
                 </div>
               ))}
-              
-              {pendingApprovals.length === 0 && (
-                <div className="text-center py-8">
-                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-gray-500 text-sm">No pending approvals</p>
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Recent Alerts */}
+          {/* Live Map Placeholder */}
           <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">Recent Alerts</h2>
-              <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded">3 NEW</span>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-gray-900">Live Operations</h2>
+              <span className="text-xs text-gray-500">{vehicleStats.inUse} Active Units</span>
             </div>
-            
+            <div className="h-48 bg-gradient-to-br from-blue-50 to-emerald-50 rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                <p className="text-gray-500 text-sm">Real-time Vehicle Tracking</p>
+                <p className="text-gray-400 text-xs mt-1">GPS integration active</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Assign Modal */}
+      {showAssignModal && selectedRequest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Assign Vehicle & Driver</h3>
+              <button onClick={() => setShowAssignModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">Trip: <span className="font-medium text-gray-800">{selectedRequest.requestNumber}</span> → {selectedRequest.destination}</p>
             <div className="space-y-4">
-              {/* Alert 1 */}
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 text-sm">Engine Overheat Alert</p>
-                  <p className="text-xs text-gray-500">Vehicle #V-202 (LA-NY Route)</p>
-                  <p className="text-xs text-gray-400 mt-1">2 mins ago</p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
+                <select value={assignmentData.vehicleId} onChange={e => setAssignmentData({ ...assignmentData, vehicleId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                  <option value="">Select vehicle...</option>
+                  {availableVehicles.map((v: any) => (
+                    <option key={v.id} value={v.id}>{v.make} {v.model} ({v.plateNumber})</option>
+                  ))}
+                </select>
               </div>
-
-              {/* Alert 2 */}
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 text-sm">Speeding Violation</p>
-                  <p className="text-xs text-gray-500">Unit #V-404 - Driver: Mark R.</p>
-                  <p className="text-xs text-gray-400 mt-1">15 mins ago</p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Driver</label>
+                <select value={assignmentData.driverId} onChange={e => setAssignmentData({ ...assignmentData, driverId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                  <option value="">Select driver...</option>
+                  {availableDrivers.map((d: any) => (
+                    <option key={d.id} value={d.id}>{d.user?.name || d.name} ({d.licenseNumber})</option>
+                  ))}
+                </select>
               </div>
-
-              {/* Alert 3 */}
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 text-sm">Geofence Entry</p>
-                  <p className="text-xs text-gray-500">Warehouse B - Trip #TRP-4522</p>
-                  <p className="text-xs text-gray-400 mt-1">45 mins ago</p>
-                </div>
-              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowAssignModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+              <button onClick={handleAssign} className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Assign</button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Live Operations Map */}
-      <div className="mt-6 bg-white rounded-xl p-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">LIVE OPERATIONS</h2>
-            <p className="text-sm text-gray-500">24 Active Units</p>
-          </div>
-        </div>
-        <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-emerald-50"></div>
-          <div className="relative z-10 text-center">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            <p className="text-gray-500 text-sm">Map View - Real-time Vehicle Tracking</p>
-            <p className="text-gray-400 text-xs mt-1">Integration with GPS tracking system</p>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

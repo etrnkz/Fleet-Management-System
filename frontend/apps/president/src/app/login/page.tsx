@@ -39,33 +39,31 @@ export default function Login() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Login failed')
 
-    // Simulate API call
-    setTimeout(() => {
-      if (email === 'president@hu.edu.et' && password === 'president123') {
-        if (rememberMe) {
-          const userData = { email, password }
-          localStorage.setItem('presidentRememberedUser', JSON.stringify(userData))
-        } else {
-          localStorage.removeItem('presidentRememberedUser')
-        }
-
-        localStorage.setItem('presidentLoggedIn', 'true')
-        localStorage.setItem('presidentUser', JSON.stringify({
-          name: 'Dr. Ahmed Hassan',
-          email: 'president@hu.edu.et',
-          role: 'University President'
-        }))
-        router.push('/dashboard')
+      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      if (rememberMe) {
+        localStorage.setItem('presidentRememberedUser', JSON.stringify({ email, password }))
       } else {
-        setError('Invalid email or password')
-        setIsLoading(false)
+        localStorage.removeItem('presidentRememberedUser')
       }
-    }, 1500)
+      router.push('/dashboard')
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password')
+      setIsLoading(false)
+    }
   }
 
   return (

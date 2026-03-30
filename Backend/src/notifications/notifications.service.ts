@@ -118,16 +118,16 @@ export class NotificationsService {
 
     // Get department head
     if (trip.requester.department) {
-      stakeholders.departmentHead = await this.usersService.findDepartmentHead(trip.requester.department.id);
+      stakeholders.departmentHead = await this.usersService.findDepartmentHead(trip.requester.department.id) ?? undefined;
     }
 
     // Get dean (college head)
     if (trip.requester.college) {
-      stakeholders.dean = await this.usersService.findCollegeHead(trip.requester.college.id);
+      stakeholders.dean = await this.usersService.findCollegeHead(trip.requester.college.id) ?? undefined;
     }
 
     // Get president
-    stakeholders.president = await this.usersService.findPresident();
+    stakeholders.president = await this.usersService.findPresident() ?? undefined;
 
     // Get deployment team members
     stakeholders.deploymentTeam = await this.usersService.findByRole(UserRole.DeploymentTeam);
@@ -313,7 +313,7 @@ export class NotificationsService {
     }
 
     // Notify other admins
-    const otherAdmins = [stakeholders.departmentHead, stakeholders.dean, stakeholders.president].filter(Boolean);
+    const otherAdmins = [stakeholders.departmentHead, stakeholders.dean, stakeholders.president].filter((u): u is User => !!u);
     if (otherAdmins.length > 0) {
       await this.createBulkNotifications(
         otherAdmins,

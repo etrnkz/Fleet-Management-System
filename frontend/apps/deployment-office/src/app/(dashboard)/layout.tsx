@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { authApi, notificationApi } from '../lib/api'
+import { authApi, notificationApi } from '@/lib/api'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 export default function DashboardLayout({
@@ -36,13 +36,8 @@ export default function DashboardLayout({
 
   const loadUserData = async () => {
     try {
-      const [user, notificationData] = await Promise.all([
-        authApi.getCurrentUser(),
-        notificationApi.getNotifications()
-      ])
-      
+      const user = await authApi.getCurrentUser()
       setUserData(user)
-      setNotifications(notificationData)
       
       const profile = {
         fullName: user.fullName || 'Deployment Officer',
@@ -55,11 +50,32 @@ export default function DashboardLayout({
       
       setProfileData(profile)
       setEditedData(profile)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load user data:', error)
-      if (error.message?.includes('token') || error.message?.includes('Unauthorized')) {
+      if (error?.message?.includes('token') || error?.message?.includes('Unauthorized')) {
         router.push('/login')
       }
+    }
+
+    // Load notifications separately so failure doesn't break layout
+    try {
+      const notificationData = await notificationApi.getNotifications()
+      setNotifications(Array.isArray(notificationData) ? notificationData : [])
+    } catch {
+      setNotifications([])
+    }
+  }
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await notificationApi.markAsRead(notificationId)
+      setNotifications(prev =>
+        (prev as any[]).map((n: any) =>
+          n.id === notificationId ? { ...n, isRead: true } : n
+        )
+      )
+    } catch {
+      // silently fail
     }
   }
 
@@ -521,118 +537,51 @@ export default function DashboardLayout({
                   <div
                     onMouseEnter={() => setShowNotifications(true)}
                     onMouseLeave={() => setShowNotifications(false)}
-                    className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[600px] overflow-y-auto"
+                    className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-y-auto"
                   >
-                    {/* Header */}
                     <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                      <h3 className="font-bold text-gray-900">Approved Requests</h3>
-                      <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">
-                        {approvedRequests.length} Pending
-                      </span>
+                      <h3 className="font-bold text-gray-900">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">
+                          {unreadCount} unread
+                        </span>
+                      )}
                     </div>
-
-                    {/* Notifications List */}
                     <div className="divide-y divide-gray-100">
-                      {approvedRequests.length === 0 ? (
+                      {(notifications as any[]).length === 0 ? (
                         <div className="p-8 text-center">
-                          <svg className="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p className="text-gray-500 text-sm">No pending assignments</p>
+                          <p className="text-gray-500 text-sm">No notifications</p>
                         </div>
                       ) : (
-                        approvedRequests.map(request => (
+                        (notifications as any[]).map((notif: any) => (
                           <div
-                            key={request.id}
-                            className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                              request.isNew ? 'bg-emerald-50' : ''
-                            }`}
+                            key={notif.id}
+                            onClick={() => handleMarkAsRead(notif.id)}
+                            className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50' : ''}`}
                           >
                             <div className="flex items-start gap-3">
-                              {/* Icon */}
-                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                request.approvedBy === 'President'
-                                  ? 'bg-purple-100'
-                                  : 'bg-blue-100'
-                              }`}>
-                                <svg className={`w-5 h-5 ${
-                                  request.approvedBy === 'President'
-                                    ? 'text-purple-600'
-                                    : 'text-blue-600'
-                                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
                               </div>
-
-                              {/* Content */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2 mb-1">
-                                  <p className="font-medium text-gray-900 text-sm">
-                                    {request.requestedBy}
-                                  </p>
-                                  {request.isNew && (
-                                    <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full flex-shrink-0">
-                                      NEW
-                                    </span>
-                                  )}
-                                </div>
-                                
-                                <p className="text-xs text-gray-600 mb-1">
-                                  {request.department}
-                                </p>
-                                
-                                <p className="text-sm text-gray-700 mb-2 line-clamp-1">
-                                  {request.purpose}
-                                </p>
-
-                                <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
-                                  <span className="flex items-center gap-1">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    {request.date}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                    </svg>
-                                    {request.passengers} passengers
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                      request.approvedBy === 'President'
-                                        ? 'bg-purple-100 text-purple-700'
-                                        : 'bg-blue-100 text-blue-700'
-                                    }`}>
-                                      Approved by {request.approvedBy}
-                                    </span>
-                                  </div>
-                                  <span className="text-xs text-gray-400">{request.timestamp}</span>
-                                </div>
-
-                                <button className="mt-3 w-full px-3 py-2 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600 transition-colors">
-                                  Assign Vehicle & Driver
-                                </button>
+                                <p className="text-sm text-gray-900 font-medium line-clamp-2">{notif.message || notif.title || 'Notification'}</p>
+                                {notif.createdAt && (
+                                  <p className="text-xs text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleDateString()}</p>
+                                )}
                               </div>
+                              {!notif.isRead && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
+                              )}
                             </div>
                           </div>
                         ))
                       )}
                     </div>
-
-                    {/* Footer */}
-                    {approvedRequests.length > 0 && (
-                      <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-3">
-                        <button className="w-full text-center text-sm font-medium text-emerald-600 hover:text-emerald-700">
-                          View All Requests
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
+
               </div>
 
               {/* Profile Dropdown */}
