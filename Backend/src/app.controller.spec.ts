@@ -55,10 +55,10 @@ describe('AppController', () => {
     it('should return health status with uptime', () => {
       const mockResponse = {
         status: 'OK',
-        uptime: expect.any(Number),
-        timestamp: expect.any(String),
+        uptime: 42.5,
+        timestamp: '2024-01-01T12:00:00.000Z',
         database: 'connected',
-        memoryUsage: expect.any(Object),
+        memoryUsage: { heapUsed: '1 MB' },
       };
 
       mockAppService.getHealthStatus.mockReturnValue(mockResponse);
@@ -80,9 +80,14 @@ describe('AppController', () => {
       const mockResponse = {
         service: 'Fleet Management API',
         status: 'operational',
-        timestamp: expect.any(String),
-        metrics: expect.any(Object),
+        timestamp: '2024-01-01T12:00:00.000Z',
+        metrics: {
+          uptime: '0 minutes',
+          memory: '10 MB used',
+          cpu: { user: 1, system: 1 },
+        },
         environment: 'development',
+        pid: 12345,
       };
 
       mockAppService.getSystemStatus.mockReturnValue(mockResponse);
@@ -105,8 +110,8 @@ describe('AppController', () => {
         version: '1.0.0',
         build: 'local',
         commit: 'development',
-        buildDate: expect.any(String),
-        node: expect.any(String),
+        buildDate: '2024-01-01T12:00:00.000Z',
+        node: 'v20.10.0',
       };
 
       mockAppService.getVersionInfo.mockReturnValue(mockResponse);
@@ -133,17 +138,17 @@ describe('AppController', () => {
     });
 
     it('should return valid JSON structure even with missing env vars', () => {
-      const originalEnv = process.env;
+      const originalEnv = { ...process.env };
 
       delete process.env.NODE_ENV;
       delete process.env.npm_package_version;
 
       mockAppService.getApiInfo.mockReturnValue({
         service: 'Fleet Management System API',
-        description: expect.any(String),
+        description: 'desc',
         version: '1.0.0',
         environment: 'development',
-        timestamp: expect.any(String),
+        timestamp: '2024-01-01T12:00:00.000Z',
       });
 
       const result = appController.getRoot();
