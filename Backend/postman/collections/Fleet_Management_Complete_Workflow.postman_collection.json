@@ -296,7 +296,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"testdriver@test.com\",\n  \"password\": \"password123\"\n}"
+							"raw": "{\n  \"email\": \"driver@test.com\",\n  \"password\": \"password123\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/login",
@@ -310,7 +310,7 @@
 								"login"
 							]
 						},
-						"description": "Use testdriver@test.com after request Create Test Driver User in this collection, or change email to driver@test.com if you ran create_maintenance_users.py."
+						"description": "Seeded by create_maintenance_users.py (driver@test.com). Driver profile is ensured in folder 2."
 					}
 				},
 				{
@@ -410,13 +410,26 @@
 					"name": "Create Test Vehicle",
 					"event": [
 						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const ts = Date.now();",
+									"pm.environment.set('workflow_vehicle_plate', 'PM-' + String(ts).slice(-8));",
+									"pm.environment.set('workflow_vehicle_code', 'VEH-PM-' + String(ts).slice(-6));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"if (pm.response.code === 200 || pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    pm.environment.set('test_vehicle_id', response.id);",
-									"}"
+									"pm.test('Vehicle created', function () {",
+									"    pm.expect([200, 201]).to.include(pm.response.code);",
+									"});",
+									"const response = pm.response.json();",
+									"pm.environment.set('test_vehicle_id', response.id);",
+									"pm.environment.set('vehicle_plate_number', response.plateNumber);"
 								],
 								"type": "text/javascript"
 							}
@@ -436,7 +449,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"vehicleId\": \"TEST-001\",\n  \"plateNumber\": \"ET-3-12345\",\n  \"vehicleType\": \"Bus\",\n  \"make\": \"Toyota\",\n  \"model\": \"Coaster\",\n  \"year\": 2023,\n  \"fuelType\": \"Diesel\",\n  \"status\": \"Active\",\n  \"capacity\": 30,\n  \"fuelCapacity\": 80,\n  \"currentMileage\": 15000\n}"
+							"raw": "{\n  \"vehicleId\": \"{{workflow_vehicle_code}}\",\n  \"plateNumber\": \"{{workflow_vehicle_plate}}\",\n  \"vehicleType\": \"Bus\",\n  \"make\": \"Toyota\",\n  \"model\": \"Coaster\",\n  \"year\": 2023,\n  \"fuelType\": \"Diesel\",\n  \"status\": \"Active\",\n  \"capacity\": 30,\n  \"fuelCapacity\": 80,\n  \"currentMileage\": 15000\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/vehicles",
@@ -448,19 +461,31 @@
 								"v1",
 								"vehicles"
 							]
-						}
+						},
+						"description": "Unique plate each run. Requires deployment@test.com login."
 					}
 				},
 				{
-					"name": "Create Test Driver User",
+					"name": "Ensure Driver Profile (driver@test.com)",
 					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set('workflow_driver_license', 'DL-PM-' + Date.now());"
+								],
+								"type": "text/javascript"
+							}
+						},
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"if (pm.response.code === 200 || pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    pm.environment.set('test_driver_user_id', response.data.id);",
+									"pm.test('Driver profile created or already exists', function () {",
+									"    pm.expect([201, 409]).to.include(pm.response.code);",
+									"});",
+									"if (pm.response.code === 201) {",
+									"    pm.environment.set('test_driver_id', pm.response.json().id);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -481,54 +506,50 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"testdriver@test.com\",\n  \"password\": \"password123\",\n  \"name\": \"Ahmed Mohammed\",\n  \"phoneNumber\": \"+251911234567\",\n  \"role\": \"Driver\"\n}"
+							"raw": "{\n  \"userId\": \"{{driver_user_id}}\",\n  \"licenseNumber\": \"{{workflow_driver_license}}\",\n  \"licenseExpiry\": \"2030-12-31\",\n  \"experienceYears\": 5\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/auth/register",
+							"raw": "{{base_url}}/api/v1/drivers",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"auth",
-								"register"
+								"drivers"
 							]
-						}
+						},
+						"description": "409 if profile already exists (re-runs). User driver@test.com must exist (create_maintenance_users.py)."
 					}
 				},
 				{
-					"name": "Create Test Driver Profile",
+					"name": "Resolve Driver Id for Allocation",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"if (pm.response.code === 200 || pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    pm.environment.set('test_driver_id', response.id);",
-									"}"
+									"pm.test('Driver resolved for allocation', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const drivers = pm.response.json();",
+									"    const uid = pm.environment.get('driver_user_id');",
+									"    const d = drivers.find((x) => x.user && x.user.id === uid);",
+									"    pm.expect(d, 'driver profile for driver@test.com').to.exist;",
+									"    pm.environment.set('test_driver_id', d.id);",
+									"});"
 								],
 								"type": "text/javascript"
 							}
 						}
 					],
 					"request": {
-						"method": "POST",
+						"method": "GET",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
 							{
 								"key": "Authorization",
 								"value": "Bearer {{deployment_token}}"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{test_driver_user_id}}\",\n  \"licenseNumber\": \"DL-123456\",\n  \"licenseExpiry\": \"2025-12-31T00:00:00.000Z\",\n  \"experienceYears\": 5\n}"
-						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/drivers",
 							"host": [
@@ -551,15 +572,27 @@
 					"name": "Step 1: Employee Creates Trip Request",
 					"event": [
 						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const start = new Date(Date.now() + 72 * 60 * 60 * 1000);",
+									"const end = new Date(start.getTime() + 8 * 60 * 60 * 1000);",
+									"pm.environment.set('trip_start_iso', start.toISOString());",
+									"pm.environment.set('trip_end_iso', end.toISOString());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"if (pm.response.code === 200 || pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    pm.environment.set('trip_id', response.id);",
-									"    console.log('Trip created with ID:', response.id);",
-									"    console.log('Trip state:', response.state);",
-									"}"
+									"pm.test('Trip created (48h+ advance rule)', function () {",
+									"    pm.expect([200, 201]).to.include(pm.response.code);",
+									"});",
+									"const response = pm.response.json();",
+									"pm.environment.set('trip_id', response.id);",
+									"console.log('Trip created with ID:', response.id);"
 								],
 								"type": "text/javascript"
 							}
@@ -579,7 +612,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"tripType\": \"Normal\",\n  \"destination\": \"Addis Ababa\",\n  \"purpose\": \"Business meeting with partners\",\n  \"startDateTime\": \"2026-03-22T08:00:00.000Z\",\n  \"endDateTime\": \"2026-03-22T18:00:00.000Z\",\n  \"passengerCount\": 5\n}"
+							"raw": "{\n  \"tripType\": \"Normal\",\n  \"destination\": \"Addis Ababa\",\n  \"purpose\": \"Business meeting with partners\",\n  \"startDateTime\": \"{{trip_start_iso}}\",\n  \"endDateTime\": \"{{trip_end_iso}}\",\n  \"passengerCount\": 5\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/trips",
@@ -681,6 +714,54 @@
 					}
 				},
 				{
+					"name": "Step 4: Dean Approves (College)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Dean approved', function () {",
+									"    pm.expect([200, 201]).to.include(pm.response.code);",
+									"});",
+									"const response = pm.response.json();",
+									"console.log('Dean approved. New state:', response.state);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dean_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"comments\": \"Approved by dean (college level)\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/trips/{{trip_id}}/approve",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trips",
+								"{{trip_id}}",
+								"approve"
+							]
+						}
+					}
+				},
+				{
 					"name": "Step 5: President Approves",
 					"event": [
 						{
@@ -728,7 +809,7 @@
 					}
 				},
 				{
-					"name": "Step 5: Deployment Team Allocates Vehicle and Driver",
+					"name": "Step 6: Deployment Team Allocates Vehicle and Driver",
 					"event": [
 						{
 							"listen": "test",
@@ -775,7 +856,7 @@
 					}
 				},
 				{
-					"name": "Step 6: Deployment Confirms Transport Ready",
+					"name": "Step 7: Transport Office Confirms Transport Ready",
 					"event": [
 						{
 							"listen": "test",
@@ -799,7 +880,7 @@
 							},
 							{
 								"key": "Authorization",
-								"value": "Bearer {{transport_token}}"
+								"value": "Bearer {{transport_office_token}}"
 							}
 						],
 						"body": {
@@ -827,7 +908,7 @@
 			"name": "4. Trip Execution",
 			"item": [
 				{
-					"name": "Step 7: Driver Starts Trip",
+					"name": "Step 8: Transport Office Starts Trip",
 					"event": [
 						{
 							"listen": "test",
@@ -851,12 +932,12 @@
 							},
 							{
 								"key": "Authorization",
-								"value": "Bearer {{deployment_token}}"
+								"value": "Bearer {{transport_office_token}}"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"plateNumber\": \"{{vehicle_plate_number}}\",\n  \"scannerValidation\": true,\n  \"startingMileage\": 15000,\n  \"fuelLevel\": 80,\n  \"notes\": \"Trip started on time\"\n}"
+							"raw": "{\n  \"plateNumber\": \"{{vehicle_plate_number}}\",\n  \"scannerValidation\": true\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/trips/{{trip_id}}/start",
@@ -874,7 +955,7 @@
 					}
 				},
 				{
-					"name": "Step 8: Add GPS Tracking Data",
+					"name": "Step 9: Add GPS Tracking Data",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -884,7 +965,7 @@
 							},
 							{
 								"key": "Authorization",
-								"value": "Bearer {{deployment_token}}"
+								"value": "Bearer {{transport_office_token}}"
 							}
 						],
 						"body": {
@@ -907,7 +988,7 @@
 					}
 				},
 				{
-					"name": "Step 9: Complete Trip",
+					"name": "Step 10: Complete Trip",
 					"event": [
 						{
 							"listen": "test",
@@ -931,12 +1012,12 @@
 							},
 							{
 								"key": "Authorization",
-								"value": "Bearer {{deployment_token}}"
+								"value": "Bearer {{transport_office_token}}"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"actualDistance\": 200.5,\n  \"actualFuelCost\": 145.75,\n  \"finalMileage\": 15200,\n  \"endingMileage\": 15200,\n  \"fuelLevel\": 65,\n  \"notes\": \"Trip completed successfully\"\n}"
+							"raw": "{\n  \"actualDistance\": 200.5,\n  \"actualFuelCost\": 145.75,\n  \"finalMileage\": 15200,\n  \"notes\": \"Trip completed successfully\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/trips/{{trip_id}}/complete",
@@ -983,7 +1064,7 @@
 					}
 				},
 				{
-					"name": "Step 10: Submit Trip Feedback",
+					"name": "Step 11: Submit Trip Feedback",
 					"event": [
 						{
 							"listen": "test",
@@ -1030,53 +1111,6 @@
 					}
 				},
 				{
-					"name": "Alternative: Complete Trip Early",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200 || pm.response.code === 201) {",
-									"    const response = pm.response.json();",
-									"    console.log('Trip completed early. New state:', response.state);",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Authorization",
-								"value": "Bearer {{transport_token}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"actualDistance\": 180.5,\n  \"actualFuelCost\": 135.75,\n  \"finalMileage\": 15180,\n  \"earlyCompletionReason\": \"Efficient route and light traffic\",\n  \"notes\": \"Trip completed 2 hours ahead of schedule\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/v1/trips/{{trip_id}}/complete-early",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"trips",
-								"{{trip_id}}",
-								"complete-early"
-							]
-						}
-					}
-				},
-				{
 					"name": "Get Trip Tracking Data",
 					"request": {
 						"method": "GET",
@@ -1108,7 +1142,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{transport_token}}"
+								"value": "Bearer {{transport_office_token}}"
 							}
 						],
 						"url": {
