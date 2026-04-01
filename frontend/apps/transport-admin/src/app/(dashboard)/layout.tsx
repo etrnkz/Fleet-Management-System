@@ -401,7 +401,7 @@ export default function DashboardLayout({
                 {pathname === '/tracking' && 'Live Tracking'}
                 {pathname === '/trips' && 'Trips'}
                 {pathname === '/fuel' && 'Fuel Management'}
-                {pathname === '/maintenance' && 'Maintenance'}
+                {pathname.startsWith('/maintenance') && 'Maintenance'}
                 {pathname === '/documents' && 'Documents'}
                 {pathname === '/reports' && 'Reports'}
                 {pathname === '/settings' && 'Settings'}

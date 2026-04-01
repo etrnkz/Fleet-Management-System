@@ -66,7 +66,16 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = 
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 
-  return response.json();
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  return JSON.parse(text) as T;
 }
 
 // Auth APIs
@@ -106,11 +115,17 @@ export const tripApi = {
   }),
 
   submit: (id: string) => apiFetch(`/trips/${id}/submit`, { method: 'POST' }),
-  
-  cancel: (id: string, reason: string) => apiFetch(`/trips/${id}/cancel`, {
-    method: 'POST',
-    body: JSON.stringify({ reason }),
-  }),
+
+  cancel: (id: string) =>
+    apiFetch(`/trips/${id}/cancel`, {
+      method: 'POST',
+    }),
+
+  /** Remove a trip that is still in DRAFT (not yet submitted). */
+  deleteDraft: (id: string) =>
+    apiFetch<void>(`/trips/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 // Notification APIs

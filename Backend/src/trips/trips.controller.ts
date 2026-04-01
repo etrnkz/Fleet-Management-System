@@ -5,8 +5,11 @@ import {
   Body,
   Patch,
   Param,
+  Delete,
   UseGuards,
   Request,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -91,6 +94,21 @@ export class TripsController {
     @Request() req,
   ) {
     return this.tripsService.update(id, updateTripDto, req.user);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Delete draft trip',
+    description: 'Permanently removes a trip that is still in DRAFT (not submitted).',
+  })
+  @ApiResponse({ status: 204, description: 'Draft trip deleted' })
+  @ApiResponse({
+    status: 400,
+    description: 'Trip is not a draft',
+  })
+  remove(@Param('id') id: string, @Request() req) {
+    return this.tripsService.remove(id, req.user);
   }
 
   @Post(':id/submit')

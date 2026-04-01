@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { tripApi, notificationApi, vehicleApi, userApi, getCurrentUser } from '../../lib/api'
+import { tripApi, notificationApi, vehicleApi, getCurrentUser } from '../../lib/api'
 
 // Defined outside DashboardPage to prevent state reset on parent re-render
 function RequestTripForm({ onSuccess, onToast, user }: {
@@ -517,8 +517,8 @@ export default function DashboardPage() {
           <div key={index} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 bg-${doc.color}-50 rounded flex items-center justify-center`}>
-                  <svg className={`w-6 h-6 text-${doc.color}-600`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-red-50 rounded flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                 </div>
@@ -636,7 +636,7 @@ export default function DashboardPage() {
                 <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${unreadCount > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={unreadCount > 0 ? 'text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-600' : 'text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500'}>
                         {unreadCount} New
                       </span>
                     </div>
@@ -669,7 +669,7 @@ export default function DashboardPage() {
                                     : 'bg-gray-300'
                                 }`} />
                                 <div className="flex-1 min-w-0">
-                                  <p className={`text-sm font-medium truncate ${notification.type?.toLowerCase().includes('reject') ? 'text-red-700' : 'text-gray-900'}`}>
+                                  <p className={notification.type?.toLowerCase().includes('reject') ? 'text-sm font-medium truncate text-red-700' : 'text-sm font-medium truncate text-gray-900'}>
                                     {notification.title || notification.type}
                                   </p>
                                   <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notification.message}</p>
@@ -768,7 +768,7 @@ export default function DashboardPage() {
 
       <div className="flex pt-16">
         {/* Sidebar */}
-        <aside className={`fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-sm z-30 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <aside className={sidebarOpen ? 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-sm z-30 transition-transform duration-300 translate-x-0 lg:translate-x-0' : 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-sm z-30 transition-transform duration-300 -translate-x-full lg:translate-x-0'}>
           <nav className="p-4 space-y-2">
             {[
               { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', type: 'section' },

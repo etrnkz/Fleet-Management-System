@@ -39,7 +39,7 @@ export default function DashboardPage() {
       const [vehicles, trips, maintenance, fuel, drivers, allTripsData] = await Promise.all([
         vehicleApi.getAll().catch(() => []),
         tripApi.getAll({ state: 'IN_PROGRESS' }).catch(() => []),
-        maintenanceApi.getAll('Submitted,EstimateProvided').catch(() => []),
+        maintenanceApi.getAll().catch(() => []),
         fuelApi.getAll().catch(() => []),
         driverApi.getAll().catch(() => []),
         tripApi.getAll().catch(() => []),
@@ -48,6 +48,16 @@ export default function DashboardPage() {
       const vehiclesArray = Array.isArray(vehicles) ? vehicles : []
       const tripsArray = Array.isArray(trips) ? trips : []
       const maintenanceArray = Array.isArray(maintenance) ? maintenance : []
+      const pendingMaintenanceStatuses = [
+        'Submitted',
+        'UnderInspection',
+        'EstimateProvided',
+        'BudgetApproved',
+        'InProgress',
+      ]
+      const openMaintenance = maintenanceArray.filter((m: any) =>
+        pendingMaintenanceStatuses.includes(m.status),
+      )
       const fuelArray = Array.isArray(fuel) ? fuel : []
       const driversArray = Array.isArray(drivers) ? drivers : []
       const allTripsArray = Array.isArray(allTripsData) ? allTripsData : []
@@ -60,15 +70,15 @@ export default function DashboardPage() {
       setStats({
         totalVehicles: vehiclesArray.length,
         activeTrips: tripsArray.length,
-        pendingMaintenance: maintenanceArray.length,
+        pendingMaintenance: openMaintenance.length,
         fuelUsage: fuelArray.reduce((sum: number, record: any) => sum + (record.quantity || 0), 0),
       })
 
       // Create alerts from real data
       const newAlerts: any[] = []
       
-      // Add maintenance alerts
-      maintenanceArray.slice(0, 2).forEach((m: any) => {
+      // Add maintenance alerts (open requests only)
+      openMaintenance.slice(0, 2).forEach((m: any) => {
         newAlerts.push({
           type: 'Maintenance Due',
           message: `${m.vehicle?.plateNumber || 'Vehicle'} requires maintenance`,
