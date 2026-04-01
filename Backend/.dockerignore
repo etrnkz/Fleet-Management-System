@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.github
+.env
+.env.*
+*.md
+coverage
+test
+**/*.spec.ts
+postman
+*.py
+npm-debug.log*
+.DS_Store

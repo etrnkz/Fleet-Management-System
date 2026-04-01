@@ -114,6 +114,9 @@ web_modules/
 .cache
 .parcel-cache
 
+# Vercel (per-app link metadata; keep local)
+**/.vercel
+
 # Next.js build output
 .next
 out

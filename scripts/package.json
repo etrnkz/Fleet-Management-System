@@ -3,9 +3,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "login-all": "node login-all-portals.mjs"
+    "login-all": "node login-all-portals.mjs",
+    "vercel:login": "npx vercel login",
+    "deploy:vercel": "node vercel-deploy-all.mjs",
+    "deploy:vercel:preview": "node vercel-deploy-all.mjs --preview",
+    "deploy:vercel:force": "node vercel-deploy-all.mjs --force",
+    "dev:all-webs": "node dev-all-webs.mjs"
   },
   "dependencies": {
     "playwright": "^1.49.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "vercel": "^50.38.2"
   }
 }

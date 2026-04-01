@@ -11,11 +11,11 @@ import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards } from '@nestjs/common';
 import { TrackingService } from './tracking.service';
 import { UpdateLocationDto } from './dto/update-location.dto';
-import { getCorsOrigins } from '../config/cors-origins';
+import { getCorsOrigin } from '../config/cors-origins';
 
 @WebSocketGateway({
   cors: {
-    origin: getCorsOrigins(),
+    origin: getCorsOrigin(),
     credentials: true,
   },
   namespace: '/tracking',
