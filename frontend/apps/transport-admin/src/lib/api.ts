@@ -75,6 +75,18 @@ export const tripApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  confirmTransport: (id: string, data: { estimatedFuelCost: number; estimatedDistance: number; notes?: string }) =>
+    apiFetch(`/trips/${id}/confirm-transport`, {
+      method: 'POST',
+      body: JSON.stringify({ ...data, fuelApproved: true }),
+    }),
+
+  updateAllocation: (id: string, data: { vehicleId?: string; driverId?: string; estimatedFuelCost?: number; estimatedDistance?: number }) =>
+    apiFetch(`/trips/${id}/allocate`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // Vehicle APIs

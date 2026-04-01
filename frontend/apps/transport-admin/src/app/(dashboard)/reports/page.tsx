@@ -189,10 +189,10 @@ export default function ReportsPage() {
               <div key={driver.id} className="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {driver.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                    {(driver.user?.name || driver.name || 'DR').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs md:text-sm font-semibold text-gray-900 truncate">{driver.name}</p>
+                    <p className="text-xs md:text-sm font-semibold text-gray-900 truncate">{driver.user?.name || driver.name || 'Unknown'}</p>
                     <p className="text-[10px] md:text-xs text-gray-500">{driver.licenseNumber}</p>
                   </div>
                 </div>

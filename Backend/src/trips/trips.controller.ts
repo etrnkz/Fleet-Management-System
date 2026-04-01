@@ -187,6 +187,13 @@ export class TripsController {
     return this.tripsService.cancel(id, req.user);
   }
 
+  @Post(':id/driver-reject')
+  @ApiOperation({ summary: 'Driver rejects assigned trip' })
+  @ApiResponse({ status: 200, description: 'Assignment rejected, trip returned for reassignment' })
+  driverReject(@Param('id') id: string, @Body() body: { reason: string }, @Request() req) {
+    return this.tripsService.driverRejectAssignment(id, body.reason || 'No reason provided', req.user);
+  }
+
   @Post(':id/confirm-transport')
   @ApiOperation({ summary: 'Transport office confirmation' })
   @ApiResponse({ status: 200, description: 'Transport confirmed successfully' })

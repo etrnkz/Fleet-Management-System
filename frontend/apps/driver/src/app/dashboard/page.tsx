@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { QRCodeSVG } from 'qrcode.react'
 import { authApi, tripApi, vehicleApi, statsApi, maintenanceApi } from '@/lib/api'
 
 export default function DriverDashboard() {
@@ -18,8 +19,11 @@ export default function DriverDashboard() {
   const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  
-  // Maintenance form state
+  const [selectedTripDetail, setSelectedTripDetail] = useState<any>(null)
+  const [qrTrip, setQrTrip] = useState<any>(null)
+  const [rejectTrip, setRejectTrip] = useState<any>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejecting, setRejecting] = useState(false)
   const [maintenanceForm, setMaintenanceForm] = useState({
     issueDescription: '',
     priority: 'Medium'
@@ -127,6 +131,22 @@ export default function DriverDashboard() {
       loadMaintenanceRequests()
     } catch (error: any) {
       setToast({ message: error.message || 'Failed to submit maintenance request', type: 'error' })
+    }
+  }
+
+  const handleRejectAssignment = async () => {
+    if (!rejectTrip || !rejectReason.trim()) return
+    setRejecting(true)
+    try {
+      await tripApi.rejectAssignment(rejectTrip.id, rejectReason)
+      setToast({ message: 'Assignment rejected. Deployment office will reassign.', type: 'success' })
+      setRejectTrip(null)
+      setRejectReason('')
+      loadAssignedTrips()
+    } catch (err: any) {
+      setToast({ message: err.message || 'Failed to reject', type: 'error' })
+    } finally {
+      setRejecting(false)
     }
   }
 
@@ -471,7 +491,9 @@ export default function DriverDashboard() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <button className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left">
+              <button
+                onClick={() => setActiveSection('assigned-trips')}
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -481,7 +503,9 @@ export default function DriverDashboard() {
                 <p className="text-sm text-gray-600">Begin your assigned trip</p>
               </button>
 
-              <button className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left">
+              <button
+                onClick={() => setActiveSection('maintenance')}
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left">
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -492,7 +516,9 @@ export default function DriverDashboard() {
                 <p className="text-sm text-gray-600">Report vehicle problems</p>
               </button>
 
-              <button className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left">
+              <button
+                onClick={() => setActiveSection('vehicle-info')}
+                className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow text-left">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -516,7 +542,14 @@ export default function DriverDashboard() {
             </div>
 
             <div className="grid gap-6">
-              {assignedTrips.map((trip) => (
+              {assignedTrips.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p className="text-sm">No assigned trips yet</p>
+                </div>
+              ) : assignedTrips.map((trip: any) => (
                 <div key={trip.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4">
@@ -528,40 +561,50 @@ export default function DriverDashboard() {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{trip.destination}</h3>
-                        <p className="text-sm text-gray-600 mt-1">Passenger: {trip.passenger}</p>
-                        <p className="text-sm text-gray-600">{trip.department}</p>
+                        <p className="text-sm text-gray-600 mt-1">Requester: {trip.requester?.name || 'N/A'}</p>
+                        <p className="text-sm text-gray-600">{trip.requester?.department?.name || ''}</p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                      {trip.status}
-                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">{trip.state}</span>
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
-                      <p className="text-sm text-gray-600">Date</p>
-                      <p className="font-medium text-gray-900">{trip.date}</p>
+                      <p className="text-sm text-gray-600">Start</p>
+                      <p className="font-medium text-gray-900">{trip.startDateTime ? new Date(trip.startDateTime).toLocaleDateString() : 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Time</p>
-                      <p className="font-medium text-gray-900">{trip.time}</p>
+                      <p className="text-sm text-gray-600">End</p>
+                      <p className="font-medium text-gray-900">{trip.endDateTime ? new Date(trip.endDateTime).toLocaleDateString() : 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Distance</p>
-                      <p className="font-medium text-gray-900">{trip.distance}</p>
+                      <p className="font-medium text-gray-900">{trip.estimatedDistance ? `${trip.estimatedDistance} km` : 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600">Vehicle</p>
-                      <p className="font-medium text-gray-900">ET-3-12345</p>
+                      <p className="font-medium text-gray-900">{trip.allocatedVehicle?.plateNumber || 'N/A'}</p>
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <button className="flex-1 bg-emerald-500 text-white py-2 px-4 rounded-lg hover:bg-emerald-600 transition-colors font-medium">
-                      Start Trip
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSelectedTripDetail(trip)}
+                      className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">
+                      Details
                     </button>
-                    <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                      View Details
+                    <button
+                      onClick={() => setQrTrip(trip)}
+                      className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Accept & Show QR
+                    </button>
+                    <button
+                      onClick={() => { setRejectTrip(trip); setRejectReason('') }}
+                      className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm">
+                      Reject
                     </button>
                   </div>
                 </div>
@@ -575,12 +618,28 @@ export default function DriverDashboard() {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">Active Trip</h2>
 
-            {activeTrips.map((trip) => (
+            {activeTrips.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
+                  </svg>
+                </div>
+                <p className="text-gray-600 font-medium">No active trip</p>
+                <p className="text-sm text-gray-400 mt-1">Your trip will appear here once the gate keeper scans your QR code to start it</p>
+                <button onClick={() => setActiveSection('assigned-trips')}
+                  className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
+                  View Assigned Trips
+                </button>
+              </div>
+            ) : activeTrips.map((trip: any) => (
               <div key={trip.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900">{trip.destination}</h3>
-                    <p className="text-gray-600 mt-1">Passenger: {trip.passenger}</p>
+                    <p className="text-gray-600 mt-1">Requester: {trip.requester?.name || 'N/A'}</p>
+                    <p className="text-sm text-gray-500">{trip.purpose}</p>
                   </div>
                   <span className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium flex items-center gap-2">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -588,86 +647,27 @@ export default function DriverDashboard() {
                   </span>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Trip Progress</span>
-                    <span className="text-sm font-medium text-emerald-600">{trip.progress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="bg-emerald-500 h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${trip.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div>
-                    <p className="text-sm text-gray-600">Start Time</p>
-                    <p className="font-medium text-gray-900">{trip.startTime}</p>
+                    <p className="text-sm text-gray-600">Start</p>
+                    <p className="font-medium text-gray-900">{trip.startDateTime ? new Date(trip.startDateTime).toLocaleString() : 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Est. Arrival</p>
-                    <p className="font-medium text-gray-900">{trip.estimatedArrival}</p>
+                    <p className="text-sm text-gray-600">Est. End</p>
+                    <p className="font-medium text-gray-900">{trip.endDateTime ? new Date(trip.endDateTime).toLocaleDateString() : 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Distance</p>
-                    <p className="font-medium text-gray-900">{trip.distance}</p>
+                    <p className="font-medium text-gray-900">{trip.estimatedDistance ? `${trip.estimatedDistance} km` : 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Department</p>
-                    <p className="font-medium text-gray-900">{trip.department}</p>
+                    <p className="text-sm text-gray-600">Vehicle</p>
+                    <p className="font-medium text-gray-900">{trip.allocatedVehicle?.plateNumber || 'N/A'}</p>
                   </div>
                 </div>
 
-                {/* Trip Log Form */}
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="font-semibold text-gray-900 mb-4">Trip Log</h4>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Current Odometer (km)
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="45,230"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Fuel Level (%)
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="75"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Notes / Issues
-                      </label>
-                      <textarea
-                        rows={3}
-                        placeholder="Add any notes or issues encountered during the trip..."
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      ></textarea>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button className="flex-1 bg-emerald-500 text-white py-3 px-4 rounded-lg hover:bg-emerald-600 transition-colors font-medium">
-                    Complete Trip
-                  </button>
-                  <button className="px-4 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium">
-                    Report Issue
-                  </button>
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800">
+                  Trip is in progress. Complete it at the destination or report any issues via the Maintenance section.
                 </div>
               </div>
             ))}
@@ -1053,6 +1053,123 @@ export default function DriverDashboard() {
         </div>
       </main>
       </div>
+
+      {/* Reject Assignment Modal */}
+      {rejectTrip && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Reject Assignment</h3>
+                <p className="text-sm text-gray-500">Trip to {rejectTrip.destination}</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">Please provide a reason. The deployment office will be notified to reassign this trip.</p>
+            <textarea
+              rows={3}
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder="e.g. Health issue, vehicle problem, emergency..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-red-400 mb-4"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setRejectTrip(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleRejectAssignment} disabled={!rejectReason.trim() || rejecting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50">
+                {rejecting ? 'Rejecting...' : 'Confirm Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {qrTrip && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Trip Accepted ✓</h3>
+              <button onClick={() => setQrTrip(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">Show this QR to the gate keeper to start your trip</p>
+            <div className="flex justify-center p-4 bg-white border-2 border-gray-100 rounded-xl mb-4">
+              <QRCodeSVG
+                value={JSON.stringify({
+                  tripId: qrTrip.id,
+                  requestNumber: qrTrip.requestNumber,
+                  destination: qrTrip.destination,
+                  vehicle: qrTrip.allocatedVehicle?.plateNumber,
+                  driver: userData?.name,
+                  action: 'START_TRIP'
+                })}
+                size={220}
+                level="H"
+                includeMargin
+              />
+            </div>
+            <div className="text-left space-y-1 bg-gray-50 rounded-lg p-3 text-sm">
+              <p><span className="text-gray-500">Trip:</span> <span className="font-semibold">{qrTrip.requestNumber}</span></p>
+              <p><span className="text-gray-500">To:</span> <span className="font-semibold">{qrTrip.destination}</span></p>
+              <p><span className="text-gray-500">Vehicle:</span> <span className="font-semibold">{qrTrip.allocatedVehicle?.plateNumber || 'N/A'}</span></p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trip Detail Modal - Read Only */}
+      {selectedTripDetail && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900">Trip Details</h3>
+              <button onClick={() => setSelectedTripDetail(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {[
+                { label: 'Trip ID', value: selectedTripDetail.requestNumber || selectedTripDetail.id?.slice(0,8) },
+                { label: 'Status', value: selectedTripDetail.state },
+                { label: 'Destination', value: selectedTripDetail.destination },
+                { label: 'Purpose', value: selectedTripDetail.purpose },
+                { label: 'Requester', value: selectedTripDetail.requester?.name },
+                { label: 'Department', value: selectedTripDetail.requester?.department?.name || 'N/A' },
+                { label: 'Passengers', value: selectedTripDetail.passengerCount },
+                { label: 'Start Date', value: selectedTripDetail.startDateTime ? new Date(selectedTripDetail.startDateTime).toLocaleString() : 'N/A' },
+                { label: 'End Date', value: selectedTripDetail.endDateTime ? new Date(selectedTripDetail.endDateTime).toLocaleString() : 'N/A' },
+                { label: 'Vehicle', value: selectedTripDetail.allocatedVehicle ? `${selectedTripDetail.allocatedVehicle.make} ${selectedTripDetail.allocatedVehicle.model} (${selectedTripDetail.allocatedVehicle.plateNumber})` : 'N/A' },
+                { label: 'Est. Distance', value: selectedTripDetail.estimatedDistance ? `${selectedTripDetail.estimatedDistance} km` : 'N/A' },
+                { label: 'Est. Fuel Cost', value: selectedTripDetail.estimatedFuelCost ? `ETB ${selectedTripDetail.estimatedFuelCost}` : 'N/A' },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex justify-between items-start py-2 border-b border-gray-50">
+                  <span className="text-sm text-gray-500 w-36 flex-shrink-0">{label}</span>
+                  <span className="text-sm font-medium text-gray-900 text-right">{value || 'N/A'}</span>
+                </div>
+              ))}
+            </div>
+            <div className="p-5 border-t border-gray-200">
+              <button onClick={() => setSelectedTripDetail(null)}
+                className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (

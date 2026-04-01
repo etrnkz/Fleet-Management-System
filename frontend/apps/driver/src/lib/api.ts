@@ -38,7 +38,7 @@ export const authApi = {
   },
 
   getCurrentUser: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
       headers: createHeaders()
     })
     return handleResponse(response)
@@ -48,24 +48,50 @@ export const authApi = {
 // Trip API
 export const tripApi = {
   getAssignedTrips: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips/assigned`, {
+    // Backend has no /trips/assigned — fetch all and filter by driver's user id
+    const response = await fetch(`${API_BASE_URL}/trips`, {
       headers: createHeaders()
     })
-    return handleResponse(response)
+    const trips = await handleResponse(response)
+    const arr = Array.isArray(trips) ? trips : []
+    // Get current user id from localStorage
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    const user = userStr ? JSON.parse(userStr) : null
+    const userId = user?.id
+    return arr.filter((t: any) =>
+      ['READY', 'CAR_ALLOCATED'].includes(t.state) &&
+      (t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId)
+    )
   },
 
   getActiveTrips: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips/active`, {
+    const response = await fetch(`${API_BASE_URL}/trips`, {
       headers: createHeaders()
     })
-    return handleResponse(response)
+    const trips = await handleResponse(response)
+    const arr = Array.isArray(trips) ? trips : []
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    const user = userStr ? JSON.parse(userStr) : null
+    const userId = user?.id
+    return arr.filter((t: any) =>
+      t.state === 'IN_PROGRESS' &&
+      (t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId)
+    )
   },
 
   getCompletedTrips: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips/completed`, {
+    const response = await fetch(`${API_BASE_URL}/trips`, {
       headers: createHeaders()
     })
-    return handleResponse(response)
+    const trips = await handleResponse(response)
+    const arr = Array.isArray(trips) ? trips : []
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    const user = userStr ? JSON.parse(userStr) : null
+    const userId = user?.id
+    return arr.filter((t: any) =>
+      t.state === 'COMPLETED' &&
+      (t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId)
+    )
   },
 
   startTrip: async (tripId: string) => {
@@ -85,6 +111,15 @@ export const tripApi = {
     return handleResponse(response)
   },
 
+  rejectAssignment: async (tripId: string, reason: string) => {
+    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/driver-reject`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify({ reason })
+    })
+    return handleResponse(response)
+  },
+
   updateTripLog: async (tripId: string, data: any) => {
     const response = await fetch(`${API_BASE_URL}/trips/${tripId}/log`, {
       method: 'POST',
@@ -98,10 +133,20 @@ export const tripApi = {
 // Vehicle API
 export const vehicleApi = {
   getAssignedVehicle: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/assigned`, {
+    // Get the driver's assigned trip and extract the vehicle
+    const response = await fetch(`${API_BASE_URL}/trips`, {
       headers: createHeaders()
     })
-    return handleResponse(response)
+    const trips = await handleResponse(response)
+    const arr = Array.isArray(trips) ? trips : []
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    const user = userStr ? JSON.parse(userStr) : null
+    const userId = user?.id
+    const activeTrip = arr.find((t: any) =>
+      ['READY', 'CAR_ALLOCATED', 'IN_PROGRESS'].includes(t.state) &&
+      (t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId)
+    )
+    return activeTrip?.allocatedVehicle || null
   },
 
   getVehicleInfo: async (vehicleId: string) => {
@@ -148,9 +193,21 @@ export const maintenanceApi = {
 // Statistics API
 export const statsApi = {
   getDriverStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/statistics/driver`, {
+    // Derive stats from trips
+    const response = await fetch(`${API_BASE_URL}/trips`, {
       headers: createHeaders()
     })
-    return handleResponse(response)
+    const trips = await handleResponse(response)
+    const arr = Array.isArray(trips) ? trips : []
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    const user = userStr ? JSON.parse(userStr) : null
+    const userId = user?.id
+    const myTrips = arr.filter((t: any) =>
+      t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId
+    )
+    return {
+      completedTrips: myTrips.filter((t: any) => t.state === 'COMPLETED').length,
+      totalDistance: myTrips.reduce((sum: number, t: any) => sum + (t.actualDistance || t.estimatedDistance || 0), 0),
+    }
   }
 }
