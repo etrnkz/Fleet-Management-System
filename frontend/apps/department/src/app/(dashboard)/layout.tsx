@@ -53,12 +53,23 @@ export default function DashboardLayout({
   const loadNotifications = async () => {
     try {
       const { notificationApi } = await import('@/lib/api')
-      const data = await notificationApi.getAll(false) // Get unread notifications
-      setNotifications(Array.isArray(data) ? data.slice(0, 5) : []) // Show only 5 most recent
+      const data = await notificationApi.getAll() // Get ALL notifications
+      setNotifications(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to load notifications:', error)
     }
   }
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const { notificationApi } = await import('@/lib/api')
+      await notificationApi.markAsRead(id)
+      // Remove from list so it disappears from dropdown
+      setNotifications(prev => prev.filter((n: any) => n.id !== id))
+    } catch {}
+  }
+
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length
   
   const getTimeAgo = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
@@ -177,6 +188,16 @@ export default function DashboardLayout({
         </svg>
       )
     },
+    { 
+      name: 'Notifications', 
+      href: '/notifications', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      ),
+      badge: unreadCount
+    },
   ]
 
   return (
@@ -223,7 +244,10 @@ export default function DashboardLayout({
                 }`}
               >
                 <span>{item.icon}</span>
-                <span className="text-sm">{item.name}</span>
+                <span className="flex-1 text-sm">{item.name}</span>
+                {(item as any).badge > 0 && (
+                  <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{(item as any).badge}</span>
+                )}
               </Link>
             )
           })}
@@ -271,9 +295,9 @@ export default function DashboardLayout({
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                {notifications.length > 0 && (
+                {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    {notifications.length}
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
@@ -283,23 +307,22 @@ export default function DashboardLayout({
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-40 max-h-[70vh] sm:max-h-[500px] overflow-y-auto">
                   {/* Header */}
                   <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="text-sm sm:text-base font-semibold text-gray-900">Pending Trip Requests</h3>
-                    <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
-                      {notifications.length} New
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900">Notifications</h3>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${unreadCount > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+                      {unreadCount} New
                     </span>
                   </div>
 
                   {/* Notifications List */}
                   <div className="divide-y divide-gray-200">
                     {notifications.length > 0 ? (
-                      notifications.map((notification) => {
-                        const timeAgo = getTimeAgo(new Date(notification.sentAt))
+                      notifications.map((notification: any) => {
+                        const timeAgo = getTimeAgo(new Date(notification.sentAt || notification.createdAt))
                         return (
-                          <Link
+                          <div
                             key={notification.id}
-                            href="/approvals"
-                            onClick={() => setNotificationDropdownOpen(false)}
-                            className="block p-3 sm:p-4 hover:bg-gray-50 transition-colors"
+                            onClick={() => { handleMarkAsRead(notification.id); setNotificationDropdownOpen(false) }}
+                            className={`block p-3 sm:p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.isRead ? 'bg-blue-50 border-l-4 border-blue-400' : ''}`}
                           >
                             <div className="flex items-start gap-2 sm:gap-3">
                               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -313,7 +336,7 @@ export default function DashboardLayout({
                                 <p className="text-xs text-gray-400 mt-1">{timeAgo}</p>
                               </div>
                             </div>
-                          </Link>
+                          </div>
                         )
                       })
                     ) : (

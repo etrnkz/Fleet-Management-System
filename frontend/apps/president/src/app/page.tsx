@@ -7,9 +7,15 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('presidentLoggedIn')
-    if (isLoggedIn === 'true') {
-      router.push('/dashboard')
+    const token = localStorage.getItem('access_token')
+    const user = localStorage.getItem('user')
+    if (token && user) {
+      try {
+        const parsed = JSON.parse(user)
+        if (parsed.role === 'President') {
+          router.push('/dashboard')
+        }
+      } catch {}
     }
   }, [router])
 
@@ -70,15 +76,11 @@ export default function Home() {
             </div>
             <div className="relative">
               <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-8 shadow-2xl">
-                <img
-                  src="/api/placeholder/600/400"
-                  alt="University Building"
-                  className="rounded-xl w-full"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-80 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-xl flex items-center justify-center"><svg class="w-32 h-32 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>'
-                  }}
-                />
+                <div className="w-full h-80 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-32 h-32 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
                 <div className="absolute bottom-12 left-12 right-12 bg-white rounded-xl p-4 shadow-lg">
                   <p className="text-sm font-medium text-gray-800">Executive Dashboard</p>
                   <p className="text-xs text-gray-600 mt-1">Real-time fleet analytics and approvals</p>

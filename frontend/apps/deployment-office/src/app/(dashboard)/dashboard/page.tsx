@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const [approvedRequests, setApprovedRequests] = useState<any[]>([])
+  const [allTrips, setAllTrips] = useState<any[]>([])
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([])
   const [availableDrivers, setAvailableDrivers] = useState<any[]>([])
   const [pendingMaintenance, setPendingMaintenance] = useState<any[]>([])
@@ -24,16 +25,18 @@ export default function DashboardPage() {
 
   const loadDashboardData = async () => {
     try {
-      const [approvedTrips, allVehicles, drivers, maintenance] = await Promise.all([
+      const [approvedTrips, allVehicles, drivers, maintenance, allTripsData] = await Promise.all([
         tripApi.getApprovedTrips().catch(() => []),
         vehicleApi.getAllVehicles().catch(() => []),
         driverApi.getAvailableDrivers().catch(() => []),
         maintenanceApi.getAllMaintenanceRequests().catch(() => []),
+        tripApi.getAllTrips().catch(() => []),
       ])
       const vehicles = Array.isArray(allVehicles) ? allVehicles : []
       const trips = Array.isArray(approvedTrips) ? approvedTrips : []
       const maint = Array.isArray(maintenance) ? maintenance : []
       setApprovedRequests(trips)
+      setAllTrips(Array.isArray(allTripsData) ? allTripsData : [])
       setAvailableVehicles(vehicles.filter((v: any) => v.status === 'Active'))
       setAvailableDrivers(Array.isArray(drivers) ? drivers : [])
       setPendingMaintenance(maint.filter((m: any) => ['Submitted','UnderInspection'].includes(m.status)).slice(0, 5))
@@ -203,6 +206,50 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Monthly Trip Trend */}
+      <div className="bg-white rounded-xl p-6 border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-bold text-gray-900">Monthly Trip Requests</h2>
+            <p className="text-xs text-gray-500">Last 6 months — real data</p>
+          </div>
+        </div>
+        {(() => {
+          const now = new Date()
+          const monthly = Array.from({ length: 6 }, (_, i) => {
+            const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+            const count = allTrips.filter((t: any) => {
+              const td = new Date(t.createdAt)
+              return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth()
+            }).length
+            return { label: d.toLocaleString('default', { month: 'short' }), count }
+          })
+          const maxVal = Math.max(...monthly.map(m => m.count), 1)
+          return (
+            <div>
+              <div className="flex items-end gap-2 h-32 border-b border-gray-100 pb-2">
+                {monthly.map((m, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                    <div className="relative w-full">
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        {m.count} trips
+                      </div>
+                      <div className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t hover:from-emerald-700 hover:to-emerald-500 transition-colors"
+                        style={{ height: `${(m.count / maxVal) * 120}px`, minHeight: m.count > 0 ? '4px' : '0' }}></div>
+                    </div>
+                    <span className="text-xs text-gray-400">{m.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
+                <div className="w-3 h-3 bg-emerald-500 rounded"></div>
+                <span>Total: {allTrips.length} trips</span>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Main Grid */}

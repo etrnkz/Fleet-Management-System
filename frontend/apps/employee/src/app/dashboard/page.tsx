@@ -4,6 +4,215 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { tripApi, notificationApi, vehicleApi, userApi, getCurrentUser } from '../../lib/api'
 
+// Defined outside DashboardPage to prevent state reset on parent re-render
+function RequestTripForm({ onSuccess, onToast, user }: {
+  onSuccess: () => void
+  onToast: (msg: string, type: 'success' | 'error') => void
+  user: any
+}) {
+  const minDateTime = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().slice(0, 16)
+  const [formData, setFormData] = useState({
+    destination: '',
+    purpose: '',
+    purposeCategory: 'Official Meeting',
+    pickupLocation: '',
+    notes: '',
+    startDateTime: '',
+    endDateTime: '',
+    passengerCount: 1,
+    tripType: 'Normal' as 'Normal' | 'VIP',
+  })
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const startTime = new Date(formData.startDateTime).getTime()
+    if (startTime - Date.now() < 48 * 60 * 60 * 1000) {
+      onToast('Trip must be requested at least 48 hours in advance', 'error')
+      return
+    }
+    if (new Date(formData.endDateTime) <= new Date(formData.startDateTime)) {
+      onToast('End date must be after start date', 'error')
+      return
+    }
+    setSubmitting(true)
+    try {
+      const purposeText = [
+        formData.purposeCategory,
+        formData.purpose ? `Details: ${formData.purpose}` : '',
+        formData.pickupLocation ? `Pickup: ${formData.pickupLocation}` : '',
+        formData.notes ? `Notes: ${formData.notes}` : '',
+      ].filter(Boolean).join(' | ')
+
+      const payload = {
+        destination: formData.destination,
+        purpose: purposeText,
+        startDateTime: formData.startDateTime,
+        endDateTime: formData.endDateTime,
+        passengerCount: formData.passengerCount,
+        tripType: formData.tripType,
+      }
+      const createdTrip: any = await tripApi.create(payload)
+      await tripApi.submit(createdTrip.id)
+      onToast('Trip request submitted successfully!', 'success')
+      onSuccess()
+    } catch (error: any) {
+      onToast(error.message || 'Failed to submit trip request', 'error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Request New Trip</h2>
+        <p className="text-sm text-gray-500 mt-1">Fill in all required details for your trip request</p>
+      </div>
+
+      <div className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+        <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-xs text-amber-700">Trip must be requested at least 48 hours in advance</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Trip Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Trip Type <span className="text-red-500">*</span></label>
+          <div className="grid grid-cols-2 gap-3">
+            {(['Normal', 'VIP'] as const).map(type => (
+              <button key={type} type="button"
+                onClick={() => setFormData({ ...formData, tripType: type })}
+                className={`py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                  formData.tripType === type
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}>
+                {type === 'Normal' ? '🚗 Normal Trip' : '⭐ VIP Trip'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Destination */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Destination <span className="text-red-500">*</span></label>
+          <input type="text" value={formData.destination}
+            onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+            placeholder="e.g. Dire Dawa Campus, Ministry of Education, Addis Ababa"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+            required />
+        </div>
+
+        {/* Purpose */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Purpose Category <span className="text-red-500">*</span></label>
+            <select value={formData.purposeCategory}
+              onChange={(e) => setFormData({ ...formData, purposeCategory: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              <option>Official Meeting</option>
+              <option>Academic Conference</option>
+              <option>Field Visit</option>
+              <option>Training & Workshop</option>
+              <option>Research Activity</option>
+              <option>Government Business</option>
+              <option>Student Activity</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Purpose Details</label>
+            <input type="text" value={formData.purpose}
+              onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+              placeholder="Brief description of the trip purpose"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+          </div>
+        </div>
+
+        {/* Pickup Location & Notes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Pickup Location</label>
+            <input type="text" value={formData.pickupLocation}
+              onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
+              placeholder="e.g. Main Gate, Admin Building, College of Engineering"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+            <input type="text" value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="e.g. Need large vehicle, accessibility requirements"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Departure Date & Time <span className="text-red-500">*</span></label>
+            <input type="datetime-local" value={formData.startDateTime} min={minDateTime}
+              onChange={(e) => setFormData({ ...formData, startDateTime: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Return Date & Time <span className="text-red-500">*</span></label>
+            <input type="datetime-local" value={formData.endDateTime} min={formData.startDateTime || minDateTime}
+              onChange={(e) => setFormData({ ...formData, endDateTime: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+          </div>
+        </div>
+
+        {/* Passengers */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Number of Passengers <span className="text-red-500">*</span></label>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => setFormData({ ...formData, passengerCount: Math.max(1, formData.passengerCount - 1) })}
+              className="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-lg font-bold">−</button>
+            <input type="number" value={formData.passengerCount}
+              onChange={(e) => setFormData({ ...formData, passengerCount: parseInt(e.target.value) || 1 })}
+              min="1" max="50"
+              className="w-24 px-4 py-3 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-emerald-500 outline-none" required />
+            <button type="button" onClick={() => setFormData({ ...formData, passengerCount: Math.min(50, formData.passengerCount + 1) })}
+              className="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-lg font-bold">+</button>
+            <span className="text-sm text-gray-500">passengers (including yourself)</span>
+          </div>
+        </div>
+
+        {/* Summary */}
+        {formData.destination && formData.startDateTime && formData.endDateTime && (
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
+            <p className="font-medium text-emerald-800 mb-1">Trip Summary</p>
+            <p className="text-emerald-700">📍 {formData.destination}</p>
+            <p className="text-emerald-700">📅 {new Date(formData.startDateTime).toLocaleString()} → {new Date(formData.endDateTime).toLocaleString()}</p>
+            <p className="text-emerald-700">👥 {formData.passengerCount} passenger{formData.passengerCount > 1 ? 's' : ''} • {formData.tripType} trip</p>
+          </div>
+        )}
+
+        <div className="flex gap-3 pt-2">
+          <button type="button"
+            onClick={() => setFormData({ destination: '', purpose: '', purposeCategory: 'Official Meeting', pickupLocation: '', notes: '', startDateTime: '', endDateTime: '', passengerCount: 1, tripType: 'Normal' })}
+            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+            Clear Form
+          </button>
+          <button type="submit" disabled={submitting}
+            className="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            {submitting ? (
+              <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Submitting...</>
+            ) : (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg> Submit Request</>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+
 export default function DashboardPage() {
   const router = useRouter()
   const [activeSection, setActiveSection] = useState('overview')
@@ -52,7 +261,7 @@ export default function DashboardPage() {
         notificationApi.getAll().catch(() => []),
         vehicleApi.getAll('Active').catch(() => [])
       ])
-      setTrips(Array.isArray(tripsData) ? tripsData : [])
+      setTrips(Array.isArray(tripsData) ? tripsData.filter((t: any) => t.state !== 'CANCELLED') : [])
       setNotifications(Array.isArray(notificationsData) ? notificationsData : [])
       setVehicles(Array.isArray(vehiclesData) ? vehiclesData : [])
     } catch (error) {
@@ -101,108 +310,7 @@ export default function DashboardPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Request Trip Form Component
-  const RequestTripForm = () => {
-    const [formData, setFormData] = useState({
-      destination: '',
-      purpose: 'Official Meeting',
-      startDateTime: '',
-      endDateTime: '',
-      passengerCount: 1,
-      tripType: 'Normal'
-    })
-    const [submitting, setSubmitting] = useState(false)
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
-      setSubmitting(true)
-      try {
-        const createdTrip: any = await tripApi.create(formData)
-        // Automatically submit the trip for approval
-        await tripApi.submit(createdTrip.id)
-        showToast('Trip request submitted successfully!', 'success')
-        loadDashboardData()
-        setActiveSection('overview')
-      } catch (error: any) {
-        showToast(error.message || 'Failed to submit trip request', 'error')
-      } finally {
-        setSubmitting(false)
-      }
-    }
-
-    return (
-      <div className="max-w-2xl mx-auto bg-white rounded-lg p-8 shadow-sm">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Request New Trip</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Destination</label>
-            <input
-              type="text"
-              value={formData.destination}
-              onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
-              placeholder="e.g. Dire Dawa Office"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Purpose</label>
-            <select
-              value={formData.purpose}
-              onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-            >
-              <option>Official Meeting</option>
-              <option>Conference</option>
-              <option>Field Visit</option>
-              <option>Training</option>
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start Date & Time</label>
-              <input
-                type="datetime-local"
-                value={formData.startDateTime}
-                onChange={(e) => setFormData({ ...formData, startDateTime: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">End Date & Time</label>
-              <input
-                type="datetime-local"
-                value={formData.endDateTime}
-                onChange={(e) => setFormData({ ...formData, endDateTime: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Number of Passengers</label>
-            <input
-              type="number"
-              value={formData.passengerCount}
-              onChange={(e) => setFormData({ ...formData, passengerCount: parseInt(e.target.value) })}
-              min="1"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {submitting ? 'Submitting...' : 'Submit Request'}
-          </button>
-        </form>
-      </div>
-    )
-  }
-
+  // Request Trip Form Component - defined outside to prevent re-creation on parent re-render
   // Overview Component
   const Overview = () => {
     const pendingTrips = trips.filter((t: any) => t.state?.includes('PENDING'))
@@ -400,13 +508,29 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Toast */}
       {toast.show && (
-        <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
-          <div className={`rounded-lg shadow-lg p-4 flex items-center gap-3 ${
-            toast.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+        <div className="fixed top-6 right-6 z-50 animate-bounce-once">
+          <div className={`flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border ${
+            toast.type === 'success'
+              ? 'bg-emerald-600 border-emerald-700 text-white'
+              : 'bg-red-600 border-red-700 text-white'
           }`}>
-            <p className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-              {toast.message}
-            </p>
+            <div className="flex-shrink-0">
+              {toast.type === 'success' ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <p className="text-sm font-semibold">{toast.message}</p>
+            <button onClick={() => setToast({ show: false, message: '', type: 'success' })} className="ml-2 opacity-70 hover:opacity-100">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
       )}
@@ -586,7 +710,7 @@ export default function DashboardPage() {
         {/* Main Content */}
         <main className="flex-1 p-6 lg:ml-64">
           {activeSection === 'overview' && <Overview />}
-          {activeSection === 'request' && <RequestTripForm />}
+          {activeSection === 'request' && <RequestTripForm onSuccess={() => { loadDashboardData(); setActiveSection('overview') }} onToast={showToast} user={user} />}
           {activeSection === 'vehicles' && <AvailableVehicles />}
           {activeSection === 'documents' && <DocumentCenter />}
         </main>
