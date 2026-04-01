@@ -231,6 +231,21 @@ export class TripsController {
     );
   }
 
+  @Post(':id/reject-transport')
+  @ApiOperation({ summary: 'Transport office rejection' })
+  @ApiResponse({ status: 200, description: 'Transport rejected successfully' })
+  @ApiResponse({
+    status: 403,
+    description: 'Only Transport Office can reject',
+  })
+  rejectTransport(
+    @Param('id') id: string,
+    @Body() rejectTransportDto: { reason: string },
+    @Request() req,
+  ) {
+    return this.tripsService.rejectTransport(id, rejectTransportDto, req.user);
+  }
+
   @Post(':id/start')
   @ApiOperation({ summary: 'Start trip' })
   @ApiResponse({ status: 200, description: 'Trip started successfully' })

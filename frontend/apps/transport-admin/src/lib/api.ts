@@ -70,19 +70,42 @@ export const tripApi = {
     body: JSON.stringify({ reason }),
   }),
 
-  allocate: (id: string, data: { vehicleId: string; driverId: string }) => 
+  allocate: (id: string, data: { vehicleId: string; driverId: string }) =>
     apiFetch(`/trips/${id}/allocate`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  confirmTransport: (id: string, data: { estimatedFuelCost: number; estimatedDistance: number; notes?: string }) =>
+  confirmTransport: (
+    id: string,
+    data: {
+      fuelApproved: boolean;
+      comments?: string;
+      estimatedFuelCost?: number;
+      estimatedDistance?: number;
+      notes?: string;
+    },
+  ) =>
     apiFetch(`/trips/${id}/confirm-transport`, {
       method: 'POST',
-      body: JSON.stringify({ ...data, fuelApproved: true }),
+      body: JSON.stringify(data),
     }),
 
-  updateAllocation: (id: string, data: { vehicleId?: string; driverId?: string; estimatedFuelCost?: number; estimatedDistance?: number }) =>
+  rejectTransport: (id: string, data: { reason: string }) =>
+    apiFetch(`/trips/${id}/reject-transport`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateAllocation: (
+    id: string,
+    data: {
+      vehicleId?: string;
+      driverId?: string;
+      estimatedFuelCost?: number;
+      estimatedDistance?: number;
+    },
+  ) =>
     apiFetch(`/trips/${id}/allocate`, {
       method: 'POST',
       body: JSON.stringify(data),

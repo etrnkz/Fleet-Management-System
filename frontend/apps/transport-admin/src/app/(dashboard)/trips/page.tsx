@@ -48,6 +48,9 @@ export default function TripsPage() {
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
   const [fuelForm, setFuelForm] = useState({ estimatedFuelCost: '', estimatedDistance: '', notes: '' })
   const [fuelSubmitting, setFuelSubmitting] = useState(false)
+  const [showRejectionModal, setShowRejectionModal] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [processingTrip, setProcessingTrip] = useState<string | null>(null)
 
   // Fetch data on mount
   useEffect(() => {
@@ -97,7 +100,7 @@ export default function TripsPage() {
     const statusMap: Record<string, { text: string; color: string; bgColor: string }> = {
       'IN_PROGRESS': { text: 'On Route', color: 'bg-emerald-500', bgColor: 'bg-emerald-50' },
       'READY': { text: 'Ready', color: 'bg-blue-500', bgColor: 'bg-blue-50' },
-      'CAR_ALLOCATED': { text: 'Scheduled', color: 'bg-blue-500', bgColor: 'bg-blue-50' },
+      'CAR_ALLOCATED': { text: 'Awaiting Approval', color: 'bg-orange-500', bgColor: 'bg-orange-50' },
       'PENDING_DEPARTMENT': { text: 'Pending', color: 'bg-yellow-500', bgColor: 'bg-yellow-50' },
       'PENDING_COLLEGE': { text: 'Pending', color: 'bg-yellow-500', bgColor: 'bg-yellow-50' },
       'PENDING_DEAN': { text: 'Pending', color: 'bg-yellow-500', bgColor: 'bg-yellow-50' },
@@ -169,10 +172,11 @@ export default function TripsPage() {
     if (!selectedTrip) return
     setFuelSubmitting(true)
     try {
-      await (tripApi as any).confirmTransport(selectedTrip.id, {
+      await tripApi.confirmTransport(selectedTrip.id, {
+        fuelApproved: true,
         estimatedFuelCost: Number(fuelForm.estimatedFuelCost) || 0,
         estimatedDistance: Number(fuelForm.estimatedDistance) || 0,
-        notes: fuelForm.notes,
+        comments: fuelForm.notes || undefined,
       })
       setToast({ message: 'Allocation approved and trip is now READY', type: 'success' })
       fetchTrips()
@@ -180,6 +184,26 @@ export default function TripsPage() {
       setToast({ message: err.message || 'Failed to approve', type: 'error' })
     } finally {
       setFuelSubmitting(false)
+    }
+  }
+
+  const handleRejectTransport = async () => {
+    if (!selectedTrip || !rejectionReason.trim()) return
+
+    try {
+      setProcessingTrip(selectedTrip.id)
+      await tripApi.rejectTransport(selectedTrip.id, {
+        reason: rejectionReason.trim()
+      })
+
+      setToast({ message: 'Transport rejected successfully', type: 'success' })
+      setShowRejectionModal(false)
+      setRejectionReason('')
+      await fetchTrips()
+    } catch (error: any) {
+      setToast({ message: error.message || 'Failed to reject transport', type: 'error' })
+    } finally {
+      setProcessingTrip(null)
     }
   }
 
@@ -500,10 +524,24 @@ export default function TripsPage() {
                           </div>
                         )}
 
-                        <button onClick={handleFuelApprove} disabled={fuelSubmitting}
-                          className="w-full py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors">
-                          {fuelSubmitting ? 'Approving...' : '✓ Approve & Mark Ready'}
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleFuelApprove}
+                            disabled={fuelSubmitting || processingTrip === selectedTrip.id}
+                            className="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                          >
+                            {fuelSubmitting ? 'Approving...' : '✓ Approve & Mark Ready'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowRejectionModal(true)}
+                            disabled={fuelSubmitting || processingTrip === selectedTrip.id}
+                            className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <>
@@ -565,6 +603,68 @@ export default function TripsPage() {
           )}
         </div>
       </div>
+
+      {/* Rejection Modal */}
+      {showRejectionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Reject Transport</h3>
+                  <p className="text-sm text-gray-500">Trip #{selectedTrip?.requestNumber}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rejection Reason <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Please provide a reason for rejecting this transport allocation..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    rows={4}
+                    required
+                  />
+                </div>
+
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> Rejecting will reset the allocation and send the trip back to the deployment team for reassignment.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowRejectionModal(false)
+                    setRejectionReason('')
+                  }}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRejectTransport}
+                  disabled={!rejectionReason.trim() || processingTrip === selectedTrip?.id}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {processingTrip === selectedTrip?.id ? 'Processing...' : 'Reject Transport'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

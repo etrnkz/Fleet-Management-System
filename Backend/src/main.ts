@@ -2,26 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { getCorsOrigins } from './config/cors-origins';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
   app.enableCors({
-    origin: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',')
-      : [
-          'http://localhost:3001', // Transport Admin
-          'http://localhost:3002', // College Dean
-          'http://localhost:3003', // Department
-          'http://localhost:3004', // Driver
-          'http://localhost:3005', // Deployment Office
-          'http://localhost:3006', // President (old)
-          'http://localhost:3007', // System Admin
-          'http://localhost:3008', // Employee
-          'http://localhost:3009', // President
-          'http://localhost:3010', // Maintenance
-        ],
+    origin: getCorsOrigins(),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
