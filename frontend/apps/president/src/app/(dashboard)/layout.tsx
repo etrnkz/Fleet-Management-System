@@ -337,9 +337,25 @@ export default function DashboardLayout({
                   <div className="p-3 md:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm md:text-base font-semibold text-gray-800">Notifications</h3>
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${notifications.filter((n: any) => !n.isRead).length > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                        {notifications.filter((n: any) => !n.isRead).length} New
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {notifications.filter((n: any) => !n.isRead).length > 0 && (
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation()
+                              try {
+                                await notificationApi.markAllAsRead()
+                                setNotifications((prev: any[]) => prev.map((n: any) => ({ ...n, isRead: true })))
+                              } catch {}
+                            }}
+                            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${notifications.filter((n: any) => !n.isRead).length > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                          {notifications.filter((n: any) => !n.isRead).length} New
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="divide-y divide-gray-100">

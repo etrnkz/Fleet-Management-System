@@ -156,7 +156,15 @@ export const notificationApi = {
 
   markAsRead: async (notificationId: string) => {
     const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
-      method: 'POST',
+      method: 'PATCH',
+      headers: createHeaders()
+    })
+    return handleResponse(response)
+  },
+
+  markAllAsRead: async () => {
+    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
+      method: 'PATCH',
       headers: createHeaders()
     })
     return handleResponse(response)
