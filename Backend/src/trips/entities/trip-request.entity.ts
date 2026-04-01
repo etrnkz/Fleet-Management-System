@@ -71,40 +71,40 @@ export class TripRequest {
   currentApprovalLevel: string | null;
 
   @ManyToOne(() => Vehicle, { nullable: true })
-  allocatedVehicle: Vehicle;
+  allocatedVehicle: Vehicle | null;
 
   @ManyToOne(() => Driver, { nullable: true })
-  allocatedDriver: Driver;
+  allocatedDriver: Driver | null;
 
   @ManyToOne(() => User, { nullable: true })
-  deploymentTeamMember: User;
+  deploymentTeamMember: User | null;
 
   @ManyToOne(() => User, { nullable: true })
-  transportOfficer: User;
+  transportOfficer: User | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  estimatedFuelCost: number;
+  estimatedFuelCost: number | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  actualFuelCost: number;
+  actualFuelCost: number | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  estimatedDistance: number;
+  estimatedDistance: number | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  actualDistance: number;
+  actualDistance: number | null;
 
   @Column({ type: 'text', nullable: true })
-  rejectionReason: string;
+  rejectionReason: string | null;
 
   @ManyToOne(() => User, { nullable: true })
-  rejectedBy: User;
+  rejectedBy: User | null;
 
   @Column({ type: 'datetime', nullable: true })
-  rejectedAt: Date;
+  rejectedAt: Date | null;
 
   @Column({ type: 'datetime', nullable: true })
-  completedAt: Date;
+  completedAt: Date | null;
 
   @OneToMany(() => Approval, (approval) => approval.tripRequest, {
     cascade: true,

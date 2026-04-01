@@ -585,6 +585,48 @@ export class TripsService {
     return savedTrip;
   }
 
+  async rejectTransport(
+    id: string,
+    rejectTransportDto: { reason: string },
+    user: User,
+  ): Promise<TripRequest> {
+    const trip = await this.findOne(id);
+
+    if (trip.state !== TripState.CAR_ALLOCATED) {
+      throw new BadRequestException('Trip must be in CAR_ALLOCATED state');
+    }
+
+    if (user.role !== UserRole.TransportOffice) {
+      throw new ForbiddenException(
+        'Only Transport Office can reject transport',
+      );
+    }
+
+    // Reset allocation and move back to approved for allocation
+    trip.allocatedVehicle = null;
+    trip.allocatedDriver = null;
+    trip.deploymentTeamMember = null;
+    trip.estimatedFuelCost = null;
+    trip.estimatedDistance = null;
+    trip.state = TripState.APPROVED_FOR_ALLOCATION;
+    trip.rejectionReason = rejectTransportDto.reason;
+
+    const savedTrip = await this.tripRepository.save(trip);
+
+    // Send notification
+    try {
+      await this.notificationsService.notifyTripRejected(
+        savedTrip,
+        user,
+        rejectTransportDto.reason,
+      );
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
+
+    return savedTrip;
+  }
+
   async startTrip(
     id: string,
     startTripDto: any,
@@ -597,7 +639,7 @@ export class TripsService {
     }
 
     // Validate plate number matches allocated vehicle
-    if (trip.allocatedVehicle.plateNumber !== startTripDto.plateNumber) {
+    if (!trip.allocatedVehicle || trip.allocatedVehicle.plateNumber !== startTripDto.plateNumber) {
       throw new BadRequestException(
         'Plate number does not match allocated vehicle',
       );

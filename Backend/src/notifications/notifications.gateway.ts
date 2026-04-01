@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { NotificationsService } from './notifications.service';
+import { getCorsOrigins } from '../config/cors-origins';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -20,16 +21,7 @@ interface AuthenticatedSocket extends Socket {
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: [
-      'http://localhost:3001', // Transport Admin
-      'http://localhost:3002', // College Dean
-      'http://localhost:3003', // Department
-      'http://localhost:3004', // Driver
-      'http://localhost:3005', // Deployment Office
-      'http://localhost:3006', // President
-      'http://localhost:3007', // System Admin
-      'http://localhost:3008', // Employee
-    ],
+    origin: getCorsOrigins(),
     credentials: true,
   },
   namespace: '/notifications',
