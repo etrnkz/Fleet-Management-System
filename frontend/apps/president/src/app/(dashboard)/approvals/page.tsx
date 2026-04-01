@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { tripApi } from '../../../lib/api'
+import { tripApi } from '@/lib/api'
 
 export default function ApprovalsPage() {
   const [selectedTab, setSelectedTab] = useState('pending')
@@ -28,12 +28,16 @@ export default function ApprovalsPage() {
     try {
       setLoading(true)
       
-      // Load trips in different states
-      const [pendingTrips, approvedTrips, rejectedTrips] = await Promise.all([
-        tripApi.getPendingApprovals().catch(() => []),
-        tripApi.getAll({ status: 'approved' }).catch(() => []),
-        tripApi.getAll({ status: 'rejected' }).catch(() => [])
-      ])
+      // Load all trips and filter client-side by status
+      const allTrips = await tripApi.getAll().catch(() => [])
+
+      const pendingStatuses = ['pending_president', 'PENDING_PRESIDENT']
+      const approvedStatuses = ['approved_for_allocation', 'APPROVED_FOR_ALLOCATION', 'approved', 'APPROVED', 'completed', 'COMPLETED', 'in_progress', 'IN_PROGRESS']
+      const rejectedStatuses = ['rejected', 'REJECTED']
+
+      const pendingTrips = allTrips.filter((t: any) => pendingStatuses.includes(t.status || t.state || ''))
+      const approvedTrips = allTrips.filter((t: any) => approvedStatuses.includes(t.status || t.state || ''))
+      const rejectedTrips = allTrips.filter((t: any) => rejectedStatuses.includes(t.status || t.state || ''))
 
       // Transform pending trips to approval requests format
       const transformedPending = pendingTrips.map((trip: any) => ({
@@ -44,7 +48,7 @@ export default function ApprovalsPage() {
               trip.purpose?.includes('Emergency') ? 'Medical Emergency' : 'Academic Trip',
         department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
         requester: {
-          name: trip.requester ? `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() : 'Unknown',
+          name: trip.requester ? (trip.requester.name || `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() || 'Unknown') : 'Unknown',
           position: trip.requester?.role || 'Staff',
           email: trip.requester?.email || 'N/A',
           phone: trip.requester?.phone || 'N/A'
@@ -59,7 +63,7 @@ export default function ApprovalsPage() {
           `${Math.ceil((new Date(trip.endDateTime).getTime() - new Date(trip.startDateTime).getTime()) / (1000 * 60 * 60 * 24))} days` : 'N/A',
         vehicleType: trip.allocatedVehicle ? `${trip.allocatedVehicle.make} ${trip.allocatedVehicle.model}` : 'To be assigned',
         passengers: trip.passengerCount || 1,
-        estimatedCost: trip.estimatedCost ? `ETB ${trip.estimatedCost.toLocaleString()}` : `ETB ${(Math.random() * 100000 + 20000).toFixed(0)}`, // Use real cost if available
+        estimatedCost: `ETB ${(Math.random() * 100000 + 20000).toFixed(0)}`, // Mock cost
         budgetStatus: 'Available',
         deanApproval: {
           status: trip.state?.includes('COLLEGE') ? 'Approved' : 'Pending',
@@ -79,7 +83,7 @@ export default function ApprovalsPage() {
         type: trip.purpose?.includes('Research') ? 'Research Trip' : 'Academic Trip',
         department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
         requester: { 
-          name: trip.requester ? `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() : 'Unknown',
+          name: trip.requester ? (trip.requester.name || `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() || 'Unknown') : 'Unknown',
           position: trip.requester?.role || 'Staff'
         },
         purpose: trip.purpose || 'Official business',
@@ -96,7 +100,7 @@ export default function ApprovalsPage() {
         type: 'Trip Request',
         department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
         requester: { 
-          name: trip.requester ? `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() : 'Unknown',
+          name: trip.requester ? (trip.requester.name || `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() || 'Unknown') : 'Unknown',
           position: trip.requester?.role || 'Staff'
         },
         purpose: trip.purpose || 'Official business',
@@ -457,6 +461,23 @@ export default function ApprovalsPage() {
                   View Details →
                 </button>
               </div>
+              {/* Quick Actions for pending */}
+              {selectedTab === 'pending' && (
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleApprove(request) }}
+                    className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm transition-colors"
+                  >
+                    ✓ Approve
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedRequest(request); setShowRejectModal(true) }}
+                    className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors"
+                  >
+                    ✗ Reject
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           ))
@@ -525,15 +546,15 @@ export default function ApprovalsPage() {
                     </div>
                     <div>
                       <p className="text-xs md:text-sm text-gray-600">Duration</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.duration}</p>
+                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.duration || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-xs md:text-sm text-gray-600">Start Date</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates.start}</p>
+                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates?.start || selectedRequest.startDateTime ? new Date(selectedRequest.startDateTime).toLocaleDateString() : 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-xs md:text-sm text-gray-600">End Date</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates.end}</p>
+                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates?.end || selectedRequest.endDateTime ? new Date(selectedRequest.endDateTime).toLocaleDateString() : 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -545,49 +566,47 @@ export default function ApprovalsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs md:text-sm text-gray-600">Vehicle Type</p>
-                    <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.vehicleType}</p>
+                    <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.vehicleType || "To be assigned"}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs md:text-sm text-gray-600">Passengers</p>
-                    <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.passengers}</p>
+                    <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.passengers || selectedRequest.passengerCount || "N/A"}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs md:text-sm text-gray-600">Estimated Cost</p>
-                    <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.estimatedCost}</p>
+                    <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.estimatedFuelCost ? `ETB ${selectedRequest.estimatedFuelCost}` : 'N/A'}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs md:text-sm text-gray-600">Budget Status</p>
-                    <p className="text-sm md:text-base font-medium text-green-600">{selectedRequest.budgetStatus}</p>
+                    <p className="text-xs md:text-sm text-gray-600">Trip Status</p>
+                    <p className="text-sm md:text-base font-medium text-green-600">{selectedRequest.state}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Dean Approval */}
+              {/* Approval Status */}
               <div>
-                <h4 className="text-base md:text-lg font-bold text-gray-800 mb-2 md:mb-3">Dean Approval</h4>
-                <div className={`rounded-xl p-3 md:p-4 border-l-4 ${
-                  selectedRequest.deanApproval.status === 'Approved' 
-                    ? 'bg-green-50 border-green-500' 
-                    : 'bg-gray-50 border-gray-300'
-                }`}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                    <div>
-                      <p className="text-xs md:text-sm text-gray-600">Status</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.deanApproval.status}</p>
+                <h4 className="text-base md:text-lg font-bold text-gray-800 mb-2 md:mb-3">Approval History</h4>
+                <div className="space-y-3">
+                  {(selectedRequest.approvals || []).map((approval: any, idx: number) => (
+                    <div key={idx} className={`rounded-xl p-3 md:p-4 border-l-4 ${
+                      approval.status === 'Approved' ? 'bg-green-50 border-green-500' :
+                      approval.status === 'Rejected' ? 'bg-red-50 border-red-500' : 'bg-gray-50 border-gray-300'
+                    }`}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><p className="text-xs text-gray-600">Level</p><p className="text-sm font-medium text-gray-800">{approval.approvalLevel}</p></div>
+                        <div><p className="text-xs text-gray-600">Status</p><p className="text-sm font-medium text-gray-800">{approval.status}</p></div>
+                        {approval.comments && <div className="col-span-2"><p className="text-xs text-gray-600">Comments</p><p className="text-sm font-medium text-gray-800">{approval.comments}</p></div>}
+                        {approval.approvedAt && <div><p className="text-xs text-gray-600">Date</p><p className="text-sm font-medium text-gray-800">{new Date(approval.approvedAt).toLocaleDateString()}</p></div>}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs md:text-sm text-gray-600">Date</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.deanApproval.date}</p>
-                    </div>
-                    <div className="col-span-1 sm:col-span-2">
-                      <p className="text-xs md:text-sm text-gray-600">Comments</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.deanApproval.comments}</p>
-                    </div>
-                  </div>
+                  ))}
+                  {(!selectedRequest.approvals || selectedRequest.approvals.length === 0) && (
+                    <p className="text-sm text-gray-400">No approval history yet</p>
+                  )}
                 </div>
               </div>
 
-              {/* Documents */}
+              {/* Documents - only show if real data exists */}
               {selectedRequest.documents && selectedRequest.documents.length > 0 && (
                 <div>
                   <h4 className="text-base md:text-lg font-bold text-gray-800 mb-2 md:mb-3">Supporting Documents</h4>
