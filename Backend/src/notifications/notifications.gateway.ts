@@ -11,7 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { NotificationsService } from './notifications.service';
-import { getCorsOrigins } from '../config/cors-origins';
+import { getCorsOrigin } from '../config/cors-origins';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -21,7 +21,7 @@ interface AuthenticatedSocket extends Socket {
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: getCorsOrigins(),
+    origin: getCorsOrigin(),
     credentials: true,
   },
   namespace: '/notifications',
