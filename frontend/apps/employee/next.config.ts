@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: process.cwd(),
-  },
+  // Remove turbopack config to avoid issues
 };
 
 export default nextConfig;

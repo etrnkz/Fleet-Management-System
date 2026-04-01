@@ -434,9 +434,14 @@ export class TripsService {
       throw new ForbiddenException('Only the requester can cancel this trip');
     }
 
-    // Can't cancel completed trips
-    if (trip.state === TripState.COMPLETED) {
-      throw new BadRequestException('Cannot cancel completed trip');
+    const terminalStates: TripState[] = [
+      TripState.COMPLETED,
+      TripState.CANCELLED,
+      TripState.REJECTED,
+      TripState.AUTO_REJECTED_TIMEOUT,
+    ];
+    if (terminalStates.includes(trip.state)) {
+      throw new BadRequestException('This trip cannot be cancelled');
     }
 
     // Cancel scheduled workflow jobs
@@ -450,19 +455,25 @@ export class TripsService {
     return this.tripRepository.save(trip);
   }
 
-  async driverRejectAssignment(id: string, reason: string, user: User): Promise<TripRequest> {
+  async driverRejectAssignment(
+    id: string,
+    reason: string,
+    user: User,
+  ): Promise<TripRequest> {
     const trip = await this.findOne(id);
 
     if (!['READY', 'CAR_ALLOCATED'].includes(trip.state)) {
-      throw new BadRequestException('Trip must be in READY or CAR_ALLOCATED state to reject assignment');
+      throw new BadRequestException(
+        'Trip must be in READY or CAR_ALLOCATED state to reject assignment',
+      );
     }
 
-    // Only the assigned driver can reject
     if (trip.allocatedDriver?.user?.id !== user.id) {
-      throw new ForbiddenException('Only the assigned driver can reject this assignment');
+      throw new ForbiddenException(
+        'Only the assigned driver can reject this assignment',
+      );
     }
 
-    // Reset allocation — send back for reassignment
     trip.allocatedDriver = null;
     trip.allocatedVehicle = null;
     trip.state = TripState.APPROVED_FOR_ALLOCATION;
@@ -470,6 +481,20 @@ export class TripsService {
 
     return this.tripRepository.save(trip);
   }
+
+  /** Permanently remove a draft trip (requester only). */
+  async remove(id: string, user: User): Promise<void> {
+    const trip = await this.findOne(id);
+
+    if (trip.state !== TripState.DRAFT) {
+      throw new BadRequestException('Only draft trips can be deleted');
+    }
+
+    if (trip.requester.id !== user.id) {
+      throw new ForbiddenException('Only the requester can delete this trip');
+    }
+
+    await this.tripRepository.remove(trip);
   }
 
   private getRequiredRoleForState(state: TripState): UserRole {
@@ -672,6 +697,9 @@ export class TripsService {
       case UserRole.Dean:
         // Dean approves at college level (PENDING_COLLEGE)
         states = [TripState.PENDING_COLLEGE, TripState.PENDING_DEAN];
+        break;
+      case UserRole.President:
+        states = [TripState.PENDING_PRESIDENT];
         break;
       default:
         return [];

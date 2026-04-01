@@ -8,7 +8,8 @@ import json
 
 # Configuration
 BASE_URL = "http://localhost:3000/api/v1"
-ADMIN_EMAIL = "admin@hu.edu.et"
+# After DB reset, use developer from create_test_users.py (created first)
+ADMIN_EMAIL = "developer@test.com"
 ADMIN_PASSWORD = "password123"
 
 def create_system_admin_users():

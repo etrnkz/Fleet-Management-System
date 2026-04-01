@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   // Load saved email on component mount
-  useState(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedEmail = localStorage.getItem('rememberedEmail')
       if (savedEmail) {
@@ -23,7 +23,7 @@ export default function LoginPage() {
         setRememberMe(true)
       }
     }
-  })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -169,7 +169,7 @@ export default function LoginPage() {
 
             {/* Sign Up Link */}
             <div className="text-center text-sm text-gray-600 mt-6">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/signup" className="text-emerald-600 hover:text-emerald-700 font-medium">
                 Sign Up
               </Link>

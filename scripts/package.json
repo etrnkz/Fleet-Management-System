@@ -1,0 +1,11 @@
+{
+  "name": "fleet-management-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "login-all": "node login-all-portals.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.1"
+  }
+}

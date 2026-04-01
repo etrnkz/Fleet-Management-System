@@ -7,7 +7,6 @@ import Toast from '../../components/Toast'
 
 export default function TripsPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
   const [trips, setTrips] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -17,6 +16,7 @@ export default function TripsPage() {
     message: '',
     type: 'success'
   })
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -24,7 +24,6 @@ export default function TripsPage() {
       router.push('/login')
       return
     }
-    setUser(currentUser)
     loadTrips()
   }, [])
 
@@ -44,22 +43,65 @@ export default function TripsPage() {
     setToast({ show: true, message, type })
   }
 
+  const terminalStates = new Set([
+    'COMPLETED',
+    'CANCELLED',
+    'REJECTED',
+    'AUTO_REJECTED_TIMEOUT',
+  ])
+
+  const canCancelTrip = (state: string | undefined) =>
+    Boolean(state && !terminalStates.has(state))
+
+  const canDeleteDraft = (state: string | undefined) => state === 'DRAFT'
+
   const handleCancelTrip = async (id: string) => {
-    if (!confirm('Are you sure you want to cancel this trip?')) return
-    
+    if (!confirm('Cancel this trip? It will be marked as cancelled and removed from the active workflow.')) return
+
     try {
-      await tripApi.cancel(id, 'Cancelled by user')
+      setActionLoading(true)
+      await tripApi.cancel(id)
       showToast('Trip cancelled successfully', 'success')
       loadTrips()
       setSelectedTrip(null)
     } catch (error: any) {
       showToast(error.message || 'Failed to cancel trip', 'error')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDeleteDraft = async (id: string) => {
+    if (
+      !confirm(
+        'Delete this draft permanently? This cannot be undone. (Submitted trips must be cancelled instead.)',
+      )
+    )
+      return
+
+    try {
+      setActionLoading(true)
+      await tripApi.deleteDraft(id)
+      showToast('Draft deleted', 'success')
+      loadTrips()
+      setSelectedTrip(null)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to delete trip', 'error')
+    } finally {
+      setActionLoading(false)
     }
   }
 
   const getStateColor = (state: string) => {
+    if (state === 'DRAFT') return 'bg-slate-100 text-slate-800'
     if (state?.includes('PENDING')) return 'bg-yellow-100 text-yellow-700'
-    if (state === 'APPROVED' || state === 'CAR_ALLOCATED' || state === 'READY') return 'bg-green-100 text-green-700'
+    if (
+      state === 'APPROVED_FOR_ALLOCATION' ||
+      state === 'CAR_ALLOCATED' ||
+      state === 'READY' ||
+      state === 'PENDING_TRANSPORT_CONFIRM'
+    )
+      return 'bg-green-100 text-green-700'
     if (state === 'IN_PROGRESS') return 'bg-blue-100 text-blue-700'
     if (state === 'COMPLETED') return 'bg-gray-100 text-gray-700'
     if (state === 'CANCELLED' || state === 'REJECTED') return 'bg-red-100 text-red-700'
@@ -69,7 +111,13 @@ export default function TripsPage() {
   const filteredTrips = trips.filter(trip => {
     if (filter === 'all') return true
     if (filter === 'pending') return trip.state?.includes('PENDING')
-    if (filter === 'approved') return ['APPROVED', 'CAR_ALLOCATED', 'READY'].includes(trip.state)
+    if (filter === 'approved')
+      return [
+        'APPROVED_FOR_ALLOCATION',
+        'CAR_ALLOCATED',
+        'READY',
+        'PENDING_TRANSPORT_CONFIRM',
+      ].includes(trip.state)
     if (filter === 'active') return trip.state === 'IN_PROGRESS'
     if (filter === 'completed') return trip.state === 'COMPLETED'
     return true
@@ -180,12 +228,35 @@ export default function TripsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => setSelectedTrip(trip)}
-                          className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
-                        >
-                          View Details
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedTrip(trip)}
+                            className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                          >
+                            View
+                          </button>
+                          {canDeleteDraft(trip.state) && (
+                            <button
+                              type="button"
+                              disabled={actionLoading}
+                              onClick={() => handleDeleteDraft(trip.id)}
+                              className="text-red-700 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+                            >
+                              Delete
+                            </button>
+                          )}
+                          {canCancelTrip(trip.state) && !canDeleteDraft(trip.state) && (
+                            <button
+                              type="button"
+                              disabled={actionLoading}
+                              onClick={() => handleCancelTrip(trip.id)}
+                              className="text-orange-700 hover:text-orange-800 text-sm font-medium disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -270,16 +341,33 @@ export default function TripsPage() {
                 </div>
               )}
 
-              {selectedTrip.state?.includes('PENDING') && (
-                <div className="pt-4 border-t">
+              <div className="pt-4 border-t space-y-3">
+                {canDeleteDraft(selectedTrip.state) && (
                   <button
-                    onClick={() => handleCancelTrip(selectedTrip.id)}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={() => handleDeleteDraft(selectedTrip.id)}
+                    className="w-full px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 disabled:opacity-50"
                   >
-                    Cancel Trip
+                    Delete draft
                   </button>
-                </div>
-              )}
+                )}
+                {canCancelTrip(selectedTrip.state) && !canDeleteDraft(selectedTrip.state) && (
+                  <button
+                    type="button"
+                    disabled={actionLoading}
+                    onClick={() => handleCancelTrip(selectedTrip.id)}
+                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Cancel trip
+                  </button>
+                )}
+                {!canCancelTrip(selectedTrip.state) && !canDeleteDraft(selectedTrip.state) && (
+                  <p className="text-sm text-gray-500 text-center">
+                    This trip cannot be cancelled or deleted.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

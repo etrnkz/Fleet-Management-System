@@ -156,10 +156,28 @@ export const maintenanceApi = {
     method: 'POST',
   }),
   
-  complete: (id: string, data: any) => apiFetch(`/maintenance/${id}/complete`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
+  start: (id: string) =>
+    apiFetch(`/maintenance/${id}/start`, { method: 'POST' }),
+
+  complete: (id: string, data: any) =>
+    apiFetch(`/maintenance/${id}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  reject: (id: string, data: { reason: string }) =>
+    apiFetch(`/maintenance/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getStatistics: () => apiFetch('/maintenance/statistics'),
+};
+
+export const notificationApi = {
+  getAll: () => apiFetch('/notifications'),
+  markAsRead: (id: string) =>
+    apiFetch(`/notifications/${id}/read`, { method: 'PATCH' }),
 };
 
 // Fuel APIs

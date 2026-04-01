@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getCurrentUser } from '../../lib/api'
-import { useNotifications } from '../../hooks/useNotifications'
+import { getCurrentUser, notificationApi } from '../../lib/api'
+// import { useNotifications } from '../../hooks/useNotifications'
 import Toast from '../../components/Toast'
 
 export default function NotificationsPage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
   const [filter, setFilter] = useState('all')
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false,
@@ -16,14 +15,36 @@ export default function NotificationsPage() {
     type: 'success'
   })
 
-  const {
-    notifications,
-    unreadCount,
-    isConnected,
-    markAsRead,
-    markAllAsRead,
-    refreshNotifications,
-  } = useNotifications()
+  // Temporarily disable useNotifications to fix Turbopack error
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const isConnected = false
+  const markAsRead = () => {}
+  const markAllAsRead = () => {}
+  const refreshNotifications = async () => {
+    try {
+      const data = await notificationApi.getAll()
+      setNotifications(Array.isArray(data) ? data : [])
+      const unread = Array.isArray(data) ? data.filter((n: any) => !n.isRead).length : 0
+      setUnreadCount(unread)
+    } catch (error) {
+      console.error('Failed to refresh notifications:', error)
+    }
+  }
+
+  // Load notifications on mount
+  useEffect(() => {
+    refreshNotifications()
+  }, [])
+
+  // const {
+  //   notifications,
+  //   unreadCount,
+  //   isConnected,
+  //   markAsRead,
+  //   markAllAsRead,
+  //   refreshNotifications,
+  // } = useNotifications()
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -31,20 +52,32 @@ export default function NotificationsPage() {
       router.push('/login')
       return
     }
-    setUser(currentUser)
   }, [])
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type })
   }
 
-  const handleMarkAsRead = (id: string) => {
-    markAsRead(id)
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await notificationApi.markAsRead(id)
+      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n))
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
+    }
   }
 
-  const handleMarkAllAsRead = () => {
-    markAllAsRead()
-    showToast('All notifications marked as read', 'success')
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationApi.markAllAsRead()
+      setNotifications(notifications.map(n => ({ ...n, isRead: true })))
+      setUnreadCount(0)
+      showToast('All notifications marked as read', 'success')
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error)
+      showToast('Failed to mark notifications as read', 'error')
+    }
   }
 
   const filteredNotifications = notifications.filter(n => {
@@ -79,7 +112,7 @@ export default function NotificationsPage() {
                 {unreadCount} unread
               </span>
             )}
-            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} 
+            <div className={isConnected ? 'w-3 h-3 rounded-full bg-green-500' : 'w-3 h-3 rounded-full bg-red-500'} 
                  title={isConnected ? 'Connected to real-time notifications' : 'Disconnected from real-time notifications'} />
           </div>
           <div className="flex items-center gap-2">
