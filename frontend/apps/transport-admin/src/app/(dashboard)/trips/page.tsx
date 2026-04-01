@@ -46,6 +46,8 @@ export default function TripsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
+  const [fuelForm, setFuelForm] = useState({ estimatedFuelCost: '', estimatedDistance: '', notes: '' })
+  const [fuelSubmitting, setFuelSubmitting] = useState(false)
 
   // Fetch data on mount
   useEffect(() => {
@@ -61,7 +63,9 @@ export default function TripsPage() {
       const list = Array.isArray(data) ? data : []
       setTrips(list)
       if (list.length > 0 && !selectedTrip) {
-        setSelectedTrip(list[0])
+        const first = list[0]
+        setSelectedTrip(first)
+        setFuelForm({ estimatedFuelCost: String((first as any).estimatedFuelCost || ''), estimatedDistance: String(first.estimatedDistance || ''), notes: '' })
       }
     } catch (error: any) {
       setToast({ message: error.message || 'Failed to fetch trips', type: 'error' })
@@ -111,6 +115,7 @@ export default function TripsPage() {
     active: trips.filter(t => t.state === 'IN_PROGRESS').length,
     scheduled: trips.filter(t => ['CAR_ALLOCATED', 'READY'].includes(t.state)).length,
     pending: trips.filter(t => t.state.includes('PENDING')).length,
+    awaitingApproval: trips.filter(t => t.state === 'CAR_ALLOCATED').length,
   }
 
   // Filter trips
@@ -123,6 +128,8 @@ export default function TripsPage() {
       filtered = filtered.filter(t => ['CAR_ALLOCATED', 'READY'].includes(t.state))
     } else if (filterStatus === 'Pending') {
       filtered = filtered.filter(t => t.state.includes('PENDING'))
+    } else if (filterStatus === 'Awaiting Approval') {
+      filtered = filtered.filter(t => t.state === 'CAR_ALLOCATED')
     }
 
     if (searchQuery) {
@@ -147,6 +154,33 @@ export default function TripsPage() {
       hour: '2-digit', 
       minute: '2-digit' 
     })
+  }
+
+  const handleSelectTrip = (trip: Trip) => {
+    setSelectedTrip(trip)
+    setFuelForm({
+      estimatedFuelCost: String((trip as any).estimatedFuelCost || ''),
+      estimatedDistance: String(trip.estimatedDistance || ''),
+      notes: ''
+    })
+  }
+
+  const handleFuelApprove = async () => {
+    if (!selectedTrip) return
+    setFuelSubmitting(true)
+    try {
+      await (tripApi as any).confirmTransport(selectedTrip.id, {
+        estimatedFuelCost: Number(fuelForm.estimatedFuelCost) || 0,
+        estimatedDistance: Number(fuelForm.estimatedDistance) || 0,
+        notes: fuelForm.notes,
+      })
+      setToast({ message: 'Allocation approved and trip is now READY', type: 'success' })
+      fetchTrips()
+    } catch (err: any) {
+      setToast({ message: err.message || 'Failed to approve', type: 'error' })
+    } finally {
+      setFuelSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -202,7 +236,7 @@ export default function TripsPage() {
 
           {/* Filter Tabs */}
           <div className="flex gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-3 border-b border-gray-200 bg-gray-50 overflow-x-auto">
-            {['All', 'Active', 'Scheduled', 'Pending'].map((filter) => (
+            {['All', 'Awaiting Approval', 'Active', 'Scheduled', 'Pending'].map((filter) => (
               <button
                 key={filter}
                 onClick={() => setFilterStatus(filter)}
@@ -232,7 +266,7 @@ export default function TripsPage() {
                 return (
                   <button
                     key={trip.id}
-                    onClick={() => setSelectedTrip(trip)}
+                    onClick={() => handleSelectTrip(trip)}
                     className={`w-full text-left p-3 md:p-4 border-b border-gray-100 hover:bg-gray-50 transition-all ${
                       selectedTrip?.id === trip.id ? 'bg-emerald-50 border-l-4 border-l-emerald-600' : ''
                     }`}
@@ -415,55 +449,105 @@ export default function TripsPage() {
                     </div>
                   </div>
 
-                  {/* Driver/Vehicle Status */}
+                  {/* Fuel Approval Panel - for CAR_ALLOCATED trips */}
                   <div className="space-y-3 md:space-y-4">
                     <h3 className="text-xs md:text-sm font-bold text-gray-900 uppercase tracking-wide">
-                      {selectedTrip.allocatedDriver ? 'Driver Info' : 'Assignment'}
+                      {selectedTrip.state === 'CAR_ALLOCATED' ? 'Fuel & Distance Approval' : 'Driver Info'}
                     </h3>
-                    
-                    {selectedTrip.allocatedDriver ? (
-                      <>
-                        <div className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-lg">
-                            {selectedTrip.allocatedDriver.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs md:text-sm font-semibold text-gray-900 truncate">
-                              {selectedTrip.allocatedDriver.name}
-                            </p>
-                            <p className="text-[10px] md:text-xs text-gray-500">
-                              {selectedTrip.allocatedDriver.licenseNumber}
-                            </p>
-                          </div>
+
+                    {selectedTrip.state === 'CAR_ALLOCATED' ? (
+                      <div className="space-y-3">
+                        <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                          <p className="text-xs font-semibold text-orange-800 mb-1">Pending Transport Approval</p>
+                          <p className="text-[10px] text-orange-600">Review and edit fuel cost & distance, then approve to mark trip as READY.</p>
                         </div>
 
-                        {selectedTrip.allocatedVehicle && (
-                          <div className="space-y-1.5 md:space-y-2">
-                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                              <span className="text-[10px] md:text-xs text-gray-600">Vehicle</span>
-                              <span className="text-xs md:text-sm font-semibold text-gray-900">
-                                {selectedTrip.allocatedVehicle.plateNumber}
-                              </span>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Est. Fuel Cost (ETB)</label>
+                          <input type="number" min="0" value={fuelForm.estimatedFuelCost}
+                            onChange={e => setFuelForm({ ...fuelForm, estimatedFuelCost: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-400" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Est. Distance (km)</label>
+                          <input type="number" min="0" value={fuelForm.estimatedDistance}
+                            onChange={e => setFuelForm({ ...fuelForm, estimatedDistance: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-400" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Notes (optional)</label>
+                          <input type="text" value={fuelForm.notes}
+                            onChange={e => setFuelForm({ ...fuelForm, notes: e.target.value })}
+                            placeholder="Any notes for the driver..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-400" />
+                        </div>
+
+                        {selectedTrip.allocatedDriver && (
+                          <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200 text-xs">
+                            <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold text-xs">
+                              {(selectedTrip.allocatedDriver.user?.name || selectedTrip.allocatedDriver.name || 'DR').split(' ').map((n: string) => n[0]).join('').slice(0,2)}
                             </div>
-                            <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                              <span className="text-[10px] md:text-xs text-gray-600">Model</span>
-                              <span className="text-xs md:text-sm font-semibold text-gray-900">
-                                {selectedTrip.allocatedVehicle.make} {selectedTrip.allocatedVehicle.model}
-                              </span>
+                            <div>
+                              <p className="font-semibold text-gray-800">{selectedTrip.allocatedDriver.user?.name || selectedTrip.allocatedDriver.name || 'Unknown'}</p>
+                              <p className="text-gray-500">{selectedTrip.allocatedDriver.licenseNumber}</p>
                             </div>
                           </div>
                         )}
-                      </>
-                    ) : (
-                      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                        <svg className="w-8 h-8 text-yellow-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <p className="text-xs md:text-sm font-semibold text-yellow-900">Not Assigned</p>
-                        <p className="text-[10px] md:text-xs text-yellow-700 mt-1">
-                          Waiting for vehicle and driver allocation
-                        </p>
+                        {selectedTrip.allocatedVehicle && (
+                          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200 text-xs">
+                            <span className="text-gray-500">Vehicle</span>
+                            <span className="font-semibold text-gray-800">{selectedTrip.allocatedVehicle.plateNumber} — {selectedTrip.allocatedVehicle.make} {selectedTrip.allocatedVehicle.model}</span>
+                          </div>
+                        )}
+
+                        <button onClick={handleFuelApprove} disabled={fuelSubmitting}
+                          className="w-full py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                          {fuelSubmitting ? 'Approving...' : '✓ Approve & Mark Ready'}
+                        </button>
                       </div>
+                    ) : (
+                      <>
+                        {selectedTrip.allocatedDriver ? (
+                          <>
+                            <div className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-lg">
+                                {(selectedTrip.allocatedDriver.user?.name || selectedTrip.allocatedDriver.name || 'DR').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs md:text-sm font-semibold text-gray-900 truncate">
+                                  {selectedTrip.allocatedDriver.user?.name || selectedTrip.allocatedDriver.name || 'Unknown Driver'}
+                                </p>
+                                <p className="text-[10px] md:text-xs text-gray-500">
+                                  {selectedTrip.allocatedDriver.licenseNumber}
+                                </p>
+                              </div>
+                            </div>
+                            {selectedTrip.allocatedVehicle && (
+                              <div className="space-y-1.5 md:space-y-2">
+                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                  <span className="text-[10px] md:text-xs text-gray-600">Vehicle</span>
+                                  <span className="text-xs md:text-sm font-semibold text-gray-900">{selectedTrip.allocatedVehicle.plateNumber}</span>
+                                </div>
+                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                  <span className="text-[10px] md:text-xs text-gray-600">Model</span>
+                                  <span className="text-xs md:text-sm font-semibold text-gray-900">{selectedTrip.allocatedVehicle.make} {selectedTrip.allocatedVehicle.model}</span>
+                                </div>
+                                {(selectedTrip as any).estimatedFuelCost && (
+                                  <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg border border-orange-100">
+                                    <span className="text-[10px] md:text-xs text-orange-600">Fuel Cost</span>
+                                    <span className="text-xs md:text-sm font-semibold text-orange-700">ETB {(selectedTrip as any).estimatedFuelCost}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                            <p className="text-xs md:text-sm font-semibold text-yellow-900">Not Assigned</p>
+                            <p className="text-[10px] md:text-xs text-yellow-700 mt-1">Waiting for vehicle and driver allocation</p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

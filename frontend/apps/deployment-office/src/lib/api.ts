@@ -64,11 +64,11 @@ export const tripApi = {
     return handleResponse(response)
   },
 
-  assignVehicleAndDriver: async (tripId: string, vehicleId: string, driverId: string) => {
+  assignVehicleAndDriver: async (tripId: string, vehicleId: string, driverId: string, estimatedFuelCost: number = 0, estimatedDistance: number = 0) => {
     const response = await fetch(`${API_BASE_URL}/trips/${tripId}/allocate`, {
       method: 'POST',
       headers: createHeaders(),
-      body: JSON.stringify({ vehicleId, driverId })
+      body: JSON.stringify({ vehicleId, driverId, estimatedFuelCost, estimatedDistance })
     })
     return handleResponse(response)
   },

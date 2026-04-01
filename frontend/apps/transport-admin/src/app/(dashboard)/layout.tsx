@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Toast, { ToastType } from '@/components/Toast'
@@ -25,6 +25,22 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false)
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+        setShowProfileDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [showSettings, setShowSettings] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState<any>(null)
   const [darkMode, setDarkMode] = useState(false)
@@ -54,18 +70,26 @@ export default function DashboardLayout({
 
   const loadNotifications = async () => {
     try {
-      // For now, get pending trips as notifications
-      const trips = await tripApi.getAll({ state: 'PENDING_DEPARTMENT,PENDING_COLLEGE,PENDING_DEAN' })
-      const tripNotifications = Array.isArray(trips) ? trips.map((trip: any) => ({
-        id: trip.id,
-        type: 'trip_approval',
-        title: `Trip Request Pending`,
-        message: `Trip to ${trip.destination} requires approval`,
-        time: new Date(trip.createdAt).toLocaleString(),
-        read: false,
-        details: trip
-      })) : []
-      setNotifications(tripNotifications)
+      const token = typeof window !== 'undefined'
+        ? localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+        : null
+      if (!token) return
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      const list = Array.isArray(data) ? data : []
+      setNotifications(list.map((n: any) => ({
+        id: n.id,
+        type: n.type,
+        title: n.title || n.type,
+        message: n.message,
+        time: new Date(n.sentAt || n.createdAt).toLocaleString(),
+        read: n.isRead,
+        isRead: n.isRead,
+        details: n.metadata || {}
+      })))
     } catch (error) {
       console.error('Failed to load notifications:', error)
       setNotifications([])
@@ -81,7 +105,7 @@ export default function DashboardLayout({
     }
   }, [darkMode])
 
-  const unreadCount = notifications.filter((n: any) => !n.read).length
+  const unreadCount = notifications.filter((n: any) => !n.read && !n.isRead).length
 
   const handleLogout = () => {
     try {
@@ -96,7 +120,17 @@ export default function DashboardLayout({
     router.push('/login')
   }
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = async (notification: any) => {
+    // Mark as read via API
+    const token = typeof window !== 'undefined'
+      ? localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+      : null
+    if (token && !notification.isRead && !notification.read) {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications/${notification.id}/read`, {
+        method: 'PATCH', headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => {})
+      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true, isRead: true } : n))
+    }
     setSelectedTrip(notification)
     setShowNotifications(false)
   }
@@ -320,29 +354,29 @@ export default function DashboardLayout({
               </svg>
               Reports
             </Link>
-          </nav>
 
-          {/* User Profile */}
-          <div className="p-4 border-t border-gray-200">
-            <button 
-              onClick={handleOpenProfileModal}
-              className="w-full flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
-              title="Edit Profile"
+            <Link 
+              href="/notifications" 
+              onClick={(e) => handleNavigation(e, '/notifications')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                isActive('/notifications')
+                  ? 'text-emerald-600 bg-emerald-50'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
             >
-              <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">
-                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
-                </span>
+              <div className="relative">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500">{user?.role || 'Transport Admin'}</p>
-              </div>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
-          </div>
+              Notifications
+            </Link>
+          </nav>
         </div>
       </aside>
 
@@ -371,15 +405,14 @@ export default function DashboardLayout({
                 {pathname === '/documents' && 'Documents'}
                 {pathname === '/reports' && 'Reports'}
                 {pathname === '/settings' && 'Settings'}
+                {pathname === '/notifications' && 'Notifications'}
               </h1>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-              <div className="relative">
+              <div className="relative" ref={notifRef}>
                 <button 
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  onMouseEnter={() => !('ontouchstart' in window) && setShowNotifications(true)}
-                  onMouseLeave={() => !('ontouchstart' in window) && setShowNotifications(false)}
+                  onClick={() => setShowNotifications(prev => !prev)}
                   className="relative p-2 hover:bg-gray-100 rounded-lg"
                 >
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,241 +427,131 @@ export default function DashboardLayout({
 
                 {/* Notifications Dropdown */}
                 {showNotifications && (
-                  <>
-                    {/* Backdrop for mobile */}
-                    <div 
-                      className="fixed inset-0 z-40 md:hidden"
-                      onClick={() => setShowNotifications(false)}
-                    ></div>
-                    
-                    <div 
-                      onMouseEnter={() => !('ontouchstart' in window) && setShowNotifications(true)}
-                      onMouseLeave={() => !('ontouchstart' in window) && setShowNotifications(false)}
-                      className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 top-16 md:top-full mx-2 md:mx-0 md:mt-2 w-auto md:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[calc(100vh-5rem)] md:max-h-[600px] overflow-hidden animate-slide-in-top"
-                    >
-                    <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
-                      <h3 className="text-sm sm:text-base font-bold text-gray-900">Notifications</h3>
-                      <span className="text-xs sm:text-sm text-emerald-600 font-medium">{unreadCount} new</span>
+                  <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
+                      <span className="text-xs text-emerald-600 font-medium">{unreadCount} new</span>
                     </div>
-                    
-                    <div className="overflow-y-auto max-h-[calc(100vh-12rem)] md:max-h-[500px]">
-                      {notifications.map((notification) => (
+                    <div className="overflow-y-auto max-h-[420px]">
+                      {notifications.filter(n => !n.read && !n.isRead).length === 0 ? (
+                        <div className="py-10 text-center text-gray-400">
+                          <p className="text-sm">No new notifications</p>
+                        </div>
+                      ) : notifications.filter(n => !n.read && !n.isRead).map((notification) => (
                         <button
                           key={notification.id}
-                          onClick={() => handleNotificationClick(notification)}
-                          className={`w-full text-left p-3 sm:p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                            !notification.read ? 'bg-emerald-50' : ''
-                          }`}
+                          onClick={() => { handleNotificationClick(notification); setShowNotifications(false) }}
+                          className="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors bg-emerald-50"
                         >
-                          <div className="flex items-start gap-2 sm:gap-3">
-                            <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                              notification.type === 'president_approval' 
-                                ? 'bg-purple-100' 
-                                : 'bg-blue-100'
-                            }`}>
-                              <svg className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                                notification.type === 'president_approval' 
-                                  ? 'text-purple-600' 
-                                  : 'text-blue-600'
-                              }`} fill="currentColor" viewBox="0 0 20 20">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-100">
+                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                               </svg>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-gray-900 text-xs sm:text-sm mb-1">
-                                {notification.title}
-                              </p>
-                              <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
-                                {notification.message}
-                              </p>
-                              <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-gray-500">
-                                <span>{notification.time}</span>
-                                <span>•</span>
-                                <span className="truncate">{notification.details.college}</span>
-                              </div>
+                              <p className="font-semibold text-gray-900 text-sm mb-1">{notification.title}</p>
+                              <p className="text-xs text-gray-600 line-clamp-2">{notification.message}</p>
+                              <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
                             </div>
-                            {!notification.read && (
-                              <div className="w-2 h-2 bg-emerald-600 rounded-full flex-shrink-0 mt-2"></div>
-                            )}
+                            <div className="w-2 h-2 bg-emerald-600 rounded-full flex-shrink-0 mt-2"></div>
                           </div>
                         </button>
                       ))}
                     </div>
-
-                    <div className="p-2 sm:p-3 border-t border-gray-200">
-                      <button className="w-full text-center text-xs sm:text-sm text-emerald-600 hover:text-emerald-700 font-medium py-2">
-                        View All Notifications
-                      </button>
-                    </div>
                   </div>
-                  </>
                 )}
               </div>
 
-              <div className="relative">
-                <button 
-                  onClick={() => setShowSettings(!showSettings)}
-                  onMouseEnter={() => !('ontouchstart' in window) && setShowSettings(true)}
-                  onMouseLeave={() => !('ontouchstart' in window) && setShowSettings(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+              {/* Dark mode toggle */}
+              <button
+                onClick={() => setDarkMode(prev => !prev)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {darkMode ? (
+                  <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.166 17.834a.75.75 0 00-1.06 1.06l1.59 1.591a.75.75 0 001.061-1.06l-1.59-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.166 6.166a.75.75 0 001.06 1.06l1.59-1.59a.75.75 0 00-1.06-1.061l-1.59 1.59z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+
+              <div className="relative" ref={profileDropdownRef}>
+                <button
+                  onClick={() => setShowProfileDropdown(prev => !prev)}
+                  className="hidden md:flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
+                    </span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-gray-900 leading-tight">{user?.name || 'User'}</p>
+                    <p className="text-xs text-gray-500 leading-tight">{user?.role || 'Transport Admin'}</p>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
-                {/* Settings Dropdown */}
-                {showSettings && (
-                  <>
-                    {/* Backdrop for mobile */}
-                    <div 
-                      className="fixed inset-0 z-40 md:hidden"
-                      onClick={() => setShowSettings(false)}
-                    ></div>
-                    
-                    <div 
-                      onMouseEnter={() => !('ontouchstart' in window) && setShowSettings(true)}
-                      onMouseLeave={() => !('ontouchstart' in window) && setShowSettings(false)}
-                      className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 top-16 md:top-full mx-2 md:mx-0 md:mt-2 w-auto md:w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[calc(100vh-5rem)] overflow-hidden animate-slide-in-top"
-                    >
-                    <div className="p-3 sm:p-4 border-b border-gray-200">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900">Quick Settings</h3>
-                      <p className="text-xs text-gray-500 mt-1">Manage your preferences</p>
-                    </div>
-
-                    <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-[calc(100vh-16rem)] overflow-y-auto">
-                      {/* Theme */}
-                      <div className="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm font-semibold text-gray-900">Dark Mode</p>
-                            <p className="text-[10px] sm:text-xs text-gray-500">Toggle theme</p>
-                          </div>
+                {showProfileDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                    {/* Profile Header */}
+                    <div className="p-4 bg-emerald-50 border-b border-emerald-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                          {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer" 
-                            checked={darkMode}
-                            onChange={(e) => setDarkMode(e.target.checked)}
-                          />
-                          <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
-                      </div>
-
-                      {/* Notifications */}
-                      <div className="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm font-semibold text-gray-900">Notifications</p>
-                            <p className="text-[10px] sm:text-xs text-gray-500">Enable alerts</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                          <input type="checkbox" defaultChecked className="sr-only peer" />
-                          <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
-                      </div>
-
-                      {/* Sound */}
-                      <div className="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm font-semibold text-gray-900">Sound Effects</p>
-                            <p className="text-[10px] sm:text-xs text-gray-500">Alert sounds</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                          <input type="checkbox" defaultChecked className="sr-only peer" />
-                          <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
-                      </div>
-
-                      {/* Language */}
-                      <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm font-semibold text-gray-900">Language</p>
-                            <p className="text-[10px] sm:text-xs text-gray-500 truncate">English (US)</p>
-                          </div>
-                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </div>
-
-                      {/* Timezone */}
-                      <div className="p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm font-semibold text-gray-900">Timezone</p>
-                            <p className="text-[10px] sm:text-xs text-gray-500 truncate">Africa/Addis Ababa</p>
-                          </div>
-                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">{user?.name || 'User'}</p>
+                          <p className="text-sm text-gray-600 truncate">{user?.email || ''}</p>
                         </div>
                       </div>
                     </div>
-
-                    <div className="p-3 sm:p-4 border-t border-gray-200">
-                      <Link
-                        href="/settings"
-                        onClick={() => setShowSettings(false)}
-                        className="block w-full text-center px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors text-sm"
-                      >
-                        View All Settings
-                      </Link>
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <button onClick={() => { setShowProfileDropdown(false); handleOpenProfileModal() }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">My Profile</p>
+                          <p className="text-xs text-gray-500">View and edit profile</p>
+                        </div>
+                      </button>
+                      <button onClick={() => { setShowProfileDropdown(false); router.push('/settings') }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Settings</p>
+                          <p className="text-xs text-gray-500">Preferences and options</p>
+                        </div>
+                      </button>
+                      <div className="border-t border-gray-100 my-1" />
+                      <button onClick={() => { setShowProfileDropdown(false); handleLogout() }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left text-red-600">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium">Logout</p>
+                          <p className="text-xs text-red-400">Sign out of your account</p>
+                        </div>
+                      </button>
                     </div>
                   </div>
-                  </>
                 )}
               </div>
 
-              <button className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                New Report
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-                title="Sign out"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="hidden md:inline">Logout</span>
-              </button>
             </div>
           </div>
         </header>

@@ -44,6 +44,9 @@ export default function LoginPage() {
       
       // Store the token
       localStorage.setItem('access_token', response.access_token)
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user))
+      }
       
       if (rememberMe) {
         const expiryDate = new Date()

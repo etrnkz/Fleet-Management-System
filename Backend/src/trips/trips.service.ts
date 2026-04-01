@@ -450,6 +450,28 @@ export class TripsService {
     return this.tripRepository.save(trip);
   }
 
+  async driverRejectAssignment(id: string, reason: string, user: User): Promise<TripRequest> {
+    const trip = await this.findOne(id);
+
+    if (!['READY', 'CAR_ALLOCATED'].includes(trip.state)) {
+      throw new BadRequestException('Trip must be in READY or CAR_ALLOCATED state to reject assignment');
+    }
+
+    // Only the assigned driver can reject
+    if (trip.allocatedDriver?.user?.id !== user.id) {
+      throw new ForbiddenException('Only the assigned driver can reject this assignment');
+    }
+
+    // Reset allocation — send back for reassignment
+    trip.allocatedDriver = null;
+    trip.allocatedVehicle = null;
+    trip.state = TripState.APPROVED_FOR_ALLOCATION;
+    trip.rejectionReason = `Driver rejected: ${reason}`;
+
+    return this.tripRepository.save(trip);
+  }
+  }
+
   private getRequiredRoleForState(state: TripState): UserRole {
     const mapping = {
       [TripState.PENDING_DEPARTMENT]: UserRole.DepartmentHead,

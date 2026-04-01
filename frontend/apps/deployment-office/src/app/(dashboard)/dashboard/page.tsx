@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [selectedRequest, setSelectedRequest] = useState<any>(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
-  const [assignmentData, setAssignmentData] = useState({ vehicleId: '', driverId: '' })
+  const [assignmentData, setAssignmentData] = useState({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' })
 
   useEffect(() => { loadDashboardData() }, [])
 
@@ -63,9 +63,16 @@ export default function DashboardPage() {
       showNotification('Please select both vehicle and driver', 'error'); return
     }
     try {
-      await tripApi.assignVehicleAndDriver(selectedRequest.id, assignmentData.vehicleId, assignmentData.driverId)
+      await tripApi.assignVehicleAndDriver(
+        selectedRequest.id,
+        assignmentData.vehicleId,
+        assignmentData.driverId,
+        Number(assignmentData.estimatedFuelCost) || 0,
+        Number(assignmentData.estimatedDistance) || 0,
+      )
       setApprovedRequests(prev => prev.filter((r: any) => r.id !== selectedRequest.id))
-      setShowAssignModal(false); setSelectedRequest(null); setAssignmentData({ vehicleId: '', driverId: '' })
+      setShowAssignModal(false); setSelectedRequest(null)
+      setAssignmentData({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' })
       showNotification('Vehicle and driver assigned successfully!')
     } catch (err: any) {
       showNotification(err?.message || 'Failed to assign', 'error')
@@ -281,7 +288,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500 truncate">→ {trip.destination}</p>
                   </div>
                   <span className={`px-3 py-1 ${sl.color} text-xs font-medium rounded-full`}>{sl.label}</span>
-                  <button onClick={() => { setSelectedRequest(trip); setShowAssignModal(true); setAssignmentData({ vehicleId: '', driverId: '' }) }}
+                  <button onClick={() => { setSelectedRequest(trip); setShowAssignModal(true); setAssignmentData({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' }) }}
                     className="px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700 flex-shrink-0">
                     Assign
                   </button>
@@ -367,6 +374,40 @@ export default function DashboardPage() {
                     <option key={d.id} value={d.id}>{d.user?.name || d.name} ({d.licenseNumber})</option>
                   ))}
                 </select>
+              </div>
+
+              {/* Fuel & Distance Section */}
+              <div className="border-t border-gray-100 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="text-sm font-semibold text-gray-700">Fuel & Distance Estimate</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Est. Fuel Cost (ETB)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 500"
+                      value={assignmentData.estimatedFuelCost}
+                      onChange={e => setAssignmentData({ ...assignmentData, estimatedFuelCost: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Est. Distance (km)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 120"
+                      value={assignmentData.estimatedDistance}
+                      onChange={e => setAssignmentData({ ...assignmentData, estimatedDistance: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-400"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
