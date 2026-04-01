@@ -64,7 +64,7 @@ function RequestTripForm({ onSuccess, onToast, user }: {
   }
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+    <div className="max-w-3xl mx-auto bg-white rounded-xl p-8 shadow-lg border border-gray-200">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Request New Trip</h2>
         <p className="text-sm text-gray-500 mt-1">Fill in all required details for your trip request</p>
@@ -374,7 +374,7 @@ export default function DashboardPage() {
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending Trips</p>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Approved Trips</p>
@@ -402,7 +402,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="bg-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Completed Trips</p>
@@ -419,7 +419,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Trips */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-800">Recent Trip Requests</h3>
             {trips.length > 0 && (
@@ -467,7 +467,7 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicles.map((vehicle: any) => (
-            <div key={vehicle.id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div key={vehicle.id} className="bg-white rounded-lg p-6 shadow-lg border border-gray-200">
               <div className="flex justify-between items-start mb-4">
                 <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                   <svg className="w-10 h-10 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
@@ -514,7 +514,7 @@ export default function DashboardPage() {
           { name: 'Safety Guidelines.pdf', date: 'Updated Dec 2024', size: '1.8 MB', color: 'red' },
           { name: 'Fleet Maintenance Schedule.pdf', date: 'Updated Feb 2025', size: '3.1 MB', color: 'red' },
         ].map((doc, index) => (
-          <div key={index} className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div key={index} className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-50 rounded flex items-center justify-center">
@@ -587,7 +587,7 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-sm h-16">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg h-16">
         <div className="h-full px-4 sm:px-6 flex items-center justify-between">
           {/* Left: hamburger + logo */}
           <div className="flex items-center gap-3">
@@ -625,7 +625,7 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm bg-red-500">
+                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg bg-red-500">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -633,7 +633,7 @@ export default function DashboardPage() {
 
               {/* Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
                       <span className={unreadCount > 0 ? 'text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-600' : 'text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500'}>
@@ -768,7 +768,7 @@ export default function DashboardPage() {
 
       <div className="flex pt-16">
         {/* Sidebar */}
-        <aside className={sidebarOpen ? 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-sm z-30 transition-transform duration-300 translate-x-0 lg:translate-x-0' : 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-sm z-30 transition-transform duration-300 -translate-x-full lg:translate-x-0'}>
+        <aside className={sidebarOpen ? 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-lg z-30 transition-transform duration-300 translate-x-0 lg:translate-x-0' : 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-lg z-30 transition-transform duration-300 -translate-x-full lg:translate-x-0'}>
           <nav className="p-4 space-y-2">
             {[
               { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', type: 'section' },
