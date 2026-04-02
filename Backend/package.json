@@ -39,7 +39,8 @@
     "db:create:interactive": "powershell -ExecutionPolicy Bypass -File ./scripts/create-database-interactive.ps1",
     "db:recreate:postgres": "bash scripts/recreate-database.sh",
     "db:recreate:postgres:win": "powershell -ExecutionPolicy Bypass -File ./scripts/recreate-database.ps1",
-    "db:recreate:postgres:sudo": "bash scripts/recreate-database-sudo.sh"
+    "db:recreate:postgres:sudo": "bash scripts/recreate-database-sudo.sh",
+    "db:postgres:set-dev-password": "bash scripts/set-postgres-dev-password.sh"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
