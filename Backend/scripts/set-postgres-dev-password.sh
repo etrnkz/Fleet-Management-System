@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TESTING ONLY — sets role "postgres" password to "postgres" (matches Backend/.env.example defaults).
+# TESTING ONLY - sets role "postgres" password to "postgres" (matches Backend/.env.example defaults).
 # Run on Linux/VPS once if migration:run fails with password authentication failed:
 #   cd Backend && bash scripts/set-postgres-dev-password.sh
 # Do not use on production servers.
