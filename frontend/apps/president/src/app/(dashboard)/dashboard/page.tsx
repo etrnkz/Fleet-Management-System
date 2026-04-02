@@ -132,7 +132,7 @@ export default function Dashboard() {
           department: trip.requester?.department?.name || 'Unknown',
           purpose: trip.purpose || 'No purpose specified',
           requestedDate: new Date(trip.createdAt).toLocaleDateString(),
-          status: trip.status,
+          status: trip.status || trip.state || 'unknown',
           requesterName: trip.requester?.name || 'Unknown'
         }))
         setPendingRequests(requestsData)
@@ -375,7 +375,7 @@ export default function Dashboard() {
 
               {/* Active Trips */}
               <div className="space-y-3">
-                {trips.filter((trip: any) => trip.status === 'in_progress').slice(0, 5).map((trip: any, index: number) => {
+                {trips.filter((trip: any) => trip.status === 'in_progress' || trip.state === 'IN_PROGRESS').slice(0, 5).map((trip: any, index: number) => {
                   const startTime = new Date(trip.startDateTime)
                   const endTime = new Date(trip.endDateTime)
                   const startHour = startTime.getHours()
@@ -485,7 +485,7 @@ export default function Dashboard() {
                             ? 'bg-yellow-100 text-yellow-700' 
                             : 'bg-blue-100 text-blue-700'
                         }`}>
-                          {request.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {(request.status || '').replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                         </span>
                       </td>
                       <td className="py-2 md:py-3 px-3 md:px-4">

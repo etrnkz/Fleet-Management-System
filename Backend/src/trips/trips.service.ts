@@ -474,8 +474,9 @@ export class TripsService {
       );
     }
 
-    trip.allocatedDriver = null;
-    trip.allocatedVehicle = null;
+    // Reset allocation — send back for reassignment
+    trip.allocatedDriver = null as any;
+    trip.allocatedVehicle = null as any;
     trip.state = TripState.APPROVED_FOR_ALLOCATION;
     trip.rejectionReason = `Driver rejected: ${reason}`;
 

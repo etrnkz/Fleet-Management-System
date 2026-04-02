@@ -359,7 +359,7 @@ export default function ApprovalsPage() {
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className={`px-2 md:px-3 py-1 rounded-full text-xs font-bold border-2 whitespace-nowrap ${getPriorityColor(request.priority)}`}>
-                    {request.priority.toUpperCase()}
+                    {(request.priority || 'normal').toUpperCase()}
                   </span>
                   {selectedTab === 'approved' && (
                     <span className="px-2 md:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold border-2 border-green-200 whitespace-nowrap">

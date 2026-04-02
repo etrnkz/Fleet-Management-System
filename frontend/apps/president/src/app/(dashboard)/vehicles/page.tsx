@@ -256,7 +256,7 @@ export default function VehiclesPage() {
                 <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(vehicle.status)} bg-white`}>
                   <div className="flex items-center space-x-1">
                     {getStatusIcon(vehicle.status)}
-                    <span className="capitalize">{vehicle.status.replace('-', ' ')}</span>
+                    <span className="capitalize">{(vehicle.status || '').replace('-', ' ')}</span>
                   </div>
                 </div>
               </div>
@@ -352,7 +352,7 @@ export default function VehiclesPage() {
                 <h4 className="text-lg font-bold text-gray-800 mb-3">Current Status</h4>
                 <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg border ${getStatusColor(selectedVehicle.status)}`}>
                   {getStatusIcon(selectedVehicle.status)}
-                  <span className="font-medium capitalize">{selectedVehicle.status.replace('-', ' ')}</span>
+                  <span className="font-medium capitalize">{(selectedVehicle.status || '').replace('-', ' ')}</span>
                 </div>
               </div>
 

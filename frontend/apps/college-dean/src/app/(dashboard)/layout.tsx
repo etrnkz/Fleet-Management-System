@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
@@ -20,6 +20,17 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotificationDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
@@ -262,12 +273,11 @@ export default function DashboardLayout({
 
           <div className="flex items-center gap-4">
             {/* Notification Bell */}
-            <div 
-              className="relative"
-              onMouseEnter={() => setNotificationDropdownOpen(true)}
-              onMouseLeave={() => setNotificationDropdownOpen(false)}
-            >
-              <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => setNotificationDropdownOpen(prev => !prev)}
+                className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
@@ -278,10 +288,9 @@ export default function DashboardLayout({
                 )}
               </button>
 
-              {/* Notification Dropdown */}
+              {/* Notification Dropdown — unread only */}
               {notificationDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-40 max-h-[70vh] sm:max-h-[500px] overflow-y-auto">
-                  {/* Header */}
                   <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
                     <h3 className="text-sm sm:text-base font-semibold text-gray-900">Pending Trip Requests</h3>
                     <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">
@@ -289,17 +298,24 @@ export default function DashboardLayout({
                     </span>
                   </div>
 
-                  {/* Notifications List */}
                   <div className="divide-y divide-gray-200">
                     {notifications.length > 0 ? (
                       notifications.map((notification) => {
                         const timeAgo = getTimeAgo(new Date(notification.sentAt))
                         return (
-                          <Link
+                          <div
                             key={notification.id}
-                            href="/approvals"
-                            onClick={() => setNotificationDropdownOpen(false)}
-                            className="block p-3 sm:p-4 hover:bg-gray-50 transition-colors"
+                            onClick={async () => {
+                              // Mark as read via API
+                              try {
+                                const { notificationApi } = await import('@/lib/api')
+                                await notificationApi.markAsRead(notification.id)
+                              } catch {}
+                              // Remove from dropdown
+                              setNotifications(prev => prev.filter(n => n.id !== notification.id))
+                              setNotificationDropdownOpen(false)
+                            }}
+                            className="block p-3 sm:p-4 hover:bg-gray-50 transition-colors cursor-pointer bg-blue-50"
                           >
                             <div className="flex items-start gap-2 sm:gap-3">
                               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -312,8 +328,9 @@ export default function DashboardLayout({
                                 <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
                                 <p className="text-xs text-gray-400 mt-1">{timeAgo}</p>
                               </div>
+                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
                             </div>
-                          </Link>
+                          </div>
                         )
                       })
                     ) : (
@@ -323,13 +340,9 @@ export default function DashboardLayout({
                     )}
                   </div>
 
-                  {/* Footer */}
                   <div className="p-2 sm:p-3 border-t border-gray-200">
-                    <Link
-                      href="/approvals"
-                      onClick={() => setNotificationDropdownOpen(false)}
-                      className="block text-center text-xs sm:text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-                    >
+                    <Link href="/approvals" onClick={() => setNotificationDropdownOpen(false)}
+                      className="block text-center text-xs sm:text-sm text-emerald-600 hover:text-emerald-700 font-medium">
                       View All Requests
                     </Link>
                   </div>
