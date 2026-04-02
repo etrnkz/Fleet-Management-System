@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { authApi, notificationApi } from '@/lib/api'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -15,6 +15,17 @@ export default function DashboardLayout({
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
   const [userData, setUserData] = useState<any>(null)
@@ -516,10 +527,9 @@ export default function DashboardLayout({
               </div>
 
               {/* Notification Bell */}
-              <div className="relative">
+              <div className="relative" ref={notifRef}>
                 <button
-                  onMouseEnter={() => setShowNotifications(true)}
-                  onMouseLeave={() => setShowNotifications(false)}
+                  onClick={() => setShowNotifications(prev => !prev)}
                   className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -532,13 +542,9 @@ export default function DashboardLayout({
                   )}
                 </button>
 
-                {/* Notifications Dropdown */}
+                {/* Notifications Dropdown — unread only */}
                 {showNotifications && (
-                  <div
-                    onMouseEnter={() => setShowNotifications(true)}
-                    onMouseLeave={() => setShowNotifications(false)}
-                    className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-y-auto"
-                  >
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-y-auto">
                     <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
                       <h3 className="font-bold text-gray-900">Notifications</h3>
                       {unreadCount > 0 && (
@@ -548,16 +554,16 @@ export default function DashboardLayout({
                       )}
                     </div>
                     <div className="divide-y divide-gray-100">
-                      {(notifications as any[]).length === 0 ? (
+                      {(notifications as any[]).filter((n: any) => !n.isRead).length === 0 ? (
                         <div className="p-8 text-center">
-                          <p className="text-gray-500 text-sm">No notifications</p>
+                          <p className="text-gray-500 text-sm">No new notifications</p>
                         </div>
                       ) : (
-                        (notifications as any[]).map((notif: any) => (
+                        (notifications as any[]).filter((n: any) => !n.isRead).map((notif: any) => (
                           <div
                             key={notif.id}
-                            onClick={() => handleMarkAsRead(notif.id)}
-                            className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50' : ''}`}
+                            onClick={() => { handleMarkAsRead(notif.id) }}
+                            className="p-4 hover:bg-gray-50 transition-colors cursor-pointer bg-blue-50"
                           >
                             <div className="flex items-start gap-3">
                               <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -566,14 +572,13 @@ export default function DashboardLayout({
                                 </svg>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-900 font-medium line-clamp-2">{notif.message || notif.title || 'Notification'}</p>
+                                <p className="text-sm text-gray-900 font-medium line-clamp-2">{notif.title || notif.message || 'Notification'}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.message}</p>
                                 {notif.createdAt && (
-                                  <p className="text-xs text-gray-500 mt-1">{new Date(notif.createdAt).toLocaleDateString()}</p>
+                                  <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
                                 )}
                               </div>
-                              {!notif.isRead && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
-                              )}
+                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
                             </div>
                           </div>
                         ))
@@ -581,7 +586,6 @@ export default function DashboardLayout({
                     </div>
                   </div>
                 )}
-
               </div>
 
               {/* Profile Dropdown */}

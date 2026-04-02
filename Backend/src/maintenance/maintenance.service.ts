@@ -94,8 +94,8 @@ export class MaintenanceService {
       );
     }
 
-    if (user.role !== UserRole.MaintenanceTeam) {
-      throw new ForbiddenException('Only Maintenance Team can inspect');
+    if (user.role !== UserRole.MaintenanceTeam && user.role !== UserRole.DeploymentTeam && user.role !== UserRole.TransportOffice) {
+      throw new ForbiddenException('Only Deployment Office or Maintenance Team can review');
     }
 
     maintenance.inspectionNotes = inspectDto.inspectionNotes;
@@ -116,8 +116,8 @@ export class MaintenanceService {
       );
     }
 
-    if (user.role !== UserRole.TransportOffice) {
-      throw new ForbiddenException('Only Transport Office can approve budget');
+    if (user.role !== UserRole.TransportOffice && user.role !== UserRole.DeploymentTeam) {
+      throw new ForbiddenException('Only Deployment Office or Transport Office can approve');
     }
 
     maintenance.approvedBy = user;
@@ -136,10 +136,8 @@ export class MaintenanceService {
       );
     }
 
-    if (user.role !== UserRole.MaintenanceTeam) {
-      throw new ForbiddenException(
-        'Only Maintenance Team can start maintenance',
-      );
+    if (user.role !== UserRole.MaintenanceTeam && user.role !== UserRole.Driver && user.role !== UserRole.DeploymentTeam) {
+      throw new ForbiddenException('Only Driver or Deployment Team can start maintenance');
     }
 
     maintenance.status = MaintenanceStatus.InProgress;
@@ -160,10 +158,8 @@ export class MaintenanceService {
       );
     }
 
-    if (user.role !== UserRole.MaintenanceTeam) {
-      throw new ForbiddenException(
-        'Only Maintenance Team can complete maintenance',
-      );
+    if (user.role !== UserRole.MaintenanceTeam && user.role !== UserRole.Driver && user.role !== UserRole.DeploymentTeam) {
+      throw new ForbiddenException('Only Driver or Deployment Team can complete maintenance');
     }
 
     maintenance.actualCost = completeDto.actualCost;

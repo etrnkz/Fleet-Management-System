@@ -8,6 +8,11 @@ export default function MaintenancePage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null)
+  const [showApproveModal, setShowApproveModal] = useState(false)
+  const [approveTarget, setApproveTarget] = useState<any>(null)
+  const [scheduleNotes, setScheduleNotes] = useState('')
+  const [estimatedCost, setEstimatedCost] = useState('')
+  const [approving, setApproving] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
@@ -33,11 +38,16 @@ export default function MaintenancePage() {
 
   const getStatusDisplay = (status: string) => {
     switch ((status || '').toLowerCase()) {
-      case 'pending': return { label: 'Pending', color: 'bg-gray-100 text-gray-700' }
-      case 'scheduled': return { label: 'Scheduled', color: 'bg-yellow-100 text-yellow-700' }
+      case 'submitted': return { label: 'Submitted', color: 'bg-orange-100 text-orange-700' }
+      case 'underinspection': return { label: 'Under Inspection', color: 'bg-yellow-100 text-yellow-700' }
+      case 'estimateprovided': return { label: 'Estimate Provided', color: 'bg-purple-100 text-purple-700' }
+      case 'budgetapproved': return { label: 'Budget Approved', color: 'bg-blue-100 text-blue-700' }
+      case 'inprogress':
       case 'in progress': return { label: 'In Progress', color: 'bg-blue-100 text-blue-700' }
       case 'completed': return { label: 'Completed', color: 'bg-emerald-100 text-emerald-700' }
-      case 'cancelled': return { label: 'Cancelled', color: 'bg-red-100 text-red-700' }
+      case 'rejected': return { label: 'Rejected', color: 'bg-red-100 text-red-700' }
+      case 'pending': return { label: 'Pending', color: 'bg-gray-100 text-gray-700' }
+      case 'scheduled': return { label: 'Scheduled', color: 'bg-yellow-100 text-yellow-700' }
       default: return { label: status || 'Unknown', color: 'bg-gray-100 text-gray-700' }
     }
   }
@@ -54,6 +64,56 @@ export default function MaintenancePage() {
     setShowDetailsModal(true)
   }
 
+  const handleApprove = (maintenance: any) => {
+    setApproveTarget(maintenance)
+    setScheduleNotes('')
+    setEstimatedCost('')
+    setShowApproveModal(true)
+  }
+
+  const handleApproveSubmit = async () => {
+    if (!approveTarget) return
+    setApproving(true)
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || localStorage.getItem('access_token') : null
+      // Step 1: inspect (moves to EstimateProvided)
+      await fetch(`http://localhost:3000/api/v1/maintenance/${approveTarget.id}/inspect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ inspectionNotes: scheduleNotes || 'Approved by deployment office', estimatedCost: Number(estimatedCost) || 0 })
+      })
+      // Step 2: approve-budget (moves to BudgetApproved — driver can now start)
+      await fetch(`http://localhost:3000/api/v1/maintenance/${approveTarget.id}/approve-budget`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      showNotification('Maintenance approved — driver will be notified to take vehicle for service', 'success')
+      setShowApproveModal(false)
+      loadMaintenance()
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to approve', 'error')
+    } finally {
+      setApproving(false)
+    }
+  }
+
+  const handleReject = async (maintenance: any) => {
+    const reason = prompt('Reason for rejection:')
+    if (!reason) return
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') || localStorage.getItem('access_token') : null
+      await fetch(`http://localhost:3000/api/v1/maintenance/${maintenance.id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason })
+      })
+      showNotification('Maintenance request rejected', 'success')
+      loadMaintenance()
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to reject', 'error')
+    }
+  }
+
   const getFilteredMaintenance = () => {
     return maintenanceList.filter(maintenance => {
       const vehicleName = maintenance.vehicleName || maintenance.vehicle?.model || maintenance.vehicle?.name || ''
@@ -64,7 +124,7 @@ export default function MaintenancePage() {
         vehiclePlate.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (maintenance.type || maintenance.maintenanceType || '').toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === 'all' ||
-        (maintenance.status || '').toLowerCase().replace(' ', '-') === statusFilter.toLowerCase()
+        (maintenance.status || '').toLowerCase().replace(/\s/g, '') === statusFilter.toLowerCase().replace(/\s/g, '')
       return matchesSearch && matchesStatus
     })
   }
@@ -73,10 +133,10 @@ export default function MaintenancePage() {
 
   const stats = {
     total: maintenanceList.length,
-    pending: maintenanceList.filter(m => (m.status || '').toLowerCase() === 'pending').length,
-    scheduled: maintenanceList.filter(m => (m.status || '').toLowerCase() === 'scheduled').length,
-    inProgress: maintenanceList.filter(m => (m.status || '').toLowerCase() === 'in progress').length,
-    completed: maintenanceList.filter(m => (m.status || '').toLowerCase() === 'completed').length
+    submitted: maintenanceList.filter(m => (m.status || '').toLowerCase() === 'submitted').length,
+    inProgress: maintenanceList.filter(m => ['inprogress','in progress'].includes((m.status || '').toLowerCase())).length,
+    completed: maintenanceList.filter(m => (m.status || '').toLowerCase() === 'completed').length,
+    rejected: maintenanceList.filter(m => (m.status || '').toLowerCase() === 'rejected').length,
   }
 
   return (
@@ -100,12 +160,8 @@ export default function MaintenancePage() {
           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">{stats.total}</h3>
         </div>
         <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-          <span className="text-xs md:text-sm text-gray-600">Pending</span>
-          <h3 className="text-2xl md:text-3xl font-bold text-gray-600 mt-2">{stats.pending}</h3>
-        </div>
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
-          <span className="text-xs md:text-sm text-gray-600">Scheduled</span>
-          <h3 className="text-2xl md:text-3xl font-bold text-yellow-600 mt-2">{stats.scheduled}</h3>
+          <span className="text-xs md:text-sm text-gray-600">Submitted</span>
+          <h3 className="text-2xl md:text-3xl font-bold text-orange-600 mt-2">{stats.submitted}</h3>
         </div>
         <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
           <span className="text-xs md:text-sm text-gray-600">In Progress</span>
@@ -114,6 +170,10 @@ export default function MaintenancePage() {
         <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
           <span className="text-xs md:text-sm text-gray-600">Completed</span>
           <h3 className="text-2xl md:text-3xl font-bold text-emerald-600 mt-2">{stats.completed}</h3>
+        </div>
+        <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
+          <span className="text-xs md:text-sm text-gray-600">Rejected</span>
+          <h3 className="text-2xl md:text-3xl font-bold text-red-600 mt-2">{stats.rejected}</h3>
         </div>
       </div>
 
@@ -137,10 +197,13 @@ export default function MaintenancePage() {
             className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
           >
             <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="in-progress">In Progress</option>
+            <option value="submitted">Submitted</option>
+            <option value="underinspection">Under Inspection</option>
+            <option value="estimateprovided">Estimate Provided</option>
+            <option value="budgetapproved">Budget Approved</option>
+            <option value="inprogress">In Progress</option>
             <option value="completed">Completed</option>
+            <option value="rejected">Rejected</option>
           </select>
           <button onClick={loadMaintenance} className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">
             Refresh
@@ -173,10 +236,10 @@ export default function MaintenancePage() {
           {filteredMaintenance.map((maintenance) => {
             const vehicleName = maintenance.vehicleName || maintenance.vehicle?.model || maintenance.vehicle?.name || 'Unknown Vehicle'
             const vehiclePlate = maintenance.vehiclePlate || maintenance.vehicle?.plateNumber || maintenance.vehicle?.plate || ''
-            const maintenanceType = maintenance.type || maintenance.maintenanceType || 'N/A'
-            const description = maintenance.description || maintenance.reason || ''
+            const maintenanceType = maintenance.type || maintenance.maintenanceType || maintenance.priority || 'N/A'
+            const description = maintenance.description || maintenance.reason || maintenance.issueDescription || ''
             const scheduledDate = maintenance.scheduledDate || maintenance.scheduledAt || ''
-            const requestedBy = maintenance.requestedBy || maintenance.requestedByUser?.name || 'N/A'
+            const requestedBy = maintenance.requestedBy || maintenance.requestedByUser?.name || maintenance.reportedBy?.user?.name || maintenance.reportedBy?.name || 'N/A'
             const { label: statusLabel, color: statusColor } = getStatusDisplay(maintenance.status)
             return (
               <div key={maintenance.id} className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 hover:shadow-lg transition-shadow">
@@ -202,13 +265,29 @@ export default function MaintenancePage() {
                       </div>
                     )}
                   </div>
-                  <div>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleViewDetails(maintenance)}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                     >
                       View Details
                     </button>
+                    {(maintenance.status === 'Submitted') && (
+                      <button
+                        onClick={() => handleApprove(maintenance)}
+                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+                      >
+                        Approve & Schedule
+                      </button>
+                    )}
+                    {(maintenance.status === 'Submitted' || maintenance.status === 'EstimateProvided') && (
+                      <button
+                        onClick={() => handleReject(maintenance)}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                      >
+                        Reject
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -221,6 +300,35 @@ export default function MaintenancePage() {
         <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-2">No maintenance records found</h3>
           <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+        </div>
+      )}
+
+      {showApproveModal && approveTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Approve & Schedule Maintenance</h3>
+            <p className="text-sm text-gray-500 mb-4">Vehicle: {approveTarget.vehicle?.plateNumber || 'N/A'} — {approveTarget.issueDescription}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Estimated Cost (ETB)</label>
+                <input type="number" min="0" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)}
+                  placeholder="e.g. 2000" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Schedule Notes (optional)</label>
+                <textarea rows={2} value={scheduleNotes} onChange={e => setScheduleNotes(e.target.value)}
+                  placeholder="e.g. Take vehicle to workshop on Monday morning"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowApproveModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+              <button onClick={handleApproveSubmit} disabled={approving}
+                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50">
+                {approving ? 'Approving...' : 'Approve & Notify Driver'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

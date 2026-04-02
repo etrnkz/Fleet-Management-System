@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { authApi, tripApi, vehicleApi, statsApi, maintenanceApi } from '@/lib/api'
@@ -10,6 +10,24 @@ export default function DriverDashboard() {
   const [activeSection, setActiveSection] = useState('overview')
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false)
+  const [driverNotifications, setDriverNotifications] = useState<any[]>([])
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
+  const notifBellRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+        setShowProfileDropdown(false)
+      }
+      if (notifBellRef.current && !notifBellRef.current.contains(e.target as Node)) {
+        setShowNotifDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [userData, setUserData] = useState<any>(null)
   const [assignedVehicle, setAssignedVehicle] = useState<any>(null)
   const [stats, setStats] = useState<any>(null)
@@ -56,6 +74,13 @@ export default function DriverDashboard() {
       setUserData(user)
       setAssignedVehicle(vehicle)
       setStats(driverStats)
+
+      // Load notifications
+      const token = localStorage.getItem('access_token')
+      if (token) {
+        fetch('http://localhost:3000/api/v1/notifications', { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.json()).then(data => setDriverNotifications(Array.isArray(data) ? data : [])).catch(() => {})
+      }
     } catch (error: unknown) {
       console.error('Failed to load user data:', error)
       const msg = error instanceof Error ? error.message : ''
@@ -319,30 +344,6 @@ export default function DriverDashboard() {
               <span className="font-medium">Vehicle Info</span>
             </button>
           </nav>
-
-          {/* User Info & Logout */}
-          <div className="border-t border-gray-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                <span className="text-emerald-600 font-bold text-sm">
-                  {userData?.fullName?.split(' ').map((n: string) => n[0]).join('') || 'D'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{userData?.fullName || 'Driver'}</p>
-                <p className="text-xs text-gray-500 truncate">{userData?.email || 'driver@hu.edu.et'}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowLogoutModal(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span className="font-medium">Logout</span>
-            </button>
-          </div>
         </div>
       </aside>
 
@@ -383,6 +384,100 @@ export default function DriverDashboard() {
                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-emerald-700">{userData?.status || 'Available'}</span>
+                </div>
+
+                {/* Notification Bell */}
+                <div className="relative" ref={notifBellRef}>
+                  <button onClick={() => setShowNotifDropdown(prev => !prev)}
+                    className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    {driverNotifications.filter(n => !n.isRead).length > 0 && (
+                      <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                        {driverNotifications.filter(n => !n.isRead).length}
+                      </span>
+                    )}
+                  </button>
+                  {showNotifDropdown && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
+                        <span className="text-xs text-gray-500">{driverNotifications.filter(n => !n.isRead).length} unread</span>
+                      </div>
+                      {driverNotifications.filter(n => !n.isRead).length === 0 ? (
+                        <div className="p-8 text-center text-sm text-gray-400">No new notifications</div>
+                      ) : driverNotifications.filter(n => !n.isRead).map(n => (
+                        <div key={n.id} onClick={async () => {
+                          const token = localStorage.getItem('access_token')
+                          if (token) await fetch(`http://localhost:3000/api/v1/notifications/${n.id}/read`, { method: 'PATCH', headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
+                          setDriverNotifications(prev => prev.map(x => x.id === n.id ? { ...x, isRead: true } : x))
+                        }}
+                          className="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer bg-blue-50">
+                          <p className="text-sm font-medium text-gray-900">{n.title || n.type}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{new Date(n.sentAt || n.createdAt).toLocaleString()}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="relative" ref={profileDropdownRef}>
+                  <button
+                    onClick={() => setShowProfileDropdown(prev => !prev)}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">
+                        {userData?.name?.split(' ').map((n: string) => n[0]).join('').slice(0,2) || 'D'}
+                      </span>
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <p className="text-sm font-medium text-gray-900 leading-tight">{userData?.name || 'Driver'}</p>
+                      <p className="text-xs text-gray-500 leading-tight">{userData?.role || 'Driver'}</p>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {showProfileDropdown && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                      {/* Profile header */}
+                      <div className="p-4 bg-emerald-50 border-b border-emerald-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">
+                              {userData?.name?.split(' ').map((n: string) => n[0]).join('').slice(0,2) || 'D'}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{userData?.name || 'Driver'}</p>
+                            <p className="text-xs text-gray-500">{userData?.email || ''}</p>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Menu items */}
+                      <div className="p-2">
+                        <button onClick={() => { setShowProfileDropdown(false); setActiveSection('vehicle-info') }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg text-left">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <div><p className="text-sm font-medium">My Profile</p><p className="text-xs text-gray-400">View vehicle info</p></div>
+                        </button>
+                      </div>
+                      <div className="p-2 border-t border-gray-100">
+                        <button onClick={() => { setShowProfileDropdown(false); setShowLogoutModal(true) }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg text-left">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          <div><p className="text-sm font-medium">Logout</p><p className="text-xs text-red-400">Sign out</p></div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -885,6 +980,39 @@ export default function DriverDashboard() {
                                 <p className="text-sm text-red-600 mt-1">
                                   Rejection Reason: {request.rejectionReason}
                                 </p>
+                              )}
+                              {/* Action buttons based on status */}
+                              {request.status === 'BudgetApproved' && (
+                                <button onClick={async () => {
+                                  const token = localStorage.getItem('access_token')
+                                  try {
+                                    await fetch(`http://localhost:3000/api/v1/maintenance/${request.id}/start`, {
+                                      method: 'POST', headers: { Authorization: `Bearer ${token}` }
+                                    })
+                                    setToast({ message: 'Maintenance started — take vehicle to service', type: 'success' })
+                                    loadMaintenanceRequests()
+                                  } catch { setToast({ message: 'Failed to start', type: 'error' }) }
+                                }}
+                                  className="mt-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700">
+                                  ✓ Start Maintenance
+                                </button>
+                              )}
+                              {request.status === 'InProgress' && (
+                                <button onClick={async () => {
+                                  const token = localStorage.getItem('access_token')
+                                  try {
+                                    await fetch(`http://localhost:3000/api/v1/maintenance/${request.id}/complete`, {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                      body: JSON.stringify({ actualCost: request.estimatedCost || 0, completionNotes: 'Completed by driver' })
+                                    })
+                                    setToast({ message: 'Maintenance marked as completed!', type: 'success' })
+                                    loadMaintenanceRequests()
+                                  } catch { setToast({ message: 'Failed to complete', type: 'error' }) }
+                                }}
+                                  className="mt-2 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700">
+                                  ✓ Mark as Completed
+                                </button>
                               )}
                             </div>
                             <span className="text-sm text-gray-500 flex-shrink-0">

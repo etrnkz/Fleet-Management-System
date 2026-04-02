@@ -7,16 +7,30 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token')
-    const user = localStorage.getItem('user')
-    if (token && user) {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('access_token')
+      const user = localStorage.getItem('user')
+      if (!token || !user) return
+
       try {
         const parsed = JSON.parse(user)
-        if (parsed.role === 'President') {
+        if (parsed.role !== 'President' && parsed.role !== 'Developer') return
+
+        // Verify token is still valid
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (res.ok) {
           router.push('/dashboard')
+        } else {
+          // Token expired — clear storage
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('user')
         }
       } catch {}
     }
+    checkAuth()
   }, [router])
 
   return (

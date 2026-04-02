@@ -397,7 +397,7 @@ export default function DashboardLayout({
                               )}
                             </div>
                             <p className="text-xs text-gray-600 mt-2 line-clamp-2">{notif.message}</p>
-                            <p className="text-xs text-gray-400 mt-2">{notif.time}</p>
+                            <p className="text-xs text-gray-400 mt-2">{notif.time || (notif.sentAt ? new Date(notif.sentAt).toLocaleString() : notif.createdAt ? new Date(notif.createdAt).toLocaleString() : '')}</p>
                           </div>
                         </div>
                       </div>
