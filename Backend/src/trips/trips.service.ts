@@ -24,11 +24,13 @@ import { RejectTripDto } from './dto/reject-trip.dto';
 import { AllocateTripDto } from './dto/allocate-trip.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { EarlyCompleteTripDto } from './dto/early-complete-trip.dto';
+import { ConfirmTransportDto } from './dto/confirm-transport.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { DriversService } from '../drivers/drivers.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { parseTripQrPayload } from './utils/trip-qr.util';
 
 @Injectable()
 export class TripsService {
@@ -552,7 +554,7 @@ export class TripsService {
 
   async confirmTransport(
     id: string,
-    confirmTransportDto: any,
+    confirmTransportDto: ConfirmTransportDto,
     user: User,
   ): Promise<TripRequest> {
     const trip = await this.findOne(id);
@@ -569,6 +571,13 @@ export class TripsService {
 
     if (!confirmTransportDto.fuelApproved) {
       throw new BadRequestException('Fuel must be approved to proceed');
+    }
+
+    if (confirmTransportDto.estimatedFuelCost != null) {
+      trip.estimatedFuelCost = confirmTransportDto.estimatedFuelCost;
+    }
+    if (confirmTransportDto.estimatedDistance != null) {
+      trip.estimatedDistance = confirmTransportDto.estimatedDistance;
     }
 
     trip.transportOfficer = user;
@@ -664,6 +673,44 @@ export class TripsService {
 
     trip.state = TripState.IN_PROGRESS;
 
+    return this.tripRepository.save(trip);
+  }
+
+  /**
+   * Gate device scans the driver QR (JSON or trip UUID). Starts trip when READY and QR fields match the server record.
+   * Caller must be Gate, TransportOffice, or Developer (enforced by RolesGuard on the controller).
+   */
+  async startTripFromGateScan(qrPayload: string): Promise<TripRequest> {
+    const parsed = parseTripQrPayload(qrPayload);
+    const trip = await this.findOne(parsed.tripId);
+
+    if (trip.state !== TripState.READY) {
+      throw new BadRequestException(
+        `Trip is not ready to start (current state: ${trip.state})`,
+      );
+    }
+
+    if (!trip.allocatedVehicle) {
+      throw new BadRequestException('Trip has no allocated vehicle');
+    }
+
+    if (
+      parsed.requestNumber != null &&
+      parsed.requestNumber !== trip.requestNumber
+    ) {
+      throw new BadRequestException('QR request number does not match trip');
+    }
+
+    if (
+      parsed.vehiclePlate != null &&
+      parsed.vehiclePlate !== trip.allocatedVehicle.plateNumber
+    ) {
+      throw new BadRequestException(
+        'QR vehicle plate does not match allocated vehicle',
+      );
+    }
+
+    trip.state = TripState.IN_PROGRESS;
     return this.tripRepository.save(trip);
   }
 
