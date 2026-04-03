@@ -55,10 +55,10 @@ export class TripRequest {
   @Column()
   destination: string;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   startDateTime: Date;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   endDateTime: Date;
 
   @Column()
@@ -100,10 +100,10 @@ export class TripRequest {
   @ManyToOne(() => User, { nullable: true })
   rejectedBy: User | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   rejectedAt: Date | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   completedAt: Date | null;
 
   @OneToMany(() => Approval, (approval) => approval.tripRequest, {

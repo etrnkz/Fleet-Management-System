@@ -19,6 +19,14 @@ export enum FuelType {
   Hybrid = 'Hybrid',
 }
 
+/** Forbidden circular zones: if a VIP-restricted vehicle enters, engine-off is simulated. */
+export type VehicleRestrictedZone = {
+  name?: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+};
+
 @Entity('vehicles')
 export class Vehicle {
   @PrimaryGeneratedColumn('uuid')
@@ -57,10 +65,10 @@ export class Vehicle {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   currentMileage: number;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastMaintenanceDate: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   nextMaintenanceDate: Date;
 
   @Column({ type: 'date', nullable: true })
@@ -80,6 +88,12 @@ export class Vehicle {
 
   @Column({ type: 'text', nullable: true })
   notes: string;
+
+  @Column({ default: false })
+  vipGeoRestrictionEnabled: boolean;
+
+  @Column({ type: 'simple-json', nullable: true })
+  restrictedZones: VehicleRestrictedZone[] | null;
 
   @CreateDateColumn()
   createdAt: Date;
