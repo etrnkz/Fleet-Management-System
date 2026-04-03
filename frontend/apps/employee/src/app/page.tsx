@@ -7,34 +7,53 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-sm">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#191C20]">
+      <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-[#C4C6D0]/30 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 rounded flex items-center justify-center">
-              <span className="text-white font-bold text-xs sm:text-sm">H</span>
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded bg-[#1B365D] flex items-center justify-center text-white shadow-sm">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
             </div>
-            <span className="font-semibold text-gray-900 text-sm sm:text-base">HUFMS</span>
-          </div>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-4 lg:gap-8">
-            <Link href="#home" className="text-gray-600 hover:text-gray-900 transition-colors duration-300 hover:scale-105 transform text-sm lg:text-base">Home</Link>
-            <Link href="#about" className="text-gray-600 hover:text-gray-900 transition-colors duration-300 hover:scale-105 transform text-sm lg:text-base">About</Link>
-            <Link href="#support" className="text-gray-600 hover:text-gray-900 transition-colors duration-300 hover:scale-105 transform text-sm lg:text-base">Support</Link>
-            <Link href="#contact" className="text-gray-600 hover:text-gray-900 transition-colors duration-300 hover:scale-105 transform text-sm lg:text-base">Contact</Link>
+            <div>
+              <p className="font-serif text-lg font-bold tracking-tight text-[#1B365D] leading-none">Fleet Authority</p>
+              <p className="text-[10px] uppercase tracking-widest text-[#565F71] font-bold mt-0.5">University Portal</p>
+            </div>
+          </Link>
+
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
+            <Link href="#home" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+              Home
+            </Link>
+            <Link href="#about" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+              About
+            </Link>
+            <Link href="#modules" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+              Services
+            </Link>
+            <Link href="#support" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+              Support
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/login" className="bg-emerald-500 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md hover:bg-emerald-600 transition-all duration-300 hover:scale-105 hover:shadow-lg transform text-sm sm:text-base">
-              Sign In
+            <Link
+              href="/login"
+              className="bg-[#1B365D] text-white px-5 sm:px-6 py-2 rounded font-bold text-sm shadow hover:bg-[#152a47] active:scale-[0.98] transition-all"
+            >
+              Sign in
             </Link>
-            
-            {/* Mobile Menu Button */}
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+              className="md:hidden p-2 text-[#565F71] hover:text-[#1B365D]"
+              aria-label="Menu"
             >
               {mobileMenuOpen ? (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,425 +68,227 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200 animate-fade-in">
-            <nav className="flex flex-col px-4 py-3 space-y-3">
-              <Link 
-                href="#home" 
+          <div className="md:hidden border-t border-[#C4C6D0]/20 bg-white px-4 py-3 space-y-2">
+            {['#home', '#about', '#modules', '#support'].map((h, i) => (
+              <Link
+                key={h}
+                href={h}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
+                className="block py-2 text-[#565F71] font-medium hover:text-[#1B365D]"
               >
-                Home
+                {['Home', 'About', 'Services', 'Support'][i]}
               </Link>
-              <Link 
-                href="#about" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
-              >
-                About
-              </Link>
-              <Link 
-                href="#support" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
-              >
-                Support
-              </Link>
-              <Link 
-                href="#contact" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
-              >
-                Contact
-              </Link>
-            </nav>
+            ))}
           </div>
         )}
       </header>
 
-      {/* Hero Section */}
-      <section id="home" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20 mt-16 sm:mt-20">
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
+      <section id="home" className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="animate-fade-in-up">
-            <div className="inline-block bg-emerald-50 text-emerald-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm mb-4 sm:mb-6 flex items-center gap-2 animate-bounce-slow">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-              </svg>
-              WELCOME: EMPLOYEE PORTAL
-            </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
-              Smart Fleet Control<br />
-              for <span className="text-emerald-500">Haramaya<br />University</span>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-4">Official employee access</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-[#1B365D] font-serif leading-tight">
+              University fleet registry &amp; trip coordination
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base lg:text-lg mb-6 sm:mb-8">
-              Our AI-powered system for managing and monitoring fleet operations, fuel consumption, 
-              and maintenance schedules for Haramaya University vehicles in a single, easy-to-use platform.
+            <p className="text-[#44474E] mt-6 text-base sm:text-lg leading-relaxed font-medium max-w-xl">
+              Submit travel requests, track approvals, and stay informed on vehicle assignments through a single
+              institutional portal aligned with transport office procedures.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Link href="/login" className="bg-emerald-500 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-md hover:bg-emerald-600 font-medium transition-all duration-300 hover:scale-105 hover:shadow-xl transform text-center text-sm sm:text-base">
-                Login as Employee →
+            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 bg-[#1B365D] text-white px-8 py-3 rounded font-bold shadow hover:bg-[#152a47] active:scale-[0.98] transition-all text-center"
+              >
+                Employee sign in
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </Link>
-              <button className="border border-gray-300 text-gray-700 px-6 sm:px-8 py-2.5 sm:py-3 rounded-md hover:bg-gray-50 font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg transform text-sm sm:text-base">
-                Learn More
-              </button>
+              <a
+                href="#about"
+                className="inline-flex items-center justify-center px-8 py-3 rounded font-semibold text-[#1B365D] border border-[#C4C6D0] bg-white hover:bg-[#F2F3F7] transition-colors"
+              >
+                Learn more
+              </a>
             </div>
           </div>
-          <div className="relative animate-fade-in-right mt-8 md:mt-0">
-            <div className="bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-              <div className="bg-white rounded-lg p-4 sm:p-6 shadow-lg">
-                <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-full"></div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm sm:text-base">Fleet Dashboard</p>
-                    <p className="text-xs sm:text-sm text-gray-500">Real-time monitoring</p>
-                  </div>
+          <div className="relative animate-fade-in-right">
+            <div className="bg-white rounded border border-[#C4C6D0]/40 shadow-sm p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded bg-[#D1E1FF]/60 flex items-center justify-center text-[#1B365D]">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
                 </div>
-                <div className="h-24 sm:h-32 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-lg"></div>
+                <div>
+                  <p className="font-serif font-bold text-[#1B365D] text-lg">Trip registry preview</p>
+                  <p className="text-xs text-[#565F71] font-semibold uppercase tracking-wider">Read-only illustration</p>
+                </div>
               </div>
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between py-3 border-b border-[#ECEEF3] last:border-0"
+                  >
+                    <span className="text-sm font-mono font-bold text-[#1B365D]">REQ-{82000 + i * 11}</span>
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm ${
+                        i === 1 ? 'bg-[#D1E1FF] text-[#1B365D]' : 'bg-[#E0E2E8] text-[#565F71]'
+                      }`}
+                    >
+                      {i === 1 ? 'Approved' : 'Pending'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-[#565F71] mt-6 italic">Figures shown are illustrative.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* About the System */}
-      <section id="about" className="bg-gray-50 py-12 sm:py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center animate-fade-in">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">About the System</h2>
-          <p className="text-gray-600 max-w-3xl mx-auto text-sm sm:text-base">
-            HUFMS is a centralized platform designed for efficiency and transparency. 
-            We help users track transport logistics across all university departments. 
-            By digitizing fleet workflows, we empower the university to manage its vehicles, 
-            trips and resources with data-driven precision.
+      <section id="about" className="bg-white border-y border-[#C4C6D0]/20 py-16 sm:py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#1B365D] font-serif tracking-tight mb-4">About the portal</h2>
+          <p className="text-[#44474E] leading-relaxed font-medium">
+            Fleet Authority centralizes official transport workflows for Haramaya University. The system supports
+            transparent approvals, documented trip records, and coordination with the transport office—consistent with
+            institutional governance and duty-of-care standards.
           </p>
         </div>
       </section>
 
-      {/* Key Management Modules */}
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section id="modules" className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Key Management Modules</h2>
-            <p className="text-gray-600 text-sm sm:text-base">Comprehensive tools for modern university logistics</p>
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl font-bold text-[#1B365D] font-serif tracking-tight mb-2">Key capabilities</h2>
+            <p className="text-[#565F71] text-sm font-medium">Tools available through the employee portal</p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                t: 'Trip requests',
+                d: 'Submit and track official travel requests with structured approval paths.',
+              },
+              {
+                t: 'Status & registry',
+                d: 'View pending, approved, and completed trips in a clear registry layout.',
+              },
+              {
+                t: 'Notifications',
+                d: 'Receive updates on approvals, assignments, and transport office messages.',
+              },
+              {
+                t: 'Fleet visibility',
+                d: 'See vehicle availability context where published by transport operations.',
+              },
+              {
+                t: 'Profile & settings',
+                d: 'Maintain contact details and institutional affiliation information.',
+              },
+              {
+                t: 'Support channels',
+                d: 'Reach the transport office or IT helpdesk through published contact routes.',
+              },
+            ].map((item) => (
+              <div
+                key={item.t}
+                className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B365D]/25 transition-colors"
+              >
+                <h3 className="font-serif font-bold text-lg text-[#1B365D] mb-2">{item.t}</h3>
+                <p className="text-sm text-[#44474E] leading-relaxed">{item.d}</p>
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Real-Time Tracking</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Monitor vehicle locations and routes in real-time with GPS integration for enhanced fleet visibility.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Fuel Monitoring</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Track fuel consumption, costs, and efficiency metrics to optimize fleet operations.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Maintenance Management</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Schedule and track vehicle maintenance to ensure fleet reliability and longevity.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Trip & Dispatch Control</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Manage trip requests, vehicle assignments, and dispatch operations efficiently.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Compliance & Docs</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Maintain digital records of licenses, insurance, and compliance documents.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Inspection Reporting</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Generate detailed reports on fleet performance, costs, and utilization.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Institutional Benefits */}
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Institutional Benefits</h2>
+      <section className="bg-[#1B365D] text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12">
+          <div>
+            <h3 className="font-serif text-xl font-bold mb-3">Operational coverage</h3>
+            <p className="text-white/85 text-sm leading-relaxed">
+              Services are intended for authorized university personnel and official business in line with transport
+              office policies.
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center animate-fade-in-up">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Cost-Efficient</h3>
-              <p className="text-gray-600">
-                Reduce operational costs through optimized fuel usage and preventive maintenance scheduling.
-              </p>
-            </div>
-
-            <div className="text-center animate-fade-in-up">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Enhanced</h3>
-              <p className="text-gray-600">
-                Real-time insights and analytics for data-driven decision making and fleet optimization.
-              </p>
-            </div>
-
-            <div className="text-center animate-fade-in-up">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Governance</h3>
-              <p className="text-gray-600">
-                Full audit trails and compliance tracking for transparent fleet management operations.
-              </p>
-            </div>
+          <div>
+            <h3 className="font-serif text-xl font-bold mb-3">Restricted access</h3>
+            <p className="text-white/85 text-sm leading-relaxed">
+              Sign-in requires valid institutional credentials. Activity may be logged for audit and compliance purposes.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* System User Roles */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 animate-fade-in">
-          <div className="text-center mb-12 sm:mb-16 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">System User Role</h2>
-            <p className="text-gray-600 text-sm sm:text-base">Employee Portal Access</p>
-          </div>
-          <div className="flex justify-center">
-            <div className="text-center animate-fade-in-up">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 hover:scale-110 transition-transform duration-300">
-                <svg className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <p className="font-semibold text-gray-900 text-lg sm:text-xl mb-2">Employee</p>
-              <p className="text-gray-600 text-sm sm:text-base max-w-md mx-auto">
-                Request trips, view available vehicles, track trip status, and provide feedback on your journey experience.
+      <section id="support" className="py-16 sm:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            <div>
+              <h2 className="font-serif text-3xl font-bold text-[#1B365D] mb-4">Need support?</h2>
+              <p className="text-[#44474E] mb-8 leading-relaxed">
+                For trip scheduling, approvals, or driver coordination, contact the transport office. For login or
+                technical issues, use the IT helpdesk.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Operational Coverage & Restricted Access */}
-      <section className="bg-emerald-500 text-white py-16 animate-fade-in">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="flex gap-4 animate-fade-in-up">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Operational Coverage</h3>
-                <p className="text-emerald-50">
-                  The system is designed to serve all parts and campuses of Haramaya University for streamlined operations.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4 animate-fade-in-up">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-2">Restricted Access</h3>
-                <p className="text-emerald-50">
-                  Only authorized personnel with valid credentials can access the system, ensuring data security and privacy.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Need Support */}
-      <section id="support" className="py-12 sm:py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-6 animate-fade-in">
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="animate-fade-in-up">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Need Support?</h2>
-              <p className="text-gray-600 mb-8">
-                If you encounter any issues or need assistance, feel free to reach out to our support team. 
-                We're here to help you get the most out of the system.
-              </p>
-
               <div className="space-y-6">
-                <div className="flex gap-4 animate-fade-in-up">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Transport Office</p>
-                    <p className="text-gray-600">For general inquiries and support</p>
-                    <a href="mailto:transport@hu.edu.et" className="text-emerald-500 hover:underline">
-                      transport@hu.edu.et
-                    </a>
-                  </div>
+                <div>
+                  <p className="font-bold text-[#1B365D]">Transport office</p>
+                  <p className="text-sm text-[#565F71]">General inquiries</p>
+                  <a href="mailto:transport@hu.edu.et" className="text-sm font-semibold text-[#1B365D] hover:underline">
+                    transport@hu.edu.et
+                  </a>
                 </div>
-
-                <div className="flex gap-4 animate-fade-in-up">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">IT Helpdesk</p>
-                    <p className="text-gray-600">For technical issues: 📞 +251 25 553 0325</p>
-                    <a href="mailto:ithelpdesk@hu.edu.et" className="text-emerald-500 hover:underline">
-                      ithelpdesk@hu.edu.et
-                    </a>
-                  </div>
+                <div>
+                  <p className="font-bold text-[#1B365D]">IT helpdesk</p>
+                  <p className="text-sm text-[#565F71]">Technical issues</p>
+                  <a href="mailto:ithelpdesk@hu.edu.et" className="text-sm font-semibold text-[#1B365D] hover:underline">
+                    ithelpdesk@hu.edu.et
+                  </a>
                 </div>
               </div>
             </div>
-
-            <div className="bg-gray-50 p-8 rounded-xl animate-fade-in-up">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">System Status</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between animate-fade-in-up">
-                  <span className="text-gray-600">Trip Request Module</span>
-                  <span className="text-emerald-500 font-medium">✓ Active</span>
-                </div>
-                <div className="flex items-center justify-between animate-fade-in-up">
-                  <span className="text-gray-600">Tracking System</span>
-                  <span className="text-emerald-500 font-medium">✓ Active</span>
-                </div>
-                <div className="flex items-center justify-between animate-fade-in-up">
-                  <span className="text-gray-600">Mobile Platform</span>
-                  <span className="text-emerald-500 font-medium">✓ Active</span>
-                </div>
-              </div>
+            <div className="bg-[#F2F3F7] p-8 rounded border border-[#C4C6D0]/40">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1B365D] mb-4 border-b border-[#C4C6D0]/30 pb-2">
+                System status
+              </h3>
+              <ul className="space-y-3 text-sm">
+                {['Trip request module', 'Employee notifications', 'Portal access'].map((x) => (
+                  <li key={x} className="flex justify-between text-[#44474E]">
+                    <span>{x}</span>
+                    <span className="font-bold text-[#1B365D]">Active</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer id="contact" className="bg-gray-900 text-white py-12 animate-fade-in">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div className="animate-fade-in-up">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">H</span>
-                </div>
-                <span className="font-semibold">HUFMS</span>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Smart Fleet Control for Haramaya University
-              </p>
-            </div>
-
-            <div className="animate-fade-in-up">
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li><Link href="#" className="hover:text-white">Home</Link></li>
-                <li><Link href="#" className="hover:text-white">About</Link></li>
-                <li><Link href="/login" className="hover:text-white">Login</Link></li>
-              </ul>
-            </div>
-
-            <div className="animate-fade-in-up">
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li><Link href="#" className="hover:text-white">Privacy Policy</Link></li>
-                <li><Link href="#" className="hover:text-white">Terms of Service</Link></li>
-              </ul>
-            </div>
-
-            <div className="animate-fade-in-up">
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>Haramaya University</li>
-                <li>P.O. Box 138</li>
-                <li>Dire Dawa, Ethiopia</li>
-              </ul>
-            </div>
+      <footer id="contact" className="bg-[#191C20] text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between gap-8">
+          <div>
+            <p className="font-serif font-bold text-lg text-white">Fleet Authority</p>
+            <p className="text-xs uppercase tracking-widest text-white/60 mt-1">University Portal</p>
+            <p className="text-sm text-white/50 mt-4 max-w-sm">
+              Official fleet management and employee transport services for Haramaya University.
+            </p>
           </div>
-
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center animate-fade-in-up">
-            <p className="text-gray-400 text-sm">
-              © 2025 by Haramaya University Fleet Management System - 
-              <a href="https://haramaya.edu.et" className="text-emerald-400 hover:underline ml-1">
+          <div className="text-sm text-white/60">
+            <p>Haramaya University</p>
+            <p>P.O. Box 138, Dire Dawa, Ethiopia</p>
+            <p className="mt-4">
+              © {new Date().getFullYear()} Haramaya University ·{' '}
+              <a href="https://haramaya.edu.et" className="text-[#D1E1FF] hover:underline">
                 haramaya.edu.et
               </a>
             </p>
-            <div className="flex gap-4 mt-4 md:mt-0">
-              <button className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700">
-                <span className="text-sm">f</span>
-              </button>
-              <button className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700">
-                <span className="text-sm">in</span>
-              </button>
-              <button className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700">
-                <span className="text-sm">⚙️</span>
-              </button>
-            </div>
           </div>
         </div>
       </footer>
