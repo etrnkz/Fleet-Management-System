@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCurrentUser, notificationApi } from '../../lib/api'
-// import { useNotifications } from '../../hooks/useNotifications'
 import Toast from '../../components/Toast'
+import { EmployeeShell } from '../../components/EmployeeShell'
 
 export default function NotificationsPage() {
   const router = useRouter()
@@ -88,7 +88,33 @@ export default function NotificationsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <EmployeeShell
+      title="Notifications"
+      subtitle={unreadCount > 0 ? `${unreadCount} unread message(s)` : 'Official system messages'}
+      headerActions={
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={refreshNotifications}
+            className="p-2.5 text-[#424845] hover:bg-[#eceef0] rounded-lg border border-[#e0e3e5]/80"
+            title="Refresh"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAllAsRead}
+              className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#1B365D] hover:bg-[#D1E1FF]/40 rounded-lg border border-[#1B365D]/30"
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
+      }
+    >
       {toast.show && (
         <Toast
           message={toast.message}
@@ -97,50 +123,10 @@ export default function NotificationsPage() {
         />
       )}
 
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => router.push('/dashboard')} className="text-gray-600 hover:text-gray-900">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
-            {unreadCount > 0 && (
-              <span className="px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full">
-                {unreadCount} unread
-              </span>
-            )}
-            <div className={isConnected ? 'w-3 h-3 rounded-full bg-green-500' : 'w-3 h-3 rounded-full bg-red-500'} 
-                 title={isConnected ? 'Connected to real-time notifications' : 'Disconnected from real-time notifications'} />
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={refreshNotifications}
-              className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-              title="Refresh notifications"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg"
-              >
-                Mark all as read
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Filters */}
-        <div className="bg-white rounded-lg p-4 mb-6 shadow-sm">
-          <div className="flex gap-2">
+        <div className="bg-white rounded-xl p-4 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
+          <div className="flex flex-wrap gap-2">
             {[
               { id: 'all', label: 'All' },
               { id: 'unread', label: 'Unread' },
@@ -148,11 +134,12 @@ export default function NotificationsPage() {
             ].map((f) => (
               <button
                 key={f.id}
+                type="button"
                 onClick={() => setFilter(f.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide transition-colors ${
                   filter === f.id
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-[#1B365D] text-white'
+                    : 'bg-[#eceef0] text-[#424845] hover:bg-[#e0e3e5]'
                 }`}
               >
                 {f.label}
@@ -162,50 +149,51 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notifications List */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)] overflow-hidden">
           {filteredNotifications.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-12 text-center text-[#424845]">
+              <svg className="w-16 h-16 mx-auto mb-4 text-[#c1c8c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              <p>No notifications</p>
+              <p className="text-sm font-medium">No notifications</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-[#e0e3e5]">
               {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
-                  className={`p-6 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    !notification.isRead ? 'bg-blue-50' : ''
+                  className={`p-6 hover:bg-[#F8F9FA] cursor-pointer transition-colors ${
+                    !notification.isRead ? 'bg-[#D1E1FF]/25 border-l-4 border-[#1B365D]' : ''
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
-                      !notification.isRead ? 'bg-blue-500' : 'bg-gray-300'
+                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
+                      !notification.isRead ? 'bg-[#1B365D]' : 'bg-[#c1c8c4]'
                     }`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <p className="text-base font-medium text-gray-900 mb-1">
+                          <p className="text-sm font-semibold text-[#1B365D] mb-1">
                             {notification.title || notification.type}
                           </p>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-[#424845] mb-2">
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-[10px] font-medium text-[#727975] uppercase tracking-wide">
                             {new Date(notification.sentAt).toLocaleString()}
                           </p>
                         </div>
                         {!notification.isRead && (
                           <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation()
                               handleMarkAsRead(notification.id)
                             }}
-                            className="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex-shrink-0"
+                            className="text-[#1B365D] hover:text-[#1B365D] text-xs font-semibold uppercase tracking-wide flex-shrink-0"
                           >
-                            Mark as read
+                            Mark read
                           </button>
                         )}
                       </div>
@@ -217,6 +205,6 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
-    </div>
+    </EmployeeShell>
   )
 }

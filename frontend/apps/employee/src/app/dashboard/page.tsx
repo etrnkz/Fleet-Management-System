@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { tripApi, notificationApi, vehicleApi, userApi, getCurrentUser } from '../../lib/api'
 
 // Defined outside DashboardPage to prevent state reset on parent re-render
@@ -64,13 +64,13 @@ function RequestTripForm({ onSuccess, onToast, user }: {
   }
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-xl p-8 shadow-lg border border-gray-200">
+    <div className="max-w-3xl mx-auto bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Request New Trip</h2>
-        <p className="text-sm text-gray-500 mt-1">Fill in all required details for your trip request</p>
+        <h2 className="text-xl font-bold text-[#1B365D] tracking-tight">Request New Trip</h2>
+        <p className="text-sm text-[#424845] mt-1 font-medium">Official transport request — all fields marked * are required</p>
       </div>
 
-      <div className="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+      <div className="mb-5 p-3 bg-amber-50/90 border border-amber-200/80 rounded-lg flex items-center gap-2">
         <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -80,17 +80,17 @@ function RequestTripForm({ onSuccess, onToast, user }: {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Trip Type */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Trip Type <span className="text-red-500">*</span></label>
+          <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Trip Type <span className="text-[#ba1a1a]">*</span></label>
           <div className="grid grid-cols-2 gap-3">
             {(['Normal', 'VIP'] as const).map(type => (
               <button key={type} type="button"
                 onClick={() => setFormData({ ...formData, tripType: type })}
-                className={`py-3 px-4 rounded-lg border-2 text-sm font-medium transition-all ${
+                className={`py-3 px-4 rounded-lg border-2 text-sm font-semibold transition-all ${
                   formData.tripType === type
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-[#1B365D] bg-[#f2f4f6] text-[#1B365D]'
+                    : 'border-[#c1c8c4] text-[#424845] hover:border-[#727975]'
                 }`}>
-                {type === 'Normal' ? '🚗 Normal Trip' : '⭐ VIP Trip'}
+                {type === 'Normal' ? 'Normal Trip' : 'VIP Trip'}
               </button>
             ))}
           </div>
@@ -102,7 +102,7 @@ function RequestTripForm({ onSuccess, onToast, user }: {
           <input type="text" value={formData.destination}
             onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
             placeholder="e.g. Dire Dawa Campus, Ministry of Education, Addis Ababa"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+            className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
             required />
         </div>
 
@@ -112,7 +112,7 @@ function RequestTripForm({ onSuccess, onToast, user }: {
             <label className="block text-sm font-medium text-gray-700 mb-2">Purpose Category <span className="text-red-500">*</span></label>
             <select value={formData.purposeCategory}
               onChange={(e) => setFormData({ ...formData, purposeCategory: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+              className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none">
               <option>Official Meeting</option>
               <option>Academic Conference</option>
               <option>Field Visit</option>
@@ -128,7 +128,7 @@ function RequestTripForm({ onSuccess, onToast, user }: {
             <input type="text" value={formData.purpose}
               onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
               placeholder="Brief description of the trip purpose"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+              className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none" />
           </div>
         </div>
 
@@ -139,14 +139,14 @@ function RequestTripForm({ onSuccess, onToast, user }: {
             <input type="text" value={formData.pickupLocation}
               onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
               placeholder="e.g. Main Gate, Admin Building, College of Engineering"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+              className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
             <input type="text" value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="e.g. Need large vehicle, accessibility requirements"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+              className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none" />
           </div>
         </div>
 
@@ -156,13 +156,13 @@ function RequestTripForm({ onSuccess, onToast, user }: {
             <label className="block text-sm font-medium text-gray-700 mb-2">Departure Date & Time <span className="text-red-500">*</span></label>
             <input type="datetime-local" value={formData.startDateTime} min={minDateTime}
               onChange={(e) => setFormData({ ...formData, startDateTime: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+              className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none" required />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Return Date & Time <span className="text-red-500">*</span></label>
             <input type="datetime-local" value={formData.endDateTime} min={formData.startDateTime || minDateTime}
               onChange={(e) => setFormData({ ...formData, endDateTime: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required />
+              className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none" required />
           </div>
         </div>
 
@@ -171,37 +171,37 @@ function RequestTripForm({ onSuccess, onToast, user }: {
           <label className="block text-sm font-medium text-gray-700 mb-2">Number of Passengers <span className="text-red-500">*</span></label>
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => setFormData({ ...formData, passengerCount: Math.max(1, formData.passengerCount - 1) })}
-              className="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-lg font-bold">−</button>
+              className="w-10 h-10 rounded-lg border border-[#c1c8c4] flex items-center justify-center text-[#424845] hover:bg-[#eceef0] text-lg font-bold">−</button>
             <input type="number" value={formData.passengerCount}
               onChange={(e) => setFormData({ ...formData, passengerCount: parseInt(e.target.value) || 1 })}
               min="1" max="50"
-              className="w-24 px-4 py-3 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-emerald-500 outline-none" required />
+              className="w-24 px-4 py-3 border border-[#c1c8c4] rounded-lg text-center focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none" required />
             <button type="button" onClick={() => setFormData({ ...formData, passengerCount: Math.min(50, formData.passengerCount + 1) })}
-              className="w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-lg font-bold">+</button>
-            <span className="text-sm text-gray-500">passengers (including yourself)</span>
+              className="w-10 h-10 rounded-lg border border-[#c1c8c4] flex items-center justify-center text-[#424845] hover:bg-[#eceef0] text-lg font-bold">+</button>
+            <span className="text-sm text-[#727975]">passengers (including yourself)</span>
           </div>
         </div>
 
         {/* Summary */}
         {formData.destination && formData.startDateTime && formData.endDateTime && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
-            <p className="font-medium text-emerald-800 mb-1">Trip Summary</p>
-            <p className="text-emerald-700">📍 {formData.destination}</p>
-            <p className="text-emerald-700">📅 {new Date(formData.startDateTime).toLocaleString()} → {new Date(formData.endDateTime).toLocaleString()}</p>
-            <p className="text-emerald-700">👥 {formData.passengerCount} passenger{formData.passengerCount > 1 ? 's' : ''} • {formData.tripType} trip</p>
+          <div className="p-4 bg-[#f2f4f6] border border-[#e0e3e5] rounded-lg text-sm">
+            <p className="font-semibold text-[#1B365D] mb-1 uppercase tracking-wide text-xs">Trip Summary</p>
+            <p className="text-[#424845]"><span className="font-medium text-[#191c1e]">Destination:</span> {formData.destination}</p>
+            <p className="text-[#424845]"><span className="font-medium text-[#191c1e]">Schedule:</span> {new Date(formData.startDateTime).toLocaleString()} → {new Date(formData.endDateTime).toLocaleString()}</p>
+            <p className="text-[#424845]"><span className="font-medium text-[#191c1e]">Passengers:</span> {formData.passengerCount} • {formData.tripType}</p>
           </div>
         )}
 
         <div className="flex gap-3 pt-2">
           <button type="button"
             onClick={() => setFormData({ destination: '', purpose: '', purposeCategory: 'Official Meeting', pickupLocation: '', notes: '', startDateTime: '', endDateTime: '', passengerCount: 1, tripType: 'Normal' })}
-            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+            className="flex-1 py-3 border border-[#c1c8c4] text-[#424845] rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-[#eceef0] transition-colors">
             Clear Form
           </button>
           <button type="submit" disabled={submitting}
-            className="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            className="flex-1 bg-[#1B365D] text-white py-3 rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-[#152a47] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
             {submitting ? (
-              <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> Submitting...</>
+              <><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div> Submitting...</>
             ) : (
               <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg> Submit Request</>
             )}
@@ -213,8 +213,9 @@ function RequestTripForm({ onSuccess, onToast, user }: {
 }
 
 
-export default function DashboardPage() {
+function DashboardPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeSection, setActiveSection] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
@@ -263,6 +264,10 @@ export default function DashboardPage() {
     
     loadDashboardData()
   }, [])
+
+  useEffect(() => {
+    if (searchParams.get('section') === 'request') setActiveSection('request')
+  }, [searchParams])
 
   const loadDashboardData = async () => {
     try {
@@ -365,88 +370,122 @@ export default function DashboardPage() {
   // Overview Component
   const Overview = () => {
     const pendingTrips = trips.filter((t: any) => t.state?.includes('PENDING'))
-    const approvedTrips = trips.filter((t: any) => t.state === 'APPROVED' || t.state === 'CAR_ALLOCATED')
+    const approvedStates = [
+      'APPROVED_FOR_ALLOCATION',
+      'CAR_ALLOCATED',
+      'READY',
+      'PENDING_TRANSPORT_CONFIRM',
+    ]
+    const approvedTrips = trips.filter((t: any) => approvedStates.includes(t.state))
     const completedTrips = trips.filter((t: any) => t.state === 'COMPLETED')
 
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Dashboard Overview</h2>
-        
-        {/* Stats Cards */}
+      <div className="space-y-10">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1B365D] tracking-tight">Operational Overview</h2>
+            <p className="text-[#424845] mt-1 text-sm font-medium">
+              Official status of your transport requests and workflow.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleSectionChange('request')}
+            className="inline-flex items-center justify-center gap-2 bg-[#1B365D] text-white px-6 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wide shadow-md hover:bg-[#152a47] transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Trip Request
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pending Trips</p>
-                <p className="text-3xl font-bold text-yellow-600">{pendingTrips.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white p-6 rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-amber-50 rounded-lg text-amber-700">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
                 </svg>
               </div>
+              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded tracking-widest uppercase">Pending</span>
+            </div>
+            <p className="text-[#424845] text-xs font-semibold tracking-wider uppercase">Pending review</p>
+            <p className="text-4xl font-extrabold text-[#1B365D] mt-2">{pendingTrips.length}</p>
+            <div className="mt-4 h-1.5 w-full bg-[#eceef0] rounded-full overflow-hidden">
+              <div className="h-full bg-amber-500 rounded-full w-1/3" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Approved Trips</p>
-                <p className="text-3xl font-bold text-green-600">{approvedTrips.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white p-6 rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-emerald-50 rounded-lg text-emerald-800">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
+              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded tracking-widest uppercase">Cleared</span>
+            </div>
+            <p className="text-[#424845] text-xs font-semibold tracking-wider uppercase">Approved / scheduled</p>
+            <p className="text-4xl font-extrabold text-[#1B365D] mt-2">{approvedTrips.length}</p>
+            <div className="mt-4 h-1.5 w-full bg-[#eceef0] rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-600 rounded-full w-3/4" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Completed Trips</p>
-                <p className="text-3xl font-bold text-blue-600">{completedTrips.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-white p-6 rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-[#D1E1FF]/50 rounded-lg text-[#1B365D]">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                   <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
+              <span className="text-[10px] font-bold text-[#1B365D] bg-[#D1E1FF]/40 px-2 py-1 rounded tracking-widest uppercase">Archive</span>
+            </div>
+            <p className="text-[#424845] text-xs font-semibold tracking-wider uppercase">Completed</p>
+            <p className="text-4xl font-extrabold text-[#1B365D] mt-2">{completedTrips.length}</p>
+            <div className="mt-4 h-1.5 w-full bg-[#eceef0] rounded-full overflow-hidden">
+              <div className="h-full bg-[#1B365D] rounded-full w-full" />
             </div>
           </div>
         </div>
 
-        {/* Recent Trips */}
-        <div className="bg-white rounded-lg p-6 shadow-lg">
+        <div className="bg-white rounded-xl p-6 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Recent Trip Requests</h3>
+            <h3 className="text-lg font-bold text-[#1B365D] tracking-tight">Recent Trip Requests</h3>
             {trips.length > 0 && (
               <button
+                type="button"
                 onClick={() => router.push('/trips')}
-                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                className="text-xs font-semibold uppercase tracking-wide text-[#1B365D] hover:text-[#1B365D]"
               >
-                View All
+                View all
               </button>
             )}
           </div>
           {trips.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No trip requests yet</p>
+            <p className="text-[#727975] text-center py-10 text-sm font-medium">No trip requests on file</p>
           ) : (
             <div className="space-y-3">
               {trips.slice(0, 5).map((trip: any) => (
-                <div key={trip.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-emerald-200 transition-colors">
+                <div
+                  key={trip.id}
+                  className="flex items-center justify-between p-4 border border-transparent rounded-xl hover:border-[#e0e3e5] hover:shadow-md transition-all bg-[#F8F9FA]/50"
+                >
                   <div>
-                    <p className="font-medium text-gray-800">{trip.destination}</p>
-                    <p className="text-sm text-gray-500">{trip.purpose}</p>
+                    <p className="font-semibold text-[#1B365D]">{trip.destination}</p>
+                    <p className="text-xs text-[#424845] mt-1 line-clamp-2">{trip.purpose}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    trip.state?.includes('PENDING') ? 'bg-yellow-100 text-yellow-700' :
-                    trip.state === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                    trip.state === 'COMPLETED' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight shrink-0 ml-3 ${
+                      trip.state?.includes('PENDING')
+                        ? 'bg-amber-50 text-amber-800'
+                        : trip.state === 'COMPLETED'
+                          ? 'bg-[#eceef0] text-[#424845]'
+                          : 'bg-emerald-50 text-emerald-900'
+                    }`}
+                  >
                     {trip.state?.replace(/_/g, ' ')}
                   </span>
                 </div>
@@ -460,14 +499,17 @@ export default function DashboardPage() {
 
   // Available Vehicles Component
   const AvailableVehicles = () => (
-    <div className="max-w-6xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Available Vehicles</h2>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div>
+        <h2 className="text-2xl font-extrabold text-[#1B365D] tracking-tight">Fleet availability</h2>
+        <p className="text-sm text-[#424845] font-medium mt-1">Reference listing — assignment is coordinated by transport office</p>
+      </div>
       {vehicles.length === 0 ? (
-        <p className="text-gray-500 text-center py-12">No vehicles available</p>
+        <p className="text-[#727975] text-center py-12 font-medium">No vehicles listed</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vehicles.map((vehicle: any) => (
-            <div key={vehicle.id} className="bg-white rounded-lg p-6 shadow-lg border border-gray-200">
+            <div key={vehicle.id} className="bg-white rounded-xl p-6 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
               <div className="flex justify-between items-start mb-4">
                 <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                   <svg className="w-10 h-10 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
@@ -504,8 +546,11 @@ export default function DashboardPage() {
 
   // Document Center Component
   const DocumentCenter = () => (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Document Center</h2>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div>
+        <h2 className="text-2xl font-extrabold text-[#1B365D] tracking-tight">Document center</h2>
+        <p className="text-sm text-[#424845] font-medium mt-1">Official policies and reference materials</p>
+      </div>
       <div className="grid grid-cols-1 gap-4">
         {[
           { name: 'Vehicle Usage Policy.pdf', date: 'Updated Jan 2025', size: '2.5 MB', color: 'red' },
@@ -514,7 +559,7 @@ export default function DashboardPage() {
           { name: 'Safety Guidelines.pdf', date: 'Updated Dec 2024', size: '1.8 MB', color: 'red' },
           { name: 'Fleet Maintenance Schedule.pdf', date: 'Updated Feb 2025', size: '3.1 MB', color: 'red' },
         ].map((doc, index) => (
-          <div key={index} className="bg-white rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+          <div key={index} className="bg-white rounded-xl p-6 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)] hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-50 rounded flex items-center justify-center">
@@ -549,21 +594,21 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B365D] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#191c1e]">
       {/* Toast */}
       {toast.show && (
         <div className="fixed top-6 right-6 z-50 animate-bounce-once">
           <div className={`flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl border ${
             toast.type === 'success'
-              ? 'bg-emerald-600 border-emerald-700 text-white'
-              : 'bg-red-600 border-red-700 text-white'
+              ? 'bg-[#1B365D] border-[#152a47] text-white'
+              : 'bg-[#ba1a1a] border-[#93000a] text-white'
           }`}>
             <div className="flex-shrink-0">
               {toast.type === 'success' ? (
@@ -587,25 +632,29 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 shadow-lg h-16">
-        <div className="h-full px-4 sm:px-6 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-40 h-16 backdrop-blur-md bg-[#F8F9FA]/90 border-b border-[#e0e3e5]/80">
+        <div className="h-full px-4 sm:px-8 flex items-center justify-between">
           {/* Left: hamburger + logo */}
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-[#eceef0] transition-colors text-[#424845]"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-[#1B365D] rounded-lg flex items-center justify-center shadow-sm">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4h1l1.5 7h9L17 4h1" />
                 </svg>
               </div>
-              <span className="text-lg font-bold text-gray-900 hidden sm:block">HUFMS</span>
+              <div className="hidden sm:block">
+                <p className="text-lg font-bold text-[#1B365D] font-serif tracking-tight leading-none">Fleet Authority</p>
+                <p className="text-[10px] text-[#565F71] font-bold uppercase tracking-widest">University Portal</p>
+              </div>
             </div>
           </div>
 
@@ -618,10 +667,10 @@ export default function DashboardPage() {
             >
               <button
                 onClick={() => setShowNotifications(prev => !prev)}
-                className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-colors group"
+                className="relative p-2.5 rounded-xl hover:bg-[#eceef0] transition-colors group text-[#424845]"
                 title="Notifications"
               >
-                <svg className="w-5 h-5 text-gray-600 group-hover:text-emerald-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 group-hover:text-[#1B365D] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
@@ -633,9 +682,9 @@ export default function DashboardPage() {
 
               {/* Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-[#e0e3e5] z-50 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-[#eceef0] flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-[#1B365D] uppercase tracking-wide">Notifications</h3>
                       <span className={unreadCount > 0 ? 'text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-600' : 'text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500'}>
                         {unreadCount} New
                       </span>
@@ -686,15 +735,16 @@ export default function DashboardPage() {
             </div>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+            <div className="w-px h-6 bg-[#c1c8c4]/50 mx-1 hidden sm:block" />
 
             {/* Profile Dropdown */}
             <div className="relative" ref={profileDropdownRef}>
               <button
+                type="button"
                 onClick={() => setShowProfileDropdown(prev => !prev)}
-                className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-gray-100 transition-colors group"
+                className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-[#eceef0] transition-colors group"
               >
-                <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center ring-2 ring-emerald-100 group-hover:ring-emerald-200 transition-all overflow-hidden">
+                <div className="w-9 h-9 bg-[#1B365D] rounded-lg flex items-center justify-center ring-2 ring-[#D1E1FF]/50 group-hover:ring-[#D1E1FF] transition-all overflow-hidden">
                   {profileImage ? (
                     <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -703,7 +753,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-left hidden sm:block">
                   <p className="text-sm font-semibold text-gray-800 leading-tight">{user?.name}</p>
-                  <p className="text-xs text-emerald-600 leading-tight">{user?.role}</p>
+                  <p className="text-[10px] text-[#424845] font-medium uppercase tracking-wide leading-tight">{user?.role}</p>
                 </div>
                 <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -711,11 +761,11 @@ export default function DashboardPage() {
               </button>
 
               {showProfileDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-[#e0e3e5] z-50 overflow-hidden">
                   {/* Profile header */}
-                  <div className="p-4 bg-emerald-50 border-b border-emerald-100">
+                  <div className="p-4 bg-[#f2f4f6] border-b border-[#e0e3e5]">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center overflow-hidden">
+                      <div className="w-12 h-12 bg-[#1B365D] rounded-lg flex items-center justify-center overflow-hidden">
                         {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : <span className="text-white font-bold text-lg">{user?.name?.charAt(0)?.toUpperCase()}</span>}
                       </div>
                       <div>
@@ -761,15 +811,15 @@ export default function DashboardPage() {
             </div>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+            <div className="w-px h-6 bg-[#c1c8c4]/50 mx-1 hidden sm:block" />
           </div>
         </div>
       </header>
 
       <div className="flex pt-16">
         {/* Sidebar */}
-        <aside className={sidebarOpen ? 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-lg z-30 transition-transform duration-300 translate-x-0 lg:translate-x-0' : 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r border-gray-200 shadow-lg z-30 transition-transform duration-300 -translate-x-full lg:translate-x-0'}>
-          <nav className="p-4 space-y-2">
+        <aside className={sidebarOpen ? 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[#f2f4f6] border-r border-[#e0e3e5]/80 z-30 transition-transform duration-300 translate-x-0 lg:translate-x-0 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]' : 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[#f2f4f6] border-r border-[#e0e3e5]/80 z-30 transition-transform duration-300 -translate-x-full lg:translate-x-0 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]'}>
+          <nav className="p-4 space-y-1">
             {[
               { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', type: 'section' },
               { id: 'request', label: 'Request Trip', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', type: 'section' },
@@ -780,15 +830,18 @@ export default function DashboardPage() {
             ].map((item) => (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => item.type === 'page' ? router.push(`/${item.id}`) : handleSectionChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  activeSection === item.id ? 'bg-emerald-50 text-emerald-600' : 'text-gray-700 hover:bg-gray-50'
+                  activeSection === item.id
+                    ? 'bg-white text-[#1B365D] border border-[#e0e3e5]/80 shadow-sm'
+                    : 'text-[#424845] hover:bg-[#eceef0]'
                 }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
-                <span className="flex-1 text-left">{item.label}</span>
+                <span className="flex-1 text-left text-xs font-semibold uppercase tracking-wide">{item.label}</span>
                 {item.badge && item.badge > 0 && (
                   <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
                     {item.badge}
@@ -828,7 +881,7 @@ export default function DashboardPage() {
               <nav className="flex gap-6">
                 {(['profile', 'password'] as const).map(tab => (
                   <button key={tab} onClick={() => setProfileActiveTab(tab)}
-                    className={`pb-3 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${profileActiveTab === tab ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                    className={`pb-3 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${profileActiveTab === tab ? 'border-[#1B365D] text-[#1B365D]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
                     {tab === 'profile' ? 'Profile Information' : 'Change Password'}
                   </button>
                 ))}
@@ -839,7 +892,7 @@ export default function DashboardPage() {
                 <div className="space-y-5">
                   {/* Avatar */}
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center overflow-hidden">
+                    <div className="w-20 h-20 bg-[#1B365D] rounded-lg flex items-center justify-center overflow-hidden">
                       {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : <span className="text-white text-2xl font-bold">{user?.name?.charAt(0)?.toUpperCase()}</span>}
                     </div>
                     <div>
@@ -859,7 +912,7 @@ export default function DashboardPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
                         <input type={f.type} value={(profileFormData as any)[f.key]}
                           onChange={e => setProfileFormData(prev => ({ ...prev, [f.key]: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D]" />
                       </div>
                     ))}
                   </div>
@@ -867,11 +920,11 @@ export default function DashboardPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
                     <textarea rows={3} value={profileFormData.bio}
                       onChange={e => setProfileFormData(prev => ({ ...prev, bio: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] resize-none" />
                   </div>
                   <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                     <button onClick={() => setShowProfileModal(false)} className="px-5 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-                    <button onClick={handleSaveProfile} className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Save Changes</button>
+                    <button onClick={handleSaveProfile} className="px-5 py-2 bg-[#1B365D] text-white rounded-lg text-sm font-semibold uppercase tracking-wide hover:bg-[#152a47]">Save Changes</button>
                   </div>
                 </div>
               )}
@@ -886,7 +939,7 @@ export default function DashboardPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
                       <input type="password" value={(passwordData as any)[f.key]}
                         onChange={e => setPasswordData(prev => ({ ...prev, [f.key]: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D]" />
                     </div>
                   ))}
                   <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
@@ -896,7 +949,7 @@ export default function DashboardPage() {
                       showToast('Password changed successfully', 'success')
                       setShowProfileModal(false)
                       setPasswordData({ current: '', newPass: '', confirm: '' })
-                    }} className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Change Password</button>
+                    }} className="px-5 py-2 bg-[#1B365D] text-white rounded-lg text-sm font-semibold uppercase tracking-wide hover:bg-[#152a47]">Change Password</button>
                   </div>
                 </div>
               )}
@@ -905,5 +958,19 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B365D] border-t-transparent" />
+        </div>
+      }
+    >
+      <DashboardPageInner />
+    </Suspense>
   )
 }

@@ -249,7 +249,7 @@ export default function SignupPage() {
       {isLoading && (
         <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B365D]"></div>
             <p className="mt-4 text-gray-700 font-medium">Creating account...</p>
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function SignupPage() {
             {/* Profile Image Upload */}
             <div className="flex flex-col items-center mb-4 sm:mb-6">
               <div className="relative">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-emerald-500">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-[#1B365D]">
                   {profileImage ? (
                     <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
@@ -278,7 +278,7 @@ export default function SignupPage() {
                     </div>
                   )}
                 </div>
-                <label htmlFor="profileImage" className="absolute bottom-0 right-0 bg-emerald-500 text-white p-1.5 sm:p-2 rounded-full cursor-pointer hover:bg-emerald-600 transition-colors">
+                <label htmlFor="profileImage" className="absolute bottom-0 right-0 bg-[#1B365D] text-white p-1.5 sm:p-2 rounded-full cursor-pointer hover:bg-[#152a47] transition-colors">
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -308,7 +308,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="Enter your full name"
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all"
                 required
               />
             </div>
@@ -326,7 +326,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="Enter your email"
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all"
                 required
               />
             </div>
@@ -344,7 +344,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="Enter your employee ID"
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all"
                 required
               />
             </div>
@@ -360,7 +360,7 @@ export default function SignupPage() {
                 value={formData.organizationType}
                 onChange={handleOrganizationTypeChange}
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all text-gray-900"
                 required
               >
                 <option value="" disabled className="text-gray-400">Select organization type</option>
@@ -382,7 +382,7 @@ export default function SignupPage() {
                     value={formData.college}
                     onChange={handleCollegeChange}
                     style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all text-gray-900"
                     required
                   >
                     <option value="" disabled className="text-gray-400">Select your college</option>
@@ -404,7 +404,7 @@ export default function SignupPage() {
                     onChange={handleChange}
                     disabled={!formData.college}
                     style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     required
                   >
                     <option value="" disabled className="text-gray-400">
@@ -430,7 +430,7 @@ export default function SignupPage() {
                   value={formData.office}
                   onChange={handleChange}
                   style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all text-gray-900"
                   required
                 >
                   <option value="" disabled className="text-gray-400">Select your office/department</option>
@@ -454,7 +454,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="+251-91-234-5678"
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all"
                 required
               />
             </div>
@@ -472,7 +472,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="Create a password"
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all"
                 required
               />
             </div>
@@ -490,7 +490,7 @@ export default function SignupPage() {
                 onChange={handleChange}
                 placeholder="Confirm your password"
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all"
                 required
               />
             </div>
@@ -503,16 +503,16 @@ export default function SignupPage() {
                 name="agreeToTerms"
                 checked={formData.agreeToTerms}
                 onChange={handleChange}
-                className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 mt-1"
+                className="w-4 h-4 text-[#1B365D] border-gray-300 rounded focus:ring-[#1B365D] mt-1"
                 required
               />
               <label htmlFor="agreeToTerms" className="ml-2 text-sm text-gray-700">
                 I agree to the{' '}
-                <Link href="/terms" className="text-emerald-600 hover:text-emerald-700">
+                <Link href="/terms" className="text-[#1B365D] hover:text-[#152a47]">
                   Terms and Conditions
                 </Link>
                 {' '}and{' '}
-                <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700">
+                <Link href="/privacy" className="text-[#1B365D] hover:text-[#152a47]">
                   Privacy Policy
                 </Link>
               </label>
@@ -522,7 +522,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-emerald-500 text-white py-3 rounded-lg font-medium hover:bg-emerald-600 transition-all duration-300 hover:scale-105 hover:shadow-lg transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full bg-[#1B365D] text-white py-3 rounded-lg font-medium hover:bg-[#152a47] transition-all duration-300 hover:scale-105 hover:shadow-lg transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
@@ -530,7 +530,7 @@ export default function SignupPage() {
             {/* Login Link */}
             <div className="text-center text-sm text-gray-600 mt-6">
               Already have an account?{' '}
-              <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">
+              <Link href="/login" className="text-[#1B365D] hover:text-[#152a47] font-medium">
                 Login
               </Link>
             </div>
@@ -539,7 +539,7 @@ export default function SignupPage() {
       </div>
 
       {/* Right Side - Image with Logo */}
-      <div className="hidden lg:block lg:w-1/2 relative bg-gradient-to-br from-emerald-400 to-emerald-600">
+      <div className="hidden lg:block lg:w-1/2 relative bg-gradient-to-br from-[#1B365D] to-[#152a47]">
         <div className="absolute inset-0 bg-black/20"></div>
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-30"

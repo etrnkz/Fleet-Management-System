@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { tripApi, getCurrentUser } from '../../lib/api'
 import Toast from '../../components/Toast'
+import { EmployeeShell } from '../../components/EmployeeShell'
 
 export default function TripsPage() {
   const router = useRouter()
@@ -165,14 +166,26 @@ export default function TripsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B365D] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <EmployeeShell
+      title="My Trips"
+      subtitle="Official university travel request registry and tracking."
+      headerActions={
+        <button
+          type="button"
+          onClick={() => router.push('/dashboard?section=request')}
+          className="px-4 py-2.5 bg-[#1B365D] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152a47] transition-colors shadow-sm"
+        >
+          New Request
+        </button>
+      }
+    >
       {toast.show && (
         <Toast
           message={toast.message}
@@ -181,29 +194,9 @@ export default function TripsPage() {
         />
       )}
 
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => router.push('/dashboard')} className="text-gray-600 hover:text-gray-900">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">My Trips</h1>
-          </div>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-          >
-            New Request
-          </button>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Filters */}
-        <div className="bg-white rounded-lg p-4 mb-6 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
           <div className="flex flex-wrap gap-2">
             {[
               { id: 'all', label: 'All Trips' },
@@ -214,11 +207,12 @@ export default function TripsPage() {
             ].map((f) => (
               <button
                 key={f.id}
+                type="button"
                 onClick={() => setFilter(f.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide transition-colors ${
                   filter === f.id
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-[#1B365D] text-white'
+                    : 'bg-[#eceef0] text-[#424845] hover:bg-[#e0e3e5]'
                 }`}
               >
                 {f.label}
@@ -228,42 +222,42 @@ export default function TripsPage() {
         </div>
 
         {/* Trips List */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)] overflow-hidden">
           {filteredTrips.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="p-12 text-center text-[#424845]">
+              <svg className="w-16 h-16 mx-auto mb-4 text-[#c1c8c4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              <p>No trips found</p>
+              <p className="text-sm font-medium">No trips found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-[#f2f4f6] border-b border-[#e0e3e5]">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destination</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Purpose</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-[#424845] uppercase tracking-wider">Destination</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-[#424845] uppercase tracking-wider">Purpose</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-[#424845] uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-[#424845] uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-[10px] font-semibold text-[#424845] uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-[#e0e3e5]">
                   {filteredTrips.map((trip) => (
-                    <tr key={trip.id} className="hover:bg-gray-50">
+                    <tr key={trip.id} className="hover:bg-[#F8F9FA]/80">
                       <td className="px-6 py-4">
-                        <p className="text-sm font-medium text-gray-900">{trip.destination}</p>
+                        <p className="text-sm font-semibold text-[#1B365D]">{trip.destination}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm text-gray-600">{trip.purpose}</p>
+                        <p className="text-sm text-[#424845]">{trip.purpose}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-[#424845]">
                           {new Date(trip.startDateTime).toLocaleDateString()}
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStateColor(trip.state)}`}>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight ${getStateColor(trip.state)}`}>
                           {trip.state?.replace(/_/g, ' ')}
                         </span>
                       </td>
@@ -272,7 +266,7 @@ export default function TripsPage() {
                           <button
                             type="button"
                             onClick={() => openTripDetails(trip)}
-                            className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                            className="text-[#1B365D] hover:text-[#1B365D] text-xs font-semibold uppercase tracking-wide"
                           >
                             View
                           </button>
@@ -309,15 +303,15 @@ export default function TripsPage() {
 
       {/* Trip Details Modal */}
       {selectedTrip && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-xl border border-[#e0e3e5] max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto relative shadow-2xl">
             {tripDetailLoading && (
-              <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-lg">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+              <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 rounded-xl">
+                <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#1B365D] border-t-transparent" />
               </div>
             )}
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">Trip Details</h3>
+              <h3 className="text-lg font-bold text-[#1B365D] tracking-tight">Trip Details</h3>
               <button
                 type="button"
                 onClick={() => setSelectedTrip(null)}
@@ -516,6 +510,6 @@ export default function TripsPage() {
           </div>
         </div>
       )}
-    </div>
+    </EmployeeShell>
   )
 }
