@@ -51,7 +51,11 @@ export default function TripsPage() {
   ])
 
   const canCancelTrip = (state: string | undefined) =>
-    Boolean(state && !terminalStates.has(state))
+    Boolean(
+      state &&
+        !terminalStates.has(state) &&
+        state !== 'IN_PROGRESS',
+    )
 
   const canDeleteDraft = (state: string | undefined) => state === 'DRAFT'
 

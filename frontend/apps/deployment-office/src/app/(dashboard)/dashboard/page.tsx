@@ -25,25 +25,30 @@ export default function DashboardPage() {
 
   const loadDashboardData = async () => {
     try {
-      const [approvedTrips, allVehicles, drivers, maintenance, allTripsData] = await Promise.all([
+      const [approvedTrips, allVehicles, assignableVehicles, drivers, maintenance, allTripsData] = await Promise.all([
         tripApi.getApprovedTrips().catch(() => []),
         vehicleApi.getAllVehicles().catch(() => []),
+        vehicleApi.getAvailableVehicles().catch(() => []),
         driverApi.getAvailableDrivers().catch(() => []),
         maintenanceApi.getAllMaintenanceRequests().catch(() => []),
         tripApi.getAllTrips().catch(() => []),
       ])
       const vehicles = Array.isArray(allVehicles) ? allVehicles : []
+      const forAssignment = Array.isArray(assignableVehicles) ? assignableVehicles : []
+      const assignableIds = new Set(forAssignment.map((v: any) => v.id))
       const trips = Array.isArray(approvedTrips) ? approvedTrips : []
       const maint = Array.isArray(maintenance) ? maintenance : []
       setApprovedRequests(trips)
       setAllTrips(Array.isArray(allTripsData) ? allTripsData : [])
-      setAvailableVehicles(vehicles.filter((v: any) => v.status === 'Active'))
+      setAvailableVehicles(forAssignment)
       setAvailableDrivers(Array.isArray(drivers) ? drivers : [])
       setPendingMaintenance(maint.filter((m: any) => ['Submitted','UnderInspection'].includes(m.status)).slice(0, 5))
+      const activeFleet = vehicles.filter((v: any) => v.status === 'Active')
+      const inUseActive = activeFleet.filter((v: any) => !assignableIds.has(v.id)).length
       setVehicleStats({
         total: vehicles.length,
-        available: vehicles.filter((v: any) => v.status === 'Active').length,
-        inUse: vehicles.filter((v: any) => v.status === 'In Use' || v.status === 'OnTrip').length,
+        available: forAssignment.length,
+        inUse: inUseActive,
         maintenance: vehicles.filter((v: any) => v.status === 'UnderMaintenance' || v.status === 'Maintenance').length,
       })
     } catch (err) {

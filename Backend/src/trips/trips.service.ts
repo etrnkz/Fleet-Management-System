@@ -5,11 +5,12 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   TripRequest,
   TripState,
   TripType,
+  TRIP_STATES_HOLDING_ALLOCATION,
 } from './entities/trip-request.entity';
 import {
   Approval,
@@ -407,7 +408,29 @@ export class TripsService {
     );
     const driver = await this.driversService.findOne(allocateTripDto.driverId);
 
-    // TODO: In Phase 3, check vehicle/driver availability for the trip dates
+    const vehicleInUse = await this.tripRepository.count({
+      where: {
+        allocatedVehicle: { id: allocateTripDto.vehicleId },
+        state: In(TRIP_STATES_HOLDING_ALLOCATION),
+      },
+    });
+    if (vehicleInUse > 0) {
+      throw new BadRequestException(
+        'This vehicle is already assigned to an active trip',
+      );
+    }
+
+    const driverInUse = await this.tripRepository.count({
+      where: {
+        allocatedDriver: { id: allocateTripDto.driverId },
+        state: In(TRIP_STATES_HOLDING_ALLOCATION),
+      },
+    });
+    if (driverInUse > 0) {
+      throw new BadRequestException(
+        'This driver is already assigned to an active trip',
+      );
+    }
 
     trip.allocatedVehicle = vehicle;
     trip.allocatedDriver = driver;
@@ -444,6 +467,10 @@ export class TripsService {
     ];
     if (terminalStates.includes(trip.state)) {
       throw new BadRequestException('This trip cannot be cancelled');
+    }
+
+    if (trip.state === TripState.IN_PROGRESS) {
+      throw new BadRequestException('Trips in progress cannot be cancelled');
     }
 
     // Cancel scheduled workflow jobs

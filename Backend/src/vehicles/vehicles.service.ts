@@ -4,8 +4,12 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { Vehicle, VehicleStatus } from './entities/vehicle.entity';
+import {
+  TripRequest,
+  TRIP_STATES_HOLDING_ALLOCATION,
+} from '../trips/entities/trip-request.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
@@ -41,14 +45,24 @@ export class VehiclesService {
     startDateTime?: Date,
     endDateTime?: Date,
   ): Promise<Vehicle[]> {
-    // For now, return all active vehicles not under maintenance
-    // In Phase 3, we'll check against trip allocations
-    return this.vehicleRepository.find({
-      where: {
-        status: VehicleStatus.Active,
-      },
+    const active = await this.vehicleRepository.find({
+      where: { status: VehicleStatus.Active },
       order: { plateNumber: 'ASC' },
     });
+
+    const holdingTrips = await this.tripRepository.find({
+      where: { state: In(TRIP_STATES_HOLDING_ALLOCATION) },
+      relations: ['allocatedVehicle'],
+    });
+    const busyIds = new Set(
+      holdingTrips
+        .map((t) => t.allocatedVehicle?.id)
+        .filter((id): id is string => Boolean(id)),
+    );
+
+    void startDateTime;
+    void endDateTime;
+    return active.filter((v) => !busyIds.has(v.id));
   }
 
   async findByStatus(status: VehicleStatus): Promise<Vehicle[]> {

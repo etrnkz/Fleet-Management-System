@@ -35,6 +35,14 @@ export enum TripState {
   CANCELLED = 'CANCELLED',
 }
 
+/** Trips in these states still hold allocatedVehicle / allocatedDriver (not released). */
+export const TRIP_STATES_HOLDING_ALLOCATION: TripState[] = [
+  TripState.CAR_ALLOCATED,
+  TripState.PENDING_TRANSPORT_CONFIRM,
+  TripState.READY,
+  TripState.IN_PROGRESS,
+];
+
 @Entity('trip_requests')
 export class TripRequest {
   @PrimaryGeneratedColumn('uuid')
