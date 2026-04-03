@@ -1,5 +1,6 @@
 // API Client for Employee App
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
@@ -39,9 +40,9 @@ async function refreshAccessToken(): Promise<boolean> {
 
 async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = true): Promise<T> {
   const token = getAuthToken();
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> | undefined),
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 

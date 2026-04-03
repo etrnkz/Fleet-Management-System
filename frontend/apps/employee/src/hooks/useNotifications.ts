@@ -1,8 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1').replace(/\/$/, '');
-const WS_BASE_URL = (process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000').replace(/\/$/, '');
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'
+).replace(/\/$/, '');
+const WS_BASE_URL = (
+  process.env.NEXT_PUBLIC_WS_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com'
+).replace(/\/$/, '');
 const NOTIFICATIONS_WS_URL = WS_BASE_URL.endsWith('/notifications')
   ? WS_BASE_URL
   : `${WS_BASE_URL}/notifications`;

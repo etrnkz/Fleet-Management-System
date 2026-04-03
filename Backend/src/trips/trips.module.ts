@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../auth/auth.module';
 import { TripsService } from './trips.service';
 import { TripsController } from './trips.controller';
+import { GateScanController } from './gate-scan.controller';
 import { TripRequest } from './entities/trip-request.entity';
 import { Approval } from './entities/approval.entity';
 import { TripFeedback } from './entities/trip-feedback.entity';
@@ -12,13 +14,14 @@ import { WorkflowModule } from '../workflow/workflow.module';
 
 @Module({
   imports: [
+    AuthModule,
     TypeOrmModule.forFeature([TripRequest, Approval, TripFeedback]),
     VehiclesModule,
     DriversModule,
     NotificationsModule,
     WorkflowModule,
   ],
-  controllers: [TripsController],
+  controllers: [TripsController, GateScanController],
   providers: [TripsService],
   exports: [TripsService],
 })

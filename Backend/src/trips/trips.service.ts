@@ -115,7 +115,7 @@ export class TripsService {
     return query.getMany();
   }
 
-  async findOne(id: string): Promise<TripRequest> {
+  async findOne(id: string, viewer?: Pick<User, 'id' | 'role'>): Promise<TripRequest> {
     const trip = await this.tripRepository.findOne({
       where: { id },
       relations: [
@@ -135,6 +135,10 @@ export class TripsService {
 
     if (!trip) {
       throw new NotFoundException('Trip request not found');
+    }
+
+    if (viewer?.role === UserRole.User && trip.requester.id !== viewer.id) {
+      throw new ForbiddenException('You can only view your own trip requests');
     }
 
     return trip;

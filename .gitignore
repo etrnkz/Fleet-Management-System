@@ -17,6 +17,10 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Python
+__pycache__/
+*.py[cod]
+
 # OS
 .DS_Store
 
@@ -46,6 +50,7 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+**/.env.production
 
 # temp directory
 .temp

@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Fleet GPS</string>
+    <string name="notify_channel">GPS upload</string>
+    <string name="notify_title">Sending location</string>
+    <string name="notify_text">Posting GPS to fleet API</string>
+    <string name="notify_engine_off_title">SIM: engine restricted</string>
+    <string name="notify_engine_off_text">Inside forbidden zone: %1$s</string>
+    <string name="notify_watch_channel">Trip watch</string>
+    <string name="notify_watch_title">Fleet trip watch</string>
+    <string name="notify_watch_idle">Waiting for gate to start your trip…</string>
+    <string name="notify_watch_active">Trip %1$s — uploading GPS</string>
+</resources>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { tripApi, notificationApi, vehicleApi, getCurrentUser } from '../../lib/api'
+import { tripApi, notificationApi, vehicleApi, userApi, getCurrentUser } from '../../lib/api'
 
 // Defined outside DashboardPage to prevent state reset on parent re-render
 function RequestTripForm({ onSuccess, onToast, user }: {

@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Fleet Gate Scan</string>
+    <string name="auth_status_signed_out">Not signed in</string>
+    <string name="auth_status_signed_in">Signed in as %1$s (%2$s)</string>
+    <string name="auth_login_bad_response">Login response missing token</string>
+    <string name="auth_login_ok">Signed in</string>
+    <string name="auth_warn_wrong_role">This account may not be allowed to scan — use Gate, Transport Office, or Developer.</string>
+    <string name="auth_network_error">Network error: %1$s</string>
+    <string name="auth_signed_out">Signed out</string>
+    <string name="toast_need_api_base">Enter API base</string>
+    <string name="toast_need_credentials">Enter email and password</string>
+    <string name="toast_sign_in_first">Sign in first</string>
+    <string name="scan_sending">Sending…</string>
+    <string name="scan_need_token">Session expired — sign in again</string>
+    <string name="scan_ok">OK — started</string>
+    <string name="scan_error">Error: %1$s</string>
+</resources>

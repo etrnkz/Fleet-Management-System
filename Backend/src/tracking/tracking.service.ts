@@ -8,6 +8,23 @@ import { Repository, Between } from 'typeorm';
 import { GpsLocation } from './entities/gps-location.entity';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { TripRequest, TripState } from '../trips/entities/trip-request.entity';
+import { evaluateVipGeofenceForPoint } from '../vehicles/utils/vip-geofence.util';
+
+export type LocationSavePayload = {
+  id: string;
+  tripId: string;
+  latitude: number;
+  longitude: number;
+  speed: number | null;
+  heading: number | null;
+  altitude: number | null;
+  accuracy: number | null;
+  isOffline: boolean;
+  timestamp: Date;
+  metadata: string | null | undefined;
+  engineSimulatedOff: boolean;
+  violationZoneName: string | null;
+};
 
 @Injectable()
 export class TrackingService {
@@ -21,9 +38,11 @@ export class TrackingService {
   async saveLocation(
     tripId: string,
     locationDto: UpdateLocationDto,
-  ): Promise<GpsLocation> {
-    // Verify trip exists and is in progress
-    const trip = await this.tripRepository.findOne({ where: { id: tripId } });
+  ): Promise<LocationSavePayload> {
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId },
+      relations: ['allocatedVehicle'],
+    });
 
     if (!trip) {
       throw new NotFoundException('Trip not found');
@@ -43,7 +62,67 @@ export class TrackingService {
         : undefined,
     });
 
-    return this.gpsLocationRepository.save(location);
+    const saved = await this.gpsLocationRepository.save(location);
+    const lat = Number(saved.latitude);
+    const lng = Number(saved.longitude);
+    const geofence = evaluateVipGeofenceForPoint(trip.allocatedVehicle, lat, lng);
+    return this.toLocationPayload(saved, geofence);
+  }
+
+  toLocationPayload(
+    saved: GpsLocation,
+    geofence: {
+      engineSimulatedOff: boolean;
+      violationZoneName: string | null;
+    },
+  ): LocationSavePayload {
+    return {
+      id: saved.id,
+      tripId: saved.tripId,
+      latitude: Number(saved.latitude),
+      longitude: Number(saved.longitude),
+      speed: saved.speed != null ? Number(saved.speed) : null,
+      heading: saved.heading != null ? Number(saved.heading) : null,
+      altitude: saved.altitude != null ? Number(saved.altitude) : null,
+      accuracy: saved.accuracy != null ? Number(saved.accuracy) : null,
+      isOffline: saved.isOffline,
+      timestamp: saved.timestamp,
+      metadata: saved.metadata ?? undefined,
+      engineSimulatedOff: geofence.engineSimulatedOff,
+      violationZoneName: geofence.violationZoneName,
+    };
+  }
+
+  async getTripGeofenceConfig(tripId: string): Promise<{
+    vipGeoRestrictionEnabled: boolean;
+    restrictedZones: {
+      name?: string;
+      latitude: number;
+      longitude: number;
+      radiusMeters: number;
+    }[];
+  }> {
+    const trip = await this.tripRepository.findOne({
+      where: { id: tripId },
+      relations: ['allocatedVehicle'],
+    });
+    if (!trip) {
+      throw new NotFoundException('Trip not found');
+    }
+    const v = trip.allocatedVehicle;
+    if (!v) {
+      return { vipGeoRestrictionEnabled: false, restrictedZones: [] };
+    }
+    const zones = Array.isArray(v.restrictedZones) ? v.restrictedZones : [];
+    return {
+      vipGeoRestrictionEnabled: !!v.vipGeoRestrictionEnabled,
+      restrictedZones: zones.map((z) => ({
+        name: z.name,
+        latitude: Number(z.latitude),
+        longitude: Number(z.longitude),
+        radiusMeters: Number(z.radiusMeters),
+      })),
+    };
   }
 
   async saveBulkLocations(

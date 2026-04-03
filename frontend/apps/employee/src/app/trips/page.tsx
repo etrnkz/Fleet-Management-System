@@ -17,6 +17,7 @@ export default function TripsPage() {
     type: 'success'
   })
   const [actionLoading, setActionLoading] = useState(false)
+  const [tripDetailLoading, setTripDetailLoading] = useState(false)
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -41,6 +42,41 @@ export default function TripsPage() {
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type })
+  }
+
+  const openTripDetails = async (trip: any) => {
+    setSelectedTrip(trip)
+    setTripDetailLoading(true)
+    try {
+      const full = await tripApi.getById(trip.id)
+      setSelectedTrip(full)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to load trip details', 'error')
+      setSelectedTrip(null)
+    } finally {
+      setTripDetailLoading(false)
+    }
+  }
+
+  const allocatedVehicle = (t: any) => t?.allocatedVehicle ?? t?.vehicle ?? null
+  const allocatedDriver = (t: any) => t?.allocatedDriver ?? t?.driver ?? null
+  const driverDisplayName = (d: any) => {
+    if (!d) return ''
+    return d.user?.name ?? d.name ?? '—'
+  }
+
+  const formatMoney = (n: unknown) => {
+    if (n == null || n === '') return '—'
+    const num = typeof n === 'string' ? parseFloat(n) : Number(n)
+    if (Number.isNaN(num)) return String(n)
+    return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  const formatNum = (n: unknown) => {
+    if (n == null || n === '') return '—'
+    const num = typeof n === 'string' ? parseFloat(n) : Number(n)
+    if (Number.isNaN(num)) return String(n)
+    return String(num)
   }
 
   const terminalStates = new Set([
@@ -235,7 +271,7 @@ export default function TripsPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => setSelectedTrip(trip)}
+                            onClick={() => openTripDetails(trip)}
                             className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
                           >
                             View
@@ -274,10 +310,19 @@ export default function TripsPage() {
       {/* Trip Details Modal */}
       {selectedTrip && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto relative">
+            {tripDetailLoading && (
+              <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10 rounded-lg">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+              </div>
+            )}
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-900">Trip Details</h3>
-              <button onClick={() => setSelectedTrip(null)} className="text-gray-400 hover:text-gray-600">
+              <button
+                type="button"
+                onClick={() => setSelectedTrip(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -285,6 +330,13 @@ export default function TripsPage() {
             </div>
 
             <div className="space-y-4">
+              {selectedTrip.requestNumber && (
+                <div>
+                  <p className="text-sm text-gray-500">Request number</p>
+                  <p className="text-base font-medium text-gray-900">{selectedTrip.requestNumber}</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Destination</p>
@@ -329,19 +381,107 @@ export default function TripsPage() {
                 </div>
               </div>
 
-              {selectedTrip.vehicle && (
-                <div>
-                  <p className="text-sm text-gray-500">Assigned Vehicle</p>
-                  <p className="text-base text-gray-900">
-                    {selectedTrip.vehicle.make} {selectedTrip.vehicle.model} ({selectedTrip.vehicle.plateNumber})
-                  </p>
+              {(selectedTrip.estimatedFuelCost != null ||
+                selectedTrip.estimatedDistance != null ||
+                selectedTrip.actualFuelCost != null ||
+                selectedTrip.actualDistance != null) && (
+                <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Est. fuel cost</p>
+                    <p className="text-base text-gray-900">{formatMoney(selectedTrip.estimatedFuelCost)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Est. distance (km)</p>
+                    <p className="text-base text-gray-900">{formatNum(selectedTrip.estimatedDistance)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Actual fuel cost</p>
+                    <p className="text-base text-gray-900">{formatMoney(selectedTrip.actualFuelCost)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Actual distance (km)</p>
+                    <p className="text-base text-gray-900">{formatNum(selectedTrip.actualDistance)}</p>
+                  </div>
                 </div>
               )}
 
-              {selectedTrip.driver && (
+              {(allocatedVehicle(selectedTrip) || allocatedDriver(selectedTrip)) && (
+                <div className="pt-2 border-t border-gray-100 space-y-3">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Assignment</p>
+                  {allocatedVehicle(selectedTrip) && (
+                    <div>
+                      <p className="text-sm text-gray-500">Assigned vehicle</p>
+                      <p className="text-base text-gray-900">
+                        {allocatedVehicle(selectedTrip).make} {allocatedVehicle(selectedTrip).model} (
+                        {allocatedVehicle(selectedTrip).plateNumber})
+                        {allocatedVehicle(selectedTrip).capacity != null && (
+                          <span className="text-gray-600"> · Capacity {allocatedVehicle(selectedTrip).capacity}</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                  {allocatedDriver(selectedTrip) && (
+                    <div>
+                      <p className="text-sm text-gray-500">Assigned driver</p>
+                      <p className="text-base text-gray-900">{driverDisplayName(allocatedDriver(selectedTrip))}</p>
+                      {allocatedDriver(selectedTrip).licenseNumber && (
+                        <p className="text-sm text-gray-600">License: {allocatedDriver(selectedTrip).licenseNumber}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(selectedTrip.deploymentTeamMember || selectedTrip.transportOfficer) && (
+                <div className="pt-2 border-t border-gray-100 space-y-2">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Deployment</p>
+                  {selectedTrip.deploymentTeamMember && (
+                    <div>
+                      <p className="text-sm text-gray-500">Deployment team</p>
+                      <p className="text-base text-gray-900">{selectedTrip.deploymentTeamMember.name}</p>
+                    </div>
+                  )}
+                  {selectedTrip.transportOfficer && (
+                    <div>
+                      <p className="text-sm text-gray-500">Transport officer</p>
+                      <p className="text-base text-gray-900">{selectedTrip.transportOfficer.name}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {Array.isArray(selectedTrip.approvals) && selectedTrip.approvals.length > 0 && (
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Approvals</p>
+                  <ul className="space-y-2">
+                    {selectedTrip.approvals.map((a: any) => (
+                      <li key={a.id} className="text-sm text-gray-800 flex flex-wrap gap-x-2 gap-y-1">
+                        <span className="font-medium">{a.approvalLevel}</span>
+                        <span className="text-gray-500">{a.status}</span>
+                        {a.approver?.name && <span className="text-gray-600">· {a.approver.name}</span>}
+                        {a.approvedAt && (
+                          <span className="text-gray-500">
+                            · {new Date(a.approvedAt).toLocaleString()}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {(selectedTrip.state === 'REJECTED' || selectedTrip.state === 'AUTO_REJECTED_TIMEOUT') &&
+                selectedTrip.rejectionReason && (
+                  <div className="rounded-lg bg-red-50 border border-red-100 p-3">
+                    <p className="text-sm font-medium text-red-800">Rejection reason</p>
+                    <p className="text-sm text-red-900 mt-1">{selectedTrip.rejectionReason}</p>
+                  </div>
+                )}
+
+              {selectedTrip.completedAt && (
                 <div>
-                  <p className="text-sm text-gray-500">Assigned Driver</p>
-                  <p className="text-base text-gray-900">{selectedTrip.driver.name}</p>
+                  <p className="text-sm text-gray-500">Completed at</p>
+                  <p className="text-base text-gray-900">{new Date(selectedTrip.completedAt).toLocaleString()}</p>
                 </div>
               )}
 

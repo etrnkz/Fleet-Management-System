@@ -37,6 +37,11 @@ interface PendingRequest {
   requesterName: string
 }
 
+function formatTripStateLabel(raw: string | undefined | null): string {
+  const s = String(raw ?? 'Unknown')
+  return s.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+}
+
 export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const [loading, setLoading] = useState(true)
@@ -132,8 +137,8 @@ export default function Dashboard() {
           department: trip.requester?.department?.name || 'Unknown',
           purpose: trip.purpose || 'No purpose specified',
           requestedDate: new Date(trip.createdAt).toLocaleDateString(),
-          status: trip.status || trip.state || 'unknown',
-          requesterName: trip.requester?.name || 'Unknown'
+          status: trip.state || trip.status || 'unknown',
+          requesterName: trip.requester?.name || 'Unknown',
         }))
         setPendingRequests(requestsData)
       }
@@ -147,8 +152,9 @@ export default function Dashboard() {
             acc[deptName] = { trips: 0, vehicles: new Set() }
           }
           acc[deptName].trips += 1
-          if (trip.vehicle?.id) {
-            acc[deptName].vehicles.add(trip.vehicle.id)
+          const vid = trip.allocatedVehicle?.id || trip.vehicle?.id
+          if (vid) {
+            acc[deptName].vehicles.add(vid)
           }
           return acc
         }, {})
@@ -359,7 +365,11 @@ export default function Dashboard() {
       <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
         <h3 className="text-base md:text-lg font-bold text-gray-800 mb-4 md:mb-6">Active Fleet Schedule</h3>
         <div className="overflow-x-auto">
-          {trips && trips.filter((trip: any) => trip.status === 'in_progress').length > 0 ? (
+          {trips &&
+          trips.filter(
+            (trip: any) =>
+              trip.state === 'IN_PROGRESS' || trip.status === 'in_progress',
+          ).length > 0 ? (
             <div className="min-w-[600px]">
               {/* Time Header */}
               <div className="flex items-center mb-4">
@@ -375,7 +385,14 @@ export default function Dashboard() {
 
               {/* Active Trips */}
               <div className="space-y-3">
-                {trips.filter((trip: any) => trip.status === 'in_progress' || trip.state === 'IN_PROGRESS').slice(0, 5).map((trip: any, index: number) => {
+                {trips
+                  .filter(
+                    (trip: any) =>
+                      trip.state === 'IN_PROGRESS' ||
+                      trip.status === 'in_progress',
+                  )
+                  .slice(0, 5)
+                  .map((trip: any, index: number) => {
                   const startTime = new Date(trip.startDateTime)
                   const endTime = new Date(trip.endDateTime)
                   const startHour = startTime.getHours()
@@ -388,7 +405,9 @@ export default function Dashboard() {
                     <div key={trip.id} className="flex items-center">
                       <div className="w-40 md:w-48 pr-3 md:pr-4">
                         <p className="text-xs md:text-sm font-medium text-gray-800 truncate">
-                          {trip.vehicle?.plateNumber || 'Vehicle TBD'}
+                          {trip.allocatedVehicle?.plateNumber ||
+                            trip.vehicle?.plateNumber ||
+                            'Vehicle TBD'}
                         </p>
                         <p className="text-xs text-gray-600 truncate">{trip.purpose}</p>
                       </div>
@@ -401,7 +420,7 @@ export default function Dashboard() {
                           }}
                         >
                           <span className="text-xs text-white font-medium truncate">
-                            {trip.purpose.substring(0, 20)}
+                            {(trip.purpose || '').substring(0, 20)}
                           </span>
                         </div>
                       </div>
@@ -480,12 +499,16 @@ export default function Dashboard() {
                         {request.requesterName}
                       </td>
                       <td className="py-2 md:py-3 px-3 md:px-4">
-                        <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
-                          request.status === 'pending_dean' 
-                            ? 'bg-yellow-100 text-yellow-700' 
-                            : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {(request.status || '').replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
+                            /PRESIDENT|DEAN|COLLEGE|DEPARTMENT|pending_dean/i.test(
+                              request.status,
+                            )
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}
+                        >
+                          {formatTripStateLabel(request.status)}
                         </span>
                       </td>
                       <td className="py-2 md:py-3 px-3 md:px-4">

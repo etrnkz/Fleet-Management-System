@@ -74,7 +74,7 @@ export default function DashboardLayout({
         ? localStorage.getItem('accessToken') || localStorage.getItem('access_token')
         : null
       if (!token) return
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'}/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (!res.ok) return
@@ -126,7 +126,7 @@ export default function DashboardLayout({
       ? localStorage.getItem('accessToken') || localStorage.getItem('access_token')
       : null
     if (token && !notification.isRead && !notification.read) {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications/${notification.id}/read`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'}/notifications/${notification.id}/read`, {
         method: 'PATCH', headers: { Authorization: `Bearer ${token}` }
       }).catch(() => {})
       setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true, isRead: true } : n))

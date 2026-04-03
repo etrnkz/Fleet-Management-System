@@ -25,6 +25,7 @@ import { RejectTripDto } from './dto/reject-trip.dto';
 import { AllocateTripDto } from './dto/allocate-trip.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { EarlyCompleteTripDto } from './dto/early-complete-trip.dto';
+import { ConfirmTransportDto } from './dto/confirm-transport.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Trips')
@@ -77,8 +78,8 @@ export class TripsController {
   @ApiOperation({ summary: 'Get trip request details' })
   @ApiResponse({ status: 200, description: 'Trip request details' })
   @ApiResponse({ status: 404, description: 'Trip request not found' })
-  findOne(@Param('id') id: string) {
-    return this.tripsService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.tripsService.findOne(id, req.user);
   }
 
   @Patch(':id')
@@ -221,7 +222,7 @@ export class TripsController {
   })
   confirmTransport(
     @Param('id') id: string,
-    @Body() confirmTransportDto: any,
+    @Body() confirmTransportDto: ConfirmTransportDto,
     @Request() req,
   ) {
     return this.tripsService.confirmTransport(
