@@ -1,7 +1,6 @@
 /**
  * Opens one browser window with a tab per portal, fills test credentials, submits login.
- * Prereqs: API + Next apps running; seed users via Backend/create_test_users.py,
- * create_system_admin_users.py, and create_maintenance_users.py (all use password123).
+ * Prereqs: API + Next apps running; seed via Backend/seed_all.py (password123).
  * Maintenance team uses Transport Admin at port 3001; after login open /maintenance.
  */
 import { chromium } from 'playwright';

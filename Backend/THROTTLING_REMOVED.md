@@ -31,7 +31,7 @@ Completely removed rate limiting/throttling from the backend to allow unlimited 
 
 2. Run the test user creation script:
    ```bash
-   python create_test_users.py
+   python seed_all.py
    ```
 
 3. Test login for all users:

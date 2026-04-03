@@ -34,7 +34,7 @@ npm run test:postman
 ```
 
 - **`test:postman`** — runs `Fleet_Management_API_Test` (health, API root, public signup-metadata). Each request has **Tests** scripts so Newman asserts status and JSON shape.
-- **`test:postman:workflow`** — runs the full trip workflow collection. Expect failures unless users/tokens exist (run `create_test_users.py` and use Postman to capture tokens first).
+- **`test:postman:workflow`** — runs the full trip workflow collection. Expect failures unless users/tokens exist (run `python seed_all.py` and use Postman to capture tokens first).
 - **`test:postman:report`** — same as smoke, writes `postman/reports/newman-smoke.json` (folder is gitignored except `.gitignore`).
 
 CI: GitHub Actions workflow `.github/workflows/postman-smoke.yml` builds the backend, starts `start:prod`, waits on `GET /api/v1/health`, then runs `npm run test:postman`.

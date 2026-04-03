@@ -4,7 +4,7 @@ Automated trip lifecycle (terminal output):
   Employee creates + submits -> Dept -> Dean -> President -> Deploy allocates
   -> Transport confirms -> Transport starts -> Transport completes
 
-Requires API at http://localhost:3000 and seeded users (create_test_users.py, etc.).
+Requires API at http://localhost:3000 and seeded data (python seed_all.py).
 Optional env: API_BASE_URL, PASSWORD (default password123)
 """
 
