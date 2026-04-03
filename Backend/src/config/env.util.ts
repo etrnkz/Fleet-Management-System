@@ -14,3 +14,10 @@ export function envStringOptional(name: string): string | undefined {
   const t = v.trim();
   return t === '' ? undefined : t;
 }
+
+/** Trimmed raw value, or "" if unset (for flags like DB_SYNCHRONIZE, NODE_ENV). */
+export function envTrimmed(name: string): string {
+  const v = process.env[name];
+  if (v === undefined) return '';
+  return v.trim();
+}

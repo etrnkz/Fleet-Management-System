@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import type { ConfigService } from '@nestjs/config';
 import type { DataSourceOptions } from 'typeorm';
-import { envString, envStringOptional } from '../config/env.util';
+import { envString, envStringOptional, envTrimmed } from '../config/env.util';
 
 const entityGlob = (base: string) => join(base, '**', '*.entity{.ts,.js}');
 const migrationGlob = (base: string) => join(base, 'migrations', '*{.ts,.js}');
@@ -24,10 +24,12 @@ function useSqlite(): boolean {
  * Else: SQLite always syncs; Postgres syncs in non-production (dev convenience), off in production.
  */
 function synchronizeDefault(): boolean {
-  if (process.env.DB_SYNCHRONIZE === 'true') return true;
-  if (process.env.DB_SYNCHRONIZE === 'false') return false;
+  const sync = envTrimmed('DB_SYNCHRONIZE').toLowerCase();
+  if (sync === 'true') return true;
+  if (sync === 'false') return false;
   if (useSqlite()) return true;
-  return (process.env.NODE_ENV || 'development') !== 'production';
+  const nodeEnv = envTrimmed('NODE_ENV') || 'development';
+  return nodeEnv !== 'production';
 }
 
 function srcOrDistRoot(): string {
@@ -39,8 +41,9 @@ export function typeOrmOptionsForNest(config: ConfigService): TypeOrmModuleOptio
   const synchronize = synchronizeDefault();
   const logging =
     config.get<boolean | string>('database.logging') === true ||
-    process.env.DB_LOGGING === 'true';
-  const migrationsRun = process.env.DB_RUN_MIGRATIONS === 'true';
+    envTrimmed('DB_LOGGING').toLowerCase() === 'true';
+  const migrationsRun =
+    envTrimmed('DB_RUN_MIGRATIONS').toLowerCase() === 'true';
 
   if (useSqlite()) {
     return {
@@ -69,10 +72,11 @@ export function typeOrmOptionsForNest(config: ConfigService): TypeOrmModuleOptio
       ...common,
       url: nestDatabaseUrl,
       ssl:
-        process.env.DB_SSL === 'true'
+        envTrimmed('DB_SSL').toLowerCase() === 'true'
           ? {
               rejectUnauthorized:
-                process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+                envTrimmed('DB_SSL_REJECT_UNAUTHORIZED').toLowerCase() !==
+                'false',
             }
           : false,
     };
@@ -86,10 +90,11 @@ export function typeOrmOptionsForNest(config: ConfigService): TypeOrmModuleOptio
     password: config.get<string>('database.password', 'postgres'),
     database: config.get<string>('database.name', 'fleet_management'),
     ssl:
-      process.env.DB_SSL === 'true'
+      envTrimmed('DB_SSL').toLowerCase() === 'true'
         ? {
             rejectUnauthorized:
-              process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+              envTrimmed('DB_SSL_REJECT_UNAUTHORIZED').toLowerCase() !==
+              'false',
           }
         : false,
   };
@@ -99,7 +104,7 @@ export function typeOrmOptionsForNest(config: ConfigService): TypeOrmModuleOptio
 export function typeOrmOptionsForCli(): DataSourceOptions {
   const root = srcOrDistRoot();
   const synchronize = synchronizeDefault();
-  const logging = process.env.DB_LOGGING === 'true';
+  const logging = envTrimmed('DB_LOGGING').toLowerCase() === 'true';
   const migrationsRun = false;
 
   if (useSqlite()) {
@@ -129,10 +134,11 @@ export function typeOrmOptionsForCli(): DataSourceOptions {
       ...common,
       url: cliDatabaseUrl,
       ssl:
-        process.env.DB_SSL === 'true'
+        envTrimmed('DB_SSL').toLowerCase() === 'true'
           ? {
               rejectUnauthorized:
-                process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+                envTrimmed('DB_SSL_REJECT_UNAUTHORIZED').toLowerCase() !==
+                'false',
             }
           : false,
     };
@@ -146,10 +152,11 @@ export function typeOrmOptionsForCli(): DataSourceOptions {
     password: envString('DB_PASSWORD', 'postgres'),
     database: envString('DB_NAME', 'fleet_management'),
     ssl:
-      process.env.DB_SSL === 'true'
+      envTrimmed('DB_SSL').toLowerCase() === 'true'
         ? {
             rejectUnauthorized:
-              process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
+              envTrimmed('DB_SSL_REJECT_UNAUTHORIZED').toLowerCase() !==
+              'false',
           }
         : false,
   };
