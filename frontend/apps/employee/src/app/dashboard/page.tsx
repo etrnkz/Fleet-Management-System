@@ -216,7 +216,7 @@ function RequestTripForm({ onSuccess, onToast, user }: {
 function DashboardPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [activeSection, setActiveSection] = useState('overview')
+  const [activeSection, setActiveSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   
@@ -298,6 +298,16 @@ function DashboardPageInner() {
   }
 
   const handleSectionChange = (section: string) => {
+    if (section === 'request') {
+      router.replace('/dashboard?section=request')
+      setActiveSection('request')
+      return
+    }
+    if (section === 'dashboard') {
+      router.replace('/dashboard')
+      setActiveSection('dashboard')
+      return
+    }
     setActiveSection(section)
   }
 
@@ -367,8 +377,8 @@ function DashboardPageInner() {
   }, [])
 
   // Request Trip Form Component - defined outside to prevent re-creation on parent re-render
-  // Overview Component
-  const Overview = () => {
+  // Main dashboard: status bento (matches HTML reference — no separate “Overview” tab)
+  const DashboardHome = () => {
     const pendingTrips = trips.filter((t: any) => t.state?.includes('PENDING'))
     const approvedStates = [
       'APPROVED_FOR_ALLOCATION',
@@ -377,76 +387,75 @@ function DashboardPageInner() {
       'PENDING_TRANSPORT_CONFIRM',
     ]
     const approvedTrips = trips.filter((t: any) => approvedStates.includes(t.state))
-    const completedTrips = trips.filter((t: any) => t.state === 'COMPLETED')
+    const activeTrips = trips.filter((t: any) => t.state === 'IN_PROGRESS')
+    const kmTotal = trips.reduce((acc: number, t: any) => {
+      const d = t.actualDistance ?? t.estimatedDistance
+      if (d == null || d === '') return acc
+      const n = typeof d === 'string' ? parseFloat(d) : Number(d)
+      return acc + (Number.isNaN(n) ? 0 : n)
+    }, 0)
 
     return (
-      <div className="space-y-10">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div className="space-y-10 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-[#C4C6D0]/30 pb-6">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1B365D] tracking-tight">Operational Overview</h2>
-            <p className="text-[#424845] mt-1 text-sm font-medium">
-              Official status of your transport requests and workflow.
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#1B365D] font-serif italic">Dashboard</h2>
+            <p className="text-[#44474E] mt-2 font-medium">Official university travel request registry and tracking.</p>
           </div>
           <button
             type="button"
             onClick={() => handleSectionChange('request')}
-            className="inline-flex items-center justify-center gap-2 bg-[#1B365D] text-white px-6 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wide shadow-md hover:bg-[#152a47] transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-[#1B365D] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow hover:bg-[#152a47] active:scale-[0.98] transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            New Trip Request
+            Request New Trip
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-amber-50 rounded-lg text-amber-700">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
-                </svg>
-              </div>
-              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded tracking-widest uppercase">Pending</span>
-            </div>
-            <p className="text-[#424845] text-xs font-semibold tracking-wider uppercase">Pending review</p>
-            <p className="text-4xl font-extrabold text-[#1B365D] mt-2">{pendingTrips.length}</p>
-            <div className="mt-4 h-1.5 w-full bg-[#eceef0] rounded-full overflow-hidden">
-              <div className="h-full bg-amber-500 rounded-full w-1/3" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B365D]/30 transition-colors">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Active Trips</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-[#1B365D] font-serif tabular-nums">
+                {String(activeTrips.length).padStart(2, '0')}
+              </span>
+              <span className="bg-[#FAD8FD]/80 text-[#28132E] px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter italic">
+                Live
+              </span>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-emerald-50 rounded-lg text-emerald-800">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded tracking-widest uppercase">Cleared</span>
-            </div>
-            <p className="text-[#424845] text-xs font-semibold tracking-wider uppercase">Approved / scheduled</p>
-            <p className="text-4xl font-extrabold text-[#1B365D] mt-2">{approvedTrips.length}</p>
-            <div className="mt-4 h-1.5 w-full bg-[#eceef0] rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-600 rounded-full w-3/4" />
+          <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Pending Approval</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-[#1B365D] font-serif tabular-nums">{pendingTrips.length}</span>
+              <svg className="w-8 h-8 text-[#565F71] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
-            <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-[#D1E1FF]/50 rounded-lg text-[#1B365D]">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-[10px] font-bold text-[#1B365D] bg-[#D1E1FF]/40 px-2 py-1 rounded tracking-widest uppercase">Archive</span>
+          <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Approved</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-[#1B365D] font-serif tabular-nums">{approvedTrips.length}</span>
+              <svg className="w-8 h-8 text-[#1B365D]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
-            <p className="text-[#424845] text-xs font-semibold tracking-wider uppercase">Completed</p>
-            <p className="text-4xl font-extrabold text-[#1B365D] mt-2">{completedTrips.length}</p>
-            <div className="mt-4 h-1.5 w-full bg-[#eceef0] rounded-full overflow-hidden">
-              <div className="h-full bg-[#1B365D] rounded-full w-full" />
+          </div>
+
+          <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Kilometers (recorded)</p>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-bold text-[#1B365D] font-serif tabular-nums">
+                {kmTotal > 0 ? Math.round(kmTotal).toLocaleString() : '—'}
+              </span>
+              <svg className="w-8 h-8 text-[#565F71] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
         </div>
@@ -483,7 +492,7 @@ function DashboardPageInner() {
                         ? 'bg-amber-50 text-amber-800'
                         : trip.state === 'COMPLETED'
                           ? 'bg-[#eceef0] text-[#424845]'
-                          : 'bg-emerald-50 text-emerald-900'
+                          : 'bg-[#D1E1FF]/60 text-[#1B365D]'
                     }`}
                   >
                     {trip.state?.replace(/_/g, ' ')}
@@ -793,8 +802,14 @@ function DashboardPageInner() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                       <div><p className="text-sm font-medium">Edit Profile</p><p className="text-xs text-gray-400">Update your information</p></div>
                     </button>
-                    <button onClick={() => { setShowProfileDropdown(false); handleSectionChange('notifications') }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileDropdown(false)
+                        router.push('/notifications')
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                    >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                       <div><p className="text-sm font-medium">Notifications</p><p className="text-xs text-gray-400">{unreadCount} unread</p></div>
                     </button>
@@ -821,7 +836,7 @@ function DashboardPageInner() {
         <aside className={sidebarOpen ? 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[#f2f4f6] border-r border-[#e0e3e5]/80 z-30 transition-transform duration-300 translate-x-0 lg:translate-x-0 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]' : 'fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[#f2f4f6] border-r border-[#e0e3e5]/80 z-30 transition-transform duration-300 -translate-x-full lg:translate-x-0 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]'}>
           <nav className="p-4 space-y-1">
             {[
-              { id: 'overview', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', type: 'section' },
+              { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', type: 'section' },
               { id: 'request', label: 'Request Trip', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', type: 'section' },
               { id: 'trips', label: 'My Trips', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', type: 'page' },
               { id: 'vehicles', label: 'Available Vehicles', icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z', type: 'section' },
@@ -831,7 +846,9 @@ function DashboardPageInner() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => item.type === 'page' ? router.push(`/${item.id}`) : handleSectionChange(item.id)}
+                onClick={() =>
+                  item.type === 'page' ? router.push(`/${item.id}`) : handleSectionChange(item.id)
+                }
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   activeSection === item.id
                     ? 'bg-white text-[#1B365D] border border-[#e0e3e5]/80 shadow-sm'
@@ -854,8 +871,18 @@ function DashboardPageInner() {
 
         {/* Main Content */}
         <main className="flex-1 p-6 lg:ml-64">
-          {activeSection === 'overview' && <Overview />}
-          {activeSection === 'request' && <RequestTripForm onSuccess={() => { loadDashboardData(); setActiveSection('overview') }} onToast={showToast} user={user} />}
+          {activeSection === 'dashboard' && <DashboardHome />}
+          {activeSection === 'request' && (
+            <RequestTripForm
+              onSuccess={() => {
+                loadDashboardData()
+                setActiveSection('dashboard')
+                router.replace('/dashboard')
+              }}
+              onToast={showToast}
+              user={user}
+            />
+          )}
           {activeSection === 'vehicles' && <AvailableVehicles />}
           {activeSection === 'documents' && <DocumentCenter />}
         </main>
