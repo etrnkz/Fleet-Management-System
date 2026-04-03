@@ -1,147 +1,181 @@
 #!/usr/bin/env python3
 """
-Create Test Users for Fleet Management System
-This script creates a complete set of test users for testing the approval workflow
+Create all test users for Fleet Management System (every UserRole used by the apps).
+
+Requires: API running. Set FLEET_API_BASE if not local, e.g.:
+  FLEET_API_BASE=https://api.example.com/api/v1 python3 create_test_users.py
+
+Default password for all seeded accounts: password123
 """
 
+import os
 import requests
-import json
-from typing import Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-BASE_URL = "http://localhost:3000/api/v1"
+BASE_URL = os.environ.get("FLEET_API_BASE", "http://localhost:3000/api/v1").rstrip("/")
+HEADERS_JSON = {"Content-Type": "application/json"}
+TIMEOUT = 60
+
 
 class Colors:
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    WHITE = '\033[97m'
-    GRAY = '\033[90m'
-    RESET = '\033[0m'
+    CYAN = "\033[96m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    RED = "\033[91m"
+    WHITE = "\033[97m"
+    GRAY = "\033[90m"
+    RESET = "\033[0m"
 
-def print_colored(text: str, color: str = Colors.WHITE):
+
+def print_colored(text: str, color: str = Colors.WHITE) -> None:
     print(f"{color}{text}{Colors.RESET}")
 
-def api_call(method: str, endpoint: str, body: Optional[Dict[str, Any]] = None, token: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Make API calls to the backend"""
-    headers = {"Content-Type": "application/json"}
-    
+
+def api_call(
+    method: str,
+    endpoint: str,
+    body: Optional[Dict[str, Any]] = None,
+    token: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    headers = dict(HEADERS_JSON)
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    
     url = f"{BASE_URL}{endpoint}"
-    
     try:
         if method == "POST":
-            response = requests.post(url, json=body, headers=headers)
+            response = requests.post(url, json=body, headers=headers, timeout=TIMEOUT)
         elif method == "GET":
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=TIMEOUT)
         else:
             raise ValueError(f"Unsupported method: {method}")
-        
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print_colored(f"Error: {e}", Colors.RED)
-        if hasattr(e.response, 'text'):
+        if getattr(e, "response", None) is not None and e.response is not None:
             print_colored(f"Response: {e.response.text}", Colors.RED)
         return None
 
-def main():
+
+def post_register(body: Dict[str, Any]) -> str:
+    """
+    POST /auth/register. Returns 'created' | 'exists' | 'error'
+    """
+    try:
+        r = requests.post(
+            f"{BASE_URL}/auth/register",
+            headers=HEADERS_JSON,
+            json=body,
+            timeout=TIMEOUT,
+        )
+        if r.status_code in (200, 201):
+            return "created"
+        if r.status_code == 409:
+            return "exists"
+        print_colored(f"  HTTP {r.status_code}: {r.text[:800]}", Colors.RED)
+        return "error"
+    except requests.exceptions.RequestException as e:
+        print_colored(f"  Request error: {e}", Colors.RED)
+        return "error"
+
+
+def main() -> None:
     print_colored("=" * 50, Colors.CYAN)
-    print_colored("Fleet Management System - Test Users", Colors.CYAN)
+    print_colored("Fleet Management System — seed all test users", Colors.CYAN)
     print_colored("=" * 50, Colors.CYAN)
     print()
+    print_colored(f"API: {BASE_URL}", Colors.GRAY)
+    print()
 
-    # Step 0: Create Developer/Admin user first (or use existing)
-    print_colored("Step 0: Creating/Using Developer User...", Colors.YELLOW)
-    developer = api_call("POST", "/auth/register", {
+    # Step 0: Developer (bootstrap)
+    print_colored("Step 0: Developer user...", Colors.YELLOW)
+    dev_body = {
         "email": "developer@test.com",
         "password": "password123",
         "name": "System Developer",
         "role": "Developer",
-        "phoneNumber": "+251911234566"
-    })
-
-    if developer:
-        # The register endpoint returns {message, data}
-        developer_data = developer.get('data', developer)
-        print_colored(f"✓ Developer user created: {developer_data.get('email', 'developer@test.com')}", Colors.GREEN)
+        "phoneNumber": "+251911234566",
+    }
+    outcome = post_register(dev_body)
+    if outcome == "created":
+        print_colored("✓ developer@test.com created", Colors.GREEN)
+    elif outcome == "exists":
+        print_colored("○ developer@test.com already exists", Colors.YELLOW)
     else:
-        print_colored("Developer user already exists, will use existing account", Colors.YELLOW)
-    
-    # Login to get token
-    print_colored("Logging in as developer...", Colors.YELLOW)
-    login_response = api_call("POST", "/auth/login", {
-        "email": "developer@test.com",
-        "password": "password123"
-    })
-
-    if not login_response or 'access_token' not in login_response:
-        print_colored("✗ Failed to login as developer", Colors.RED)
+        print_colored("✗ Could not create developer — fix API and retry", Colors.RED)
         return
 
-    token = login_response['access_token']
-    print_colored("✓ Logged in successfully", Colors.GREEN)
+    print_colored("Logging in as developer...", Colors.YELLOW)
+    login_response = api_call(
+        "POST",
+        "/auth/login",
+        {
+            "email": "developer@test.com",
+            "password": "password123",
+        },
+    )
+    if not login_response or "access_token" not in login_response:
+        print_colored("✗ Failed to login as developer", Colors.RED)
+        return
+    token = login_response["access_token"]
+    print_colored("✓ Developer token OK", Colors.GREEN)
     print()
 
-    # Step 1: Create or Get College
-    print_colored("Step 1: Creating/Getting College...", Colors.YELLOW)
-    college = api_call("POST", "/colleges", {
-        "name": "College of Business and Economics",
-        "code": "CBE",
-        "description": "College of Business and Economics"
-    }, token)
-
+    # College + department
+    print_colored("Step 1: College...", Colors.YELLOW)
+    college = api_call(
+        "POST",
+        "/colleges",
+        {
+            "name": "College of Business and Economics",
+            "code": "CBE",
+            "description": "College of Business and Economics",
+        },
+        token,
+    )
     if college:
-        print_colored(f"✓ College created: {college['name']} (ID: {college['id']})", Colors.GREEN)
-        college_id = college['id']
+        college_id = college["id"]
+        print_colored(f"✓ College CBE ({college_id})", Colors.GREEN)
     else:
-        # College might already exist, try to get it
-        print_colored("College might already exist, fetching list...", Colors.YELLOW)
         colleges = api_call("GET", "/colleges", None, token)
-        if colleges and len(colleges) > 0:
-            # Find the CBE college
-            college = next((c for c in colleges if c['code'] == 'CBE'), colleges[0])
-            college_id = college['id']
-            print_colored(f"✓ Using existing college: {college['name']} (ID: {college_id})", Colors.GREEN)
-        else:
-            print_colored("✗ Failed to create or find college", Colors.RED)
+        if not colleges:
+            print_colored("✗ No college — cannot attach users", Colors.RED)
             return
-
+        college = next((c for c in colleges if c.get("code") == "CBE"), colleges[0])
+        college_id = college["id"]
+        print_colored(f"○ Using college {college.get('name')} ({college_id})", Colors.YELLOW)
     print()
 
-    # Step 2: Create or Get Department
-    print_colored("Step 2: Creating/Getting Department...", Colors.YELLOW)
-    department = api_call("POST", "/departments", {
-        "name": "Department of Management",
-        "code": "MGT",
-        "collegeId": college_id,
-        "description": "Department of Management"
-    }, token)
-
+    print_colored("Step 2: Department...", Colors.YELLOW)
+    department = api_call(
+        "POST",
+        "/departments",
+        {
+            "name": "Department of Management",
+            "code": "MGT",
+            "collegeId": college_id,
+            "description": "Department of Management",
+        },
+        token,
+    )
     if department:
-        print_colored(f"✓ Department created: {department['name']} (ID: {department['id']})", Colors.GREEN)
-        department_id = department['id']
+        department_id = department["id"]
+        print_colored(f"✓ Department MGT ({department_id})", Colors.GREEN)
     else:
-        # Department might already exist, try to get it
-        print_colored("Department might already exist, fetching list...", Colors.YELLOW)
         departments = api_call("GET", "/departments", None, token)
-        if departments and len(departments) > 0:
-            # Find the MGT department
-            department = next((d for d in departments if d['code'] == 'MGT'), departments[0])
-            department_id = department['id']
-            print_colored(f"✓ Using existing department: {department['name']} (ID: {department_id})", Colors.GREEN)
-        else:
-            print_colored("✗ Failed to create or find department", Colors.RED)
+        if not departments:
+            print_colored("✗ No department — cannot attach users", Colors.RED)
             return
-
+        department = next((d for d in departments if d.get("code") == "MGT"), departments[0])
+        department_id = department["id"]
+        print_colored(
+            f"○ Using department {department.get('name')} ({department_id})",
+            Colors.YELLOW,
+        )
     print()
-    print_colored("Step 3: Creating Test Users...", Colors.YELLOW)
-    print()
 
-    # Create users
-    users = [
+    # All workflow + ops roles (matches UserRole enum)
+    users: List[Dict[str, Any]] = [
         {
             "name": "Employee User",
             "email": "employee@test.com",
@@ -149,7 +183,7 @@ def main():
             "role": "User",
             "phoneNumber": "+251911234567",
             "departmentId": department_id,
-            "app": "http://localhost:3008 (Employee portal)"
+            "app": "Employee portal",
         },
         {
             "name": "Department Head",
@@ -158,7 +192,7 @@ def main():
             "role": "DepartmentHead",
             "phoneNumber": "+251911234568",
             "departmentId": department_id,
-            "app": "http://localhost:3003 (Department head portal)"
+            "app": "Department head portal",
         },
         {
             "name": "College Dean",
@@ -167,7 +201,16 @@ def main():
             "role": "Dean",
             "phoneNumber": "+251911234569",
             "collegeId": college_id,
-            "app": "http://localhost:3002 (College dean portal)"
+            "app": "College dean portal",
+        },
+        {
+            "name": "College Head",
+            "email": "collegehead@test.com",
+            "password": "password123",
+            "role": "CollegeHead",
+            "phoneNumber": "+251911234576",
+            "collegeId": college_id,
+            "app": "College head role (enum CollegeHead)",
         },
         {
             "name": "University President",
@@ -175,7 +218,7 @@ def main():
             "password": "password123",
             "role": "President",
             "phoneNumber": "+251911234570",
-            "app": "http://localhost:3006 (President portal)"
+            "app": "President portal",
         },
         {
             "name": "Deployment Team",
@@ -183,7 +226,7 @@ def main():
             "password": "password123",
             "role": "DeploymentTeam",
             "phoneNumber": "+251911234571",
-            "app": "http://localhost:3005 (Deployment office portal)"
+            "app": "Deployment office portal",
         },
         {
             "name": "Transport Office",
@@ -191,78 +234,103 @@ def main():
             "password": "password123",
             "role": "TransportOffice",
             "phoneNumber": "+251911234572",
-            "app": "http://localhost:3001 (Transport admin portal)"
-        }
+            "app": "Transport admin portal",
+        },
+        {
+            "name": "Gate Security",
+            "email": "gate@test.com",
+            "password": "password123",
+            "role": "Gate",
+            "phoneNumber": "+251911234573",
+            "app": "Gate scanner app",
+        },
+        {
+            "name": "Maintenance Team Lead",
+            "email": "maintenance@test.com",
+            "password": "password123",
+            "role": "MaintenanceTeam",
+            "phoneNumber": "+251911234574",
+            "app": "Maintenance portal",
+        },
+        {
+            "name": "Test Driver",
+            "email": "driver@test.com",
+            "password": "password123",
+            "role": "Driver",
+            "phoneNumber": "+251911234575",
+            "app": "Driver app / portal",
+        },
+        {
+            "name": "System Administrator",
+            "email": "sysadmin@hu.edu.et",
+            "password": "password123",
+            "role": "SystemAdmin",
+            "phoneNumber": "+251911123456",
+            "app": "System admin portal",
+        },
+        {
+            "name": "Super Administrator",
+            "email": "superadmin@hu.edu.et",
+            "password": "password123",
+            "role": "SystemAdmin",
+            "phoneNumber": "+251911123457",
+            "app": "System admin portal",
+        },
+        {
+            "name": "Developer Campus",
+            "email": "developer@hu.edu.et",
+            "password": "password123",
+            "role": "Developer",
+            "phoneNumber": "+251911123458",
+            "app": "Developer (second account)",
+        },
     ]
 
-    created_users = []
+    print_colored("Step 3: Register all role users (public /auth/register)...", Colors.YELLOW)
+    print()
+
+    created_users: List[Dict[str, Any]] = []
     for user_data in users:
-        print_colored(f"Creating {user_data['name']}...", Colors.CYAN)
-        
-        # Prepare registration data
-        reg_data = {
+        name = user_data["name"]
+        print_colored(f"  {name} ({user_data['role']})...", Colors.CYAN)
+        reg_data: Dict[str, Any] = {
             "email": user_data["email"],
             "password": user_data["password"],
             "name": user_data["name"],
             "role": user_data["role"],
-            "phoneNumber": user_data["phoneNumber"]
+            "phoneNumber": user_data["phoneNumber"],
         }
-        
         if "departmentId" in user_data:
             reg_data["departmentId"] = user_data["departmentId"]
         if "collegeId" in user_data:
             reg_data["collegeId"] = user_data["collegeId"]
-        
-        user = api_call("POST", "/auth/register", reg_data)
-        
-        if user:
-            print_colored(f"✓ {user_data['name']} created successfully", Colors.GREEN)
-            print_colored(f"  Email: {user_data['email']}", Colors.GRAY)
-            print_colored(f"  Password: {user_data['password']}", Colors.GRAY)
-            print_colored(f"  Role: {user_data['role']}", Colors.GRAY)
-            created_users.append(user_data)
+
+        out = post_register(reg_data)
+        if out == "created":
+            print_colored(f"    ✓ created {user_data['email']}", Colors.GREEN)
+        elif out == "exists":
+            print_colored(f"    ○ already exists {user_data['email']}", Colors.YELLOW)
         else:
-            print_colored(f"⚠ {user_data['name']} might already exist", Colors.YELLOW)
-            print_colored(f"  Email: {user_data['email']}", Colors.GRAY)
-            print_colored(f"  Password: {user_data['password']}", Colors.GRAY)
-            print_colored(f"  Role: {user_data['role']}", Colors.GRAY)
-            created_users.append(user_data)
-        
+            print_colored(f"    ✗ failed {user_data['email']}", Colors.RED)
+        created_users.append(user_data)
         print()
 
-    # Summary
     print_colored("=" * 50, Colors.CYAN)
-    print_colored("Test Users Setup Complete!", Colors.GREEN)
+    print_colored("Done. Password for all: password123", Colors.GREEN)
     print_colored("=" * 50, Colors.CYAN)
     print()
-    
-    print_colored("Organization Structure:", Colors.YELLOW)
-    print_colored("  College: College of Business and Economics (CBE)", Colors.WHITE)
-    print_colored("    └─ Department: Department of Management (MGT)", Colors.WHITE)
+    print_colored("Accounts:", Colors.YELLOW)
+    print_colored("  developer@test.com (Developer)", Colors.GRAY)
+    for u in created_users:
+        print_colored(f"  {u['email']} ({u['role']}) — {u.get('app', '')}", Colors.GRAY)
     print()
-    
-    print_colored("Test Users (All passwords: password123):", Colors.YELLOW)
+    print_colored(
+        "Next: optional vehicles/drivers → python3 create_test_vehicles_drivers.py",
+        Colors.YELLOW,
+    )
+    print_colored("Or: python3 seed_all.py   (users only; add --with-vehicles for vehicles)", Colors.YELLOW)
     print()
-    
-    print_colored("0. Developer (API / full access seed user)", Colors.WHITE)
-    print_colored("   Email: developer@test.com", Colors.GRAY)
-    print_colored("   Note: Use the API (e.g. :3000) or Transport admin (:3001) as appropriate", Colors.GRAY)
-    print()
-    
-    for i, user in enumerate(created_users, 1):
-        print_colored(f"{i}. {user['name']}", Colors.WHITE)
-        print_colored(f"   Email: {user['email']}", Colors.GRAY)
-        print_colored(f"   App: {user['app']}", Colors.GRAY)
-        print()
-    
-    print_colored("Testing Workflow:", Colors.YELLOW)
-    print_colored("1. Login as employee@test.com and create a trip request", Colors.WHITE)
-    print_colored("2. Login as depthead@test.com to approve at department level", Colors.WHITE)
-    print_colored("3. Login as dean@test.com to approve at college level (Dean = College Head)", Colors.WHITE)
-    print_colored("4. Login as deployment@test.com to allocate vehicle and driver", Colors.WHITE)
-    print_colored("", Colors.WHITE)
-    print_colored("Note: API role \"Dean\" maps to the College Dean workflow in this system.", Colors.YELLOW)
-    print()
+
 
 if __name__ == "__main__":
     main()
