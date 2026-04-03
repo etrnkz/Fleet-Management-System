@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
@@ -20,6 +20,7 @@ import { FuelModule } from './fuel/fuel.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { SystemAdminModule } from './system-admin/system-admin.module';
 import configuration from './config/configuration';
+import { typeOrmOptionsForNest } from './database/typeorm.factory';
 
 @Module({
   imports: [
@@ -31,13 +32,18 @@ import configuration from './config/configuration';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: 'fleet_management.db',
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-        logging: configService.get('database.logging', true),
-      }),
+      useFactory: (configService: ConfigService) => {
+        const opts = typeOrmOptionsForNest(configService);
+        let dbLabel = '?';
+        if (opts.type === 'postgres') {
+          if ('url' in opts && opts.url) dbLabel = '(DATABASE_URL)';
+          else if ('database' in opts) dbLabel = String(opts.database);
+        }
+        new Logger('TypeOrm').log(
+          `synchronize=${String(opts.synchronize)} database=${dbLabel}`,
+        );
+        return opts;
+      },
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
