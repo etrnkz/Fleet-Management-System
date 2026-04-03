@@ -1,5 +1,6 @@
 // API client — Transport Admin app (Transport Office / fleet operations roles)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
 // Helper to get auth token
 const getAuthToken = (): string | null => {
@@ -286,5 +287,7 @@ export const trackingApi = {
 };
 
 // WebSocket URL for real-time tracking
-const WS_BASE_URL = (process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000').replace(/\/$/, '');
+const WS_BASE_URL = (
+  process.env.NEXT_PUBLIC_WS_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com'
+).replace(/\/$/, '');
 export const WS_URL = WS_BASE_URL.endsWith('/tracking') ? WS_BASE_URL : `${WS_BASE_URL}/tracking`;

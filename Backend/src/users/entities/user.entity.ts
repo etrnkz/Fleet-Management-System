@@ -23,6 +23,8 @@ export enum UserRole {
   TransportOffice = 'TransportOffice',
   MaintenanceTeam = 'MaintenanceTeam',
   Driver = 'Driver',
+  /** Gate / security: scan driver trip QR to start READY trips */
+  Gate = 'Gate',
   Developer = 'Developer',
   SystemAdmin = 'SystemAdmin',
 }

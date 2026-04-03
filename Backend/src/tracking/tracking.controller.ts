@@ -30,11 +30,23 @@ export class TrackingController {
     private readonly trackingGateway: TrackingGateway,
   ) {}
 
+  @Get(':tripId/geofence-config')
+  @ApiOperation({
+    summary: 'Geofence config for allocated vehicle',
+    description:
+      'Returns VIP restriction zones for the vehicle assigned to this trip (for GPS clients).',
+  })
+  @ApiResponse({ status: 200, description: 'Geofence configuration' })
+  @ApiResponse({ status: 404, description: 'Trip not found' })
+  getTripGeofenceConfig(@Param('tripId', ParseUUIDPipe) tripId: string) {
+    return this.trackingService.getTripGeofenceConfig(tripId);
+  }
+
   @Post(':tripId/location')
   @ApiOperation({
     summary: 'Update GPS location (REST fallback)',
     description:
-      'Update GPS location via REST API. Prefer WebSocket for real-time updates.',
+      'Update GPS location via REST API. Prefer WebSocket for real-time updates. Response includes engineSimulatedOff when the allocated vehicle is VIP-restricted and inside a forbidden zone.',
   })
   @ApiResponse({
     status: 201,
@@ -48,6 +60,8 @@ export class TrackingController {
         speed: 45.5,
         heading: 180,
         timestamp: '2026-03-01T10:30:00Z',
+        engineSimulatedOff: false,
+        violationZoneName: null,
       },
     },
   })

@@ -17,8 +17,14 @@ interface Trip {
   passengerCount: number
   state: string
   allocatedVehicle?: { id: string; plateNumber: string; make: string; model: string }
-  allocatedDriver?: { id: string; name: string; licenseNumber: string }
+  allocatedDriver?: {
+    id: string
+    name: string
+    licenseNumber: string
+    user?: { name?: string }
+  }
   estimatedDistance?: number
+  estimatedFuelCost?: number
   actualDistance?: number
   createdAt: string
   updatedAt: string
@@ -68,7 +74,13 @@ export default function TripsPage() {
       if (list.length > 0 && !selectedTrip) {
         const first = list[0]
         setSelectedTrip(first)
-        setFuelForm({ estimatedFuelCost: String((first as any).estimatedFuelCost || ''), estimatedDistance: String(first.estimatedDistance || ''), notes: '' })
+        setFuelForm({
+          estimatedFuelCost:
+            first.estimatedFuelCost != null ? String(first.estimatedFuelCost) : '',
+          estimatedDistance:
+            first.estimatedDistance != null ? String(first.estimatedDistance) : '',
+          notes: '',
+        })
       }
     } catch (error: any) {
       setToast({ message: error.message || 'Failed to fetch trips', type: 'error' })
@@ -162,20 +174,30 @@ export default function TripsPage() {
   const handleSelectTrip = (trip: Trip) => {
     setSelectedTrip(trip)
     setFuelForm({
-      estimatedFuelCost: String((trip as any).estimatedFuelCost || ''),
-      estimatedDistance: String(trip.estimatedDistance || ''),
-      notes: ''
+      estimatedFuelCost:
+        trip.estimatedFuelCost != null ? String(trip.estimatedFuelCost) : '',
+      estimatedDistance:
+        trip.estimatedDistance != null ? String(trip.estimatedDistance) : '',
+      notes: '',
     })
   }
 
   const handleFuelApprove = async () => {
     if (!selectedTrip) return
+    const parseOpt = (s: string): number | undefined => {
+      const t = s.trim()
+      if (t === '') return undefined
+      const n = Number(t)
+      return Number.isFinite(n) && n >= 0 ? n : undefined
+    }
+    const fuel = parseOpt(fuelForm.estimatedFuelCost)
+    const dist = parseOpt(fuelForm.estimatedDistance)
     setFuelSubmitting(true)
     try {
       await tripApi.confirmTransport(selectedTrip.id, {
         fuelApproved: true,
-        estimatedFuelCost: Number(fuelForm.estimatedFuelCost) || 0,
-        estimatedDistance: Number(fuelForm.estimatedDistance) || 0,
+        ...(fuel !== undefined && { estimatedFuelCost: fuel }),
+        ...(dist !== undefined && { estimatedDistance: dist }),
         comments: fuelForm.notes || undefined,
       })
       setToast({ message: 'Allocation approved and trip is now READY', type: 'success' })
@@ -483,7 +505,7 @@ export default function TripsPage() {
                       <div className="space-y-3">
                         <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                           <p className="text-xs font-semibold text-orange-800 mb-1">Pending Transport Approval</p>
-                          <p className="text-[10px] text-orange-600">Review and edit fuel cost & distance, then approve to mark trip as READY.</p>
+                          <p className="text-[10px] text-orange-600">Adjust fuel (ETB) and distance (km) if needed; leave a field empty when approving to keep the deployment office values.</p>
                         </div>
 
                         <div>
@@ -570,10 +592,10 @@ export default function TripsPage() {
                                   <span className="text-[10px] md:text-xs text-gray-600">Model</span>
                                   <span className="text-xs md:text-sm font-semibold text-gray-900">{selectedTrip.allocatedVehicle.make} {selectedTrip.allocatedVehicle.model}</span>
                                 </div>
-                                {(selectedTrip as any).estimatedFuelCost && (
+                                {selectedTrip.estimatedFuelCost != null && (
                                   <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg border border-orange-100">
                                     <span className="text-[10px] md:text-xs text-orange-600">Fuel Cost</span>
-                                    <span className="text-xs md:text-sm font-semibold text-orange-700">ETB {(selectedTrip as any).estimatedFuelCost}</span>
+                                    <span className="text-xs md:text-sm font-semibold text-orange-700">ETB {selectedTrip.estimatedFuelCost}</span>
                                   </div>
                                 )}
                               </div>

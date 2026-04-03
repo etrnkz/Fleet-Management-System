@@ -8,6 +8,13 @@ interface ToastMessage {
   type: ToastType
 }
 
+type RestrictedZone = {
+  name?: string
+  latitude: number
+  longitude: number
+  radiusMeters: number
+}
+
 interface Vehicle {
   id: string
   vehicleId?: string
@@ -21,6 +28,8 @@ interface Vehicle {
   capacity?: number
   currentMileage?: number
   color?: string
+  vipGeoRestrictionEnabled?: boolean
+  restrictedZones?: RestrictedZone[] | null
 }
 
 export default function VehiclesPage() {
@@ -30,6 +39,10 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<ToastMessage | null>(null)
+  const [geofenceVehicle, setGeofenceVehicle] = useState<Vehicle | null>(null)
+  const [vipGeoEnabled, setVipGeoEnabled] = useState(false)
+  const [geofenceZones, setGeofenceZones] = useState<RestrictedZone[]>([])
+  const [savingGeofence, setSavingGeofence] = useState(false)
 
   useEffect(() => {
     loadVehicles()
@@ -50,6 +63,68 @@ export default function VehiclesPage() {
 
   const showToast = (message: string, type: ToastType) => {
     setToast({ message, type })
+  }
+
+  const openGeofenceEditor = async (v: Vehicle) => {
+    try {
+      const full = await vehicleApi.getById(v.id)
+      setGeofenceVehicle(full as Vehicle)
+      setVipGeoEnabled(!!full.vipGeoRestrictionEnabled)
+      const z = Array.isArray(full.restrictedZones) ? full.restrictedZones : []
+      setGeofenceZones(
+        z.length > 0
+          ? z.map((r) => ({
+              name: r.name,
+              latitude: Number(r.latitude),
+              longitude: Number(r.longitude),
+              radiusMeters: Number(r.radiusMeters),
+            }))
+          : [{ name: '', latitude: 0, longitude: 0, radiusMeters: 200 }],
+      )
+    } catch (e: any) {
+      showToast(e.message || 'Failed to load vehicle', 'error')
+    }
+  }
+
+  const closeGeofenceEditor = () => {
+    setGeofenceVehicle(null)
+    setSavingGeofence(false)
+  }
+
+  const saveGeofence = async () => {
+    if (!geofenceVehicle) return
+    const cleaned = geofenceZones
+      .map((z) => ({
+        name: z.name?.trim() || undefined,
+        latitude: Number(z.latitude),
+        longitude: Number(z.longitude),
+        radiusMeters: Number(z.radiusMeters),
+      }))
+      .filter(
+        (z) =>
+          Number.isFinite(z.latitude) &&
+          Number.isFinite(z.longitude) &&
+          Number.isFinite(z.radiusMeters) &&
+          z.radiusMeters > 0,
+      )
+    if (vipGeoEnabled && cleaned.length === 0) {
+      showToast('Add at least one forbidden zone (center + radius in meters), or turn VIP geofence off.', 'error')
+      return
+    }
+    try {
+      setSavingGeofence(true)
+      await vehicleApi.update(geofenceVehicle.id, {
+        vipGeoRestrictionEnabled: vipGeoEnabled,
+        restrictedZones: vipGeoEnabled ? cleaned : [],
+      })
+      showToast('VIP geofence settings saved', 'success')
+      closeGeofenceEditor()
+      await loadVehicles()
+    } catch (e: any) {
+      showToast(e.message || 'Save failed', 'error')
+    } finally {
+      setSavingGeofence(false)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -198,13 +273,14 @@ export default function VehiclesPage() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fuel Type</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Mileage</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">VIP zone</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -242,10 +318,21 @@ export default function VehiclesPage() {
                     <span className="text-sm text-gray-600">{vehicle.currentMileage ? `${vehicle.currentMileage.toLocaleString()} km` : 'N/A'}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
+                    {vehicle.vipGeoRestrictionEnabled ? (
+                      <span className="px-2 py-1 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                        On ({Array.isArray(vehicle.restrictedZones) ? vehicle.restrictedZones.length : 0})
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">Off</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => openGeofenceEditor(vehicle)}
+                      className="text-sm font-medium text-emerald-700 hover:text-emerald-900"
+                    >
+                      VIP / zones
                     </button>
                   </td>
                 </tr>
@@ -285,6 +372,126 @@ export default function VehiclesPage() {
         ))}
       </div>
     </div>
+
+    {geofenceVehicle && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200">
+          <div className="p-5 border-b border-gray-100">
+            <h2 className="text-lg font-semibold text-gray-900">VIP geofence (simulated engine-off)</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {geofenceVehicle.plateNumber} — if enabled, entering a forbidden circle triggers a simulated engine cut-off on GPS clients and in the API response.
+            </p>
+          </div>
+          <div className="p-5 space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={vipGeoEnabled}
+                onChange={(e) => setVipGeoEnabled(e.target.checked)}
+                className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-sm font-medium text-gray-800">Restrict this vehicle with forbidden zones</span>
+            </label>
+            {vipGeoEnabled && (
+              <div className="space-y-3">
+                <p className="text-xs text-gray-500">
+                  Each zone is a circle: center latitude/longitude and radius in meters. The vehicle must not enter these areas.
+                </p>
+                {geofenceZones.map((z, i) => (
+                  <div key={i} className="p-3 rounded-lg border border-gray-200 space-y-2 bg-gray-50">
+                    <input
+                      type="text"
+                      placeholder="Label (optional)"
+                      value={z.name ?? ''}
+                      onChange={(e) => {
+                        const next = [...geofenceZones]
+                        next[i] = { ...next[i], name: e.target.value }
+                        setGeofenceZones(next)
+                      }}
+                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
+                    />
+                    <div className="grid grid-cols-3 gap-2">
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="Lat"
+                        value={z.latitude === 0 ? '' : z.latitude}
+                        onChange={(e) => {
+                          const next = [...geofenceZones]
+                          next[i] = { ...next[i], latitude: parseFloat(e.target.value) || 0 }
+                          setGeofenceZones(next)
+                        }}
+                        className="px-2 py-1.5 text-sm border border-gray-300 rounded"
+                      />
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="Lng"
+                        value={z.longitude === 0 ? '' : z.longitude}
+                        onChange={(e) => {
+                          const next = [...geofenceZones]
+                          next[i] = { ...next[i], longitude: parseFloat(e.target.value) || 0 }
+                          setGeofenceZones(next)
+                        }}
+                        className="px-2 py-1.5 text-sm border border-gray-300 rounded"
+                      />
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="Radius m"
+                        value={z.radiusMeters === 0 ? '' : z.radiusMeters}
+                        onChange={(e) => {
+                          const next = [...geofenceZones]
+                          next[i] = { ...next[i], radiusMeters: parseFloat(e.target.value) || 0 }
+                          setGeofenceZones(next)
+                        }}
+                        className="px-2 py-1.5 text-sm border border-gray-300 rounded"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setGeofenceZones(geofenceZones.filter((_, j) => j !== i))}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Remove zone
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setGeofenceZones([
+                      ...geofenceZones,
+                      { name: '', latitude: 0, longitude: 0, radiusMeters: 200 },
+                    ])
+                  }
+                  className="text-sm text-emerald-700 font-medium hover:underline"
+                >
+                  + Add zone
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="p-5 border-t border-gray-100 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={closeGeofenceEditor}
+              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={savingGeofence}
+              onClick={saveGeofence}
+              className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {savingGeofence ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
     {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </>

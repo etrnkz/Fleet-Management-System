@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -188,6 +189,29 @@ export const maintenanceApi = {
     })
     return handleResponse(response)
   }
+}
+
+// Tracking / GPS (driver live location during IN_PROGRESS trips)
+export const trackingApi = {
+  postLocation: async (
+    tripId: string,
+    body: {
+      latitude: number
+      longitude: number
+      speed?: number
+      heading?: number
+      altitude?: number
+      accuracy?: number
+      metadata?: { deviceId?: string; networkType?: string; batteryLevel?: number }
+    },
+  ) => {
+    const response = await fetch(`${API_BASE_URL}/tracking/${tripId}/location`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify(body),
+    })
+    return handleResponse(response)
+  },
 }
 
 // Statistics API

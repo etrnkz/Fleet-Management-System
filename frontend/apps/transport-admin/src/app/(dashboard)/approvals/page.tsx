@@ -34,6 +34,10 @@ export default function ApprovalsPage() {
   const [rejectionReason, setRejectionReason] = useState('')
   const [fuelApproved, setFuelApproved] = useState(false)
   const [comments, setComments] = useState('')
+  const [fuelConfirmForm, setFuelConfirmForm] = useState({
+    estimatedFuelCost: '',
+    estimatedDistance: '',
+  })
   const [processingTrip, setProcessingTrip] = useState<string | null>(null)
 
   // Fetch pending approvals on mount
@@ -63,17 +67,29 @@ export default function ApprovalsPage() {
   const handleApproveTransport = async () => {
     if (!selectedTrip || !fuelApproved) return
 
+    const parseOpt = (s: string): number | undefined => {
+      const t = s.trim()
+      if (t === '') return undefined
+      const n = Number(t)
+      return Number.isFinite(n) && n >= 0 ? n : undefined
+    }
+    const fuel = parseOpt(fuelConfirmForm.estimatedFuelCost)
+    const dist = parseOpt(fuelConfirmForm.estimatedDistance)
+
     try {
       setProcessingTrip(selectedTrip.id)
       await tripApi.confirmTransport(selectedTrip.id, {
         fuelApproved,
-        comments: comments.trim() || undefined
+        comments: comments.trim() || undefined,
+        ...(fuel !== undefined && { estimatedFuelCost: fuel }),
+        ...(dist !== undefined && { estimatedDistance: dist }),
       })
-      
+
       setToast({ message: 'Transport approved successfully', type: 'success' })
       setShowApprovalModal(false)
       setFuelApproved(false)
       setComments('')
+      setFuelConfirmForm({ estimatedFuelCost: '', estimatedDistance: '' })
       await fetchPendingApprovals()
     } catch (error: any) {
       setToast({ message: error.message || 'Failed to approve transport', type: 'error' })
@@ -328,16 +344,23 @@ export default function ApprovalsPage() {
                         </div>
                       )}
 
-                      {selectedTrip.estimatedDistance && (
+                      {(selectedTrip.estimatedDistance != null ||
+                        selectedTrip.estimatedFuelCost != null) && (
                         <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Est. Distance:</span>
-                            <span className="text-sm font-semibold text-gray-900">{selectedTrip.estimatedDistance} km</span>
-                          </div>
-                          {selectedTrip.estimatedFuelCost && (
+                          {selectedTrip.estimatedDistance != null && (
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600">Est. Distance:</span>
+                              <span className="text-sm font-semibold text-gray-900">
+                                {selectedTrip.estimatedDistance} km
+                              </span>
+                            </div>
+                          )}
+                          {selectedTrip.estimatedFuelCost != null && (
                             <div className="flex justify-between">
                               <span className="text-sm text-gray-600">Est. Fuel Cost:</span>
-                              <span className="text-sm font-semibold text-gray-900">ETB {selectedTrip.estimatedFuelCost}</span>
+                              <span className="text-sm font-semibold text-gray-900">
+                                ETB {selectedTrip.estimatedFuelCost}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -348,7 +371,21 @@ export default function ApprovalsPage() {
                   {/* Action Buttons */}
                   <div className="flex gap-4 mt-6 pt-6 border-t border-gray-200">
                     <button
-                      onClick={() => setShowApprovalModal(true)}
+                      onClick={() => {
+                        setFuelConfirmForm({
+                          estimatedFuelCost:
+                            selectedTrip.estimatedFuelCost != null
+                              ? String(selectedTrip.estimatedFuelCost)
+                              : '',
+                          estimatedDistance:
+                            selectedTrip.estimatedDistance != null
+                              ? String(selectedTrip.estimatedDistance)
+                              : '',
+                        })
+                        setFuelApproved(false)
+                        setComments('')
+                        setShowApprovalModal(true)
+                      }}
                       disabled={processingTrip === selectedTrip.id}
                       className="flex-1 bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
@@ -409,6 +446,49 @@ export default function ApprovalsPage() {
                   </label>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Est. fuel (ETB)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={fuelConfirmForm.estimatedFuelCost}
+                      onChange={(e) =>
+                        setFuelConfirmForm((f) => ({
+                          ...f,
+                          estimatedFuelCost: e.target.value,
+                        }))
+                      }
+                      placeholder="From deployment"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave blank to keep deployment value</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Est. distance (km)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={fuelConfirmForm.estimatedDistance}
+                      onChange={(e) =>
+                        setFuelConfirmForm((f) => ({
+                          ...f,
+                          estimatedDistance: e.target.value,
+                        }))
+                      }
+                      placeholder="From deployment"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Leave blank to keep deployment value</p>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Comments (optional)
@@ -429,6 +509,7 @@ export default function ApprovalsPage() {
                     setShowApprovalModal(false)
                     setFuelApproved(false)
                     setComments('')
+                    setFuelConfirmForm({ estimatedFuelCost: '', estimatedDistance: '' })
                   }}
                   className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >

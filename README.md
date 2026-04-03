@@ -15,16 +15,9 @@ A production-grade Fleet Management System for school transportation with strict
 - **Full Audit Trail**: Complete logging of all system operations
 - **Event-Driven Architecture**: Scalable and maintainable design
 
-## 📋 Documentation
+## 📋 API documentation
 
-### Backend Documentation
-- [Architecture Overview](./Backend/ARCHITECTURE.md) - System design and technical architecture
-- [Database Schema](./Backend/DATABASE_SCHEMA.md) - Complete database design with TypeORM entities
-- [API Contracts](./Backend/API_CONTRACTS.md) - REST and WebSocket API documentation
-- [Workflow Engine](./Backend/WORKFLOW_ENGINE.md) - Workflow system design and implementation
-- [Module Structure](./Backend/MODULE_STRUCTURE.md) - NestJS project organization
-- [Implementation Plan](./Backend/plan.md) - 16-week development roadmap
-- [Quick Start Guide](./Backend/QUICKSTART.md) - Setup and installation instructions
+With the Backend running locally, open **Swagger** at `http://localhost:3000/api/docs` (path may differ if `PORT` or global prefix is customized in your `.env`).
 
 ## 🛠️ Technology Stack
 
@@ -87,9 +80,7 @@ npm run migration:run
 npm run start:dev
 ```
 
-Visit `http://localhost:3000/api/docs` for API documentation.
-
-For detailed setup instructions, see [Backend/QUICKSTART.md](./Backend/QUICKSTART.md).
+Visit `http://localhost:3000/api/docs` for interactive API documentation.
 
 ## 👥 Roles and portals
 
@@ -192,29 +183,7 @@ This project is licensed under the MIT License.
 
 For support and questions, please contact:
 - Email: support@school.edu
-- Documentation: [/docs](./docs)
 - Issues: GitHub Issues
-
-## 🗺️ Roadmap
-
-See [Backend/plan.md](./Backend/plan.md) for the complete 16-week implementation roadmap.
-
-### Phase 1: Foundation (Week 1-2)
-- ✅ Project setup and configuration
-- ✅ Authentication and authorization
-- ✅ User and organization management
-
-### Phase 2: Core Business Logic (Week 3-5)
-- 🔄 Vehicle and driver management
-- 🔄 Workflow engine implementation
-- 🔄 Trip request system
-
-### Phase 3-9: Advanced Features
-- Approval and allocation system
-- Real-time tracking
-- Maintenance and fuel management
-- Reporting and analytics
-- Testing and deployment
 
 ---
 

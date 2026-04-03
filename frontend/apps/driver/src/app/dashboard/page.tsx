@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { authApi, tripApi, vehicleApi, statsApi, maintenanceApi } from '@/lib/api'
+import { useDriverGpsTracking } from '@/hooks/useDriverGpsTracking'
 
 export default function DriverDashboard() {
   const router = useRouter()
@@ -50,6 +51,20 @@ export default function DriverDashboard() {
   useEffect(() => {
     loadUserData()
   }, [])
+
+  useEffect(() => {
+    loadActiveTrips()
+  }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      loadActiveTrips()
+    }, 45_000)
+    return () => clearInterval(id)
+  }, [])
+
+  const liveTripId = activeTrips[0]?.id ?? null
+  const gpsStatus = useDriverGpsTracking(liveTripId)
 
   useEffect(() => {
     if (activeSection === 'assigned-trips') {
@@ -484,6 +499,42 @@ export default function DriverDashboard() {
           </div>
         </header>
 
+        {liveTripId && (
+          <div
+            className={`border-b px-4 py-2.5 text-sm ${
+              gpsStatus.engineSimulatedOff
+                ? 'bg-amber-50 border-amber-200 text-amber-950'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+            }`}
+          >
+            <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="inline-flex items-center gap-2 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                Live GPS — sharing location for this trip (no setup required)
+              </span>
+              {gpsStatus.lastPostedAt != null && (
+                <span className="text-xs opacity-80">
+                  Last update {new Date(gpsStatus.lastPostedAt).toLocaleTimeString()}
+                </span>
+              )}
+              {gpsStatus.engineSimulatedOff && (
+                <span className="text-xs font-semibold">
+                  Restricted zone
+                  {gpsStatus.violationZoneName ? `: ${gpsStatus.violationZoneName}` : ''} — engine simulated off
+                </span>
+              )}
+              {gpsStatus.geoUnsupported && (
+                <span className="text-xs font-medium text-red-700">
+                  Turn on location permission for this site to send GPS.
+                </span>
+              )}
+              {gpsStatus.lastError && !gpsStatus.geoUnsupported && (
+                <span className="text-xs text-red-700">{gpsStatus.lastError}</span>
+              )}
+            </div>
+          </div>
+        )}
+
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
@@ -761,8 +812,11 @@ export default function DriverDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800">
-                  Trip is in progress. Complete it at the destination or report any issues via the Maintenance section.
+                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-sm text-emerald-800 space-y-2">
+                  <p>
+                    Trip is in progress. Your browser shares GPS automatically while this trip is active (see the bar
+                    at the top). Complete at the destination or report issues via Maintenance.
+                  </p>
                 </div>
               </div>
             ))}

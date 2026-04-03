@@ -8,9 +8,14 @@ import {
   Max,
   Matches,
   IsDateString,
+  IsBoolean,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { FuelType, VehicleStatus } from '../entities/vehicle.entity';
+import { RestrictedZoneDto } from './restricted-zone.dto';
 
 export class CreateVehicleDto {
   @ApiPropertyOptional({
@@ -154,4 +159,22 @@ export class CreateVehicleDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'VIP-style geofence: when enabled, entering any restricted zone simulates engine cut-off',
+  })
+  @IsBoolean()
+  @IsOptional()
+  vipGeoRestrictionEnabled?: boolean;
+
+  @ApiPropertyOptional({
+    type: [RestrictedZoneDto],
+    description: 'Forbidden circular zones (center + radius in meters)',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RestrictedZoneDto)
+  restrictedZones?: RestrictedZoneDto[];
 }
