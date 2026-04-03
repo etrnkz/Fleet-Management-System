@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "fleet-management-workflow",
 		"name": "Fleet Management - Complete Trip Workflow",
-		"description": "Complete workflow from trip request to driver assignment and trip execution",
+		"description": "Complete workflow from trip request to driver assignment and trip execution.\n\nGate QR: folder **6. Gate scan & tracking extras** has `POST /trips/gate/start-from-scan` (same payload as the driver app QR). Run that **instead of Step 8** if you are testing the gate flow; do not run both on the same READY trip.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -222,7 +222,7 @@
 								"login"
 							]
 						},
-						"description": "Role: DeploymentTeam. Seed: Backend/create_test_users.py (deployment@test.com)."
+						"description": "Role: DeploymentTeam. Seed: Backend/seed_all.py (deployment@test.com)."
 					}
 				},
 				{
@@ -266,7 +266,7 @@
 								"login"
 							]
 						},
-						"description": "Role: TransportOffice (fleet admin UI). Seed: create_test_users.py (transport@test.com)."
+						"description": "Role: TransportOffice (fleet admin UI). Seed: Backend/seed_all.py (transport@test.com)."
 					}
 				},
 				{
@@ -310,7 +310,7 @@
 								"login"
 							]
 						},
-						"description": "Seeded by create_maintenance_users.py (driver@test.com). Driver profile is ensured in folder 2."
+						"description": "Seeded by Backend/seed_all.py (driver@test.com + driver profile). Driver profile is ensured in folder 2."
 					}
 				},
 				{
@@ -354,7 +354,7 @@
 								"login"
 							]
 						},
-						"description": "Role: Developer. Created by create_test_users.py step 0. System Admin app also accepts Developer role."
+						"description": "Role: Developer. Created by Backend/seed_all.py. System Admin app also accepts Developer role."
 					}
 				},
 				{
@@ -398,7 +398,7 @@
 								"login"
 							]
 						},
-						"description": "Role: SystemAdmin. Create with Backend/create_system_admin_users.py or your own seed. If 401, use Login as Developer instead."
+						"description": "Role: SystemAdmin. Seed with Backend/seed_all.py. If 401, use Login as Developer instead."
 					}
 				}
 			]
@@ -519,7 +519,7 @@
 								"drivers"
 							]
 						},
-						"description": "409 if profile already exists (re-runs). User driver@test.com must exist (create_maintenance_users.py)."
+						"description": "409 if profile already exists (re-runs). User driver@test.com must exist (Backend/seed_all.py)."
 					}
 				},
 				{
@@ -592,6 +592,9 @@
 									"});",
 									"const response = pm.response.json();",
 									"pm.environment.set('trip_id', response.id);",
+									"if (response.requestNumber) {",
+									"    pm.environment.set('trip_request_number', response.requestNumber);",
+									"}",
 									"console.log('Trip created with ID:', response.id);"
 								],
 								"type": "text/javascript"
@@ -908,7 +911,7 @@
 			"name": "4. Trip Execution",
 			"item": [
 				{
-					"name": "Step 8: Transport Office Starts Trip",
+					"name": "Step 8: Start trip (plate + scannerValidation)",
 					"event": [
 						{
 							"listen": "test",
@@ -956,6 +959,7 @@
 				},
 				{
 					"name": "Step 9: Add GPS Tracking Data",
+					"description": "Response may include engineSimulatedOff / violationZoneName when the allocated vehicle has VIP geofence zones enabled.",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -1156,6 +1160,118 @@
 								"trips",
 								"feedback",
 								"statistics"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Gate scan & tracking extras",
+			"description": "Optional manual tests. **Gate start:** use instead of Step 8 (trip must still be READY). Roles: Gate, TransportOffice, or Developer. **Geofence config:** for GPS clients / `GET` before tracking.",
+			"item": [
+				{
+					"name": "POST Gate start from QR payload",
+					"description": "Body `qrPayload` is the raw string from the driver QR (JSON with tripId, requestNumber, vehicle, action: START_TRIP) or a bare trip UUID. Skip Step 8 when using this.",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const r = pm.response.json();",
+									"    console.log('Gate start OK, state:', r.state);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{transport_office_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"qrPayload\": \"{\\\"tripId\\\":\\\"{{trip_id}}\\\",\\\"requestNumber\\\":\\\"{{trip_request_number}}\\\",\\\"vehicle\\\":\\\"{{vehicle_plate_number}}\\\",\\\"action\\\":\\\"START_TRIP\\\"}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/trips/gate/start-from-scan",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"trips",
+								"gate",
+								"start-from-scan"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Trip geofence config (allocated vehicle)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{transport_office_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tracking/{{trip_id}}/geofence-config",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tracking",
+								"{{trip_id}}",
+								"geofence-config"
+							]
+						}
+					}
+				},
+				{
+					"name": "PATCH Vehicle VIP geofence (example)",
+					"description": "Enable forbidden circular zones for the workflow test vehicle. Adjust coordinates for your region.",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{transport_office_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vipGeoRestrictionEnabled\": true,\n  \"restrictedZones\": [\n    {\n      \"name\": \"Postman demo zone\",\n      \"latitude\": 9.032,\n      \"longitude\": 38.7469,\n      \"radiusMeters\": 500\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/vehicles/{{test_vehicle_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"vehicles",
+								"{{test_vehicle_id}}"
 							]
 						}
 					}
