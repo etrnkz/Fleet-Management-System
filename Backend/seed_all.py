@@ -11,7 +11,7 @@ Remote API:
 
   FLEET_API_BASE=https://your-api.com/api/v1 python seed_all.py
 
-Optional: append --with-vehicles to also run create_test_vehicles_drivers.py (may need DTO updates).
+Optional: append --with-vehicles to run create_test_vehicles_drivers.py (one vehicle + driver records).
 
 create_test_users.py seeds every role: User, DepartmentHead, Dean, CollegeHead, President,
 DeploymentTeam, TransportOffice, Gate, MaintenanceTeam, Driver, SystemAdmin, Developer, etc.
