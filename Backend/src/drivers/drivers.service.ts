@@ -5,8 +5,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { Driver, DriverStatus } from './entities/driver.entity';
+import {
+  TripRequest,
+  TRIP_STATES_HOLDING_ALLOCATION,
+} from '../trips/entities/trip-request.entity';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { UsersService } from '../users/users.service';
@@ -17,6 +21,8 @@ export class DriversService {
   constructor(
     @InjectRepository(Driver)
     private readonly driverRepository: Repository<Driver>,
+    @InjectRepository(TripRequest)
+    private readonly tripRepository: Repository<TripRequest>,
     private readonly usersService: UsersService,
   ) {}
 
@@ -68,11 +74,23 @@ export class DriversService {
   }
 
   async findAvailable(): Promise<Driver[]> {
-    return this.driverRepository.find({
+    const drivers = await this.driverRepository.find({
       where: { status: DriverStatus.Available },
       relations: ['user'],
       order: { rating: 'DESC' },
     });
+
+    const holdingTrips = await this.tripRepository.find({
+      where: { state: In(TRIP_STATES_HOLDING_ALLOCATION) },
+      relations: ['allocatedDriver'],
+    });
+    const busyIds = new Set(
+      holdingTrips
+        .map((t) => t.allocatedDriver?.id)
+        .filter((id): id is string => Boolean(id)),
+    );
+
+    return drivers.filter((d) => !busyIds.has(d.id));
   }
 
   async findByStatus(status: DriverStatus): Promise<Driver[]> {
