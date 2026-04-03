@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Create Test Vehicles and Drivers for Fleet Management System
+Create one test vehicle and optional driver profiles (Fleet Management System).
+
+Vehicle status must match API enum: Active, Maintenance, Inactive (not READY).
 """
 
+import os
 import requests
-import json
 
-BASE_URL = "http://localhost:3000/api/v1"
+BASE_URL = os.environ.get("FLEET_API_BASE", "http://localhost:3000/api/v1").rstrip("/")
 
 class Colors:
     CYAN = '\033[96m'
@@ -64,10 +66,10 @@ def main():
     print_colored("✓ Logged in successfully", Colors.GREEN)
     print()
 
-    # Create Vehicles
-    print_colored("Creating Test Vehicles...", Colors.YELLOW)
+    # One seed vehicle (matches VehicleStatus.Active in API)
+    print_colored("Creating test vehicle (one)...", Colors.YELLOW)
     print()
-    
+
     vehicles = [
         {
             "plateNumber": "AA-12345",
@@ -76,44 +78,8 @@ def main():
             "year": 2020,
             "capacity": 30,
             "fuelType": "Diesel",
-            "status": "READY"
+            "status": "Active",
         },
-        {
-            "plateNumber": "AA-67890",
-            "make": "Toyota",
-            "model": "Hiace",
-            "year": 2019,
-            "capacity": 14,
-            "fuelType": "Diesel",
-            "status": "READY"
-        },
-        {
-            "plateNumber": "AA-11111",
-            "make": "Toyota",
-            "model": "Land Cruiser",
-            "year": 2021,
-            "capacity": 7,
-            "fuelType": "Diesel",
-            "status": "READY"
-        },
-        {
-            "plateNumber": "AA-22222",
-            "make": "Isuzu",
-            "model": "D-Max",
-            "year": 2020,
-            "capacity": 5,
-            "fuelType": "Diesel",
-            "status": "READY"
-        },
-        {
-            "plateNumber": "AA-33333",
-            "make": "Mercedes",
-            "model": "Sprinter",
-            "year": 2022,
-            "capacity": 16,
-            "fuelType": "Diesel",
-            "status": "MAINTENANCE"
-        }
     ]
 
     created_vehicles = []
