@@ -86,7 +86,15 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
   }, [router])
 
   const handleLogout = () => {
-    localStorage.clear()
+    // Clear authentication tokens and user session
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+    
+    // Keep only essential userData (profile settings without images)
+    // Profile image will be restored from backend on next login
+    
     router.push('/login')
   }
 

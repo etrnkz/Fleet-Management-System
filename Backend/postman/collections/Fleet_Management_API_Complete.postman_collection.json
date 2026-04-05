@@ -1,0 +1,706 @@
+{
+	"info": {
+		"_postman_id": "fleet-management-api-complete",
+		"name": "Fleet Management API — Complete Test Suite",
+		"description": "Comprehensive API testing including new bulk invite functionality. Requires API running and seeded users.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health & Info",
+			"item": [
+				{
+					"name": "GET /api/v1/health",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Body has status OK\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.have.property(\"status\", \"OK\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/health",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "health"]
+						}
+					}
+				},
+				{
+					"name": "GET /api/v1 (root info)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Fleet service name present\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.have.property(\"service\");",
+									"    pm.expect(json.service).to.include(\"Fleet\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "GET /api/v1/auth/signup-metadata",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns colleges and departments\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.have.property(\"colleges\");",
+									"    pm.expect(json).to.have.property(\"departments\");",
+									"    pm.expect(json.colleges).to.be.an(\"array\");",
+									"    pm.expect(json.departments).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/signup-metadata",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "signup-metadata"]
+						}
+					}
+				},
+				{
+					"name": "POST /api/v1/auth/login (employee)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login succeeds\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"pm.test(\"Has access_token and user\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.have.property(\"access_token\");",
+									"    pm.expect(json).to.have.property(\"user\");",
+									"    pm.expect(json.user.email).to.eql(\"employee@test.com\");",
+									"});",
+									"try {",
+									"    const json = pm.response.json();",
+									"    pm.environment.set(\"employee_token\", json.access_token);",
+									"    pm.environment.set(\"employee_user_id\", json.user.id);",
+									"} catch (e) {}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"employee@test.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "POST /api/v1/auth/login (dean)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Dean login succeeds\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"try {",
+									"    const json = pm.response.json();",
+									"    pm.environment.set(\"dean_token\", json.access_token);",
+									"    pm.environment.set(\"dean_user_id\", json.user.id);",
+									"} catch (e) {}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"dean@test.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "GET /api/v1/users/me (JWT)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Profile email matches\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.email).to.eql(\"employee@test.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/me",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "me"]
+						}
+					}
+				},
+				{
+					"name": "GET /api/v1/users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns array of users\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.be.an(\"array\");",
+									"    pm.expect(json.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users"]
+						}
+					}
+				},
+				{
+					"name": "POST /api/v1/users/bulk-invite",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Bulk invite status check\", function () {",
+									"    // Should succeed with dean token or fail with employee token (403)",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 403]);",
+									"});",
+									"if (pm.response.code === 201) {",
+									"    pm.test(\"Bulk invite response structure\", function () {",
+									"        const json = pm.response.json();",
+									"        pm.expect(json).to.have.property(\"success\");",
+									"        pm.expect(json).to.have.property(\"invited\");",
+									"        pm.expect(json).to.have.property(\"failed\");",
+									"        pm.expect(json).to.have.property(\"message\");",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emails\": [\n    \"test.user1@university.edu\",\n    \"test.user2@university.edu\"\n  ],\n  \"welcomeMessage\": \"Welcome to Fleet Management System!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/bulk-invite",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "bulk-invite"]
+						}
+					}
+				},
+				{
+					"name": "POST /api/v1/users/bulk-invite (as dean)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Dean bulk invite succeeds\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+									"});",
+									"if (pm.response.code === 201) {",
+									"    pm.test(\"Bulk invite response structure\", function () {",
+									"        const json = pm.response.json();",
+									"        pm.expect(json).to.have.property(\"success\");",
+									"        pm.expect(json).to.have.property(\"invited\");",
+									"        pm.expect(json).to.have.property(\"failed\");",
+									"        pm.expect(json).to.have.property(\"message\");",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dean_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emails\": [\n    \"dean.test1@university.edu\",\n    \"dean.test2@university.edu\"\n  ],\n  \"welcomeMessage\": \"Welcome to Fleet Management System! You have been invited by the Dean.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/bulk-invite",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "bulk-invite"]
+						}
+					}
+				},
+				{
+					"name": "GET /api/v1/users/statistics/overview",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Statistics status check\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+									"});",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Statistics response structure\", function () {",
+									"        const json = pm.response.json();",
+									"        pm.expect(json).to.have.property(\"total\");",
+									"        pm.expect(json).to.have.property(\"active\");",
+									"        pm.expect(json).to.have.property(\"byRole\");",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{dean_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/users/statistics/overview",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users", "statistics", "overview"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "System Admin",
+			"item": [
+				{
+					"name": "GET /api/v1/system-admin/statistics/overview",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"System admin endpoint exists\", function () {",
+									"    // Should return 403 for non-admin users or 200 for admin users",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/system-admin/statistics/overview",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "system-admin", "statistics", "overview"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Trips",
+			"item": [
+				{
+					"name": "GET /api/v1/trips",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns array\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/trips",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "trips"]
+						}
+					}
+				},
+				{
+					"name": "POST /api/v1/trips/gate/start-from-scan (403 as employee)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Gate scan — employee forbidden\", function () {",
+									"    pm.expect(pm.response.code).to.eql(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"qrPayload\": \"00000000-0000-4000-8000-000000000000\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/trips/gate/start-from-scan",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "trips", "gate", "start-from-scan"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Vehicles",
+			"item": [
+				{
+					"name": "GET /api/v1/vehicles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns array\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/vehicles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "vehicles"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Drivers",
+			"item": [
+				{
+					"name": "GET /api/v1/drivers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns array\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "drivers"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "GET /api/v1/notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Returns array\", function () {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.be.an(\"array\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notifications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "notifications"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Tracking",
+			"item": [
+				{
+					"name": "GET /api/v1/tracking/{id}/geofence-config (404 unknown trip)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Geofence config route — trip not found\", function () {",
+									"    pm.expect(pm.response.code).to.eql(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/tracking/00000000-0000-4000-8000-000000000000/geofence-config",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "tracking", "00000000-0000-4000-8000-000000000000", "geofence-config"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}

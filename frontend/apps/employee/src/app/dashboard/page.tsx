@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { tripApi, getCurrentUser, notificationApi, vehicleApi, userApi } from '../../lib/api'
+import { tripApi, getCurrentUser, notificationApi, vehicleApi, userApi, collegeApi, departmentApi } from '../../lib/api'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -33,6 +33,67 @@ export default function DashboardPage() {
   const notifRef = useRef<HTMLDivElement>(null)
   const profileDropdownRef = useRef<HTMLDivElement>(null)
 
+  // Safe localStorage setter that handles quota exceeded errors
+  const safeSetLocalStorage = (key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value)
+    } catch (error: any) {
+      if (error.name === 'QuotaExceededError') {
+        // Clear some non-essential data and try again
+        localStorage.removeItem('userData')
+        try {
+          localStorage.setItem(key, value)
+        } catch (retryError) {
+          console.warn('localStorage quota exceeded, unable to save:', key)
+          showToast('Storage quota exceeded. Some settings may not be saved.', 'error')
+        }
+      } else {
+        console.error('localStorage error:', error)
+      }
+    }
+  }
+
+  // Compress image before upload to reduce size
+  const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width
+          width = maxWidth
+        }
+        
+        canvas.width = width
+        canvas.height = height
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now(),
+              })
+              resolve(compressedFile)
+            } else {
+              resolve(file) // Fallback to original if compression fails
+            }
+          },
+          file.type,
+          quality
+        )
+      }
+      
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   useEffect(() => {
     const currentUser = getCurrentUser()
     if (!currentUser) {
@@ -41,13 +102,25 @@ export default function DashboardPage() {
     }
     setUser(currentUser)
     
-    // Load profile image from localStorage
-    const userData = localStorage.getItem('userData')
-    if (userData) {
-      const parsedData = JSON.parse(userData)
-      if (parsedData.profileImage) {
-        setProfileImage(parsedData.profileImage)
+    // Load profile image from user data (comes from backend)
+    if (currentUser.profileImage) {
+      setProfileImage(currentUser.profileImage)
+    }
+    
+    // Clean up any large userData entries to prevent quota issues
+    try {
+      const userData = localStorage.getItem('userData')
+      if (userData) {
+        const parsedData = JSON.parse(userData)
+        // Remove profileImage from userData if it exists (it should be in user object instead)
+        if (parsedData.profileImage) {
+          delete parsedData.profileImage
+          safeSetLocalStorage('userData', JSON.stringify(parsedData))
+        }
       }
+    } catch (error) {
+      // If userData is corrupted or too large, clear it
+      localStorage.removeItem('userData')
     }
     
     loadTrips()
@@ -207,7 +280,15 @@ export default function DashboardPage() {
     return 'bg-gray-100 text-gray-700'
   }
   const handleLogout = () => {
-    localStorage.clear()
+    // Clear authentication tokens and user session
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
+    
+    // Keep only essential userData (profile settings without images)
+    // Profile image will be restored from backend on next login
+    
     router.push('/login')
   }
 
@@ -732,7 +813,7 @@ export default function DashboardPage() {
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState('profile')
     const [colleges, setColleges] = useState<{ id: string; name: string }[]>([])
-    const [departments, setDepartments] = useState<{ id: string; name: string; collegeId: string | null }[]>([])
+    const [departments, setDepartments] = useState<{ id: string; name: string; collegeId?: string; college?: { id: string } }[]>([])
     const [availableDepartments, setAvailableDepartments] = useState<{ id: string; name: string }[]>([])
     const [formData, setFormData] = useState({
       name: '',
@@ -756,36 +837,115 @@ export default function DashboardPage() {
 
     const loadCollegesAndDepartments = async () => {
       try {
-        // Load colleges and departments from API or fallback data
-        const collegesData = [
-          { id: '1', name: 'College of Engineering' },
-          { id: '2', name: 'College of Medicine' },
-          { id: '3', name: 'College of Business' },
-          { id: '4', name: 'College of Arts and Sciences' },
-          { id: '5', name: 'College of Education' },
-        ]
+        // Load colleges and departments from backend API
+        const [collegesResponse, departmentsResponse] = await Promise.all([
+          collegeApi.getAll().catch(() => []),
+          departmentApi.getAll().catch(() => [])
+        ])
         
-        const departmentsData = [
-          { id: '1', name: 'Computer Science', collegeId: '1' },
-          { id: '2', name: 'Electrical Engineering', collegeId: '1' },
-          { id: '3', name: 'Mechanical Engineering', collegeId: '1' },
-          { id: '4', name: 'Internal Medicine', collegeId: '2' },
-          { id: '5', name: 'Surgery', collegeId: '2' },
-          { id: '6', name: 'Pediatrics', collegeId: '2' },
-          { id: '7', name: 'Accounting', collegeId: '3' },
-          { id: '8', name: 'Marketing', collegeId: '3' },
-          { id: '9', name: 'Finance', collegeId: '3' },
-          { id: '10', name: 'Mathematics', collegeId: '4' },
-          { id: '11', name: 'Physics', collegeId: '4' },
-          { id: '12', name: 'Chemistry', collegeId: '4' },
-          { id: '13', name: 'Elementary Education', collegeId: '5' },
-          { id: '14', name: 'Secondary Education', collegeId: '5' },
-        ]
+        // Set the data from API
+        setColleges(Array.isArray(collegesResponse) ? collegesResponse : [])
+        setDepartments(Array.isArray(departmentsResponse) ? departmentsResponse : [])
         
-        setColleges(collegesData)
-        setDepartments(departmentsData)
+        // If API fails, fallback to hardcoded data
+        if (!Array.isArray(collegesResponse) || collegesResponse.length === 0) {
+          const fallbackColleges = [
+            { id: '1', name: 'College of Agriculture and Environmental Sciences' },
+            { id: '2', name: 'College of Business and Economics' },
+            { id: '3', name: 'College of Computing and Informatics' },
+            { id: '4', name: 'College of Education and Behavioural Sciences' },
+            { id: '5', name: 'College of Health and Medical Science' },
+            { id: '6', name: 'College of Law' },
+            { id: '7', name: 'College of Natural and Computational Science' },
+            { id: '8', name: 'College of Social Sciences and Humanities' },
+            { id: '9', name: 'College of Veterinary Medicine' },
+            { id: '10', name: 'Haramaya Institute of Technology (HIT)' },
+          ]
+          setColleges(fallbackColleges)
+        }
+        
+        if (!Array.isArray(departmentsResponse) || departmentsResponse.length === 0) {
+          const fallbackDepartments = [
+            // College of Agriculture and Environmental Sciences
+            { id: '1', name: 'Agricultural Economics and Agribusiness', collegeId: '1' },
+            { id: '2', name: 'Animal and Range Science', collegeId: '1' },
+            { id: '3', name: 'Natural Resources and Environmental Science', collegeId: '1' },
+            { id: '4', name: 'Plant Sciences', collegeId: '1' },
+            { id: '5', name: 'Rural Development and Agricultural Innovation', collegeId: '1' },
+            
+            // College of Business and Economics
+            { id: '6', name: 'Accounting and Finance', collegeId: '2' },
+            { id: '7', name: 'Cooperatives', collegeId: '2' },
+            { id: '8', name: 'Economics', collegeId: '2' },
+            { id: '9', name: 'Management', collegeId: '2' },
+            { id: '10', name: 'Public Administration and Development Management', collegeId: '2' },
+            
+            // College of Computing and Informatics
+            { id: '11', name: 'Computer Science', collegeId: '3' },
+            { id: '12', name: 'Information Technology', collegeId: '3' },
+            { id: '13', name: 'Information System', collegeId: '3' },
+            { id: '14', name: 'Information Science', collegeId: '3' },
+            { id: '15', name: 'Software Engineering', collegeId: '3' },
+            { id: '16', name: 'Statistics', collegeId: '3' },
+            
+            // College of Education and Behavioural Sciences
+            { id: '17', name: 'Adult Education and Community Development', collegeId: '4' },
+            { id: '18', name: 'Educational Planning and Management', collegeId: '4' },
+            { id: '19', name: 'Psychology', collegeId: '4' },
+            { id: '20', name: 'Special Needs and Inclusive Education', collegeId: '4' },
+            
+            // College of Health and Medical Science
+            { id: '21', name: 'Environmental Health Sciences', collegeId: '5' },
+            { id: '22', name: 'Medicine', collegeId: '5' },
+            { id: '23', name: 'Medical Laboratory Sciences', collegeId: '5' },
+            { id: '24', name: 'Nursing and Midwifery', collegeId: '5' },
+            { id: '25', name: 'Pharmacy', collegeId: '5' },
+            { id: '26', name: 'Public Health', collegeId: '5' },
+            
+            // College of Law
+            { id: '27', name: 'Law', collegeId: '6' },
+            
+            // College of Natural and Computational Science
+            { id: '28', name: 'Biological Sciences and Biotechnology', collegeId: '7' },
+            { id: '29', name: 'Mathematics', collegeId: '7' },
+            { id: '30', name: 'Physics', collegeId: '7' },
+            { id: '31', name: 'Chemistry', collegeId: '7' },
+            
+            // College of Social Sciences and Humanities
+            { id: '32', name: 'Geography Environmental Studies', collegeId: '8' },
+            { id: '33', name: 'History and Heritage Management', collegeId: '8' },
+            { id: '34', name: 'Foreign Language Studies', collegeId: '8' },
+            { id: '35', name: 'Afaan Oromoo', collegeId: '8' },
+            { id: '36', name: 'Gender and Development Studies', collegeId: '8' },
+            { id: '37', name: 'Sociology', collegeId: '8' },
+            
+            // College of Veterinary Medicine
+            { id: '38', name: 'Doctor of Veterinary Medicine', collegeId: '9' },
+            { id: '39', name: 'Veterinary Laboratory Technology', collegeId: '9' },
+            
+            // HIT (Haramaya Institute of Technology)
+            { id: '40', name: 'School of Water Resources and Environmental Engineering', collegeId: '10' },
+            { id: '41', name: 'School of Electrical and Computer Engineering', collegeId: '10' },
+            { id: '42', name: 'Chemical Engineering', collegeId: '10' },
+            { id: '43', name: 'Civil Engineering', collegeId: '10' },
+            { id: '44', name: 'Food Science and Post-harvest Technology', collegeId: '10' },
+            { id: '45', name: 'Food Technology and Process', collegeId: '10' },
+            { id: '46', name: 'Mechanical Engineering', collegeId: '10' },
+          ]
+          setDepartments(fallbackDepartments)
+        }
       } catch (error) {
         console.error('Failed to load colleges and departments:', error)
+        // Use fallback data on error
+        setColleges([
+          { id: '1', name: 'College of Agriculture and Environmental Sciences' },
+          { id: '2', name: 'College of Business and Economics' },
+          { id: '3', name: 'College of Computing and Informatics' },
+        ])
+        setDepartments([
+          { id: '1', name: 'Computer Science', collegeId: '3' },
+          { id: '2', name: 'Management', collegeId: '2' },
+        ])
       }
     }
 
@@ -808,7 +968,11 @@ export default function DashboardPage() {
       if (parsedData.college) {
         setAvailableDepartments(
           departments
-            .filter((dept) => dept.collegeId === parsedData.college)
+            .filter((dept) => {
+              // Handle both collegeId and college.id structures from API
+              const deptCollegeId = dept.collegeId || dept.college?.id
+              return deptCollegeId === parsedData.college
+            })
             .map((dept) => ({ id: dept.id, name: dept.name }))
         )
       }
@@ -826,7 +990,11 @@ export default function DashboardPage() {
       if (selectedCollege) {
         setAvailableDepartments(
           departments
-            .filter((dept) => dept.collegeId === selectedCollege)
+            .filter((dept) => {
+              // Handle both collegeId and college.id structures from API
+              const deptCollegeId = dept.collegeId || dept.college?.id
+              return deptCollegeId === selectedCollege
+            })
             .map((dept) => ({ id: dept.id, name: dept.name }))
         )
       } else {
@@ -834,11 +1002,48 @@ export default function DashboardPage() {
       }
     }
 
+    const handleRemoveProfileImage = async () => {
+      try {
+        setSaving(true)
+        
+        // Remove from backend
+        await userApi.removeProfileImage()
+        
+        // Update local state
+        setProfileImage(null)
+        
+        // Update user object in localStorage (main source of truth)
+        const currentUser = getCurrentUser()
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            profileImage: null
+          }
+          setUser(updatedUser)
+          safeSetLocalStorage('user', JSON.stringify(updatedUser))
+        }
+        
+        showToast('Profile picture removed successfully!', 'success')
+      } catch (error: any) {
+        showToast(error.message || 'Failed to remove profile picture', 'error')
+      } finally {
+        setSaving(false)
+      }
+    }
+
     const handleSaveProfile = async () => {
       try {
         setSaving(true)
         
-        // Update user state
+        // Update profile via backend API
+        const profileData = {
+          name: formData.name,
+          phoneNumber: formData.phoneNumber,
+        }
+        
+        await userApi.updateProfile(profileData)
+        
+        // Update local user state
         const currentUser = getCurrentUser()
         const updatedUser = {
           ...currentUser,
@@ -846,20 +1051,18 @@ export default function DashboardPage() {
           phoneNumber: formData.phoneNumber,
         }
         setUser(updatedUser)
-        localStorage.setItem('user', JSON.stringify(updatedUser))
+        safeSetLocalStorage('user', JSON.stringify(updatedUser))
         
-        // Get college and department names for display
-        const selectedCollege = colleges.find(c => c.id === formData.college)
-        const selectedDepartment = availableDepartments.find(d => d.id === formData.department)
-        
-        // Save extended profile data to localStorage
+        // Save only non-image data to userData (to avoid localStorage quota issues)
         const userData = {
-          ...formData,
-          collegeName: selectedCollege?.name || '',
-          departmentName: selectedDepartment?.name || '',
-          profileImage,
+          employeeId: formData.employeeId,
+          organizationType: formData.organizationType,
+          college: formData.college,
+          office: formData.office,
+          department: formData.department,
+          // Don't store profileImage here to avoid quota issues
         }
-        localStorage.setItem('userData', JSON.stringify(userData))
+        safeSetLocalStorage('userData', JSON.stringify(userData))
         
         showToast('Profile updated successfully!', 'success')
       } catch (error: any) {
@@ -896,7 +1099,7 @@ export default function DashboardPage() {
       }
     }
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
       if (file) {
         // Validate file size (max 5MB)
@@ -911,28 +1114,35 @@ export default function DashboardPage() {
           return
         }
         
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const imageData = reader.result as string
+        try {
+          setSaving(true)
           
-          // Update main dashboard profile image state
-          setProfileImage(imageData)
+          // Compress image before upload to reduce storage requirements
+          const compressedFile = await compressImage(file, 400, 0.7) // Smaller size for profile pics
           
-          // Save to localStorage immediately
-          const userData = localStorage.getItem('userData')
-          const parsedData = userData ? JSON.parse(userData) : {}
-          const updatedUserData = {
-            ...parsedData,
-            profileImage: imageData
+          // Upload to backend
+          const response = await userApi.uploadProfileImage(compressedFile)
+          
+          // Update local state with the returned image URL
+          setProfileImage(response.profileImageUrl)
+          
+          // Update user object in localStorage (this is the main source of truth)
+          const currentUser = getCurrentUser()
+          if (currentUser) {
+            const updatedUser = {
+              ...currentUser,
+              profileImage: response.profileImageUrl
+            }
+            setUser(updatedUser)
+            safeSetLocalStorage('user', JSON.stringify(updatedUser))
           }
-          localStorage.setItem('userData', JSON.stringify(updatedUserData))
           
           showToast('Profile picture updated successfully!', 'success')
+        } catch (error: any) {
+          showToast(error.message || 'Failed to upload profile picture', 'error')
+        } finally {
+          setSaving(false)
         }
-        reader.onerror = () => {
-          showToast('Failed to read image file', 'error')
-        }
-        reader.readAsDataURL(file)
       }
     }
 
@@ -1001,9 +1211,22 @@ export default function DashboardPage() {
                       accept="image/*"
                       onChange={handleImageUpload}
                       className="hidden"
+                      disabled={saving}
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">Click to change profile picture</p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <p className="text-sm text-gray-500">Click to change profile picture</p>
+                    {profileImage && (
+                      <button
+                        onClick={handleRemoveProfileImage}
+                        disabled={saving}
+                        className="text-sm text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
+                        title="Remove profile picture"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Personal Information */}
@@ -1472,7 +1695,9 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-bold text-[#1B365D] font-serif">{user?.name}</p>
-                <p className="text-[10px] text-[#565F71] uppercase tracking-wider font-semibold">{user?.role}</p>
+                <p className="text-[10px] text-[#565F71] uppercase tracking-wider font-semibold">
+                  {user?.department?.name || user?.role || 'Employee'}
+                </p>
               </div>
               <div className="relative" ref={profileDropdownRef}>
                 <button
@@ -1496,7 +1721,7 @@ export default function DashboardPage() {
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900">{user?.name}</p>
-                          <p className="text-sm text-gray-500">{user?.department?.name || user?.role}</p>
+                          <p className="text-sm text-gray-500">{user?.department?.name || user?.role || 'Employee'}</p>
                         </div>
                       </div>
                       <div className="space-y-1 text-xs text-gray-600">
