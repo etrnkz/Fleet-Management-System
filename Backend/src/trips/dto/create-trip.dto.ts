@@ -5,14 +5,20 @@ import {
   IsInt,
   Min,
   IsNotEmpty,
+  IsOptional,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { TripType } from '../entities/trip-request.entity';
+import { TripType, TripCategory } from '../entities/trip-request.entity';
 
 export class CreateTripDto {
   @ApiProperty({ enum: TripType, example: TripType.Normal })
   @IsEnum(TripType)
   tripType: TripType;
+
+  @ApiProperty({ enum: TripCategory, example: TripCategory.STANDARD, required: false })
+  @IsEnum(TripCategory)
+  @IsOptional()
+  tripCategory?: TripCategory;
 
   @ApiProperty({ example: 'Academic conference attendance' })
   @IsString()

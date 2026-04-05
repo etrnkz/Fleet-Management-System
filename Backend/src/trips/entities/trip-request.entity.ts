@@ -17,6 +17,12 @@ export enum TripType {
   VIP = 'VIP',
 }
 
+export enum TripCategory {
+  STANDARD = 'STANDARD',
+  VIP = 'VIP',
+  SERVICE = 'SERVICE',
+}
+
 export enum TripState {
   DRAFT = 'DRAFT',
   SUBMITTED = 'SUBMITTED',
@@ -56,6 +62,9 @@ export class TripRequest {
 
   @Column()
   tripType: TripType;
+
+  @Column({ type: 'enum', enum: TripCategory, default: TripCategory.STANDARD })
+  tripCategory: TripCategory;
 
   @Column({ type: 'text' })
   purpose: string;

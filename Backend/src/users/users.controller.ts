@@ -10,13 +10,18 @@ import {
   Request,
   Query,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -154,6 +159,68 @@ export class UsersController {
       phoneNumber: updateUserDto.phoneNumber,
     };
     return this.usersService.update(req.user.id, allowedFields);
+  }
+
+  @Post('me/profile-image')
+  @UseInterceptors(FileInterceptor('profileImage', {
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        return callback(new BadRequestException('Only image files are allowed!'), false);
+      }
+      callback(null, true);
+    },
+  }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Upload profile image',
+    description: 'Upload a profile image for the current user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile image uploaded successfully',
+    schema: {
+      example: {
+        profileImageUrl: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ...',
+        message: 'Profile image updated successfully',
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid file format or size' })
+  async uploadProfileImage(
+    @Request() req,
+    @UploadedFile() file: any,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Convert file to base64 for storage
+    const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    
+    // Update user with profile image
+    await this.usersService.update(req.user.id, { profileImage: base64Image });
+    
+    return {
+      profileImageUrl: base64Image,
+      message: 'Profile image updated successfully',
+    };
+  }
+
+  @Delete('me/profile-image')
+  @ApiOperation({
+    summary: 'Remove profile image',
+    description: 'Remove the profile image for the current user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile image removed successfully',
+  })
+  async removeProfileImage(@Request() req) {
+    await this.usersService.update(req.user.id, { profileImage: null });
+    return { message: 'Profile image removed successfully' };
   }
 
   @Get(':id')

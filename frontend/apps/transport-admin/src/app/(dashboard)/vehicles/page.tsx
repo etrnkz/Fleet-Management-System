@@ -67,13 +67,13 @@ export default function VehiclesPage() {
 
   const openGeofenceEditor = async (v: Vehicle) => {
     try {
-      const full = await vehicleApi.getById(v.id)
+      const full = await vehicleApi.getById(v.id) as any
       setGeofenceVehicle(full as Vehicle)
       setVipGeoEnabled(!!full.vipGeoRestrictionEnabled)
       const z = Array.isArray(full.restrictedZones) ? full.restrictedZones : []
       setGeofenceZones(
         z.length > 0
-          ? z.map((r) => ({
+          ? z.map((r: any) => ({
               name: r.name,
               latitude: Number(r.latitude),
               longitude: Number(r.longitude),

@@ -105,11 +105,13 @@ export const tripApi = {
   
   create: (data: {
     tripType: string;
+    tripCategory?: string;
     purpose: string;
     destination: string;
     startDateTime: string;
     endDateTime: string;
     passengerCount: number;
+    estimatedDistance?: number;
   }) => apiFetch('/trips', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -163,4 +165,43 @@ export const userApi = {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
+
+  uploadProfileImage: async (file: File) => {
+    const token = getAuthToken();
+    const formData = new FormData();
+    formData.append('profileImage', file);
+
+    const response = await fetch(`${API_BASE_URL}/users/me/profile-image`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  removeProfileImage: () => apiFetch('/users/me/profile-image', {
+    method: 'DELETE',
+  }),
+};
+
+// Department APIs
+export const departmentApi = {
+  getAll: () => apiFetch('/departments'),
+  
+  getByCollege: (collegeId: string) => apiFetch(`/departments?collegeId=${collegeId}`),
+};
+
+// College APIs
+export const collegeApi = {
+  getAll: () => apiFetch('/colleges'),
+  
+  getById: (id: string) => apiFetch(`/colleges/${id}`),
 };
