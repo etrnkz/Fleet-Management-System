@@ -26,6 +26,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { BulkInviteUsersDto } from './dto/bulk-invite-users.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/guards/roles.guard';
 import { UserRole } from './entities/user.entity';
@@ -300,6 +301,72 @@ export class UsersController {
   async activate(@Param('id', ParseUUIDPipe) id: string) {
     await this.usersService.update(id, { isActive: true });
     return { message: 'User activated successfully' };
+  }
+
+  @Post('bulk-invite')
+  @Roles(UserRole.Developer, UserRole.Dean, UserRole.DepartmentHead, UserRole.President, UserRole.TransportOffice)
+  @ApiOperation({
+    summary: 'Bulk invite users via email addresses',
+    description: 'Send invitation emails to multiple users with auto-generated passwords. Only authorized roles can invite users.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Invitations sent successfully',
+    schema: {
+      example: {
+        success: true,
+        invited: ['john.doe@university.edu', 'jane.smith@university.edu'],
+        failed: [],
+        message: '2 invitations sent successfully',
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  async bulkInviteUsers(@Request() req, @Body() bulkInviteDto: BulkInviteUsersDto) {
+    return this.usersService.bulkInviteUsers(req.user, bulkInviteDto);
+  }
+
+  @Post('bulk-invite-csv')
+  @Roles(UserRole.Developer, UserRole.Dean, UserRole.DepartmentHead, UserRole.President, UserRole.TransportOffice)
+  @UseInterceptors(FileInterceptor('csvFile', {
+    limits: {
+      fileSize: 2 * 1024 * 1024, // 2MB limit
+    },
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.includes('csv') && !file.originalname.endsWith('.csv')) {
+        return callback(new BadRequestException('Only CSV files are allowed!'), false);
+      }
+      callback(null, true);
+    },
+  }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Bulk invite users via CSV file upload',
+    description: 'Upload a CSV file with email addresses to send bulk invitations. CSV should have "email" column.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'CSV processed and invitations sent',
+    schema: {
+      example: {
+        success: true,
+        invited: ['john.doe@university.edu', 'jane.smith@university.edu'],
+        failed: ['invalid-email'],
+        message: '2 invitations sent successfully, 1 failed',
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid CSV file or format' })
+  async bulkInviteUsersFromCsv(
+    @Request() req,
+    @UploadedFile() file: any,
+    @Body() body: { departmentId?: string; collegeId?: string; welcomeMessage?: string },
+  ) {
+    if (!file) {
+      throw new BadRequestException('No CSV file uploaded');
+    }
+
+    return this.usersService.bulkInviteUsersFromCsv(req.user, file, body);
   }
 
   @Delete(':id')

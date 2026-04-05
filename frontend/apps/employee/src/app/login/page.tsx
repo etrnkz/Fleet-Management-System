@@ -49,6 +49,9 @@ export default function LoginPage() {
       localStorage.setItem('refreshToken', data.refresh_token)
       localStorage.setItem('user', JSON.stringify(data.user))
 
+      // Note: Profile image is now stored in the user object from backend
+      // No need to duplicate it in userData to avoid localStorage quota issues
+
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email)
       } else {

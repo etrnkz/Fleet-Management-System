@@ -96,7 +96,7 @@ if ($employee) {
     Write-Host "  Role: User (Employee)" -ForegroundColor Gray
     Write-Host "  Department: $($mgmtDept.name)" -ForegroundColor Gray
 } else {
-    Write-Host "✗ Failed to create employee" -ForegroundColor Red
+    Write-Host "✗ Failed to create employee (may already exist)" -ForegroundColor Yellow
 }
 
 Write-Host ""
@@ -119,7 +119,7 @@ if ($deptHead) {
     Write-Host "  Role: DepartmentHead" -ForegroundColor Gray
     Write-Host "  Department: $($mgmtDept.name)" -ForegroundColor Gray
 } else {
-    Write-Host "✗ Failed to create department head" -ForegroundColor Red
+    Write-Host "✗ Failed to create department head (may already exist)" -ForegroundColor Yellow
 }
 
 Write-Host ""
@@ -142,49 +142,7 @@ if ($dean) {
     Write-Host "  Role: Dean" -ForegroundColor Gray
     Write-Host "  College: $($cbe.name)" -ForegroundColor Gray
 } else {
-    Write-Host "✗ Failed to create dean" -ForegroundColor Red
-}
-
-Write-Host ""
-
-# Deployment Team Member
-Write-Host "Creating Deployment Team Member..." -ForegroundColor Cyan
-$deployment = Invoke-ApiCall -Method POST -Endpoint "/auth/register" -Body @{
-    email = "deployment@test.com"
-    password = "password123"
-    name = "Alex Deployment"
-    role = "DeploymentTeam"
-    phoneNumber = "+251911234570"
-}
-
-if ($deployment) {
-    Write-Host "✓ Deployment Team member created successfully" -ForegroundColor Green
-    Write-Host "  Email: deployment@test.com" -ForegroundColor Gray
-    Write-Host "  Password: password123" -ForegroundColor Gray
-    Write-Host "  Role: DeploymentTeam" -ForegroundColor Gray
-} else {
-    Write-Host "✗ Failed to create deployment team member" -ForegroundColor Red
-}
-
-Write-Host ""
-# Transport Office User
-Write-Host "Creating Transport Office User..." -ForegroundColor Cyan
-$transport = Invoke-ApiCall -Method POST -Endpoint "/auth/register" -Body @{
-    email = "transport@test.com"
-    password = "password123"
-    name = "Lisa Transport"
-    role = "TransportOffice"
-    phoneNumber = "+251911234571"
-}
-
-
-if ($transport) {
-    Write-Host "✓ Transport Office user created successfully" -ForegroundColor Green
-    Write-Host "  Email: transport@test.com" -ForegroundColor Gray
-    Write-Host "  Password: password123" -ForegroundColor Gray
-    Write-Host "  Role: TransportOffice" -ForegroundColor Gray
-} else {
-    Write-Host "✗ Failed to create transport office user" -ForegroundColor Red
+    Write-Host "✗ Failed to create dean (may already exist)" -ForegroundColor Yellow
 }
 
 Write-Host ""
@@ -193,7 +151,7 @@ Write-Host ""
 # Summary
 # -------------------------
 Write-Host "=====================================" -ForegroundColor Cyan
-Write-Host "Test Users Created Successfully!" -ForegroundColor Green
+Write-Host "Test Users Setup Complete!" -ForegroundColor Green
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -205,27 +163,17 @@ Write-Host "Test Users (All passwords: password123):" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "1. Employee (Regular User)" -ForegroundColor White
 Write-Host "   Email: employee@test.com" -ForegroundColor Gray
+Write-Host "   Phone: +251987654321" -ForegroundColor Gray
+Write-Host "   Department: $($mgmtDept.name)" -ForegroundColor Gray
 Write-Host "   App: http://localhost:3001 (Employee App)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "2. Department Head" -ForegroundColor White
 Write-Host "   Email: depthead@test.com" -ForegroundColor Gray
+Write-Host "   Department: $($mgmtDept.name)" -ForegroundColor Gray
 Write-Host "   App: http://localhost:3002 (Department App)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "3. Dean (College Head)" -ForegroundColor White
 Write-Host "   Email: dean@test.com" -ForegroundColor Gray
+Write-Host "   College: $($cbe.name)" -ForegroundColor Gray
 Write-Host "   App: http://localhost:3003 (Dean App)" -ForegroundColor Gray
-Write-Host ""
-Write-Host "4. Deployment Team" -ForegroundColor White
-Write-Host "   Email: deployment@test.com" -ForegroundColor Gray
-Write-Host "   App: http://localhost:3000 (Admin App)" -ForegroundColor Gray
-Write-Host ""
-Write-Host "5. Transport Office" -ForegroundColor White
-Write-Host "   Email: transport@test.com" -ForegroundColor Gray
-Write-Host "   App: http://localhost:3000 (Admin App)" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Testing Workflow:" -ForegroundColor Yellow
-Write-Host "1. Login as employee@test.com and create a trip request" -ForegroundColor White
-Write-Host "2. Login as depthead@test.com to approve at department level" -ForegroundColor White
-Write-Host "3. Login as dean@test.com to approve at college level" -ForegroundColor White
-Write-Host "4. Login as deployment@test.com to allocate vehicle and driver" -ForegroundColor White
 Write-Host ""

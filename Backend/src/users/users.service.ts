@@ -2,12 +2,17 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from './entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
 import { College } from '../colleges/entities/college.entity';
+import { BulkInviteUsersDto } from './dto/bulk-invite-users.dto';
+import { EmailService } from '../email/email.service';
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +23,7 @@ export class UsersService {
     private readonly departmentRepository: Repository<Department>,
     @InjectRepository(College)
     private readonly collegeRepository: Repository<College>,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(
@@ -180,5 +186,192 @@ export class UsersService {
     }
 
     await this.userRepository.remove(user);
+  }
+
+  /**
+   * Generate a secure random password
+   */
+  private generatePassword(): string {
+    const length = 12;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    
+    // Ensure at least one character from each type
+    password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]; // uppercase
+    password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]; // lowercase
+    password += '0123456789'[Math.floor(Math.random() * 10)]; // number
+    password += '!@#$%^&*'[Math.floor(Math.random() * 8)]; // special
+    
+    // Fill the rest randomly
+    for (let i = 4; i < length; i++) {
+      password += charset[Math.floor(Math.random() * charset.length)];
+    }
+    
+    // Shuffle the password
+    return password.split('').sort(() => Math.random() - 0.5).join('');
+  }
+
+  /**
+   * Extract name from email address
+   */
+  private extractNameFromEmail(email: string): string {
+    const localPart = email.split('@')[0];
+    // Convert dots and underscores to spaces, then title case
+    return localPart
+      .replace(/[._]/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  /**
+   * Bulk invite users via email addresses
+   */
+  async bulkInviteUsers(inviter: User, bulkInviteDto: BulkInviteUsersDto) {
+    const { emails, departmentId, collegeId, welcomeMessage } = bulkInviteDto;
+    const invited: string[] = [];
+    const failed: { email: string; reason: string }[] = [];
+
+    // Get department and college if specified
+    let department: Department | null = null;
+    let college: College | null = null;
+
+    if (departmentId) {
+      department = await this.departmentRepository.findOne({
+        where: { id: departmentId },
+        relations: ['college'],
+      });
+      if (!department) {
+        throw new BadRequestException('Department not found');
+      }
+    }
+
+    if (collegeId) {
+      college = await this.collegeRepository.findOne({
+        where: { id: collegeId },
+      });
+      if (!college) {
+        throw new BadRequestException('College not found');
+      }
+    }
+
+    for (const email of emails) {
+      try {
+        // Check if user already exists
+        const existingUser = await this.userRepository.findOne({
+          where: { email: email.toLowerCase().trim() },
+        });
+
+        if (existingUser) {
+          failed.push({ email, reason: 'User already exists' });
+          continue;
+        }
+
+        // Generate password and create user
+        const password = this.generatePassword();
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const name = this.extractNameFromEmail(email);
+
+        const user = this.userRepository.create({
+          email: email.toLowerCase().trim(),
+          password: hashedPassword,
+          name,
+          role: UserRole.User,
+          department,
+          college: department?.college || college,
+          isActive: true,
+        });
+
+        await this.userRepository.save(user);
+
+        // Send invitation email
+        await this.emailService.sendInvitationEmail({
+          to: email,
+          name,
+          password,
+          inviterName: inviter.name,
+          inviterRole: inviter.role,
+          department: department?.name,
+          college: department?.college?.name || college?.name,
+          welcomeMessage,
+        });
+
+        invited.push(email);
+      } catch (error) {
+        console.error(`Failed to invite ${email}:`, error);
+        failed.push({ email, reason: error.message || 'Unknown error' });
+      }
+    }
+
+    return {
+      success: true,
+      invited,
+      failed,
+      message: `${invited.length} invitations sent successfully${failed.length > 0 ? `, ${failed.length} failed` : ''}`,
+    };
+  }
+
+  /**
+   * Parse CSV content and extract email addresses
+   */
+  private parseCsvEmails(csvContent: string): string[] {
+    const lines = csvContent.split('\n').map(line => line.trim()).filter(line => line);
+    if (lines.length === 0) {
+      throw new BadRequestException('CSV file is empty');
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const emailColumnIndex = headers.findIndex(h => 
+      h.includes('email') || h.includes('e-mail') || h.includes('mail')
+    );
+
+    if (emailColumnIndex === -1) {
+      throw new BadRequestException('CSV must contain an "email" column');
+    }
+
+    const emails: string[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const columns = lines[i].split(',').map(c => c.trim());
+      if (columns[emailColumnIndex]) {
+        const email = columns[emailColumnIndex].replace(/['"]/g, ''); // Remove quotes
+        if (email && email.includes('@')) {
+          emails.push(email);
+        }
+      }
+    }
+
+    if (emails.length === 0) {
+      throw new BadRequestException('No valid email addresses found in CSV');
+    }
+
+    return emails;
+  }
+
+  /**
+   * Bulk invite users from CSV file
+   */
+  async bulkInviteUsersFromCsv(
+    inviter: User,
+    file: any,
+    options: { departmentId?: string; collegeId?: string; welcomeMessage?: string },
+  ) {
+    try {
+      const csvContent = file.buffer.toString('utf-8');
+      const emails = this.parseCsvEmails(csvContent);
+
+      const bulkInviteDto: BulkInviteUsersDto = {
+        emails,
+        departmentId: options.departmentId,
+        collegeId: options.collegeId,
+        welcomeMessage: options.welcomeMessage,
+      };
+
+      return await this.bulkInviteUsers(inviter, bulkInviteDto);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Failed to process CSV file: ${error.message}`);
+    }
   }
 }

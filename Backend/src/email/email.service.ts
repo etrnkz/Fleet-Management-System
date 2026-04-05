@@ -303,4 +303,67 @@ export class EmailService {
       html,
     });
   }
+
+  // Employee invitation email
+  async sendInvitationEmail(options: {
+    to: string;
+    name: string;
+    password: string;
+    inviterName: string;
+    inviterRole: string;
+    department?: string;
+    college?: string;
+    welcomeMessage?: string;
+  }): Promise<boolean> {
+    const { to, name, password, inviterName, inviterRole, department, college, welcomeMessage } = options;
+    
+    const organizationInfo = department 
+      ? `${department}${college ? ` (${college})` : ''}`
+      : college || 'Haramaya University';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #2563eb; text-align: center;">Welcome to Fleet Management System</h2>
+        
+        <p>Dear ${name},</p>
+        
+        <p>You have been invited to join the Fleet Management System by <strong>${inviterName}</strong> (${inviterRole}) from <strong>${organizationInfo}</strong>.</p>
+        
+        ${welcomeMessage ? `<div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;"><p style="margin: 0; font-style: italic;">"${welcomeMessage}"</p></div>` : ''}
+        
+        <h3 style="color: #374151;">Your Account Details:</h3>
+        <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb;">
+          <p><strong>Email:</strong> ${to}</p>
+          <p><strong>Temporary Password:</strong> <code style="background-color: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${password}</code></p>
+          <p><strong>Organization:</strong> ${organizationInfo}</p>
+        </div>
+        
+        <h3 style="color: #374151;">Next Steps:</h3>
+        <ol style="line-height: 1.6;">
+          <li>Log in to the system using your email and temporary password</li>
+          <li>Complete your profile information (name, phone number, etc.)</li>
+          <li>Change your password to something secure and memorable</li>
+          <li>Start submitting trip requests as needed</li>
+        </ol>
+        
+        <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <p style="margin: 0;"><strong>⚠️ Security Notice:</strong> Please change your password immediately after your first login for security purposes.</p>
+        </div>
+        
+        <p>If you have any questions or need assistance, please contact your system administrator or the transport office.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="text-align: center; color: #6b7280; font-size: 14px;">
+          This is an automated message from Fleet Management System<br>
+          Haramaya University
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to,
+      subject: 'Welcome to Fleet Management System - Account Created',
+      html,
+    });
+  }
 }
