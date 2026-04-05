@@ -18,6 +18,8 @@ export class VehiclesService {
   constructor(
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
+    @InjectRepository(TripRequest)
+    private readonly tripRepository: Repository<TripRequest>,
   ) {}
 
   async create(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {

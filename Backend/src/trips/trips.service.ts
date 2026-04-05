@@ -10,6 +10,7 @@ import {
   TripRequest,
   TripState,
   TripType,
+  TripCategory,
   TRIP_STATES_HOLDING_ALLOCATION,
 } from './entities/trip-request.entity';
 import {
@@ -202,16 +203,20 @@ export class TripsService {
       throw new ForbiddenException('Only the requester can submit this trip');
     }
 
-    // Determine initial state based on trip type
+    // Determine initial state based on trip category
     let initialState: TripState;
     let approvalLevel: ApprovalLevel;
 
-    if (trip.tripType === TripType.VIP) {
-      // VIP goes directly to Dean
+    if (trip.tripCategory === TripCategory.VIP || trip.tripCategory === TripCategory.SERVICE) {
+      // VIP and SERVICE go directly to President
+      initialState = TripState.PENDING_PRESIDENT;
+      approvalLevel = ApprovalLevel.President;
+    } else if (trip.tripType === TripType.VIP) {
+      // Legacy VIP type goes directly to Dean
       initialState = TripState.PENDING_DEAN;
       approvalLevel = ApprovalLevel.Dean;
     } else {
-      // Normal goes to Department first
+      // Normal/Standard goes to Department first
       initialState = TripState.PENDING_DEPARTMENT;
       approvalLevel = ApprovalLevel.Department;
     }
@@ -644,11 +649,11 @@ export class TripsService {
     }
 
     // Reset allocation and move back to approved for allocation
-    trip.allocatedVehicle = null;
-    trip.allocatedDriver = null;
-    trip.deploymentTeamMember = null;
-    trip.estimatedFuelCost = null;
-    trip.estimatedDistance = null;
+    trip.allocatedVehicle = null as any;
+    trip.allocatedDriver = null as any;
+    trip.deploymentTeamMember = null as any;
+    trip.estimatedFuelCost = null as any;
+    trip.estimatedDistance = null as any;
     trip.state = TripState.APPROVED_FOR_ALLOCATION;
     trip.rejectionReason = rejectTransportDto.reason;
 

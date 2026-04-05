@@ -50,6 +50,9 @@ export class User {
   @Column({ nullable: true })
   phoneNumber: string;
 
+  @Column({ type: 'text', nullable: true })
+  profileImage: string | null;
+
   @ManyToOne(() => Department, { nullable: true })
   department: Department | null;
 

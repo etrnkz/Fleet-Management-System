@@ -328,7 +328,7 @@ export default function ApprovalsPage() {
                           <div className="flex items-center gap-3 mb-3">
                             <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                               {selectedTrip.allocatedDriver?.user?.name ? 
-                                selectedTrip.allocatedDriver.user.name.split(' ').map(n => n[0]).join('').slice(0, 2) : 
+                                selectedTrip.allocatedDriver.user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2) : 
                                 'DR'
                               }
                             </div>

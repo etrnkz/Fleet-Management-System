@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Single entrypoint: seed all test users, one vehicle, one driver profile.
+Single entrypoint: seed university colleges/departments (signup dropdowns), test users,
+one vehicle, one driver profile.
 
 Requires: Python 3 + requests, API running.
 
@@ -28,6 +29,9 @@ import urllib.request
 from typing import Any, Dict, List, Optional
 
 import requests
+
+from organization_catalog import ORGANIZATION
+from seed_organization import resolve_default_seed_org, seed_organization_catalog
 
 BASE = os.environ.get("FLEET_API_BASE", "http://localhost:3000/api/v1").rstrip("/")
 HEALTH_URL = f"{BASE}/health"
@@ -291,55 +295,24 @@ def main() -> None:
     token = login["access_token"]
     print()
 
-    # College
-    print_c("College CBE...", Colors.YELLOW)
-    college = api_call(
-        "POST",
-        "/colleges",
-        {
-            "name": "College of Business and Economics",
-            "code": "CBE",
-            "description": "College of Business and Economics",
-        },
-        token,
+    # Full university org (dropdowns + approvals); demo users stay on CBE / Management
+    dept_total = sum(len(row["departments"]) for row in ORGANIZATION)
+    print_c(
+        f"Colleges & departments ({len(ORGANIZATION)} colleges, {dept_total} departments)...",
+        Colors.YELLOW,
     )
-    if college:
-        college_id = college["id"]
-        print_c(f"✓ college {college_id}", Colors.GREEN)
-    else:
-        colleges = api_call("GET", "/colleges", None, token)
-        if not colleges:
-            print_c("✗ No college", Colors.RED)
-            sys.exit(1)
-        c = next((x for x in colleges if x.get("code") == "CBE"), colleges[0])
-        college_id = c["id"]
-        print_c(f"○ using {c.get('name')}", Colors.YELLOW)
-    print()
-
-    # Department
-    print_c("Department MGT...", Colors.YELLOW)
-    department = api_call(
-        "POST",
-        "/departments",
-        {
-            "name": "Department of Management",
-            "code": "MGT",
-            "collegeId": college_id,
-            "description": "Department of Management",
-        },
-        token,
+    seed_organization_catalog(token, verbose=False)
+    college_id, department_id = resolve_default_seed_org(token)
+    if not college_id or not department_id:
+        print_c(
+            "✗ Could not resolve College of Business and Economics + Management (CBE_MGT or MGT)",
+            Colors.RED,
+        )
+        sys.exit(1)
+    print_c(
+        f"✓ catalog applied; seed users → college CBE, dept Management ({department_id})",
+        Colors.GREEN,
     )
-    if department:
-        department_id = department["id"]
-        print_c(f"✓ department {department_id}", Colors.GREEN)
-    else:
-        departments = api_call("GET", "/departments", None, token)
-        if not departments:
-            print_c("✗ No department", Colors.RED)
-            sys.exit(1)
-        d = next((x for x in departments if x.get("code") == "MGT"), departments[0])
-        department_id = d["id"]
-        print_c(f"○ using {d.get('name')}", Colors.YELLOW)
     print()
 
     seed_users(token, college_id, department_id)

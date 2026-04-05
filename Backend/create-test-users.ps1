@@ -184,6 +184,7 @@ $transport = Invoke-ApiCall -Method POST -Endpoint "/auth/register" -Body @{
     name = "Lisa Transport"
     role = "TransportOffice"
     phoneNumber = "+251911234571"
+}
 
 
 if ($transport) {
