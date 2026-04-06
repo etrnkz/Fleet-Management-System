@@ -12,7 +12,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
+            <div className="w-8 h-8 bg-emerald-700 rounded flex items-center justify-center">
               <span className="text-white font-bold text-sm">H</span>
             </div>
             <span className="font-semibold text-gray-900">HUFMS</span>
@@ -28,7 +28,7 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-4">
             {/* Sign In Button - Always Visible */}
-            <Link href="/login" className="bg-emerald-500 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-emerald-600 transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm font-medium">
+            <Link href="/login" className="bg-emerald-700 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-emerald-800 transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm font-medium">
               Sign In
             </Link>
 
@@ -109,7 +109,7 @@ export default function LandingPage() {
               
               <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
                 Smart Fleet Control<br />
-                for <span className="text-emerald-500">Haramaya<br />University</span>
+                for <span className="text-emerald-700">Haramaya<br />University</span>
               </h1>
               
               <p className="text-gray-600 text-lg mb-8 leading-relaxed">
@@ -118,7 +118,7 @@ export default function LandingPage() {
               </p>
               
               <div className="flex gap-4">
-                <Link href="/login" className="bg-emerald-500 text-white px-6 py-3 rounded-md hover:bg-emerald-600 transition-all duration-300 hover:scale-105 hover:shadow-xl font-medium">
+                <Link href="/login" className="bg-emerald-700 text-white px-6 py-3 rounded-md hover:bg-emerald-800 transition-all duration-300 hover:scale-105 hover:shadow-xl font-medium">
                   Login as System →
                 </Link>
                 <button className="border border-gray-300 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-50 transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium">
@@ -131,7 +131,7 @@ export default function LandingPage() {
               <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
                 <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                   <div className="text-center p-8">
-                    <div className="w-24 h-24 bg-emerald-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+                    <div className="w-24 h-24 bg-emerald-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
                       <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
@@ -168,7 +168,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
               <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -178,7 +178,7 @@ export default function LandingPage() {
             </div>
             <div className="bg-white p-8 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
               <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
@@ -187,7 +187,7 @@ export default function LandingPage() {
             </div>
             <div className="bg-white p-8 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
               <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -197,7 +197,7 @@ export default function LandingPage() {
             </div>
             <div className="bg-white p-8 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
               <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-6 h-6 text-emerald-800" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                   <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
                 </svg>
@@ -207,7 +207,7 @@ export default function LandingPage() {
             </div>
             <div className="bg-white p-8 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
               <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -216,7 +216,7 @@ export default function LandingPage() {
             </div>
             <div className="bg-white p-8 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
               <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
@@ -236,7 +236,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -248,7 +248,7 @@ export default function LandingPage() {
 
             <div className="text-center">
               <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
@@ -260,7 +260,7 @@ export default function LandingPage() {
 
             <div className="text-center">
               <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
@@ -283,7 +283,7 @@ export default function LandingPage() {
           <div className="flex justify-center">
             <div className="text-center">
               <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <svg className="w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-12 h-12 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -295,7 +295,7 @@ export default function LandingPage() {
       </section>
 
       {/* Operational Coverage & Restricted Access */}
-      <section className="bg-emerald-500 py-16">
+      <section className="bg-emerald-700 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
             <div className="flex gap-4">
@@ -348,7 +348,7 @@ export default function LandingPage() {
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
@@ -356,7 +356,7 @@ export default function LandingPage() {
                   <div>
                     <p className="font-semibold text-gray-900">Transport Office</p>
                     <p className="text-gray-600 text-sm">For general inquiries and support</p>
-                    <a href="mailto:transport@hu.edu.et" className="text-emerald-500 hover:underline text-sm">
+                    <a href="mailto:transport@hu.edu.et" className="text-emerald-700 hover:underline text-sm">
                       transport@hu.edu.et
                     </a>
                   </div>
@@ -365,7 +365,7 @@ export default function LandingPage() {
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
                     <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
@@ -373,7 +373,7 @@ export default function LandingPage() {
                   <div>
                     <p className="font-semibold text-gray-900">IT Helpdesk</p>
                     <p className="text-gray-600 text-sm">For technical issues: 📞 +251 25 553 0325</p>
-                    <a href="mailto:ithelpdesk@hu.edu.et" className="text-emerald-500 hover:underline text-sm">
+                    <a href="mailto:ithelpdesk@hu.edu.et" className="text-emerald-700 hover:underline text-sm">
                       ithelpdesk@hu.edu.et
                     </a>
                   </div>
@@ -386,15 +386,15 @@ export default function LandingPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Trip Request Module</span>
-                  <span className="text-emerald-500 font-medium text-sm">✓ Active</span>
+                  <span className="text-emerald-700 font-medium text-sm">✓ Active</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Tracking System</span>
-                  <span className="text-emerald-500 font-medium text-sm">✓ Active</span>
+                  <span className="text-emerald-700 font-medium text-sm">✓ Active</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Mobile Platform</span>
-                  <span className="text-emerald-500 font-medium text-sm">✓ Active</span>
+                  <span className="text-emerald-700 font-medium text-sm">✓ Active</span>
                 </div>
               </div>
             </div>
@@ -408,7 +408,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-emerald-700 rounded flex items-center justify-center">
                   <span className="text-white font-bold text-sm">H</span>
                 </div>
                 <span className="font-semibold">HUFMS</span>

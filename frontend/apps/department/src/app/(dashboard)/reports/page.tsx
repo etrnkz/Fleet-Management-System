@@ -70,7 +70,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
       </div>
     )
   }
@@ -87,7 +87,7 @@ export default function ReportsPage() {
 
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Reports & Analytics</h1>
           <p className="text-sm text-gray-500 mt-1">Department fleet management overview</p>
         </div>
         <div className="flex gap-2">
@@ -102,7 +102,7 @@ export default function ReportsPage() {
           </button>
           <button
             onClick={handleExportExcel}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-2"
+            className="px-4 py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 text-sm font-medium flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -123,7 +123,7 @@ export default function ReportsPage() {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{trips.length}</div>
+          <div className="text-3xl font-bold text-emerald-600">{trips.length}</div>
           <p className="text-xs text-gray-500 mt-1">{completedTrips.length} completed</p>
         </div>
 
@@ -131,13 +131,13 @@ export default function ReportsPage() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500">Active Vehicles</span>
             <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-emerald-800" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                 <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3z"/>
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{activeVehicles.length}</div>
+          <div className="text-3xl font-bold text-emerald-600">{activeVehicles.length}</div>
           <p className="text-xs text-gray-500 mt-1">of {vehicles.length} total</p>
         </div>
 
@@ -150,7 +150,7 @@ export default function ReportsPage() {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{availableDrivers.length}</div>
+          <div className="text-3xl font-bold text-emerald-600">{availableDrivers.length}</div>
           <p className="text-xs text-gray-500 mt-1">of {drivers.length} total</p>
         </div>
 
@@ -163,7 +163,7 @@ export default function ReportsPage() {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{pendingTrips.length}</div>
+          <div className="text-3xl font-bold text-emerald-600">{pendingTrips.length}</div>
           <p className="text-xs text-gray-500 mt-1">awaiting review</p>
         </div>
       </div>

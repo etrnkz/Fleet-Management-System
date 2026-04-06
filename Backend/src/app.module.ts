@@ -18,6 +18,7 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
 import { AuditModule } from './audit/audit.module';
 import { FuelModule } from './fuel/fuel.module';
 import { TrackingModule } from './tracking/tracking.module';
+import { EmailModule } from './email/email.module';
 import { SystemAdminModule } from './system-admin/system-admin.module';
 import { EmailModule } from './email/email.module';
 import { SmsModule } from './sms/sms.module';

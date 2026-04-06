@@ -45,10 +45,10 @@ export class Approval {
   @Column({ type: 'text', nullable: true })
   comments: string | null;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   dueDate: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   approvedAt: Date;
 
   @CreateDateColumn()
