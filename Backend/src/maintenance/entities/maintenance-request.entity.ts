@@ -55,7 +55,7 @@ export class MaintenanceRequest {
   @ManyToOne(() => User, { nullable: true })
   inspectedBy: User;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   inspectedAt: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
@@ -67,13 +67,13 @@ export class MaintenanceRequest {
   @ManyToOne(() => User, { nullable: true })
   approvedBy: User;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   approvedAt: Date;
 
   @Column({ type: 'text', nullable: true })
   completionNotes: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   completedAt: Date;
 
   @Column({ type: 'text', nullable: true })

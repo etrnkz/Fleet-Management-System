@@ -161,7 +161,16 @@ export default function DashboardLayout({
       )
     },
     { 
-      name: 'Approvals', 
+      name: 'My Trips', 
+      href: '/my-trips', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Trip Requests', 
       href: '/approvals', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,18 +219,17 @@ export default function DashboardLayout({
         ></div>
       )}
 
-      {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200">
-          <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
-            <span className="text-white font-bold text-sm">H</span>
+          <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+            <span className="text-emerald-600 font-bold text-sm">H</span>
           </div>
           <div>
-            <div className="font-semibold text-gray-900 text-sm">Haramaya University</div>
-            <div className="text-xs text-gray-500">FLEET MANAGEMENT</div>
+            <div className="font-bold text-emerald-600 tracking-tight">Haramaya University</div>
+            <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
           </div>
         </div>
 
@@ -239,12 +247,12 @@ export default function DashboardLayout({
                 }}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-emerald-50 text-emerald-600 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                    : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
                 }`}
               >
                 <span>{item.icon}</span>
-                <span className="flex-1 text-sm">{item.name}</span>
+                <span className="flex-1 antialiased tracking-tight">{item.name}</span>
                 {(item as any).badge > 0 && (
                   <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{(item as any).badge}</span>
                 )}
@@ -269,15 +277,16 @@ export default function DashboardLayout({
           </button>
 
           <div className="flex items-center gap-4 lg:hidden">
-            <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
+            <div className="w-8 h-8 bg-emerald-700 rounded flex items-center justify-center">
               <span className="text-white font-bold text-sm">H</span>
             </div>
           </div>
 
           <div className="hidden lg:flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-emerald-600">
               {pathname === '/dashboard' && 'Department Head Dashboard'}
-              {pathname === '/approvals' && 'Trip Approvals'}
+              {pathname === '/my-trips' && 'My Trips'}
+              {pathname === '/approvals' && 'Trip Requests'}
               {pathname === '/vehicles' && 'Fleet Vehicles'}
               {pathname === '/reports' && 'Reports'}
               {pathname === '/settings' && 'Settings'}
@@ -326,7 +335,7 @@ export default function DashboardLayout({
                           >
                             <div className="flex items-start gap-2 sm:gap-3">
                               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
                               </div>
@@ -351,7 +360,7 @@ export default function DashboardLayout({
                     <Link
                       href="/approvals"
                       onClick={() => setNotificationDropdownOpen(false)}
-                      className="block text-center text-xs sm:text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                      className="block text-center text-xs sm:text-sm text-emerald-800 hover:text-emerald-700 font-medium"
                     >
                       View All Requests
                     </Link>
@@ -370,7 +379,7 @@ export default function DashboardLayout({
                   <div className="text-sm font-medium text-gray-900">{user?.name || 'User'}</div>
                   <div className="text-xs text-gray-500 hidden lg:block">{user?.department?.name || user?.college?.name || user?.role}</div>
                 </div>
-                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-emerald-700 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium text-sm">AK</span>
                 </div>
                 <svg className="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,7 +401,7 @@ export default function DashboardLayout({
                     {/* Profile Info */}
                     <div className="p-3 sm:p-4 border-b border-gray-200">
                       <div className="flex items-center gap-2 sm:gap-3 mb-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-700 rounded-full flex items-center justify-center">
                           <span className="text-white font-medium text-base sm:text-lg">AK</span>
                         </div>
                         <div>
@@ -504,7 +513,7 @@ export default function DashboardLayout({
                     onClick={() => setActiveTab('profile')}
                     className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                       activeTab === 'profile'
-                        ? 'border-emerald-500 text-emerald-600'
+                        ? 'border-emerald-700 text-emerald-800'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
@@ -514,7 +523,7 @@ export default function DashboardLayout({
                     onClick={() => setActiveTab('password')}
                     className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                       activeTab === 'password'
-                        ? 'border-emerald-500 text-emerald-600'
+                        ? 'border-emerald-700 text-emerald-800'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
@@ -532,13 +541,13 @@ export default function DashboardLayout({
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-4">Profile Picture</label>
                       <div className="flex items-center gap-6">
-                        <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center">
+                        <div className="w-24 h-24 bg-emerald-700 rounded-full flex items-center justify-center">
                           <span className="text-white font-bold text-3xl">AK</span>
                         </div>
                         <div>
                           <button
                             type="button"
-                            className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-medium"
+                            className="px-4 py-2 bg-emerald-50 text-emerald-800 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-medium"
                           >
                             Change Photo
                           </button>
@@ -558,7 +567,7 @@ export default function DashboardLayout({
                           type="text"
                           value={formData.fullName}
                           onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                         />
                       </div>
 
@@ -572,7 +581,7 @@ export default function DashboardLayout({
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                         />
                       </div>
 
@@ -586,7 +595,7 @@ export default function DashboardLayout({
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                         />
                       </div>
 
@@ -600,7 +609,7 @@ export default function DashboardLayout({
                           type="text"
                           value={formData.department}
                           onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                         />
                       </div>
                     </div>
@@ -615,7 +624,7 @@ export default function DashboardLayout({
                         type="text"
                         value={formData.office}
                         onChange={(e) => setFormData({ ...formData, office: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                       />
                     </div>
 
@@ -629,7 +638,7 @@ export default function DashboardLayout({
                         rows={4}
                         value={formData.bio}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none resize-none"
                       />
                     </div>
 
@@ -644,7 +653,7 @@ export default function DashboardLayout({
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                        className="px-6 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors"
                       >
                         Save Changes
                       </button>
@@ -673,7 +682,7 @@ export default function DashboardLayout({
                           type={showCurrentPassword ? 'text' : 'password'}
                           value={passwordData.currentPassword}
                           onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                           required
                         />
                         <button
@@ -706,7 +715,7 @@ export default function DashboardLayout({
                           type={showNewPassword ? 'text' : 'password'}
                           value={passwordData.newPassword}
                           onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                           required
                         />
                         <button
@@ -739,7 +748,7 @@ export default function DashboardLayout({
                           type={showConfirmPassword ? 'text' : 'password'}
                           value={passwordData.confirmPassword}
                           onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none"
                           required
                         />
                         <button
@@ -775,7 +784,7 @@ export default function DashboardLayout({
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                        className="px-6 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors"
                       >
                         Update Password
                       </button>
@@ -788,16 +797,6 @@ export default function DashboardLayout({
         </div>
       )}
       
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
-            <p className="mt-4 text-gray-700 font-medium">Loading...</p>
-          </div>
-        </div>
-      )}
-
       {/* Toast Notifications */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] space-y-2 pointer-events-none">
         <div className="pointer-events-auto">

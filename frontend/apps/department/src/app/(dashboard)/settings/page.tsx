@@ -152,7 +152,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
       </div>
     )
   }
@@ -168,7 +168,7 @@ export default function SettingsPage() {
       )}
 
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Settings</h1>
         <p className="text-sm text-gray-500 mt-1">Manage your account settings and preferences</p>
       </div>
 
@@ -180,7 +180,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab('profile')}
               className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'profile'
-                  ? 'border-emerald-500 text-emerald-600'
+                  ? 'border-emerald-700 text-emerald-800'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -190,7 +190,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab('account')}
               className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'account'
-                  ? 'border-emerald-500 text-emerald-600'
+                  ? 'border-emerald-700 text-emerald-800'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -215,7 +215,7 @@ export default function SettingsPage() {
               {/* Profile Image */}
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-emerald-500">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-emerald-700">
                     {profileImage ? (
                       <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
-                  <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-emerald-500 text-white p-2 rounded-full cursor-pointer hover:bg-emerald-600 shadow-lg">
+                  <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-emerald-700 text-white p-2 rounded-full cursor-pointer hover:bg-emerald-800 shadow-lg">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   />
                 </div>
 
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   />
                 </div>
 
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                     type="text"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   />
                 </div>
 
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                     type="text"
                     value={formData.college}
                     onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium"
+                  className="px-6 py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 disabled:opacity-50 font-medium"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>

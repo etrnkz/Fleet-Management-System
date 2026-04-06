@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "HUFMS Dean Portal",
-  description: "Fleet Management System - Dean Portal",
+  title: "HUFMS — Department Head Portal",
+  description: "Fleet Management System - Department Head Portal",
 };
 
 export default function RootLayout({
@@ -13,7 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${inter.variable} ${newsreader.variable} antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }
