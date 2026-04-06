@@ -183,7 +183,7 @@ onChange={(e)=>setSearchQuery(e.target.value)}
 className="w-fullpl-10pr-4py-2text-smborderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500focus:border-transparentoutline-none"
 />
 <svgclassName="w-5h-5text-gray-400absoluteleft-3top-1/2-translate-y-1/2"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M2121l-6-6m2-5a77011-14077001140z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M2121l-6-6m2-5a77011-14077001140z"/>
 </svg>
 </div>
 </div>
@@ -222,26 +222,26 @@ className="px-4py-2text-smborderborder-gray-300rounded-lgfocus:ring-2focus:ring-
 <divclassName="gridgrid-cols-1md:grid-cols-2gap-3mb-3">
 <divclassName="flexitems-centergap-2text-sm">
 <svgclassName="w-4h-4text-gray-400"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M17.65716.657L13.41420.9a1.9981.998001-2.8270l-4.244-4.243a8801111.3140z"/>
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1511a33011-603300160z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M17.65716.657L13.41420.9a1.9981.998001-2.8270l-4.244-4.243a8801111.3140z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1511a33011-603300160z"/>
 </svg>
 <spanclassName="text-gray-700"><spanclassName="font-medium">Destination:</span>{trip.destination}</span>
 </div>
 <divclassName="flexitems-centergap-2text-sm">
 <svgclassName="w-4h-4text-gray-400"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M87V3m84V3m-98h10M521h14a220002-2V7a22000-2-2H5a22000-22v12a2200022z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M87V3m84V3m-98h10M521h14a220002-2V7a22000-2-2H5a22000-22v12a2200022z"/>
 </svg>
 <spanclassName="text-gray-700"><spanclassName="font-medium">Date:</span>{trip.startDate}to{trip.endDate}</span>
 </div>
 <divclassName="flexitems-centergap-2text-sm">
 <svgclassName="w-4h-4text-gray-400"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M128v4l33m6-3a99011-18099001180z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M128v4l33m6-3a99011-18099001180z"/>
 </svg>
 <spanclassName="text-gray-700"><spanclassName="font-medium">Duration:</span>{trip.duration}</span>
 </div>
 <divclassName="flexitems-centergap-2text-sm">
 <svgclassName="w-4h-4text-gray-400"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1720h5v-2a33000-5.356-1.857M1720H7m100v-2c0-.656-.126-1.283-.356-1.857M720H2v-2a330015.356-1.857M720v-2c0-.656.126-1.283.356-1.857m00a5.0025.0020019.2880M157a33011-603300160zm63a22011-402200140zM710a22011-402200140z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1720h5v-2a33000-5.356-1.857M1720H7m100v-2c0-.656-.126-1.283-.356-1.857M720H2v-2a330015.356-1.857M720v-2c0-.656.126-1.283.356-1.857m00a5.0025.0020019.2880M157a33011-603300160zm63a22011-402200140zM710a22011-402200140z"/>
 </svg>
 <spanclassName="text-gray-700"><spanclassName="font-medium">Passengers:</span>{trip.passengers}</span>
 </div>
@@ -293,7 +293,7 @@ style={{width:`${trip.vehicle.fuelLevel}%`}}
 <divclassName="bg-blue-50rounded-lgp-3">
 <divclassName="flexitems-centergap-2mb-2">
 <svgclassName="w-4h-4text-blue-600"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
 </svg>
 <spanclassName="text-xsfont-semiboldtext-blue-700">AssignedDriver</span>
 </div>
@@ -327,7 +327,7 @@ onClick={()=>handleRequestFuel(trip)}
 className="flex-1lg:flex-nonepx-4py-2bg-orange-500text-whiterounded-lgtext-smfont-mediumhover:bg-orange-600transition-colorsflexitems-centerjustify-centergap-1"
 >
 <svgclassName="w-4h-4"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M126v6m00v6m0-6h6m-60H6"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M126v6m00v6m0-6h6m-60H6"/>
 </svg>
 RequestFuel
 </button>
@@ -342,7 +342,7 @@ RequestFuel
 {filteredTrips.length===0&&(
 <divclassName="bg-whiterounded-xlp-12text-centerborderborder-gray-200">
 <svgclassName="w-16h-16text-gray-300mx-automb-4"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M95H7a22000-22v12a2200022h10a220002-2V7a22000-2-2h-2M95a2200022h2a220002-2M95a220012-2h2a2200122"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M95H7a22000-22v12a2200022h10a220002-2V7a22000-2-2h-2M95a2200022h2a220002-2M95a220012-2h2a2200122"/>
 </svg>
 <h3className="text-lgfont-mediumtext-gray-900mb-2">Notripsfound</h3>
 <pclassName="text-gray-500">Tryadjustingyoursearchorfiltercriteria</p>
@@ -360,7 +360,7 @@ onClick={()=>setShowAssignModal(false)}
 className="p-2hover:bg-gray-100rounded-lg"
 >
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M618L186M66l1212"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/>
 </svg>
 </button>
 </div>
@@ -452,7 +452,7 @@ assignmentData.driverId===driver.id
 assignmentData.driverId===driver.id?'bg-blue-500':'bg-gray-100'
 }`}>
 <svgclassName={`w-6h-6${assignmentData.driverId===driver.id?'text-white':'text-gray-600'}`}fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
 </svg>
 </div>
 <divclassName="flex-1">
@@ -498,7 +498,7 @@ onClick={()=>setShowDetailsModal(false)}
 className="p-2hover:bg-gray-100rounded-lg"
 >
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M618L186M66l1212"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/>
 </svg>
 </button>
 </div>
@@ -559,7 +559,7 @@ className="p-2hover:bg-gray-100rounded-lg"
 <divkey={index}className="flexitems-centergap-4p-3bg-emerald-50rounded-lg">
 <divclassName="w-10h-10bg-emerald-500rounded-fullflexitems-centerjustify-centerflex-shrink-0">
 <svgclassName="w-6h-6text-white"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M513l44L197"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M513l44L197"/>
 </svg>
 </div>
 <divclassName="flex-1">
@@ -596,7 +596,7 @@ className="p-2hover:bg-gray-100rounded-lg"
 <divclassName="bg-blue-50rounded-lgp-4">
 <divclassName="flexitems-centergap-2mb-3">
 <svgclassName="w-5h-5text-blue-600"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
 </svg>
 <spanclassName="font-semiboldtext-blue-700">AssignedDriver</span>
 </div>
@@ -630,7 +630,7 @@ onClick={()=>setShowFuelRequestModal(false)}
 className="p-2hover:bg-gray-100rounded-lg"
 >
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M618L186M66l1212"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/>
 </svg>
 </button>
 </div>
@@ -736,5 +736,6 @@ SubmitRequest
 </div>
 )
 }
+
 
 

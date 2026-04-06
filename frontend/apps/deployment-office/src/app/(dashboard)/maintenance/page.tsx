@@ -188,7 +188,7 @@ onChange={(e)=>setSearchQuery(e.target.value)}
 className="w-fullpl-10pr-4py-2text-smborderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
 />
 <svgclassName="w-5h-5text-gray-400absoluteleft-3top-1/2-translate-y-1/2"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M2121l-6-6m2-5a77011-14077001140z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M2121l-6-6m2-5a77011-14077001140z"/>
 </svg>
 </div>
 <select
@@ -339,7 +339,7 @@ className="flex-1px-4py-2bg-emerald-600text-whiterounded-lgtext-smfont-semiboldh
 <h3className="text-xlfont-boldtext-gray-800">MaintenanceDetails</h3>
 <buttononClick={()=>setShowDetailsModal(false)}className="p-2hover:bg-gray-100rounded-lg">
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M618L186M66l1212"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/>
 </svg>
 </button>
 </div>
@@ -369,5 +369,6 @@ Close
 </div>
 )
 }
+
 
 

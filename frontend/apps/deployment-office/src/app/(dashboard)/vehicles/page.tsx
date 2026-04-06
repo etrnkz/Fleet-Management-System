@@ -104,7 +104,7 @@ onClick={()=>setShowDetailsModal(false)}
 className="p-2hover:bg-gray-100rounded-lg"
 >
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M618L186M66l1212"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/>
 </svg>
 </button>
 </div>
@@ -182,7 +182,7 @@ Close
 <spanclassName="text-smtext-gray-600">Available</span>
 <divclassName="w-10h-10bg-emerald-100rounded-lgflexitems-centerjustify-center">
 <svgclassName="w-6h-6text-emerald-600"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M513l44L197"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M513l44L197"/>
 </svg>
 </div>
 </div>
@@ -194,7 +194,7 @@ Close
 <spanclassName="text-smtext-gray-600">InUse</span>
 <divclassName="w-10h-10bg-blue-100rounded-lgflexitems-centerjustify-center">
 <svgclassName="w-6h-6text-blue-600"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1310V3L414h7v7l9-11h-7z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1310V3L414h7v7l9-11h-7z"/>
 </svg>
 </div>
 </div>
@@ -206,8 +206,8 @@ Close
 <spanclassName="text-smtext-gray-600">Maintenance</span>
 <divclassName="w-10h-10bg-orange-100rounded-lgflexitems-centerjustify-center">
 <svgclassName="w-6h-6text-orange-600"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M10.3254.317c.426-1.7562.924-1.7563.350a1.7241.7240002.5731.066c1.543-.943.31.8262.372.37a1.7241.7240001.0652.572c1.756.4261.7562.92403.35a1.7241.724000-1.0662.573c.941.543-.8263.31-2.372.37a1.7241.724000-2.5721.065c-.4261.756-2.9241.756-3.350a1.7241.724000-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.7241.724000-1.065-2.572c-1.756-.426-1.756-2.9240-3.35a1.7241.7240001.066-2.573c-.94-1.543.826-3.312.37-2.37.996.6082.296.072.572-1.065z"/>
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1512a33011-603300160z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M10.3254.317c.426-1.7562.924-1.7563.350a1.7241.7240002.5731.066c1.543-.943.31.8262.372.37a1.7241.7240001.0652.572c1.756.4261.7562.92403.35a1.7241.724000-1.0662.573c.941.543-.8263.31-2.372.37a1.7241.724000-2.5721.065c-.4261.756-2.9241.756-3.350a1.7241.724000-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.7241.724000-1.065-2.572c-1.756-.426-1.756-2.9240-3.35a1.7241.7240001.066-2.573c-.94-1.543.826-3.312.37-2.37.996.6082.296.072.572-1.065z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1512a33011-603300160z"/>
 </svg>
 </div>
 </div>
@@ -228,7 +228,7 @@ onChange={(e)=>setSearchQuery(e.target.value)}
 className="w-fullpl-10pr-4py-2text-smborderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500focus:border-transparentoutline-none"
 />
 <svgclassName="w-5h-5text-gray-400absoluteleft-3top-1/2-translate-y-1/2"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M2121l-6-6m2-5a77011-14077001140z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M2121l-6-6m2-5a77011-14077001140z"/>
 </svg>
 </div>
 </div>
@@ -248,7 +248,7 @@ className="px-4py-2text-smborderborder-gray-300rounded-lgfocus:ring-2focus:ring-
 onClick={loadVehicles}
 className="px-4py-2bg-emerald-500text-whiterounded-lgtext-smfont-mediumhover:bg-emerald-600transition-colorsflexitems-centerjustify-centergap-2">
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M44v5h.582m15.3562A8.0018.0010004.5829m00H9m1111v-5h-.581m00a8.0038.003001-15.357-2m15.3572H15"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M44v5h.582m15.3562A8.0018.0010004.5829m00H9m1111v-5h-.581m00a8.0038.003001-15.357-2m15.3572H15"/>
 </svg>
 <spanclassName="hiddensm:inline">Refresh</span>
 </button>
@@ -331,7 +331,7 @@ ViewDetails
 {!loading&&!error&&filteredVehicles.length===0&&(
 <divclassName="bg-whiterounded-xlp-12text-centerborderborder-gray-200">
 <svgclassName="w-16h-16text-gray-300mx-automb-4"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M912h6m-64h6m25H7a22001-2-2V5a220012-2h5.586a11001.707.293l5.4145.414a11001.293.707V19a22001-22z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M912h6m-64h6m25H7a22001-2-2V5a220012-2h5.586a11001.707.293l5.4145.414a11001.293.707V19a22001-22z"/>
 </svg>
 <h3className="text-lgfont-mediumtext-gray-900mb-2">Novehiclesfound</h3>
 <pclassName="text-gray-500">Tryadjustingyoursearchorfiltercriteria</p>
@@ -340,5 +340,6 @@ ViewDetails
 </div>
 )
 }
+
 
 

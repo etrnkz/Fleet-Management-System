@@ -62,7 +62,7 @@ id:'profile',
 name:'Profile',
 icon:(
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
 </svg>
 )
 },
@@ -71,7 +71,7 @@ id:'notifications',
 name:'Notifications',
 icon:(
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1517h5l-1.405-1.405A2.0322.0320011814.158V11a6.0026.002000-4-5.659V5a22010-40v.341C7.676.16568.388611v3.159c0.538-.2141.055-.5951.436L417h5m60v1a33011-60v-1m60H9"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1517h5l-1.405-1.405A2.0322.0320011814.158V11a6.0026.002000-4-5.659V5a22010-40v.341C7.676.16568.388611v3.159c0.538-.2141.055-.5951.436L417h5m60v1a33011-60v-1m60H9"/>
 </svg>
 )
 },
@@ -80,7 +80,7 @@ id:'security',
 name:'Security',
 icon:(
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1215v2m-64h12a220002-2v-6a22000-2-2H6a22000-22v6a2200022zm10-10V7a44000-80v4h8z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1215v2m-64h12a220002-2v-6a22000-2-2H6a22000-22v6a2200022zm10-10V7a44000-80v4h8z"/>
 </svg>
 )
 },
@@ -89,8 +89,8 @@ id:'system',
 name:'System',
 icon:(
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M10.3254.317c.426-1.7562.924-1.7563.350a1.7241.7240002.5731.066c1.543-.943.31.8262.372.37a1.7241.7240001.0652.572c1.756.4261.7562.92403.35a1.7241.724000-1.0662.573c.941.543-.8263.31-2.372.37a1.7241.724000-2.5721.065c-.4261.756-2.9241.756-3.350a1.7241.724000-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.7241.724000-1.065-2.572c-1.756-.426-1.756-2.9240-3.35a1.7241.7240001.066-2.573c-.94-1.543.826-3.312.37-2.37.996.6082.296.072.572-1.065z"/>
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1512a33011-603300160z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M10.3254.317c.426-1.7562.924-1.7563.350a1.7241.7240002.5731.066c1.543-.943.31.8262.372.37a1.7241.7240001.0652.572c1.756.4261.7562.92403.35a1.7241.724000-1.0662.573c.941.543-.8263.31-2.372.37a1.7241.724000-2.5721.065c-.4261.756-2.9241.756-3.350a1.7241.724000-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.7241.724000-1.065-2.572c-1.756-.426-1.756-2.9240-3.35a1.7241.7240001.066-2.573c-.94-1.543.826-3.312.37-2.37.996.6082.296.072.572-1.065z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1512a33011-603300160z"/>
 </svg>
 )
 }
@@ -446,7 +446,7 @@ toast.type==='error'?'bg-red-600':
 <span>{toast.message}</span>
 <buttononClick={()=>setToast(null)}className="hover:opacity-80">
 <svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M618L186M66l1212"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/>
 </svg>
 </button>
 </div>
@@ -455,5 +455,6 @@ toast.type==='error'?'bg-red-600':
 </div>
 )
 }
+
 
 

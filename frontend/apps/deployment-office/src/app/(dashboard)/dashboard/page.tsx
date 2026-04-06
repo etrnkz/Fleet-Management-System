@@ -148,7 +148,7 @@ className={`px-3py-2rounded-lgtext-xsfont-mediumtransition-colorscapitalize${sel
 <spanclassName="text-smtext-gray-600">{s.label}</span>
 <divclassName={`w-10h-10${s.bg}rounded-lgflexitems-centerjustify-center`}>
 <svgclassName={`w-5h-5${s.color}`}fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d={s.icon}/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d={s.icon}/>
 </svg>
 </div>
 </div>
@@ -276,7 +276,7 @@ style={{height:`${(m.count/maxVal)*120}px`,minHeight:m.count>0?'4px':'0'}}></div
 {approvedRequests.length===0?(
 <divclassName="text-centerpy-8text-gray-400">
 <svgclassName="w-12h-12mx-automb-2text-gray-300"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M95H7a22000-22v12a2200022h10a220002-2V7a22000-2-2h-2M95a2200022h2a220002-2M95a220012-2h2a2200122"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M95H7a22000-22v12a2200022h10a220002-2V7a22000-2-2h-2M95a2200022h2a220002-2M95a220012-2h2a2200122"/>
 </svg>
 <pclassName="text-sm">Notripsawaitingallocation</p>
 </div>
@@ -338,7 +338,7 @@ Assign
 <divclassName="h-48bg-gradient-to-brfrom-blue-50to-emerald-50rounded-lgflexitems-centerjustify-center">
 <divclassName="text-center">
 <svgclassName="w-12h-12text-gray-400mx-automb-2"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M920l-5.447-2.724A11001316.382V5.618a110011.447-.894L97m013l6-3m-63V7m610l4.5532.276A110002118.382V7.618a11000-.553-.894L154m013V4m00L97"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M920l-5.447-2.724A11001316.382V5.618a110011.447-.894L97m013l6-3m-63V7m610l4.5532.276A110002118.382V7.618a11000-.553-.894L154m013V4m00L97"/>
 </svg>
 <pclassName="text-gray-500text-sm">Real-timeVehicleTracking</p>
 <pclassName="text-gray-400text-xsmt-1">GPSintegrationactive</p>
@@ -355,7 +355,7 @@ Assign
 <divclassName="flexjustify-betweenmb-4">
 <h3className="text-xlfont-boldtext-gray-800">AssignVehicle&Driver</h3>
 <buttononClick={()=>setShowAssignModal(false)}className="p-2hover:bg-gray-100rounded-lg">
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424"><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M618L186M66l1212"/></svg>
+<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424"><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/></svg>
 </button>
 </div>
 <pclassName="text-smtext-gray-500mb-4">Trip:<spanclassName="font-mediumtext-gray-800">{selectedRequest.requestNumber}</span>→{selectedRequest.destination}</p>
@@ -385,7 +385,7 @@ className="w-fullpx-3py-2borderborder-gray-300rounded-lgtext-smoutline-nonefocus
 <divclassName="border-tborder-gray-100pt-4">
 <divclassName="flexitems-centergap-2mb-3">
 <svgclassName="w-4h-4text-orange-500"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1310V3L414h7v7l9-11h-7z"/>
+<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1310V3L414h7v7l9-11h-7z"/>
 </svg>
 <spanclassName="text-smfont-semiboldtext-gray-700">Fuel&DistanceEstimate</span>
 </div>
@@ -425,5 +425,6 @@ className="w-fullpx-3py-2borderborder-gray-300rounded-lgtext-smoutline-nonefocus
 </div>
 )
 }
+
 
 
