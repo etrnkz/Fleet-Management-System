@@ -2,705 +2,204 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { authApi, notificationApi } from '@/lib/api'
-import LoadingSpinner from '@/components/LoadingSpinner'
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false)
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setShowNotifications(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [isNavigating, setIsNavigating] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
   const [userData, setUserData] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
-  const [profileData, setProfileData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    position: '',
-    department: '',
-    employeeId: ''
-  })
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedData, setEditedData] = useState(profileData)
 
   useEffect(() => {
-    loadUserData()
+    const h = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifDropdown(false)
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfileDropdown(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
   }, [])
 
-  const loadUserData = async () => {
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
     try {
       const user = await authApi.getCurrentUser()
       setUserData(user)
-      
-      const profile = {
-        fullName: user.fullName || 'Deployment Officer',
-        email: user.email || 'deployment@hu.edu.et',
-        phone: user.phone || '+251 911 234 567',
-        position: user.position || 'Head of Operations',
-        department: user.department?.name || 'Deployment Office',
-        employeeId: user.employeeId || 'EMP-2024-001'
-      }
-      
-      setProfileData(profile)
-      setEditedData(profile)
-    } catch (error: any) {
-      console.error('Failed to load user data:', error)
-      if (error?.message?.includes('token') || error?.message?.includes('Unauthorized')) {
+    } catch (err: any) {
+      if (err?.message?.includes('401') || err?.message?.includes('Unauthorized') || err?.message?.includes('expired')) {
         router.push('/login')
       }
     }
-
-    // Load notifications separately so failure doesn't break layout
     try {
-      const notificationData = await notificationApi.getNotifications()
-      setNotifications(Array.isArray(notificationData) ? notificationData : [])
-    } catch {
-      setNotifications([])
-    }
+      const notifs = await notificationApi.getNotifications()
+      setNotifications(Array.isArray(notifs) ? notifs : [])
+    } catch { setNotifications([]) }
   }
 
-  const handleMarkAsRead = async (notificationId: string) => {
-    try {
-      await notificationApi.markAsRead(notificationId)
-      setNotifications(prev =>
-        (prev as any[]).map((n: any) =>
-          n.id === notificationId ? { ...n, isRead: true } : n
-        )
-      )
-    } catch {
-      // silently fail
-    }
+  const handleMarkAsRead = async (id: string) => {
+    await notificationApi.markAsRead(id).catch(() => {})
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
   }
 
-  const unreadCount = notifications.filter((notif: any) => !notif.isRead).length
-
-  // Navigation handler with loading spinner
-  const handleNavigation = (path: string) => {
-    if (pathname === path) {
-      // Even if same page, show spinner briefly
-      setIsNavigating(true)
-      setTimeout(() => {
-        setIsNavigating(false)
-      }, 800)
-      return
-    }
-
-    setIsNavigating(true)
-    // Small delay to show the spinner
-    setTimeout(() => {
-      router.push(path)
-      // Keep spinner visible for smooth transition
-      setTimeout(() => {
-        setIsNavigating(false)
-      }, 800)
-    }, 300)
+  const handleLogout = () => {
+    ;['access_token', 'accessToken', 'user'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
+    router.push('/login')
   }
 
-  const handleSaveProfile = () => {
-    setProfileData(editedData)
-    setIsEditing(false)
-    console.log('Profile updated:', editedData)
-  }
-
-  const handleCancelEdit = () => {
-    setEditedData(profileData)
-    setIsEditing(false)
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setEditedData(prev => ({ ...prev, [name]: value }))
-  }
+  const unreadCount = notifications.filter(n => !n.isRead).length
+  const initials = userData?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'DO'
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' },
-    { name: 'Vehicles', path: '/vehicles', icon: 'vehicle' },
-    { name: 'Trips', path: '/trips', icon: 'trips' },
-    { name: 'Drivers', path: '/drivers', icon: 'drivers' },
-    { name: 'Maintenance', path: '/maintenance', icon: 'maintenance' },
-    { name: 'Reports', path: '/reports', icon: 'reports' },
-    { name: 'Settings', path: '/settings', icon: 'settings' },
+    { name: 'Dashboard', path: '/dashboard', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg> },
+    { name: 'Trips', path: '/trips', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> },
+    { name: 'Vehicles', path: '/vehicles', icon: <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/></svg> },
+    { name: 'Drivers', path: '/drivers', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
+    { name: 'Maintenance', path: '/maintenance', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
+    { name: 'Reports', path: '/reports', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
+    { name: 'Settings', path: '/settings', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
   ]
 
-  const getIcon = (iconName: string) => {
-    switch (iconName) {
-      case 'dashboard':
-        return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-          </svg>
-        )
-      case 'vehicle':
-        return (
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-            <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-          </svg>
-        )
-      case 'trips':
-        return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-        )
-      case 'drivers':
-        return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-        )
-      case 'maintenance':
-        return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        )
-      case 'reports':
-        return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        )
-      case 'settings':
-        return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        )
-      default:
-        return null
-    }
-  }
+  const pageTitle = navItems.find(n => n.path === pathname)?.name ?? 'Dashboard'
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Loading Spinner */}
-      {isNavigating && <LoadingSpinner />}
-      
-      {/* Profile Edit Modal */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Profile Settings</h2>
-              <button
-                onClick={() => {
-                  setShowProfileModal(false)
-                  setIsEditing(false)
-                  setEditedData(profileData)
-                }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#F8F9FA]">
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-            {/* Modal Content */}
-            <div className="p-6">
-              {/* Profile Picture Section */}
-              <div className="flex items-center gap-6 mb-8 pb-6 border-b border-gray-200">
-                <div className="relative">
-                  <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center text-white text-3xl font-semibold">
-                    {profileData.fullName.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  {isEditing && (
-                    <button className="absolute bottom-0 right-0 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white hover:bg-emerald-600 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900">{profileData.fullName}</h3>
-                  <p className="text-gray-600">{profileData.position}</p>
-                  <p className="text-sm text-gray-500">{profileData.department}</p>
-                </div>
-                {!isEditing && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit Profile
-                  </button>
-                )}
-              </div>
-
-              {/* Profile Information Form */}
-              <div className="space-y-6">
-                {/* Full Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={isEditing ? editedData.fullName : profileData.fullName}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                      isEditing
-                        ? 'focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                        : 'bg-gray-50 cursor-not-allowed'
-                    } outline-none transition-all`}
-                  />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={isEditing ? editedData.email : profileData.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                      isEditing
-                        ? 'focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                        : 'bg-gray-50 cursor-not-allowed'
-                    } outline-none transition-all`}
-                  />
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={isEditing ? editedData.phone : profileData.phone}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                      isEditing
-                        ? 'focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                        : 'bg-gray-50 cursor-not-allowed'
-                    } outline-none transition-all`}
-                  />
-                </div>
-
-                {/* Position */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    name="position"
-                    value={isEditing ? editedData.position : profileData.position}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                      isEditing
-                        ? 'focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                        : 'bg-gray-50 cursor-not-allowed'
-                    } outline-none transition-all`}
-                  />
-                </div>
-
-                {/* Department */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Department
-                  </label>
-                  <input
-                    type="text"
-                    name="department"
-                    value={isEditing ? editedData.department : profileData.department}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                      isEditing
-                        ? 'focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-                        : 'bg-gray-50 cursor-not-allowed'
-                    } outline-none transition-all`}
-                  />
-                </div>
-
-                {/* Employee ID */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Employee ID
-                  </label>
-                  <input
-                    type="text"
-                    name="employeeId"
-                    value={profileData.employeeId}
-                    disabled
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed outline-none"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Employee ID cannot be changed</p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              {isEditing && (
-                <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
-                  <button
-                    onClick={handleSaveProfile}
-                    className="flex-1 bg-emerald-500 text-white py-3 rounded-lg font-medium hover:bg-emerald-600 transition-colors"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 fixed h-full">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-              </svg>
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-900">Deployment</h2>
-              <p className="text-xs text-gray-500">Fleet Management</p>
-            </div>
-          </div>
-
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => handleNavigation(item.path)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  pathname === item.path
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {getIcon(item.icon)}
-                <span className="font-medium">{item.name}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* New Deployment Button */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <button className="w-full bg-emerald-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 flex flex-col transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200 flex-shrink-0">
+          <div className="w-8 h-8 bg-[#1B365D] rounded flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+              <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
             </svg>
-            New Deployment
-          </button>
+          </div>
+          <div>
+            <div className="font-semibold text-gray-900 text-sm">Haramaya University</div>
+            <div className="text-xs text-gray-500">DEPLOYMENT OFFICE</div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+          {navItems.map(item => (
+            <Link key={item.path} href={item.path} onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm ${pathname === item.path ? 'bg-[#1B365D]/10 text-[#1B365D] font-semibold' : 'text-gray-700 hover:bg-gray-50'}`}>
+              {item.icon}
+              <span>{item.name}</span>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-gray-200 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#1B365D] rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">{initials}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{userData?.name || 'Deployment Officer'}</p>
+              <p className="text-xs text-gray-500 truncate">{userData?.email || ''}</p>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* Mobile Menu Overlay */}
-      {showMobileMenu && (
-        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setShowMobileMenu(false)}>
-          <aside className="w-64 bg-white h-full" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                      <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-gray-900">Deployment</h2>
-                    <p className="text-xs text-gray-500">Fleet Management</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowMobileMenu(false)} className="text-gray-500 hover:text-gray-700">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <nav className="space-y-1">
-                {navItems.map((item) => (
-                  <button
-                    key={item.path}
-                    onClick={() => {
-                      handleNavigation(item.path)
-                      setShowMobileMenu(false)
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                      pathname === item.path
-                        ? 'bg-emerald-500 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    {getIcon(item.icon)}
-                    <span className="font-medium">{item.name}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            {/* New Deployment Button */}
-            <div className="absolute bottom-6 left-6 right-6">
-              <button className="w-full bg-emerald-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                New Deployment
-              </button>
-            </div>
-          </aside>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="lg:ml-64 flex-1">
+      {/* Main */}
+      <div className="lg:pl-64 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4 fixed top-0 right-0 left-0 lg:left-64 z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setShowMobileMenu(true)}
-                className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+        <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 z-40">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <h1 className="text-lg font-semibold text-gray-900">{pageTitle}</h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <div className="relative" ref={notifRef}>
+              <button onClick={() => setShowNotifDropdown(p => !p)} className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                {unreadCount > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">{unreadCount > 9 ? '9+' : unreadCount}</span>}
               </button>
-              
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
-                {navItems.find(item => item.path === pathname)?.name || 'Dashboard'}
-              </h1>
+              {showNotifDropdown && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                  <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${unreadCount > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>{unreadCount} new</span>
+                  </div>
+                  {notifications.length === 0
+                    ? <div className="p-8 text-center text-sm text-gray-400">No notifications</div>
+                    : notifications.slice(0, 15).map(n => (
+                      <div key={n.id} onClick={() => handleMarkAsRead(n.id)}
+                        className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!n.isRead ? 'bg-blue-50 border-l-4 border-l-[#1B365D]' : ''}`}>
+                        <p className="text-sm font-medium text-gray-900">{n.title || n.type}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">{new Date(n.sentAt || n.createdAt).toLocaleString()}</p>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
-            
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* Search - Hidden on mobile */}
-              <div className="hidden md:block relative">
-                <input
-                  type="text"
-                  placeholder="Search vehicles, drivers or trip IDs..."
-                  className="w-64 lg:w-96 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-sm"
-                />
-                <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
 
-              {/* Notification Bell */}
-              <div className="relative" ref={notifRef}>
-                <button
-                  onClick={() => setShowNotifications(prev => !prev)}
-                  className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Notifications Dropdown — unread only */}
-                {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-y-auto">
-                    <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                      <h3 className="font-bold text-gray-900">Notifications</h3>
-                      {unreadCount > 0 && (
-                        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded">
-                          {unreadCount} unread
-                        </span>
-                      )}
-                    </div>
-                    <div className="divide-y divide-gray-100">
-                      {(notifications as any[]).filter((n: any) => !n.isRead).length === 0 ? (
-                        <div className="p-8 text-center">
-                          <p className="text-gray-500 text-sm">No new notifications</p>
+            {/* Profile */}
+            <div className="relative" ref={profileRef}>
+              <button onClick={() => setShowProfileDropdown(p => !p)} className="flex items-center gap-2 hover:bg-gray-50 rounded-lg p-1.5">
+                <div className="w-8 h-8 bg-[#1B365D] rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">{initials}</span>
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-medium text-gray-900 leading-tight">{userData?.name || 'Deployment Officer'}</p>
+                  <p className="text-xs text-gray-500">Deployment Office</p>
+                </div>
+                <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {showProfileDropdown && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowProfileDropdown(false)} />
+                  <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-2xl border border-gray-200 z-40 overflow-hidden">
+                    <div className="p-4 bg-[#1B365D]/5 border-b border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#1B365D] rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-sm">{initials}</span>
                         </div>
-                      ) : (
-                        (notifications as any[]).filter((n: any) => !n.isRead).map((notif: any) => (
-                          <div
-                            key={notif.id}
-                            onClick={() => { handleMarkAsRead(notif.id) }}
-                            className="p-4 hover:bg-gray-50 transition-colors cursor-pointer bg-blue-50"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                                <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                </svg>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-900 font-medium line-clamp-2">{notif.title || notif.message || 'Notification'}</p>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.message}</p>
-                                {notif.createdAt && (
-                                  <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
-                                )}
-                              </div>
-                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Profile Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  onMouseEnter={() => !('ontouchstart' in window) && setShowProfileDropdown(true)}
-                  onMouseLeave={() => !('ontouchstart' in window) && setShowProfileDropdown(false)}
-                  className="flex items-center gap-2 sm:gap-3 hover:bg-gray-100 p-2 rounded-lg transition-colors"
-                >
-                  <div className="hidden sm:block text-right">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">{profileData.fullName}</p>
-                    <p className="text-xs text-gray-500">{profileData.position}</p>
-                  </div>
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white text-sm sm:text-base font-semibold">
-                    {profileData.fullName.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <svg className="hidden sm:block w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Profile Dropdown Menu */}
-                {showProfileDropdown && (
-                  <>
-                    {/* Backdrop for mobile */}
-                    <div 
-                      className="fixed inset-0 z-40 md:hidden"
-                      onClick={() => setShowProfileDropdown(false)}
-                    ></div>
-                    
-                    <div 
-                      onMouseEnter={() => !('ontouchstart' in window) && setShowProfileDropdown(true)}
-                      onMouseLeave={() => !('ontouchstart' in window) && setShowProfileDropdown(false)}
-                      className="fixed md:absolute left-0 right-0 md:left-auto md:right-0 top-16 md:top-full mx-2 md:mx-0 md:mt-2 w-auto md:w-72 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden animate-slide-in-top"
-                    >
-                      {/* Profile Header */}
-                      <div className="p-4 bg-emerald-50 border-b border-emerald-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
-                            {profileData.fullName.split(' ').map(n => n[0]).join('')}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 truncate">{profileData.fullName}</p>
-                            <p className="text-sm text-gray-600 truncate">{profileData.email}</p>
-                          </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{userData?.name || 'Deployment Officer'}</p>
+                          <p className="text-xs text-gray-500 truncate">{userData?.email || ''}</p>
                         </div>
                       </div>
-
-                      {/* Menu Items */}
-                      <div className="py-2">
-                        <button
-                          onClick={() => {
-                            setShowProfileDropdown(false)
-                            setShowProfileModal(true)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-                        >
-                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">My Profile</p>
-                            <p className="text-xs text-gray-500">View and edit profile</p>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setShowProfileDropdown(false)
-                            handleNavigation('/settings')
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
-                        >
-                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Settings</p>
-                            <p className="text-xs text-gray-500">Preferences and options</p>
-                          </div>
-                        </button>
-
-                        <div className="border-t border-gray-200 my-2"></div>
-
-                        <button
-                          onClick={() => {
-                            setShowProfileDropdown(false)
-                            router.push('/')
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left text-red-600"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          <div>
-                            <p className="text-sm font-medium">Logout</p>
-                            <p className="text-xs text-red-400">Sign out of your account</p>
-                          </div>
-                        </button>
-                      </div>
                     </div>
-                  </>
-                )}
-              </div>
+                    <div className="p-2">
+                      <Link href="/settings" onClick={() => setShowProfileDropdown(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        Settings
+                      </Link>
+                    </div>
+                    <div className="p-2 border-t border-gray-100">
+                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-lg text-sm">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <div className="pt-16 sm:pt-20">
+        <main className="flex-1 p-4 sm:p-6 pt-20">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
