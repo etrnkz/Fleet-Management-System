@@ -336,6 +336,253 @@
 					]
 				}
 			}
+		},
+		{
+			"name": "POST /api/v1/auth/login (dept head) — capture refresh_token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Login succeeds\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"});",
+							"pm.test(\"Has access_token and refresh_token\", function () {",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property(\"access_token\");",
+							"    pm.expect(json).to.have.property(\"refresh_token\");",
+							"});",
+							"try {",
+							"    const json = pm.response.json();",
+							"    pm.environment.set(\"dept_head_token\", json.access_token);",
+							"    pm.environment.set(\"dept_head_refresh_token\", json.refresh_token);",
+							"    pm.environment.set(\"dept_head_user_id\", json.user.id);",
+							"} catch (e) {}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"department@test.com\",\n  \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/auth/login",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "auth", "login"]
+				}
+			}
+		},
+		{
+			"name": "POST /api/v1/auth/refresh (body token)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Refresh returns new access_token\", function () {",
+							"    pm.expect(pm.response.code).to.eql(200);",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property(\"access_token\");",
+							"    pm.expect(json).to.have.property(\"refresh_token\");",
+							"});",
+							"try {",
+							"    const json = pm.response.json();",
+							"    pm.environment.set(\"dept_head_token\", json.access_token);",
+							"    pm.environment.set(\"dept_head_refresh_token\", json.refresh_token);",
+							"} catch (e) {}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"refresh_token\": \"{{dept_head_refresh_token}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/auth/refresh",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "auth", "refresh"]
+				}
+			}
+		},
+		{
+			"name": "POST /api/v1/auth/refresh (invalid token → 401)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Invalid refresh token returns 401\", function () {",
+							"    pm.expect(pm.response.code).to.eql(401);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"refresh_token\": \"invalid.token.here\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/auth/refresh",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "auth", "refresh"]
+				}
+			}
+		},
+		{
+			"name": "POST /api/v1/users/bulk-invite (dept head)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Bulk invite returns success\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"    const json = pm.response.json();",
+							"    pm.expect(json).to.have.property(\"success\", true);",
+							"    pm.expect(json).to.have.property(\"invited\");",
+							"    pm.expect(json).to.have.property(\"failed\");",
+							"    pm.expect(json).to.have.property(\"message\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" },
+					{ "key": "Authorization", "value": "Bearer {{dept_head_token}}", "type": "text" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"emails\": [\"testinvite_postman@example.com\"],\n  \"welcomeMessage\": \"Welcome from Postman test!\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/users/bulk-invite",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "users", "bulk-invite"]
+				}
+			}
+		},
+		{
+			"name": "POST /api/v1/users/bulk-invite (employee → 403)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Employee cannot bulk invite (403)\", function () {",
+							"    pm.expect(pm.response.code).to.eql(403);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" },
+					{ "key": "Authorization", "value": "Bearer {{employee_token}}", "type": "text" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"emails\": [\"shouldfail@example.com\"]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/users/bulk-invite",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "users", "bulk-invite"]
+				}
+			}
+		},
+		{
+			"name": "POST /api/v1/users/bulk-invite (no auth → 401)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Bulk invite requires auth (401)\", function () {",
+							"    pm.expect(pm.response.code).to.eql(401);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"emails\": [\"noauth@example.com\"]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/users/bulk-invite",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "users", "bulk-invite"]
+				}
+			}
+		},
+		{
+			"name": "POST /api/v1/users/bulk-invite (duplicate email → already exists in failed)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Duplicate email reported in failed array\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+							"    const json = pm.response.json();",
+							"    pm.expect(json.failed.length).to.be.greaterThan(0);",
+							"    pm.expect(json.failed[0].reason).to.include(\"already exists\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" },
+					{ "key": "Authorization", "value": "Bearer {{dept_head_token}}", "type": "text" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"emails\": [\"employee@test.com\"]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/users/bulk-invite",
+					"host": ["{{base_url}}"],
+					"path": ["api", "v1", "users", "bulk-invite"]
+				}
+			}
 		}
 	]
 }
