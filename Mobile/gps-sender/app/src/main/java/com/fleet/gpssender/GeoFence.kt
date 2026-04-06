@@ -14,7 +14,18 @@ data class RestrictedZone(
     val radiusMeters: Double,
 )
 
+enum class GeofenceStatus { CLEAR, WARNING, SHUTDOWN }
+
+data class GeofenceEval(
+    val status: GeofenceStatus,
+    val zoneName: String?,
+    /** positive = distance to boundary; negative = how far inside */
+    val distanceMeters: Double?,
+)
+
 object GeoFence {
+
+    private const val WARNING_RATIO = 0.8 // warn when within 80% of radius
 
     fun haversineMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val r = 6371000.0
@@ -27,21 +38,37 @@ object GeoFence {
         return r * c
     }
 
-    /** @return pair(engineOff, zone label or null) */
+    /** Evaluate all zones and return the worst status found. */
+    fun evaluate(zones: List<RestrictedZone>, lat: Double, lon: Double): GeofenceEval {
+        var worst = GeofenceEval(GeofenceStatus.CLEAR, null, null)
+        for (z in zones) {
+            if (z.radiusMeters <= 0) continue
+            val d = haversineMeters(lat, lon, z.latitude, z.longitude)
+            val label = z.name?.trim()?.takeIf { it.isNotEmpty() } ?: "Restricted zone"
+            when {
+                d <= z.radiusMeters -> {
+                    // Inside zone — shutdown (worst possible, return immediately)
+                    return GeofenceEval(GeofenceStatus.SHUTDOWN, label, -(z.radiusMeters - d))
+                }
+                d <= z.radiusMeters / WARNING_RATIO -> {
+                    // Approaching — warning (keep looking for shutdown in other zones)
+                    if (worst.status != GeofenceStatus.SHUTDOWN) {
+                        worst = GeofenceEval(GeofenceStatus.WARNING, label, d - z.radiusMeters)
+                    }
+                }
+            }
+        }
+        return worst
+    }
+
+    /** Legacy helper kept for compatibility */
     fun violationInAnyZone(
         zones: List<RestrictedZone>,
         lat: Double,
         lon: Double,
     ): Pair<Boolean, String?> {
-        for (z in zones) {
-            if (z.radiusMeters <= 0) continue
-            val d = haversineMeters(lat, lon, z.latitude, z.longitude)
-            if (d <= z.radiusMeters) {
-                val label = z.name?.trim()?.takeIf { it.isNotEmpty() } ?: "Restricted zone"
-                return true to label
-            }
-        }
-        return false to null
+        val r = evaluate(zones, lat, lon)
+        return (r.status == GeofenceStatus.SHUTDOWN) to r.zoneName
     }
 
     fun parseZonesFromConfigJson(body: String): Pair<Boolean, List<RestrictedZone>> {
@@ -63,6 +90,19 @@ object GeoFence {
             enabled to list
         } catch (_: Exception) {
             false to emptyList()
+        }
+    }
+
+    /** Parse geofenceStatus string from API location response */
+    fun parseStatusFromResponse(body: String): GeofenceStatus {
+        return try {
+            when (JSONObject(body).optString("geofenceStatus", "clear").lowercase()) {
+                "warning" -> GeofenceStatus.WARNING
+                "shutdown" -> GeofenceStatus.SHUTDOWN
+                else -> GeofenceStatus.CLEAR
+            }
+        } catch (_: Exception) {
+            GeofenceStatus.CLEAR
         }
     }
 }

@@ -35,8 +35,18 @@ class MainActivity : AppCompatActivity() {
 
     private val logReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val msg = intent?.getStringExtra(GpsPostService.EXTRA_LOG) ?: return
-            appendLog(msg)
+            when (intent?.action) {
+                GpsPostService.ACTION_LOG -> {
+                    val msg = intent.getStringExtra(GpsPostService.EXTRA_LOG) ?: return
+                    appendLog(msg)
+                }
+                GpsPostService.ACTION_GEOFENCE_STATUS -> {
+                    val statusName = intent.getStringExtra(GpsPostService.EXTRA_GEOFENCE_STATUS) ?: return
+                    val zone = intent.getStringExtra(GpsPostService.EXTRA_GEOFENCE_ZONE)
+                    val status = runCatching { GeofenceStatus.valueOf(statusName) }.getOrDefault(GeofenceStatus.CLEAR)
+                    updateGeofenceBanner(status, zone)
+                }
+            }
         }
     }
 
@@ -84,7 +94,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshAuthUi()
-        val filter = IntentFilter(GpsPostService.ACTION_LOG)
+        val filter = IntentFilter().apply {
+            addAction(GpsPostService.ACTION_LOG)
+            addAction(GpsPostService.ACTION_GEOFENCE_STATUS)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
@@ -268,6 +281,28 @@ class MainActivity : AppCompatActivity() {
         while (logLines.size >= MAX_LOG_LINES) logLines.removeFirst()
         logLines.addLast(line)
         binding.textLog.text = logLines.joinToString("\n")
+    }
+
+    private fun updateGeofenceBanner(status: GeofenceStatus, zone: String?) {
+        val banner = binding.geofenceBanner
+        val bannerText = binding.geofenceBannerText
+        when (status) {
+            GeofenceStatus.CLEAR -> {
+                banner.visibility = android.view.View.GONE
+            }
+            GeofenceStatus.WARNING -> {
+                banner.visibility = android.view.View.VISIBLE
+                banner.setBackgroundColor(android.graphics.Color.parseColor("#FFF59D")) // yellow
+                bannerText.setTextColor(android.graphics.Color.parseColor("#7B5800"))
+                bannerText.text = "⚠️  WARNING — Approaching restricted zone: ${zone ?: "?"}\nEngine shutdown will trigger if you enter."
+            }
+            GeofenceStatus.SHUTDOWN -> {
+                banner.visibility = android.view.View.VISIBLE
+                banner.setBackgroundColor(android.graphics.Color.parseColor("#FFCDD2")) // red
+                bannerText.setTextColor(android.graphics.Color.parseColor("#B71C1C"))
+                bannerText.text = "🚨  ENGINE SHUTDOWN — Inside restricted zone: ${zone ?: "?"}\nYou must leave this area immediately."
+            }
+        }
     }
 
     companion object {

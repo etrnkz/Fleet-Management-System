@@ -102,6 +102,27 @@
             android:textSize="14sp"
             tools:text="Not signed in" />
 
+        <!-- Geofence status banner — hidden when clear -->
+        <LinearLayout
+            android:id="@+id/geofenceBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#FFF59D"
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/geofenceBannerText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:lineSpacingExtra="4dp"
+                tools:text="⚠️ WARNING — Approaching restricted zone" />
+        </LinearLayout>
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

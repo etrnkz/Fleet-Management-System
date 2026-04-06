@@ -22,14 +22,12 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 class GpsPostService : Service() {
 
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private val lastSentMs = AtomicLong(0L)
-    private val lastEngineSimOff = AtomicBoolean(false)
     private val mainHandler = Handler(Looper.getMainLooper())
     private val http by lazy {
         OkHttpClient.Builder()
@@ -39,18 +37,11 @@ class GpsPostService : Service() {
             .build()
     }
 
-    @Volatile
-    private var serverGeoEnabled: Boolean = false
-
-    @Volatile
-    private var serverZones: List<RestrictedZone> = emptyList()
-
-    @Volatile
-    private var geofenceFetchAttempted: Boolean = false
-
-    /** When prefs trip id changes, refetch geofence config */
-    @Volatile
-    private var geofenceTripId: String? = null
+    @Volatile private var lastGeofenceStatus = GeofenceStatus.CLEAR
+    @Volatile private var serverGeoEnabled: Boolean = false
+    @Volatile private var serverZones: List<RestrictedZone> = emptyList()
+    @Volatile private var geofenceFetchAttempted: Boolean = false
+    @Volatile private var geofenceTripId: String? = null
 
     private val callback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
@@ -64,29 +55,24 @@ class GpsPostService : Service() {
             val tripId = prefs.getString(MainActivity.KEY_TRIP, null)?.trim() ?: return
             val token = prefs.getString(MainActivity.KEY_TOKEN, null)?.trim() ?: return
 
+            // Local geofence evaluation (demo zones + server zones)
             val demoZones = loadDemoZonesFromPrefs(prefs)
             val combined = if (serverGeoEnabled) serverZones + demoZones else demoZones
-
-            val (localOff, localZone) = if (combined.isEmpty()) {
-                false to null
+            val localEval = if (combined.isNotEmpty()) {
+                GeoFence.evaluate(combined, loc.latitude, loc.longitude)
             } else {
-                GeoFence.violationInAnyZone(combined, loc.latitude, loc.longitude)
+                GeofenceEval(GeofenceStatus.CLEAR, null, null)
             }
 
             val url = "$base/tracking/$tripId/location"
             val json = JSONObject().apply {
                 put("latitude", loc.latitude)
                 put("longitude", loc.longitude)
-                loc.speed.takeIf { !it.isNaN() && it >= 0 }?.let {
-                    put("speed", (it * 3.6f).toDouble())
-                }
+                loc.speed.takeIf { !it.isNaN() && it >= 0 }?.let { put("speed", (it * 3.6f).toDouble()) }
                 loc.bearing.takeIf { !it.isNaN() }?.let { put("heading", it.toDouble()) }
                 if (loc.hasAltitude()) put("altitude", loc.altitude)
                 if (loc.hasAccuracy()) put("accuracy", loc.accuracy.toDouble())
-                put(
-                    "metadata",
-                    JSONObject().apply { put("source", "android-gps-sender") },
-                )
+                put("metadata", JSONObject().apply { put("source", "android-gps-sender") })
             }
 
             Thread {
@@ -100,30 +86,27 @@ class GpsPostService : Service() {
                     http.newCall(req).execute().use { resp ->
                         val text = resp.body?.string().orEmpty()
                         if (resp.isSuccessful) {
-                            val serverOff = parseEngineOffFromResponse(text)
-                            val serverZone = parseViolationZoneName(text)
-                            val effectiveOff = localOff || serverOff
-                            val displayZone = when {
-                                serverOff && !serverZone.isNullOrBlank() -> serverZone
-                                localOff -> localZone
-                                else -> null
+                            // Server status takes precedence over local eval
+                            val serverStatus = GeoFence.parseStatusFromResponse(text)
+                            val serverZoneName = parseViolationZoneName(text)
+
+                            // Use worst of server + local
+                            val effectiveStatus = when {
+                                serverStatus == GeofenceStatus.SHUTDOWN || localEval.status == GeofenceStatus.SHUTDOWN -> GeofenceStatus.SHUTDOWN
+                                serverStatus == GeofenceStatus.WARNING || localEval.status == GeofenceStatus.WARNING -> GeofenceStatus.WARNING
+                                else -> GeofenceStatus.CLEAR
                             }
-                            if (effectiveOff != lastEngineSimOff.getAndSet(effectiveOff)) {
-                                if (effectiveOff) {
-                                    broadcastLog("SIM ENGINE OFF — ${displayZone ?: "?"}")
-                                } else {
-                                    broadcastLog("SIM ENGINE OK (outside restricted zones)")
-                                }
-                            }
-                            mainHandler.post {
-                                startForeground(
-                                    NOTIFY_ID,
-                                    buildNotification(effectiveOff, displayZone),
-                                )
-                            }
+                            val effectiveZone = serverZoneName ?: localEval.zoneName
+
+                            handleGeofenceStatusChange(effectiveStatus, effectiveZone)
+
                             broadcastLog(
                                 "OK ${loc.latitude.format6()},${loc.longitude.format6()}" +
-                                    if (effectiveOff) " [restricted]" else "",
+                                    when (effectiveStatus) {
+                                        GeofenceStatus.SHUTDOWN -> " [SHUTDOWN: $effectiveZone]"
+                                        GeofenceStatus.WARNING -> " [WARNING: $effectiveZone]"
+                                        GeofenceStatus.CLEAR -> ""
+                                    }
                             )
                         } else {
                             broadcastLog("FAIL ${resp.code}: ${text.take(200)}")
@@ -137,11 +120,57 @@ class GpsPostService : Service() {
         }
     }
 
+    private fun handleGeofenceStatusChange(newStatus: GeofenceStatus, zoneName: String?) {
+        val prev = lastGeofenceStatus
+        lastGeofenceStatus = newStatus
+
+        // Always update the persistent foreground notification
+        mainHandler.post {
+            startForeground(NOTIFY_GPS_ID, buildGpsNotification(newStatus, zoneName))
+        }
+
+        // Only fire alert notification on status change (avoid spam)
+        if (newStatus == prev) return
+
+        when (newStatus) {
+            GeofenceStatus.WARNING -> {
+                broadcastLog("⚠️ GEOFENCE WARNING — approaching ${zoneName ?: "restricted zone"}")
+                broadcastGeofenceStatus(newStatus, zoneName)
+                fireAlertNotification(
+                    id = NOTIFY_WARN_ID,
+                    channelId = CHANNEL_WARN,
+                    title = getString(R.string.notify_geofence_warn_title),
+                    text = getString(R.string.notify_geofence_warn_text, zoneName ?: "?"),
+                )
+            }
+            GeofenceStatus.SHUTDOWN -> {
+                broadcastLog("🚨 GEOFENCE VIOLATION — engine shutdown — ${zoneName ?: "restricted zone"}")
+                broadcastGeofenceStatus(newStatus, zoneName)
+                fireAlertNotification(
+                    id = NOTIFY_SHUTDOWN_ID,
+                    channelId = CHANNEL_ALERT,
+                    title = getString(R.string.notify_engine_off_title),
+                    text = getString(R.string.notify_engine_off_text, zoneName ?: "?"),
+                )
+            }
+            GeofenceStatus.CLEAR -> {
+                if (prev != GeofenceStatus.CLEAR) {
+                    broadcastLog("✅ Geofence clear — outside all restricted zones")
+                    broadcastGeofenceStatus(newStatus, null)
+                    // Cancel alert notifications when clear
+                    val mgr = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+                    mgr.cancel(NOTIFY_WARN_ID)
+                    mgr.cancel(NOTIFY_SHUTDOWN_ID)
+                }
+            }
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
-        createChannel()
+        createChannels()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -157,21 +186,19 @@ class GpsPostService : Service() {
             geofenceFetchAttempted = false
             serverGeoEnabled = false
             serverZones = emptyList()
+            lastGeofenceStatus = GeofenceStatus.CLEAR
         }
 
-        startForeground(NOTIFY_ID, buildNotification(false, null))
+        startForeground(NOTIFY_GPS_ID, buildGpsNotification(GeofenceStatus.CLEAR, null))
         requestGeofenceConfigIfNeeded()
+
         val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5_000L)
             .setMinUpdateIntervalMillis(4_000L)
             .setMaxUpdateDelayMillis(15_000L)
             .build()
         try {
             fused.removeLocationUpdates(callback)
-            fused.requestLocationUpdates(
-                request,
-                callback,
-                Looper.getMainLooper(),
-            )
+            fused.requestLocationUpdates(request, callback, Looper.getMainLooper())
             broadcastLog("GPS updates requested")
         } catch (e: SecurityException) {
             broadcastLog("No location permission: ${e.message}")
@@ -206,9 +233,7 @@ class GpsPostService : Service() {
                         val (en, zones) = GeoFence.parseZonesFromConfigJson(text)
                         serverGeoEnabled = en
                         serverZones = zones
-                        broadcastLog(
-                            "Geofence: server ${if (en) "on" else "off"}, ${zones.size} zone(s)",
-                        )
+                        broadcastLog("Geofence: server ${if (en) "on" else "off"}, ${zones.size} zone(s)")
                     } else {
                         broadcastLog("Geofence config ${resp.code}: ${text.take(120)}")
                     }
@@ -221,23 +246,11 @@ class GpsPostService : Service() {
     }
 
     private fun loadDemoZonesFromPrefs(prefs: android.content.SharedPreferences): List<RestrictedZone> {
-        val latStr = prefs.getString(MainActivity.KEY_DEMO_LAT, "")?.trim().orEmpty()
-        val lngStr = prefs.getString(MainActivity.KEY_DEMO_LNG, "")?.trim().orEmpty()
-        val radStr = prefs.getString(MainActivity.KEY_DEMO_RADIUS_M, "")?.trim().orEmpty()
-        if (latStr.isEmpty() || lngStr.isEmpty() || radStr.isEmpty()) return emptyList()
-        val lat = latStr.toDoubleOrNull() ?: return emptyList()
-        val lng = lngStr.toDoubleOrNull() ?: return emptyList()
-        val rad = radStr.toDoubleOrNull() ?: return emptyList()
+        val lat = prefs.getString(MainActivity.KEY_DEMO_LAT, "")?.trim()?.toDoubleOrNull() ?: return emptyList()
+        val lng = prefs.getString(MainActivity.KEY_DEMO_LNG, "")?.trim()?.toDoubleOrNull() ?: return emptyList()
+        val rad = prefs.getString(MainActivity.KEY_DEMO_RADIUS_M, "")?.trim()?.toDoubleOrNull() ?: return emptyList()
         if (!lat.isFinite() || !lng.isFinite() || !rad.isFinite() || rad <= 0) return emptyList()
         return listOf(RestrictedZone("Demo zone", lat, lng, rad))
-    }
-
-    private fun parseEngineOffFromResponse(text: String): Boolean {
-        return try {
-            JSONObject(text).optBoolean("engineSimulatedOff", false)
-        } catch (_: Exception) {
-            false
-        }
     }
 
     private fun parseViolationZoneName(text: String): String? {
@@ -245,29 +258,22 @@ class GpsPostService : Service() {
             val o = JSONObject(text)
             if (!o.has("violationZoneName") || o.isNull("violationZoneName")) null
             else o.optString("violationZoneName", "").trim().takeIf { it.isNotEmpty() }
-        } catch (_: Exception) {
-            null
-        }
+        } catch (_: Exception) { null }
     }
 
-    private fun buildNotification(engineOff: Boolean, zone: String?): Notification {
+    private fun buildGpsNotification(status: GeofenceStatus, zone: String?): Notification {
         val open = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
+            this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val title = if (engineOff) {
-            getString(R.string.notify_engine_off_title)
-        } else {
-            getString(R.string.notify_title)
+        val (title, text) = when (status) {
+            GeofenceStatus.SHUTDOWN -> getString(R.string.notify_engine_off_title) to
+                getString(R.string.notify_engine_off_text, zone ?: "?")
+            GeofenceStatus.WARNING -> getString(R.string.notify_geofence_warn_title) to
+                getString(R.string.notify_geofence_warn_text, zone ?: "?")
+            GeofenceStatus.CLEAR -> getString(R.string.notify_title) to getString(R.string.notify_text)
         }
-        val text = if (engineOff) {
-            getString(R.string.notify_engine_off_text, zone ?: "?")
-        } else {
-            getString(R.string.notify_text)
-        }
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        return NotificationCompat.Builder(this, CHANNEL_GPS)
             .setContentTitle(title)
             .setContentText(text)
             .setSmallIcon(R.drawable.ic_pin)
@@ -277,21 +283,56 @@ class GpsPostService : Service() {
             .build()
     }
 
-    private fun createChannel() {
-        val mgr = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val ch = NotificationChannel(
-            CHANNEL_ID,
-            getString(R.string.notify_channel),
-            NotificationManager.IMPORTANCE_LOW,
+    private fun fireAlertNotification(id: Int, channelId: String, title: String, text: String) {
+        val open = PendingIntent.getActivity(
+            this, id, Intent(this, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        mgr.createNotificationChannel(ch)
+        val n = NotificationCompat.Builder(this, channelId)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setSmallIcon(R.drawable.ic_pin)
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .build()
+        val mgr = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+        mgr.notify(id, n)
+    }
+
+    private fun createChannels() {
+        val mgr = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+        // Low-importance persistent GPS channel
+        mgr.createNotificationChannel(
+            NotificationChannel(CHANNEL_GPS, getString(R.string.notify_channel), NotificationManager.IMPORTANCE_LOW)
+        )
+        // High-importance warning channel (heads-up)
+        mgr.createNotificationChannel(
+            NotificationChannel(CHANNEL_WARN, getString(R.string.notify_warn_channel), NotificationManager.IMPORTANCE_HIGH).apply {
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 300, 200, 300)
+            }
+        )
+        // Max-importance shutdown channel (heads-up + sound)
+        mgr.createNotificationChannel(
+            NotificationChannel(CHANNEL_ALERT, getString(R.string.notify_alert_channel), NotificationManager.IMPORTANCE_HIGH).apply {
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
+            }
+        )
     }
 
     private fun broadcastLog(msg: String) {
+        sendBroadcast(Intent(ACTION_LOG).setPackage(packageName).putExtra(EXTRA_LOG, msg))
+    }
+
+    private fun broadcastGeofenceStatus(status: GeofenceStatus, zoneName: String?) {
         sendBroadcast(
-            Intent(ACTION_LOG)
+            Intent(ACTION_GEOFENCE_STATUS)
                 .setPackage(packageName)
-                .putExtra(EXTRA_LOG, msg),
+                .putExtra(EXTRA_GEOFENCE_STATUS, status.name)
+                .putExtra(EXTRA_GEOFENCE_ZONE, zoneName)
         )
     }
 
@@ -300,9 +341,16 @@ class GpsPostService : Service() {
     companion object {
         private const val TAG = "GpsPostService"
         const val ACTION_LOG = "com.fleet.gpssender.LOG"
+        const val ACTION_GEOFENCE_STATUS = "com.fleet.gpssender.GEOFENCE_STATUS"
         const val EXTRA_LOG = "msg"
-        private const val CHANNEL_ID = "gps_upload"
-        private const val NOTIFY_ID = 7101
+        const val EXTRA_GEOFENCE_STATUS = "geofence_status"
+        const val EXTRA_GEOFENCE_ZONE = "geofence_zone"
+        private const val CHANNEL_GPS = "gps_upload"
+        private const val CHANNEL_WARN = "geofence_warning"
+        private const val CHANNEL_ALERT = "geofence_alert"
+        private const val NOTIFY_GPS_ID = 7101
+        private const val NOTIFY_WARN_ID = 7103
+        private const val NOTIFY_SHUTDOWN_ID = 7104
         private const val MIN_INTERVAL_MS = 4_000L
         private val JSON = "application/json; charset=utf-8".toMediaType()
     }
