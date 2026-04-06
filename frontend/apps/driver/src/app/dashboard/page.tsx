@@ -324,7 +324,9 @@ export default function DriverDashboard() {
         )}
 
         {/* Page content */}
-        <main className={`flex-1 p-4 sm:p-6 ${liveTripId && gpsStatus.engineSimulatedOff ? 'pt-28' : 'pt-20'}`}>
+        <main className="flex-1 p-4 sm:p-6 pt-20 lg:pt-20">
+          {/* Extra space when geofence shutdown banner is showing */}
+          {liveTripId && gpsStatus.engineSimulatedOff && <div className="h-10" />}
 
           {/* ── OVERVIEW ── */}
           {activeSection === 'overview' && (
