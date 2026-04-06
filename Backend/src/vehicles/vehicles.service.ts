@@ -174,4 +174,34 @@ export class VehiclesService {
       availablePercentage: total > 0 ? ((active / total) * 100).toFixed(2) : 0,
     };
   }
+
+  async getGeofenceConfig(id: string) {
+    const vehicle = await this.findOne(id);
+    return {
+      vehicleId: vehicle.id,
+      plateNumber: vehicle.plateNumber,
+      vipGeoRestrictionEnabled: vehicle.vipGeoRestrictionEnabled,
+      restrictedZones: vehicle.restrictedZones ?? [],
+    };
+  }
+
+  async updateGeofenceConfig(
+    id: string,
+    vipGeoRestrictionEnabled: boolean,
+    restrictedZones: { name?: string; latitude: number; longitude: number; radiusMeters: number }[],
+  ) {
+    const vehicle = await this.findOne(id);
+    vehicle.vipGeoRestrictionEnabled = vipGeoRestrictionEnabled;
+    vehicle.restrictedZones = restrictedZones.length > 0 ? restrictedZones : null;
+    const saved = await this.vehicleRepository.save(vehicle);
+    return {
+      vehicleId: saved.id,
+      plateNumber: saved.plateNumber,
+      vipGeoRestrictionEnabled: saved.vipGeoRestrictionEnabled,
+      restrictedZones: saved.restrictedZones ?? [],
+      message: vipGeoRestrictionEnabled
+        ? `Geofence enabled with ${restrictedZones.length} zone(s)`
+        : 'Geofence disabled',
+    };
+  }
 }

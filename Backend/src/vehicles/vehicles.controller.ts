@@ -120,4 +120,50 @@ export class VehiclesController {
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.vehiclesService.remove(id);
   }
+
+  // ── Geofence / Perimeter Management ──────────────────────────────────────
+
+  @Get(':id/geofence')
+  @ApiOperation({ summary: 'Get geofence config for a vehicle' })
+  @ApiResponse({ status: 200, description: 'Geofence configuration' })
+  getGeofence(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiclesService.getGeofenceConfig(id);
+  }
+
+  @Patch(':id/geofence')
+  @Roles(UserRole.Developer, UserRole.TransportOffice, UserRole.President)
+  @ApiOperation({
+    summary: 'Set geofence perimeters for a vehicle',
+    description:
+      'Enable/disable VIP geo-restriction and set restricted circular zones. When a vehicle enters a zone it receives a warning first, then engine shutdown.',
+  })
+  @ApiResponse({ status: 200, description: 'Geofence updated' })
+  @ApiResponse({ status: 404, description: 'Vehicle not found' })
+  updateGeofence(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body()
+    body: {
+      vipGeoRestrictionEnabled: boolean;
+      restrictedZones: {
+        name?: string;
+        latitude: number;
+        longitude: number;
+        radiusMeters: number;
+      }[];
+    },
+  ) {
+    return this.vehiclesService.updateGeofenceConfig(
+      id,
+      body.vipGeoRestrictionEnabled,
+      body.restrictedZones,
+    );
+  }
+
+  @Delete(':id/geofence')
+  @Roles(UserRole.Developer, UserRole.TransportOffice, UserRole.President)
+  @ApiOperation({ summary: 'Clear all geofence zones for a vehicle' })
+  @ApiResponse({ status: 200, description: 'Geofence cleared' })
+  clearGeofence(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiclesService.updateGeofenceConfig(id, false, []);
+  }
 }
