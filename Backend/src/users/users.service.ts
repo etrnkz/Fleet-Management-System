@@ -12,7 +12,6 @@ import { College } from '../colleges/entities/college.entity';
 import { BulkInviteUsersDto } from './dto/bulk-invite-users.dto';
 import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
 
 @Injectable()
 export class UsersService {

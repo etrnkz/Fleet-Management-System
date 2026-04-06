@@ -22,6 +22,9 @@ export default function LoginPage() {
         setEmail(savedEmail)
         setRememberMe(true)
       }
+      // If already logged in (token in either storage), redirect
+      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
+      if (token) router.replace('/dashboard')
     }
   }, [])
 
@@ -32,9 +35,7 @@ export default function LoginPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
 
@@ -44,13 +45,27 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login failed')
       }
 
-      localStorage.setItem('accessToken', data.access_token)
-      localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('refreshToken', data.refresh_token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      // Remember me: persist tokens in localStorage; otherwise use sessionStorage (clears on tab close)
+      const storage = rememberMe ? localStorage : sessionStorage
 
-      // Note: Profile image is now stored in the user object from backend
-      // No need to duplicate it in userData to avoid localStorage quota issues
+      // Clear the other storage to avoid stale tokens
+      if (rememberMe) {
+        sessionStorage.removeItem('accessToken')
+        sessionStorage.removeItem('refreshToken')
+        sessionStorage.removeItem('user')
+      } else {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+      }
+
+      storage.setItem('accessToken', data.access_token)
+      storage.setItem('refreshToken', data.refresh_token)
+      storage.setItem('user', JSON.stringify(data.user))
+
+      // Keep access_token alias in same storage for compatibility
+      storage.setItem('access_token', data.access_token)
 
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email)
@@ -159,7 +174,7 @@ export default function LoginPage() {
                 className="w-4 h-4 rounded border-[#c1c8c4] text-[#1B365D] focus:ring-[#1B365D]"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-[#424845]">
-                Remember email on this device
+                Keep me signed in
               </label>
             </div>
 

@@ -2,21 +2,73 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
-// Helper to get auth token
+// Helper to get auth token (checks both storages)
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('accessToken') || localStorage.getItem('access_token');
+  return (
+    localStorage.getItem('accessToken') ||
+    sessionStorage.getItem('accessToken') ||
+    localStorage.getItem('access_token') ||
+    sessionStorage.getItem('access_token') ||
+    null
+  );
+};
+
+const getRefreshToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return (
+    localStorage.getItem('refreshToken') ||
+    sessionStorage.getItem('refreshToken') ||
+    null
+  );
 };
 
 // Helper to get current user
 export const getCurrentUser = () => {
   if (typeof window === 'undefined') return null;
-  const userStr = localStorage.getItem('user');
+  const userStr =
+    localStorage.getItem('user') || sessionStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 };
 
-// Generic fetch wrapper
-async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+// Deduplicated refresh promise
+let _refreshPromise: Promise<boolean> | null = null;
+
+async function refreshAccessToken(): Promise<boolean> {
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage;
+      storage.setItem('accessToken', data.access_token);
+      if (data.refresh_token) storage.setItem('refreshToken', data.refresh_token);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      _refreshPromise = null;
+    }
+  })();
+  return _refreshPromise;
+}
+
+function clearSession() {
+  ['accessToken', 'access_token', 'refreshToken', 'user'].forEach((k) => {
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  });
+}
+
+// Generic fetch wrapper with auto-refresh
+async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = true): Promise<T> {
   const token = getAuthToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -32,12 +84,22 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     headers,
   });
 
+  if (response.status === 401 && retry) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) return apiFetch<T>(endpoint, options, false);
+    clearSession();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new Error('Session expired. Please log in again.');
+  }
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
+    const error = await response.json().catch(() => ({ message: 'Network error' }));
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 
-  return response.json();
+  if (response.status === 204) return undefined as T;
+  const text = await response.text();
+  return text ? (JSON.parse(text) as T) : (undefined as T);
 }
 
 // Auth APIs
@@ -164,5 +226,26 @@ export const auditApi = {
     if (endDate) params.append('endDate', endDate);
     const query = params.toString() ? `?${params}` : '';
     return apiFetch(`/audit/statistics${query}`);
+  },
+};
+
+// Invite APIs
+export const inviteApi = {
+  bulkInvite: (data: { emails: string[]; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
+    apiFetch('/users/bulk-invite', { method: 'POST', body: JSON.stringify(data) }),
+
+  bulkInviteCsv: (formData: FormData) => {
+    const token = getAuthToken();
+    return fetch(`${API_BASE_URL}/users/bulk-invite-csv`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Upload failed' }));
+        throw new Error(err.message || 'Upload failed');
+      }
+      return res.json();
+    });
   },
 };

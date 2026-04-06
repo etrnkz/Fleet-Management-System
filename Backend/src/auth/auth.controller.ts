@@ -172,11 +172,15 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Refresh access token',
-    description: 'Get new access token using refresh token',
+    description: 'Get new access token using refresh token. Accepts token in Authorization header (Bearer) or request body.',
   })
-  @ApiHeader({ name: 'Authorization', description: 'Bearer refresh_token' })
-  async refreshToken(@Headers('authorization') authHeader: string) {
-    const refreshToken = authHeader?.replace('Bearer ', '');
+  @ApiHeader({ name: 'Authorization', description: 'Bearer refresh_token (optional if body provided)' })
+  async refreshToken(
+    @Headers('authorization') authHeader: string,
+    @Body() body: { refresh_token?: string },
+  ) {
+    // Accept token from body or Authorization header
+    const refreshToken = body?.refresh_token || authHeader?.replace('Bearer ', '');
 
     if (!refreshToken) {
       throw new BadRequestException('Refresh token is required');
