@@ -193,13 +193,10 @@ export default function DriverDashboard() {
   const initials = userData?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'DR'
 
   const navItems = [
-    { id: 'assigned-trips', label: 'Assigned Trips', icon: '📋' },
-    { id: 'active-trip', label: 'Active Trip', icon: '🚗' },
-    { id: 'trip-history', label: 'Trip History', icon: '🕐' },
-    { id: 'maintenance', label: 'Maintenance', icon: '🔧' },
-    { id: 'vehicle-info', label: 'Vehicle Info', icon: 'ℹ️' },
-    { id: 'notifications', label: 'Notifications', icon: '🔔' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'assigned-trips', label: 'Assigned Trips' },
+    { id: 'trip-history', label: 'Trip History' },
+    { id: 'maintenance', label: 'Maintenance' },
+    { id: 'vehicle-info', label: 'Vehicle Info' },
   ]
 
   const allSections: Record<string, string> = { 'assigned-trips': 'Assigned Trips', 'active-trip': 'Active Trip', 'trip-history': 'Trip History', 'maintenance': 'Maintenance', 'vehicle-info': 'Vehicle Info', 'notifications': 'Notifications', 'settings': 'Settings' }
@@ -218,7 +215,7 @@ export default function DriverDashboard() {
     <div className="min-h-screen bg-[#F8F9FA]">
       {toast && (
         <div className={`fixed top-4 right-4 z-[100] px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium ${toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
-          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
+          {toast.message}
         </div>
       )}
 
@@ -243,10 +240,7 @@ export default function DriverDashboard() {
           {navItems.map(item => (
             <button key={item.id} onClick={() => { setActiveSection(item.id); setSidebarOpen(false) }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-sm ${activeSection === item.id ? 'bg-[#1B365D]/10 text-[#1B365D] font-semibold' : 'text-gray-700 hover:bg-gray-50'}`}>
-              <span className="text-base">{item.icon}</span>
               <span className="flex-1 text-left">{item.label}</span>
-              {item.id === 'active-trip' && activeTrips.length > 0 && <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />}
-              {item.id === 'notifications' && unreadCount > 0 && <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">{unreadCount > 9 ? '9+' : unreadCount}</span>}
             </button>
           ))}
         </nav>
@@ -340,11 +334,11 @@ export default function DriverDashboard() {
                     <div className="p-2">
                       <button onClick={() => { setShowProfileDropdown(false); setActiveSection('settings') }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
-                        ⚙️ Settings
+                        Settings
                       </button>
                       <button onClick={() => { setShowProfileDropdown(false); setActiveSection('notifications') }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-sm">
-                        🔔Notifications {unreadCount > 0 && <span className="ml-auto px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">{unreadCount}</span>}
+                        Notifications {unreadCount > 0 && <span className="ml-auto px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">{unreadCount}</span>}
                       </button>
                     </div>
                     <div className="p-2 border-t border-gray-100">
