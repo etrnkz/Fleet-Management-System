@@ -72,7 +72,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.refreshSecret,
-      expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
+      expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as any,
     });
 
     this.logger.log(`Login successful for: ${loginDto.email}`);
@@ -109,7 +109,7 @@ export class AuthService {
       // Rotate refresh token on each use
       const newRefreshToken = this.jwtService.sign(newPayload, {
         secret: this.refreshSecret,
-        expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
+        expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as any,
       });
 
       return {
