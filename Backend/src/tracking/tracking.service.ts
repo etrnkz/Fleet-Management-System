@@ -8,7 +8,11 @@ import { Repository, Between } from 'typeorm';
 import { GpsLocation } from './entities/gps-location.entity';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { TripRequest, TripState } from '../trips/entities/trip-request.entity';
-import { evaluateVipGeofenceForPoint } from '../vehicles/utils/vip-geofence.util';
+import { evaluateVipGeofenceForPoint, GeofenceResult } from '../vehicles/utils/vip-geofence.util';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { UsersService } from '../users/users.service';
+import { UserRole } from '../users/entities/user.entity';
 
 export type LocationSavePayload = {
   id: string;
@@ -23,8 +27,13 @@ export type LocationSavePayload = {
   timestamp: Date;
   metadata: string | null | undefined;
   engineSimulatedOff: boolean;
+  geofenceStatus: 'clear' | 'warning' | 'shutdown';
   violationZoneName: string | null;
+  distanceToZoneMeters: number | null;
 };
+
+// Track last geofence status per trip to avoid spamming notifications
+const geofenceStateCache = new Map<string, 'clear' | 'warning' | 'shutdown'>();
 
 @Injectable()
 export class TrackingService {
@@ -33,6 +42,8 @@ export class TrackingService {
     private readonly gpsLocationRepository: Repository<GpsLocation>,
     @InjectRepository(TripRequest)
     private readonly tripRepository: Repository<TripRequest>,
+    private readonly notificationsService: NotificationsService,
+    private readonly usersService: UsersService,
   ) {}
 
   async saveLocation(
@@ -41,7 +52,7 @@ export class TrackingService {
   ): Promise<LocationSavePayload> {
     const trip = await this.tripRepository.findOne({
       where: { id: tripId },
-      relations: ['allocatedVehicle'],
+      relations: ['allocatedVehicle', 'requester'],
     });
 
     if (!trip) {
@@ -66,15 +77,71 @@ export class TrackingService {
     const lat = Number(saved.latitude);
     const lng = Number(saved.longitude);
     const geofence = evaluateVipGeofenceForPoint(trip.allocatedVehicle, lat, lng);
+
+    // Fire notifications only when status changes
+    await this.handleGeofenceStateChange(trip, geofence);
+
     return this.toLocationPayload(saved, geofence);
+  }
+
+  private async handleGeofenceStateChange(
+    trip: TripRequest,
+    geofence: GeofenceResult,
+  ): Promise<void> {
+    const prevStatus = geofenceStateCache.get(trip.id) ?? 'clear';
+    const newStatus = geofence.status;
+
+    if (prevStatus === newStatus) return;
+    geofenceStateCache.set(trip.id, newStatus);
+
+    if (newStatus === 'clear') return; // No notification needed when clearing
+
+    const vehicle = trip.allocatedVehicle;
+    const plateNumber = vehicle?.plateNumber ?? 'Unknown';
+    const zoneName = geofence.violationZoneName ?? 'Restricted zone';
+    const distanceInfo = geofence.distanceToZoneMeters != null
+      ? newStatus === 'warning'
+        ? ` (${Math.round(geofence.distanceToZoneMeters)}m from boundary)`
+        : ` (${Math.round(Math.abs(geofence.distanceToZoneMeters))}m inside zone)`
+      : '';
+
+    const isWarning = newStatus === 'warning';
+    const notifType = isWarning ? NotificationType.GeofenceWarning : NotificationType.GeofenceViolation;
+    const title = isWarning
+      ? `⚠️ Geofence Warning — ${plateNumber}`
+      : `🚨 Geofence Violation — Engine Shutdown — ${plateNumber}`;
+    const message = isWarning
+      ? `Vehicle ${plateNumber} is approaching restricted zone "${zoneName}"${distanceInfo}. Engine shutdown will trigger if it enters.`
+      : `Vehicle ${plateNumber} has entered restricted zone "${zoneName}"${distanceInfo}. Engine shutdown has been triggered.`;
+
+    const notifData = {
+      tripId: trip.id,
+      vehicleId: vehicle?.id,
+      plateNumber,
+      zoneName,
+      geofenceStatus: newStatus,
+      distanceToZoneMeters: geofence.distanceToZoneMeters,
+    };
+
+    // Notify the trip requester
+    if (trip.requester) {
+      await this.notificationsService.create(
+        trip.requester, notifType, title, message, notifData,
+      ).catch(() => {});
+    }
+
+    // Notify all transport office users
+    try {
+      const transportUsers = await this.usersService.findByRole(UserRole.TransportOffice);
+      for (const user of transportUsers) {
+        await this.notificationsService.create(user, notifType, title, message, notifData).catch(() => {});
+      }
+    } catch {}
   }
 
   toLocationPayload(
     saved: GpsLocation,
-    geofence: {
-      engineSimulatedOff: boolean;
-      violationZoneName: string | null;
-    },
+    geofence: GeofenceResult,
   ): LocationSavePayload {
     return {
       id: saved.id,
@@ -89,7 +156,9 @@ export class TrackingService {
       timestamp: saved.timestamp,
       metadata: saved.metadata ?? undefined,
       engineSimulatedOff: geofence.engineSimulatedOff,
+      geofenceStatus: geofence.status,
       violationZoneName: geofence.violationZoneName,
+      distanceToZoneMeters: geofence.distanceToZoneMeters,
     };
   }
 

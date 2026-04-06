@@ -23,6 +23,8 @@ export enum NotificationType {
   FeedbackSubmitted = 'FeedbackSubmitted',
   NewTripRequest = 'NewTripRequest',
   ApprovalPending = 'ApprovalPending',
+  GeofenceWarning = 'GeofenceWarning',
+  GeofenceViolation = 'GeofenceViolation',
 }
 
 @Entity('notifications')

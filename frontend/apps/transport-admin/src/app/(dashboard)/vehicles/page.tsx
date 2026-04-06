@@ -108,16 +108,28 @@ export default function VehiclesPage() {
           z.radiusMeters > 0,
       )
     if (vipGeoEnabled && cleaned.length === 0) {
-      showToast('Add at least one forbidden zone (center + radius in meters), or turn VIP geofence off.', 'error')
+      showToast('Add at least one zone (center + radius in meters), or disable geofence.', 'error')
       return
     }
     try {
       setSavingGeofence(true)
-      await vehicleApi.update(geofenceVehicle.id, {
-        vipGeoRestrictionEnabled: vipGeoEnabled,
-        restrictedZones: vipGeoEnabled ? cleaned : [],
-      })
-      showToast('VIP geofence settings saved', 'success')
+      // Use dedicated geofence endpoint
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/vehicles/${geofenceVehicle.id}/geofence`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || ''}`,
+          },
+          body: JSON.stringify({ vipGeoRestrictionEnabled: vipGeoEnabled, restrictedZones: vipGeoEnabled ? cleaned : [] }),
+        }
+      )
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Save failed' }))
+        throw new Error(err.message || 'Save failed')
+      }
+      showToast('Geofence perimeters saved', 'success')
       closeGeofenceEditor()
       await loadVehicles()
     } catch (e: any) {
@@ -377,11 +389,25 @@ export default function VehiclesPage() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
         <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200">
           <div className="p-5 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">VIP geofence (simulated engine-off)</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Geofence Perimeters</h2>
             <p className="text-sm text-gray-500 mt-1">
-              {geofenceVehicle.plateNumber} — if enabled, entering a forbidden circle triggers a simulated engine cut-off on GPS clients and in the API response.
+              {geofenceVehicle.plateNumber} — {geofenceVehicle.make} {geofenceVehicle.model}
             </p>
           </div>
+
+          {/* How it works */}
+          <div className="mx-5 mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-1.5">
+            <p className="text-xs font-semibold text-amber-800">How it works</p>
+            <div className="flex items-start gap-2 text-xs text-amber-700">
+              <span className="mt-0.5">⚠️</span>
+              <span>When the vehicle approaches within 80% of the zone radius, a warning notification is sent to the driver and transport office.</span>
+            </div>
+            <div className="flex items-start gap-2 text-xs text-amber-700">
+              <span className="mt-0.5">🚨</span>
+              <span>When the vehicle enters the zone, engine shutdown is triggered and an alert is sent immediately.</span>
+            </div>
+          </div>
+
           <div className="p-5 space-y-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -390,18 +416,28 @@ export default function VehiclesPage() {
                 onChange={(e) => setVipGeoEnabled(e.target.checked)}
                 className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-800">Restrict this vehicle with forbidden zones</span>
+              <span className="text-sm font-medium text-gray-800">Enable geofence restriction for this vehicle</span>
             </label>
             {vipGeoEnabled && (
               <div className="space-y-3">
                 <p className="text-xs text-gray-500">
-                  Each zone is a circle: center latitude/longitude and radius in meters. The vehicle must not enter these areas.
+                  Each zone is a circle defined by a center point (lat/lng) and a radius in meters. The vehicle will be warned when approaching and shut down when entering.
                 </p>
                 {geofenceZones.map((z, i) => (
                   <div key={i} className="p-3 rounded-lg border border-gray-200 space-y-2 bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-600">Zone {i + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => setGeofenceZones(geofenceZones.filter((_, j) => j !== i))}
+                        className="text-xs text-red-600 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
                     <input
                       type="text"
-                      placeholder="Label (optional)"
+                      placeholder="Zone name (e.g. Campus boundary)"
                       value={z.name ?? ''}
                       onChange={(e) => {
                         const next = [...geofenceZones]
@@ -411,50 +447,57 @@ export default function VehiclesPage() {
                       className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
                     />
                     <div className="grid grid-cols-3 gap-2">
-                      <input
-                        type="number"
-                        step="any"
-                        placeholder="Lat"
-                        value={z.latitude === 0 ? '' : z.latitude}
-                        onChange={(e) => {
-                          const next = [...geofenceZones]
-                          next[i] = { ...next[i], latitude: parseFloat(e.target.value) || 0 }
-                          setGeofenceZones(next)
-                        }}
-                        className="px-2 py-1.5 text-sm border border-gray-300 rounded"
-                      />
-                      <input
-                        type="number"
-                        step="any"
-                        placeholder="Lng"
-                        value={z.longitude === 0 ? '' : z.longitude}
-                        onChange={(e) => {
-                          const next = [...geofenceZones]
-                          next[i] = { ...next[i], longitude: parseFloat(e.target.value) || 0 }
-                          setGeofenceZones(next)
-                        }}
-                        className="px-2 py-1.5 text-sm border border-gray-300 rounded"
-                      />
-                      <input
-                        type="number"
-                        step="any"
-                        placeholder="Radius m"
-                        value={z.radiusMeters === 0 ? '' : z.radiusMeters}
-                        onChange={(e) => {
-                          const next = [...geofenceZones]
-                          next[i] = { ...next[i], radiusMeters: parseFloat(e.target.value) || 0 }
-                          setGeofenceZones(next)
-                        }}
-                        className="px-2 py-1.5 text-sm border border-gray-300 rounded"
-                      />
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Latitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="9.0320"
+                          value={z.latitude === 0 ? '' : z.latitude}
+                          onChange={(e) => {
+                            const next = [...geofenceZones]
+                            next[i] = { ...next[i], latitude: parseFloat(e.target.value) || 0 }
+                            setGeofenceZones(next)
+                          }}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Longitude</label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="38.7469"
+                          value={z.longitude === 0 ? '' : z.longitude}
+                          onChange={(e) => {
+                            const next = [...geofenceZones]
+                            next[i] = { ...next[i], longitude: parseFloat(e.target.value) || 0 }
+                            setGeofenceZones(next)
+                          }}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Radius (m)</label>
+                        <input
+                          type="number"
+                          step="any"
+                          placeholder="500"
+                          value={z.radiusMeters === 0 ? '' : z.radiusMeters}
+                          onChange={(e) => {
+                            const next = [...geofenceZones]
+                            next[i] = { ...next[i], radiusMeters: parseFloat(e.target.value) || 0 }
+                            setGeofenceZones(next)
+                          }}
+                          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded"
+                        />
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setGeofenceZones(geofenceZones.filter((_, j) => j !== i))}
-                      className="text-xs text-red-600 hover:underline"
-                    >
-                      Remove zone
-                    </button>
+                    {z.radiusMeters > 0 && (
+                      <p className="text-xs text-gray-400">
+                        Warning at ~{Math.round(z.radiusMeters * 0.8)}m from center · Shutdown at {z.radiusMeters}m
+                      </p>
+                    )}
                   </div>
                 ))}
                 <button
@@ -462,7 +505,7 @@ export default function VehiclesPage() {
                   onClick={() =>
                     setGeofenceZones([
                       ...geofenceZones,
-                      { name: '', latitude: 0, longitude: 0, radiusMeters: 200 },
+                      { name: '', latitude: 0, longitude: 0, radiusMeters: 500 },
                     ])
                   }
                   className="text-sm text-emerald-700 font-medium hover:underline"
@@ -486,7 +529,7 @@ export default function VehiclesPage() {
               onClick={saveGeofence}
               className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50"
             >
-              {savingGeofence ? 'Saving…' : 'Save'}
+              {savingGeofence ? 'Saving…' : 'Save Perimeters'}
             </button>
           </div>
         </div>

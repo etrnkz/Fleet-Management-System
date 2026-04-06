@@ -21,18 +21,36 @@ export function haversineDistanceMeters(
   return R * c;
 }
 
+export type GeofenceStatus = 'clear' | 'warning' | 'shutdown';
+
+export interface GeofenceResult {
+  status: GeofenceStatus;
+  /** true only when status === 'shutdown' */
+  engineSimulatedOff: boolean;
+  violationZoneName: string | null;
+  /** distance to nearest zone boundary in meters (negative = inside zone) */
+  distanceToZoneMeters: number | null;
+}
+
+/**
+ * Warning buffer: vehicle is warned when within this fraction of the radius.
+ * e.g. 0.8 means warn when within 80% of the restricted radius.
+ */
+const WARNING_BUFFER_RATIO = 0.8;
+
 export function evaluateVipGeofenceForPoint(
   vehicle: Vehicle | null | undefined,
   latitude: number,
   longitude: number,
-): { engineSimulatedOff: boolean; violationZoneName: string | null } {
+): GeofenceResult {
   if (!vehicle?.vipGeoRestrictionEnabled) {
-    return { engineSimulatedOff: false, violationZoneName: null };
+    return { status: 'clear', engineSimulatedOff: false, violationZoneName: null, distanceToZoneMeters: null };
   }
   const zones = vehicle.restrictedZones;
   if (!Array.isArray(zones) || zones.length === 0) {
-    return { engineSimulatedOff: false, violationZoneName: null };
+    return { status: 'clear', engineSimulatedOff: false, violationZoneName: null, distanceToZoneMeters: null };
   }
+
   for (const z of zones) {
     if (z == null || typeof z !== 'object') continue;
     const lat = Number(z.latitude);
@@ -42,13 +60,31 @@ export function evaluateVipGeofenceForPoint(
       continue;
     }
     const d = haversineDistanceMeters(latitude, longitude, lat, lng);
+    const zoneName =
+      typeof z.name === 'string' && z.name.trim().length > 0
+        ? z.name.trim()
+        : 'Restricted zone';
+
     if (d <= r) {
-      const name =
-        typeof z.name === 'string' && z.name.trim().length > 0
-          ? z.name.trim()
-          : 'Restricted zone';
-      return { engineSimulatedOff: true, violationZoneName: name };
+      // Inside the restricted zone → engine shutdown
+      return {
+        status: 'shutdown',
+        engineSimulatedOff: true,
+        violationZoneName: zoneName,
+        distanceToZoneMeters: -(r - d), // negative = how far inside
+      };
+    }
+
+    if (d <= r / WARNING_BUFFER_RATIO) {
+      // Within warning buffer (approaching the zone)
+      return {
+        status: 'warning',
+        engineSimulatedOff: false,
+        violationZoneName: zoneName,
+        distanceToZoneMeters: d - r, // positive = distance to boundary
+      };
     }
   }
-  return { engineSimulatedOff: false, violationZoneName: null };
+
+  return { status: 'clear', engineSimulatedOff: false, violationZoneName: null, distanceToZoneMeters: null };
 }
