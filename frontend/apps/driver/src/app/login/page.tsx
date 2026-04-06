@@ -50,7 +50,7 @@ export default function LoginPage() {
       {isLoading && (
         <div className="fixed inset-0 backdrop-blur-sm bg-[#F8F9FA]/80 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl border border-[#e0e3e5] p-8 shadow-xl flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B365D] border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
             <p className="mt-4 text-[#424845] text-sm font-semibold uppercase tracking-wide">Authenticating…</p>
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-11 h-11 bg-[#1B365D] rounded-lg flex items-center justify-center shadow-sm">
+              <div className="w-11 h-11 bg-[#1B3D2F] rounded-lg flex items-center justify-center shadow-sm">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                   <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
@@ -69,10 +69,10 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-[#565F71] uppercase tracking-[0.15em]">Fleet Authority</p>
-                <h1 className="text-xl font-bold text-[#1B365D] font-serif tracking-tight">Driver Portal</h1>
+                <h1 className="text-xl font-bold text-[#1B3D2F] font-serif tracking-tight">Driver Portal</h1>
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-[#1B365D] font-serif tracking-tight">Secure sign in</h2>
+            <h2 className="text-2xl font-bold text-[#1B3D2F] font-serif tracking-tight">Secure sign in</h2>
             <p className="text-[#424845] text-sm mt-2 font-medium">
               Use your assigned driver credentials to access the portal.
             </p>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="driver@haramaya.edu.et"
-                className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all bg-white"
+                className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all bg-white"
                 required
               />
             </div>
@@ -113,13 +113,13 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  className="w-full px-4 py-3 pr-12 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none transition-all bg-white"
+                  className="w-full px-4 py-3 pr-12 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all bg-white"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#727975] hover:text-[#1B365D]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#727975] hover:text-[#1B3D2F]"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ export default function LoginPage() {
                 id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-[#c1c8c4] text-[#1B365D] focus:ring-[#1B365D]"
+                className="w-4 h-4 rounded border-[#c1c8c4] text-[#1B3D2F] focus:ring-[#1B3D2F]"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-[#424845]">
                 Keep me signed in
@@ -151,7 +151,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#1B365D] text-white py-3 rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-[#152a47] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#1B3D2F] text-white py-3 rounded-lg font-semibold text-sm uppercase tracking-wide hover:bg-[#152a47] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Signing in…' : 'Sign in'}
             </button>
@@ -160,7 +160,7 @@ export default function LoginPage() {
       </div>
 
       {/* Branding side */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-[#1B365D] flex-col justify-center px-12 text-white overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#1B3D2F] flex-col justify-center px-12 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-[0.07] bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%221%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]" />
         <div className="relative z-10 max-w-md">
           <p className="text-[#D1E1FF] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Driver access</p>
@@ -177,3 +177,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
+
