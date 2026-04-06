@@ -1,10 +1,14 @@
 <resources>
     <string name="app_name">Fleet GPS</string>
     <string name="notify_channel">GPS upload</string>
+    <string name="notify_warn_channel">Geofence warning</string>
+    <string name="notify_alert_channel">Geofence alert</string>
     <string name="notify_title">Sending location</string>
     <string name="notify_text">Posting GPS to fleet API</string>
-    <string name="notify_engine_off_title">SIM: engine restricted</string>
-    <string name="notify_engine_off_text">Inside forbidden zone: %1$s</string>
+    <string name="notify_geofence_warn_title">⚠️ Geofence Warning</string>
+    <string name="notify_geofence_warn_text">Approaching restricted zone: %1$s — engine shutdown will trigger if you enter</string>
+    <string name="notify_engine_off_title">🚨 Engine Shutdown — Restricted Zone</string>
+    <string name="notify_engine_off_text">Inside restricted zone: %1$s — leave this area immediately</string>
     <string name="notify_watch_channel">Trip watch</string>
     <string name="notify_watch_title">Fleet trip watch</string>
     <string name="notify_watch_idle">Waiting for gate to start your trip…</string>
