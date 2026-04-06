@@ -19,6 +19,7 @@ import { AuditModule } from './audit/audit.module';
 import { FuelModule } from './fuel/fuel.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { SystemAdminModule } from './system-admin/system-admin.module';
+import { EmailModule } from './email/email.module';
 import configuration from './config/configuration';
 import { typeOrmOptionsForNest } from './database/typeorm.factory';
 
@@ -66,7 +67,7 @@ import { typeOrmOptionsForNest } from './database/typeorm.factory';
     MaintenanceModule,
     AuditModule,
     FuelModule,
-    // EmailModule, // Temporarily disabled - optional feature
+    EmailModule,
     TrackingModule,
     SystemAdminModule,
     AuthModule,
