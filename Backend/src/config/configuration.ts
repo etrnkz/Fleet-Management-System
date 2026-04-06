@@ -32,7 +32,7 @@ export default () => ({
     port: parseInt(envString('EMAIL_PORT', '587'), 10),
     secure: process.env.EMAIL_SECURE === 'true' || false,
     user: process.env.EMAIL_USER?.trim(),
-    password: process.env.EMAIL_PASSWORD?.trim(),
+    password: process.env.EMAIL_PASSWORD?.replace(/\s/g, ''),
     from: envString(
       'EMAIL_FROM',
       'Fleet Management <noreply@fleet.school.edu>',
