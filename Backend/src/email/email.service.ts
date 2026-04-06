@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import { Transporter } from 'nodemailer';
+import { createTransport, Transporter } from 'nodemailer';
 
 export interface EmailOptions {
   to: string | string[];
@@ -32,7 +31,7 @@ export class EmailService {
       },
     };
 
-    this.transporter = nodemailer.createTransporter(emailConfig);
+    this.transporter = createTransport(emailConfig);
 
     // Verify connection
     this.transporter.verify((error) => {
