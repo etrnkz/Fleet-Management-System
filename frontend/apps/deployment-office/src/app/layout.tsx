@@ -1,19 +1,21 @@
-import type { Metadata } from 'next'
-import './globals.css'
+importtype{Metadata}from'next'
+import'./globals.css'
 
-export const metadata: Metadata = {
-  title: 'Deployment Office Portal - HUFMS',
-  description: 'Haramaya University Fleet Management System - Deployment Office Portal',
+exportconstmetadata:Metadata={
+title:'DeploymentOfficePortal-HUFMS',
+description:'HaramayaUniversityFleetManagementSystem-DeploymentOfficePortal',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  )
+exportdefaultfunctionRootLayout({
+children,
+}:{
+children:React.ReactNode
+}){
+return(
+<htmllang="en">
+<body>{children}</body>
+</html>
+)
 }
+
+
