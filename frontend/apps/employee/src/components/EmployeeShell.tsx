@@ -12,7 +12,7 @@ const navItems: { href: string; label: string; requestSection?: boolean; icon: (
     label: 'Dashboard',
     icon: (active) => (
       <svg
-        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B365D]' : 'text-[#565F71] group-hover:text-[#1B365D]'}`}
+        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B3D2F]' : 'text-[#565F71] group-hover:text-[#1B3D2F]'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ const navItems: { href: string; label: string; requestSection?: boolean; icon: (
     label: 'My Trips',
     icon: (active) => (
       <svg
-        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B365D]' : 'text-[#565F71] group-hover:text-[#1B365D]'}`}
+        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B3D2F]' : 'text-[#565F71] group-hover:text-[#1B3D2F]'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -51,7 +51,7 @@ const navItems: { href: string; label: string; requestSection?: boolean; icon: (
     requestSection: true,
     icon: (active) => (
       <svg
-        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B365D]' : 'text-[#565F71] group-hover:text-[#1B365D]'}`}
+        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B3D2F]' : 'text-[#565F71] group-hover:text-[#1B3D2F]'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -126,7 +126,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
         }`}
       >
         <div className="mb-10 px-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-[#1B365D] flex items-center justify-center text-white shadow-sm">
+          <div className="w-10 h-10 rounded bg-[#1B3D2F] flex items-center justify-center text-white shadow-sm">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path
                 strokeLinecap="round"
@@ -137,7 +137,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-[#1B365D] font-serif">Fleet Authority</h1>
+            <h1 className="text-xl font-bold tracking-tight text-[#1B3D2F] font-serif">Fleet Authority</h1>
             <p className="text-[10px] uppercase tracking-widest text-[#565F71] font-bold">University Portal</p>
           </div>
         </div>
@@ -152,8 +152,8 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
                 onClick={() => setSidebarOpen(false)}
                 className={`group flex items-center gap-3 px-4 py-3 rounded transition-colors duration-200 ${
                   active
-                    ? 'text-[#1B365D] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B365D]'
-                    : 'text-[#565F71] font-medium hover:text-[#1B365D] hover:bg-[#ECEEF3]'
+                    ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
+                    : 'text-[#565F71] font-medium hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
                 }`}
               >
                 {item.icon(active)}
@@ -167,7 +167,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
           <Link
             href="/profile"
             onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 rounded text-[#565F71] font-medium hover:text-[#1B365D] hover:bg-[#ECEEF3] transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded text-[#565F71] font-medium hover:text-[#1B3D2F] hover:bg-[#ECEEF3] transition-colors"
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -182,7 +182,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
           </Link>
           <a
             href="mailto:transport@hu.edu.et"
-            className="flex items-center gap-3 px-4 py-3 rounded text-[#565F71] font-medium hover:text-[#1B365D] hover:bg-[#ECEEF3] transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded text-[#565F71] font-medium hover:text-[#1B3D2F] hover:bg-[#ECEEF3] transition-colors"
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -226,7 +226,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
               </svg>
             </button>
             <div className="min-w-0 hidden sm:block lg:hidden">
-              <h1 className="text-base font-bold text-[#1B365D] font-serif tracking-tight truncate">{title}</h1>
+              <h1 className="text-base font-bold text-[#1B3D2F] font-serif tracking-tight truncate">{title}</h1>
             </div>
           </div>
 
@@ -243,7 +243,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
               type="search"
               readOnly
               placeholder="Search trip ID, destination…"
-              className="w-full bg-[#ECEEF3] border-none rounded py-2 pl-10 pr-4 text-sm text-[#191C20] placeholder:text-[#565F71] focus:ring-1 focus:ring-[#1B365D] focus:bg-white transition-all outline-none"
+              className="w-full bg-[#ECEEF3] border-none rounded py-2 pl-10 pr-4 text-sm text-[#191C20] placeholder:text-[#565F71] focus:ring-1 focus:ring-[#1B3D2F] focus:bg-white transition-all outline-none"
               aria-label="Search trips"
             />
           </div>
@@ -252,7 +252,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
             <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/notifications"
-                className="text-[#565F71] hover:text-[#1B365D] transition-colors p-1"
+                className="text-[#565F71] hover:text-[#1B3D2F] transition-colors p-1"
                 aria-label="Notifications"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,7 +266,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
               </Link>
               <a
                 href="mailto:transport@hu.edu.et"
-                className="text-[#565F71] hover:text-[#1B365D] transition-colors p-1 hidden sm:inline"
+                className="text-[#565F71] hover:text-[#1B3D2F] transition-colors p-1 hidden sm:inline"
                 aria-label="Help"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -282,14 +282,14 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
             <div className="h-8 w-px bg-[#C4C6D0]/30 hidden sm:block" />
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-[#1B365D] font-serif leading-tight truncate max-w-[160px]">
+                <p className="text-sm font-bold text-[#1B3D2F] font-serif leading-tight truncate max-w-[160px]">
                   {user?.name ?? '—'}
                 </p>
                 <p className="text-[10px] text-[#565F71] uppercase tracking-wider font-semibold">
                   {user?.role ?? 'Employee'}
                 </p>
               </div>
-              <div className="w-10 h-10 rounded border border-[#C4C6D0]/30 bg-[#1B365D] flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-10 h-10 rounded border border-[#C4C6D0]/30 bg-[#1B3D2F] flex items-center justify-center text-white text-sm font-bold">
                 {(user?.name || 'U').charAt(0).toUpperCase()}
               </div>
             </div>
@@ -299,7 +299,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
         <div className="px-4 sm:px-8 pt-4 pb-2 border-b border-[#C4C6D0]/15 bg-[#F8F9FA] hidden lg:block">
           <div className="max-w-7xl mx-auto flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1B365D] font-serif">{title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1B3D2F] font-serif">{title}</h1>
               {subtitle && <p className="text-[#44474E] mt-1 font-medium text-sm">{subtitle}</p>}
             </div>
             {headerActions ? <div className="flex items-center gap-2 shrink-0">{headerActions}</div> : null}
@@ -317,7 +317,7 @@ export function EmployeeShell(props: EmployeeShellProps) {
     <Suspense
       fallback={
         <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B365D] border-t-transparent" />
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
         </div>
       }
     >
@@ -325,3 +325,4 @@ export function EmployeeShell(props: EmployeeShellProps) {
     </Suspense>
   )
 }
+

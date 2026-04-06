@@ -11,7 +11,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-[#C4C6D0]/30 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded bg-[#1B365D] flex items-center justify-center text-white shadow-sm">
+            <div className="w-10 h-10 rounded bg-[#1B3D2F] flex items-center justify-center text-white shadow-sm">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path
                   strokeLinecap="round"
@@ -22,22 +22,22 @@ export default function LandingPage() {
               </svg>
             </div>
             <div>
-              <p className="font-serif text-lg font-bold tracking-tight text-[#1B365D] leading-none">Fleet Authority</p>
+              <p className="font-serif text-lg font-bold tracking-tight text-[#1B3D2F] leading-none">Fleet Authority</p>
               <p className="text-[10px] uppercase tracking-widest text-[#565F71] font-bold mt-0.5">University Portal</p>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            <Link href="#home" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+            <Link href="#home" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
               Home
             </Link>
-            <Link href="#about" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+            <Link href="#about" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
               About
             </Link>
-            <Link href="#modules" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+            <Link href="#modules" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
               Services
             </Link>
-            <Link href="#support" className="text-sm font-medium text-[#565F71] hover:text-[#1B365D] transition-colors">
+            <Link href="#support" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
               Support
             </Link>
           </nav>
@@ -45,14 +45,14 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="bg-[#1B365D] text-white px-5 sm:px-6 py-2 rounded font-bold text-sm shadow hover:bg-[#152a47] active:scale-[0.98] transition-all"
+              className="bg-[#1B3D2F] text-white px-5 sm:px-6 py-2 rounded font-bold text-sm shadow hover:bg-[#152e22] active:scale-[0.98] transition-all"
             >
               Sign in
             </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-[#565F71] hover:text-[#1B365D]"
+              className="md:hidden p-2 text-[#565F71] hover:text-[#1B3D2F]"
               aria-label="Menu"
             >
               {mobileMenuOpen ? (
@@ -75,7 +75,7 @@ export default function LandingPage() {
                 key={h}
                 href={h}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-2 text-[#565F71] font-medium hover:text-[#1B365D]"
+                className="block py-2 text-[#565F71] font-medium hover:text-[#1B3D2F]"
               >
                 {['Home', 'About', 'Services', 'Support'][i]}
               </Link>
@@ -88,7 +88,7 @@ export default function LandingPage() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="animate-fade-in-up">
             <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-4">Official employee access</p>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-[#1B365D] font-serif leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-[#1B3D2F] font-serif leading-tight">
               University fleet registry &amp; trip coordination
             </h1>
             <p className="text-[#44474E] mt-6 text-base sm:text-lg leading-relaxed font-medium max-w-xl">
@@ -98,7 +98,7 @@ export default function LandingPage() {
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 bg-[#1B365D] text-white px-8 py-3 rounded font-bold shadow hover:bg-[#152a47] active:scale-[0.98] transition-all text-center"
+                className="inline-flex items-center justify-center gap-2 bg-[#1B3D2F] text-white px-8 py-3 rounded font-bold shadow hover:bg-[#152e22] active:scale-[0.98] transition-all text-center"
               >
                 Employee sign in
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ export default function LandingPage() {
               </Link>
               <a
                 href="#about"
-                className="inline-flex items-center justify-center px-8 py-3 rounded font-semibold text-[#1B365D] border border-[#C4C6D0] bg-white hover:bg-[#F2F3F7] transition-colors"
+                className="inline-flex items-center justify-center px-8 py-3 rounded font-semibold text-[#1B3D2F] border border-[#C4C6D0] bg-white hover:bg-[#F2F3F7] transition-colors"
               >
                 Learn more
               </a>
@@ -116,7 +116,7 @@ export default function LandingPage() {
           <div className="relative animate-fade-in-right">
             <div className="bg-white rounded border border-[#C4C6D0]/40 shadow-sm p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded bg-[#D1E1FF]/60 flex items-center justify-center text-[#1B365D]">
+                <div className="w-12 h-12 rounded bg-[#D1E1FF]/60 flex items-center justify-center text-[#1B3D2F]">
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -127,7 +127,7 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-serif font-bold text-[#1B365D] text-lg">Trip registry preview</p>
+                  <p className="font-serif font-bold text-[#1B3D2F] text-lg">Trip registry preview</p>
                   <p className="text-xs text-[#565F71] font-semibold uppercase tracking-wider">Read-only illustration</p>
                 </div>
               </div>
@@ -137,10 +137,10 @@ export default function LandingPage() {
                     key={i}
                     className="flex items-center justify-between py-3 border-b border-[#ECEEF3] last:border-0"
                   >
-                    <span className="text-sm font-mono font-bold text-[#1B365D]">REQ-{82000 + i * 11}</span>
+                    <span className="text-sm font-mono font-bold text-[#1B3D2F]">REQ-{82000 + i * 11}</span>
                     <span
                       className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm ${
-                        i === 1 ? 'bg-[#D1E1FF] text-[#1B365D]' : 'bg-[#E0E2E8] text-[#565F71]'
+                        i === 1 ? 'bg-[#D1E1FF] text-[#1B3D2F]' : 'bg-[#E0E2E8] text-[#565F71]'
                       }`}
                     >
                       {i === 1 ? 'Approved' : 'Pending'}
@@ -156,7 +156,7 @@ export default function LandingPage() {
 
       <section id="about" className="bg-white border-y border-[#C4C6D0]/20 py-16 sm:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#1B365D] font-serif tracking-tight mb-4">About the portal</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#1B3D2F] font-serif tracking-tight mb-4">About the portal</h2>
           <p className="text-[#44474E] leading-relaxed font-medium">
             Fleet Authority centralizes official transport workflows for Haramaya University. The system supports
             transparent approvals, documented trip records, and coordination with the transport office—consistent with
@@ -168,7 +168,7 @@ export default function LandingPage() {
       <section id="modules" className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl font-bold text-[#1B365D] font-serif tracking-tight mb-2">Key capabilities</h2>
+            <h2 className="text-3xl font-bold text-[#1B3D2F] font-serif tracking-tight mb-2">Key capabilities</h2>
             <p className="text-[#565F71] text-sm font-medium">Tools available through the employee portal</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -200,9 +200,9 @@ export default function LandingPage() {
             ].map((item) => (
               <div
                 key={item.t}
-                className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B365D]/25 transition-colors"
+                className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B3D2F]/25 transition-colors"
               >
-                <h3 className="font-serif font-bold text-lg text-[#1B365D] mb-2">{item.t}</h3>
+                <h3 className="font-serif font-bold text-lg text-[#1B3D2F] mb-2">{item.t}</h3>
                 <p className="text-sm text-[#44474E] leading-relaxed">{item.d}</p>
               </div>
             ))}
@@ -210,7 +210,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="bg-[#1B365D] text-white py-16">
+      <section className="bg-[#1B3D2F] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12">
           <div>
             <h3 className="font-serif text-xl font-bold mb-3">Operational coverage</h3>
@@ -232,37 +232,37 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="font-serif text-3xl font-bold text-[#1B365D] mb-4">Need support?</h2>
+              <h2 className="font-serif text-3xl font-bold text-[#1B3D2F] mb-4">Need support?</h2>
               <p className="text-[#44474E] mb-8 leading-relaxed">
                 For trip scheduling, approvals, or driver coordination, contact the transport office. For login or
                 technical issues, use the IT helpdesk.
               </p>
               <div className="space-y-6">
                 <div>
-                  <p className="font-bold text-[#1B365D]">Transport office</p>
+                  <p className="font-bold text-[#1B3D2F]">Transport office</p>
                   <p className="text-sm text-[#565F71]">General inquiries</p>
-                  <a href="mailto:transport@hu.edu.et" className="text-sm font-semibold text-[#1B365D] hover:underline">
+                  <a href="mailto:transport@hu.edu.et" className="text-sm font-semibold text-[#1B3D2F] hover:underline">
                     transport@hu.edu.et
                   </a>
                 </div>
                 <div>
-                  <p className="font-bold text-[#1B365D]">IT helpdesk</p>
+                  <p className="font-bold text-[#1B3D2F]">IT helpdesk</p>
                   <p className="text-sm text-[#565F71]">Technical issues</p>
-                  <a href="mailto:ithelpdesk@hu.edu.et" className="text-sm font-semibold text-[#1B365D] hover:underline">
+                  <a href="mailto:ithelpdesk@hu.edu.et" className="text-sm font-semibold text-[#1B3D2F] hover:underline">
                     ithelpdesk@hu.edu.et
                   </a>
                 </div>
               </div>
             </div>
             <div className="bg-[#F2F3F7] p-8 rounded border border-[#C4C6D0]/40">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1B365D] mb-4 border-b border-[#C4C6D0]/30 pb-2">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1B3D2F] mb-4 border-b border-[#C4C6D0]/30 pb-2">
                 System status
               </h3>
               <ul className="space-y-3 text-sm">
                 {['Trip request module', 'Employee notifications', 'Portal access'].map((x) => (
                   <li key={x} className="flex justify-between text-[#44474E]">
                     <span>{x}</span>
-                    <span className="font-bold text-[#1B365D]">Active</span>
+                    <span className="font-bold text-[#1B3D2F]">Active</span>
                   </li>
                 ))}
               </ul>
@@ -295,3 +295,4 @@ export default function LandingPage() {
     </div>
   )
 }
+

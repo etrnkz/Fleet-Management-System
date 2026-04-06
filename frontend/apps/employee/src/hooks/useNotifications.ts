@@ -134,3 +134,4 @@ export const useNotifications = (): UseNotificationsReturn => {
 
   return { notifications, unreadCount, isConnected, markAsRead, markAllAsRead, refreshNotifications };
 };
+
