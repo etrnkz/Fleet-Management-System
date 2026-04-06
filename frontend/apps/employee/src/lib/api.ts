@@ -2,40 +2,77 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
+// Storage helpers — uses localStorage when "remember me" was checked, sessionStorage otherwise
+function getStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+  // If a refresh token exists in localStorage, user chose "remember me"
+  return localStorage.getItem('refreshToken') ? localStorage : sessionStorage;
+}
+
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('accessToken');
+  return (
+    localStorage.getItem('accessToken') ||
+    sessionStorage.getItem('accessToken') ||
+    null
+  );
 };
 
 const getRefreshToken = (): string | null => {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('refreshToken');
+  return (
+    localStorage.getItem('refreshToken') ||
+    sessionStorage.getItem('refreshToken') ||
+    null
+  );
 };
 
 export const getCurrentUser = () => {
   if (typeof window === 'undefined') return null;
-  const userStr = localStorage.getItem('user');
+  const userStr =
+    localStorage.getItem('user') || sessionStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 };
 
 // Refresh the access token using the refresh token
+let _refreshPromise: Promise<boolean> | null = null;
+
 async function refreshAccessToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
-  try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    localStorage.setItem('accessToken', data.access_token);
-    if (data.refresh_token) localStorage.setItem('refreshToken', data.refresh_token);
-    return true;
-  } catch {
-    return false;
-  }
+  // Deduplicate concurrent refresh calls
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) return false;
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      // Store in the same storage the refresh token came from
+      const storage =
+        localStorage.getItem('refreshToken') ? localStorage : sessionStorage;
+      storage.setItem('accessToken', data.access_token);
+      if (data.refresh_token) storage.setItem('refreshToken', data.refresh_token);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      _refreshPromise = null;
+    }
+  })();
+
+  return _refreshPromise;
+}
+
+function clearSession() {
+  ['accessToken', 'refreshToken', 'user', 'access_token'].forEach((key) => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  });
 }
 
 async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = true): Promise<T> {
@@ -52,13 +89,9 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = 
   if (response.status === 401 && retry) {
     const refreshed = await refreshAccessToken();
     if (refreshed) return apiFetch<T>(endpoint, options, false);
-    // Refresh failed — redirect to login
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
+    // Refresh failed — clear session and redirect to login
+    clearSession();
+    if (typeof window !== 'undefined') window.location.href = '/login';
     throw new Error('Session expired. Please log in again.');
   }
 
@@ -67,14 +100,10 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = 
     throw new Error(error.message || `HTTP ${response.status}`);
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
+  if (response.status === 204) return undefined as T;
 
   const text = await response.text();
-  if (!text) {
-    return undefined as T;
-  }
+  if (!text) return undefined as T;
 
   return JSON.parse(text) as T;
 }

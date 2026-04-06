@@ -166,3 +166,24 @@ export const auditApi = {
     return apiFetch(`/audit/statistics${query}`);
   },
 };
+
+// Invite APIs
+export const inviteApi = {
+  bulkInvite: (data: { emails: string[]; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
+    apiFetch('/users/bulk-invite', { method: 'POST', body: JSON.stringify(data) }),
+
+  bulkInviteCsv: (formData: FormData) => {
+    const token = getAuthToken();
+    return fetch(`${API_BASE_URL}/users/bulk-invite-csv`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Upload failed' }));
+        throw new Error(err.message || 'Upload failed');
+      }
+      return res.json();
+    });
+  },
+};

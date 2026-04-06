@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
-import { userApi, getCurrentUser, authApi } from '@/lib/api'
+import { userApi, getCurrentUser, authApi, inviteApi } from '@/lib/api'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -24,6 +24,14 @@ export default function SettingsPage() {
     message: '',
     type: 'success'
   })
+
+  // Invite state
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -108,6 +116,32 @@ export default function SettingsPage() {
     }
   }
 
+  const handleInvite = async () => {
+    setInviting(true)
+    setInviteResult(null)
+    try {
+      let result: any
+      if (inviteMode === 'csv' && csvFile) {
+        const fd = new FormData()
+        fd.append('csvFile', csvFile)
+        if (inviteMessage) fd.append('welcomeMessage', inviteMessage)
+        result = await inviteApi.bulkInviteCsv(fd)
+      } else {
+        const emails = inviteEmails.split(/[\n,]+/).map((e) => e.trim()).filter((e) => e.includes('@'))
+        if (emails.length === 0) { showToast('Please enter at least one valid email address', 'error'); setInviting(false); return }
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined })
+      }
+      setInviteResult(result)
+      showToast(result.message || 'Invitations sent!', 'success')
+      setInviteEmails('')
+      setCsvFile(null)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to send invitations', 'error')
+    } finally {
+      setInviting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -154,6 +188,16 @@ export default function SettingsPage() {
               }`}
             >
               Account
+            </button>
+            <button
+              onClick={() => setActiveTab('invite')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'invite'
+                  ? 'border-emerald-500 text-emerald-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Invite Employees
             </button>
           </div>
         </div>
@@ -297,6 +341,65 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+          {activeTab === 'invite' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Invite Employees</h3>
+                <p className="text-sm text-gray-500 mt-1">Invited employees receive an email with a temporary password and must complete their profile before making trip requests.</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setInviteMode('email')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'email' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Paste Emails</button>
+                <button onClick={() => setInviteMode('csv')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'csv' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Upload CSV</button>
+              </div>
+              {inviteMode === 'email' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Addresses <span className="text-gray-400 font-normal">(comma or new line separated)</span></label>
+                  <textarea value={inviteEmails} onChange={(e) => setInviteEmails(e.target.value)} rows={5} placeholder="john@university.edu, jane@university.edu" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm" />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">CSV File <span className="text-gray-400 font-normal">(must have an "email" column)</span></label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-400 transition-colors">
+                    <input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUpload" />
+                    <label htmlFor="csvUpload" className="cursor-pointer">
+                      <svg className="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                      {csvFile ? <p className="text-sm font-medium text-emerald-600">{csvFile.name}</p> : <p className="text-sm text-gray-500">Click to upload CSV</p>}
+                    </label>
+                  </div>
+                  <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-emerald-600 hover:underline mt-2 inline-block">Download CSV template</a>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                <textarea value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} rows={3} placeholder="Welcome to the Fleet Management System!" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm" />
+              </div>
+              <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)} className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium flex items-center gap-2">
+                {inviting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>Send Invitations</>}
+              </button>
+              {inviteResult && (
+                <div className="space-y-3">
+                  {inviteResult.invited.length > 0 && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                      <p className="text-sm font-medium text-emerald-800 mb-2">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p>
+                      <div className="flex flex-wrap gap-1">{inviteResult.invited.map((e) => <span key={e} className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">{e}</span>)}</div>
+                    </div>
+                  )}
+                  {inviteResult.failed.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <p className="text-sm font-medium text-red-800 mb-2">✗ {inviteResult.failed.length} failed</p>
+                      <div className="space-y-1">{inviteResult.failed.map((f) => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

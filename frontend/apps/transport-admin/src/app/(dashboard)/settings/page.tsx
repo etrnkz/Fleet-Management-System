@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Toast, { ToastType } from '@/components/Toast'
-import { userApi } from '@/lib/api'
+import { userApi, inviteApi } from '@/lib/api'
 
 interface ToastMessage {
   message: string
@@ -85,8 +85,43 @@ export default function SettingsPage() {
     { id: 'users', name: 'Users', icon: '👥' },
     { id: 'security', name: 'Security', icon: '🔒' },
     { id: 'integrations', name: 'Integrations', icon: '🔗' },
-    { id: 'backup', name: 'Backup', icon: '💾' }
+    { id: 'backup', name: 'Backup', icon: '💾' },
+    { id: 'invite', name: 'Invite Employees', icon: '✉️' },
   ]
+
+  // Invite state
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
+
+  const handleInvite = async () => {
+    setInviting(true)
+    setInviteResult(null)
+    try {
+      let result: any
+      if (inviteMode === 'csv' && csvFile) {
+        const fd = new FormData()
+        fd.append('csvFile', csvFile)
+        if (inviteMessage) fd.append('welcomeMessage', inviteMessage)
+        result = await inviteApi.bulkInviteCsv(fd)
+      } else {
+        const emails = inviteEmails.split(/[\n,]+/).map((e) => e.trim()).filter((e) => e.includes('@'))
+        if (emails.length === 0) { showToast('Please enter at least one valid email', 'error'); setInviting(false); return }
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined })
+      }
+      setInviteResult(result)
+      showToast(result.message || 'Invitations sent!', 'success')
+      setInviteEmails('')
+      setCsvFile(null)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to send invitations', 'error')
+    } finally {
+      setInviting(false)
+    }
+  }
 
   return (
     <>
@@ -620,6 +655,60 @@ export default function SettingsPage() {
                     </label>
                   </div>
                 </div>
+              </div>
+            )}
+            {/* Invite Employees */}
+            {activeTab === 'invite' && (
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-900">Invite Employees</h2>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">Invited employees receive an email with a temporary password and must complete their profile before making trip requests.</p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setInviteMode('email')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${inviteMode === 'email' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Paste Emails</button>
+                  <button onClick={() => setInviteMode('csv')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${inviteMode === 'csv' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Upload CSV</button>
+                </div>
+                {inviteMode === 'email' ? (
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Email Addresses <span className="text-gray-400 font-normal">(comma or new line separated)</span></label>
+                    <textarea value={inviteEmails} onChange={(e) => setInviteEmails(e.target.value)} rows={5} placeholder="john@university.edu, jane@university.edu" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-xs sm:text-sm" />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">CSV File <span className="text-gray-400 font-normal">(must have an "email" column)</span></label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-emerald-400 transition-colors">
+                      <input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUploadTransport" />
+                      <label htmlFor="csvUploadTransport" className="cursor-pointer">
+                        <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                        {csvFile ? <p className="text-xs sm:text-sm font-medium text-emerald-600">{csvFile.name}</p> : <p className="text-xs sm:text-sm text-gray-500">Click to upload CSV</p>}
+                      </label>
+                    </div>
+                    <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-emerald-600 hover:underline mt-2 inline-block">Download CSV template</a>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <textarea value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} rows={3} placeholder="Welcome to the Fleet Management System!" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm" />
+                </div>
+                <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)} className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2 text-xs sm:text-sm">
+                  {inviting ? <><div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <>✉️ Send Invitations</>}
+                </button>
+                {inviteResult && (
+                  <div className="space-y-3">
+                    {inviteResult.invited.length > 0 && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 sm:p-4">
+                        <p className="text-xs sm:text-sm font-medium text-emerald-800 mb-2">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p>
+                        <div className="flex flex-wrap gap-1">{inviteResult.invited.map((e) => <span key={e} className="text-[10px] sm:text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">{e}</span>)}</div>
+                      </div>
+                    )}
+                    {inviteResult.failed.length > 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+                        <p className="text-xs sm:text-sm font-medium text-red-800 mb-2">✗ {inviteResult.failed.length} failed</p>
+                        <div className="space-y-1">{inviteResult.failed.map((f) => <p key={f.email} className="text-[10px] sm:text-xs text-red-700">{f.email}: {f.reason}</p>)}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

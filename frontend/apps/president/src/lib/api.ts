@@ -1,10 +1,23 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'
 
-// Get auth token from localStorage
+// Get auth token from localStorage or sessionStorage
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+    return (
+      localStorage.getItem('accessToken') ||
+      sessionStorage.getItem('accessToken') ||
+      localStorage.getItem('access_token') ||
+      sessionStorage.getItem('access_token') ||
+      null
+    )
+  }
+  return null
+}
+
+const getRefreshToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken') || null
   }
   return null
 }
@@ -18,13 +31,73 @@ const createHeaders = () => {
   }
 }
 
-// Handle API responses
-const handleResponse = async (response: Response) => {
+// Deduplicated refresh promise
+let _refreshPromise: Promise<boolean> | null = null
+
+async function refreshAccessToken(): Promise<boolean> {
+  if (_refreshPromise) return _refreshPromise
+  _refreshPromise = (async () => {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) return false
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      })
+      if (!res.ok) return false
+      const data = await res.json()
+      const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+      storage.setItem('accessToken', data.access_token)
+      if (data.refresh_token) storage.setItem('refreshToken', data.refresh_token)
+      return true
+    } catch {
+      return false
+    } finally {
+      _refreshPromise = null
+    }
+  })()
+  return _refreshPromise
+}
+
+function clearSession() {
+  ;['accessToken', 'access_token', 'refreshToken', 'user'].forEach((k) => {
+    localStorage.removeItem(k)
+    sessionStorage.removeItem(k)
+  })
+}
+
+// Handle API responses with auto-refresh
+async function handleResponse(response: Response, retry: () => Promise<Response>): Promise<any> {
+  if (response.status === 401) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) {
+      const retried = await retry()
+      if (!retried.ok) {
+        const error = await retried.json().catch(() => ({ message: 'Network error' }))
+        throw new Error(error.message || 'API request failed')
+      }
+      return retried.json()
+    }
+    clearSession()
+    if (typeof window !== 'undefined') window.location.href = '/login'
+    throw new Error('Session expired. Please log in again.')
+  }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Network error' }))
     throw new Error(error.message || 'API request failed')
   }
   return response.json()
+}
+
+// Convenience wrapper used by all API methods
+async function apiFetch(url: string, options: RequestInit = {}): Promise<any> {
+  const headers = { ...createHeaders(), ...(options.headers as Record<string, string>) }
+  const response = await fetch(url, { ...options, headers })
+  return handleResponse(response, () => {
+    const newHeaders = { ...createHeaders(), ...(options.headers as Record<string, string>) }
+    return fetch(url, { ...options, headers: newHeaders })
+  })
 }
 
 // Auth API
@@ -35,251 +108,141 @@ export const authApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     })
-    return handleResponse(response)
+    return handleResponse(response, () =>
+      fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+    )
   },
 
-  getCurrentUser: async () => {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  getCurrentUser: async () => apiFetch(`${API_BASE_URL}/users/me`)
 }
 
 // User API
 export const userApi = {
-  getProfile: async () => {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
+  getProfile: async () => apiFetch(`${API_BASE_URL}/users/me`),
 
-  updateProfile: async (data: any) => {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
+  updateProfile: async (data: any) =>
+    apiFetch(`${API_BASE_URL}/users/me`, {
       method: 'PATCH',
-      headers: createHeaders(),
       body: JSON.stringify(data)
     })
-    return handleResponse(response)
-  }
 }
 
 // Trip API
 export const tripApi = {
-  getPendingApprovals: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips/pending/approvals`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
+  getPendingApprovals: async () => apiFetch(`${API_BASE_URL}/trips/pending/approvals`),
 
-  getAllTrips: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
+  getAllTrips: async () => apiFetch(`${API_BASE_URL}/trips`),
 
   getAll: async (filters?: any) => {
     const queryParams = filters ? new URLSearchParams(filters).toString() : ''
-    const response = await fetch(`${API_BASE_URL}/trips${queryParams ? `?${queryParams}` : ''}`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
+    return apiFetch(`${API_BASE_URL}/trips${queryParams ? `?${queryParams}` : ''}`)
   },
 
-  approve: async (tripId: string, comments?: string) => {
-    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/approve`, {
+  approve: async (tripId: string, comments?: string) =>
+    apiFetch(`${API_BASE_URL}/trips/${tripId}/approve`, {
       method: 'POST',
-      headers: createHeaders(),
       body: JSON.stringify({ comments })
-    })
-    return handleResponse(response)
-  },
+    }),
 
-  reject: async (tripId: string, reason: string) => {
-    const response = await fetch(`${API_BASE_URL}/trips/${tripId}/reject`, {
+  reject: async (tripId: string, reason: string) =>
+    apiFetch(`${API_BASE_URL}/trips/${tripId}/reject`, {
       method: 'POST',
-      headers: createHeaders(),
       body: JSON.stringify({ reason })
     })
-    return handleResponse(response)
-  }
 }
 
 // Statistics API
 export const statsApi = {
-  getDashboardStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/trips/statistics/overview`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  getVehicleStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/statistics`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  getFleetUtilization: async () => {
-    const response = await fetch(`${API_BASE_URL}/statistics/fleet-utilization`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  getDashboardStats: async () => apiFetch(`${API_BASE_URL}/trips/statistics/overview`),
+  getVehicleStats: async () => apiFetch(`${API_BASE_URL}/vehicles/statistics`),
+  getFleetUtilization: async () => apiFetch(`${API_BASE_URL}/statistics/fleet-utilization`)
 }
 
 // Audit API
 export const auditApi = {
-  getAuditLogs: async () => {
-    const response = await fetch(`${API_BASE_URL}/audit`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  getAuditLogs: async () => apiFetch(`${API_BASE_URL}/audit`)
 }
 
 // Notifications API
-const fetchNotificationsList = async () => {
-  const response = await fetch(`${API_BASE_URL}/notifications`, {
-    headers: createHeaders()
-  })
-  return handleResponse(response)
-}
+const fetchNotificationsList = async () => apiFetch(`${API_BASE_URL}/notifications`)
 
 export const notificationApi = {
   getNotifications: fetchNotificationsList,
-  /** Alias for layout code that calls `getAll` */
   getAll: fetchNotificationsList,
 
-  markAsRead: async (notificationId: string) => {
-    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
-      method: 'PATCH',
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
+  markAsRead: async (notificationId: string) =>
+    apiFetch(`${API_BASE_URL}/notifications/${notificationId}/read`, { method: 'PATCH' }),
 
-  markAllAsRead: async () => {
-    const response = await fetch(`${API_BASE_URL}/notifications/read-all`, {
-      method: 'PATCH',
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  markAllAsRead: async () =>
+    apiFetch(`${API_BASE_URL}/notifications/read-all`, { method: 'PATCH' })
 }
 
 // Departments API
 export const departmentApi = {
-  getAllDepartments: async () => {
-    const response = await fetch(`${API_BASE_URL}/departments`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  getByCollege: async (collegeId: string) => {
-    const response = await fetch(`${API_BASE_URL}/departments?collegeId=${collegeId}`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  getAllDepartments: async () => apiFetch(`${API_BASE_URL}/departments`),
+  getByCollege: async (collegeId: string) =>
+    apiFetch(`${API_BASE_URL}/departments?collegeId=${collegeId}`)
 }
 
 // Colleges API
-const fetchAllColleges = async () => {
-  const response = await fetch(`${API_BASE_URL}/colleges`, {
-    headers: createHeaders()
-  })
-  return handleResponse(response)
-}
+const fetchAllColleges = async () => apiFetch(`${API_BASE_URL}/colleges`)
 
 export const collegeApi = {
   getAllColleges: fetchAllColleges,
-  /** Alias for pages that expect `getAll` */
   getAll: fetchAllColleges,
 }
 
 // Vehicles API
 export const vehicleApi = {
-  getAllVehicles: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  getVehicleStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/vehicles/statistics`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  getAllVehicles: async () => apiFetch(`${API_BASE_URL}/vehicles`),
+  getAll: async () => apiFetch(`${API_BASE_URL}/vehicles`),
+  getVehicleStats: async () => apiFetch(`${API_BASE_URL}/vehicles/statistics`)
 }
 
-// Maintenance API (fleet maintenance requests)
+// Maintenance API
 export const maintenanceApi = {
-  getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/maintenance`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
+  getAll: async () => apiFetch(`${API_BASE_URL}/maintenance`)
 }
 
 // Drivers API
 export const driverApi = {
-  getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/drivers`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  },
-
-  getById: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/drivers/${id}`, {
-      headers: createHeaders()
-    })
-    return handleResponse(response)
-  }
+  getAll: async () => apiFetch(`${API_BASE_URL}/drivers`),
+  getById: async (id: string) => apiFetch(`${API_BASE_URL}/drivers/${id}`)
 }
 
 // Reports API
 export const reportApi = {
-  generateTripReport: async (filters: any) => {
-    const response = await fetch(`${API_BASE_URL}/reports/trips`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify(filters)
-    })
-    return handleResponse(response)
-  },
+  generateTripReport: async (filters: any) =>
+    apiFetch(`${API_BASE_URL}/reports/trips`, { method: 'POST', body: JSON.stringify(filters) }),
 
-  generateBudgetReport: async (filters: any) => {
-    const response = await fetch(`${API_BASE_URL}/reports/budget`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify(filters)
-    })
-    return handleResponse(response)
-  },
+  generateBudgetReport: async (filters: any) =>
+    apiFetch(`${API_BASE_URL}/reports/budget`, { method: 'POST', body: JSON.stringify(filters) }),
 
-  generateComplianceReport: async (filters: any) => {
-    const response = await fetch(`${API_BASE_URL}/reports/compliance`, {
+  generateComplianceReport: async (filters: any) =>
+    apiFetch(`${API_BASE_URL}/reports/compliance`, { method: 'POST', body: JSON.stringify(filters) })
+}
+
+// Invite APIs
+export const inviteApi = {
+  bulkInvite: (data: { emails: string[]; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
+    apiFetch(`${API_BASE_URL}/users/bulk-invite`, { method: 'POST', body: JSON.stringify(data) }),
+
+  bulkInviteCsv: (formData: FormData) => {
+    const token = getAuthToken()
+    return fetch(`${API_BASE_URL}/users/bulk-invite-csv`, {
       method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify(filters)
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Upload failed' }))
+        throw new Error(err.message || 'Upload failed')
+      }
+      return res.json()
     })
-    return handleResponse(response)
-  }
+  },
 }

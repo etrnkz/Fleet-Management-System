@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -8,11 +9,18 @@ import { User, UserRole } from '../users/entities/user.entity';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly refreshSecret: string;
 
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.refreshSecret =
+      this.configService.get<string>('JWT_REFRESH_SECRET') ||
+      this.configService.get<string>('jwt.secret') ||
+      'REFRESH_SECRET_KEY';
+  }
 
   async register(registerDto: RegisterDto) {
     this.logger.log(`Registering new user: ${registerDto.email}`);
@@ -62,7 +70,10 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.refreshSecret,
+      expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
+    });
 
     this.logger.log(`Login successful for: ${loginDto.email}`);
 
@@ -78,7 +89,9 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken);
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: this.refreshSecret,
+      });
 
       const user = await this.usersService.findById(payload.sub);
 
@@ -93,9 +106,15 @@ export class AuthService {
       };
 
       const newAccessToken = this.jwtService.sign(newPayload);
+      // Rotate refresh token on each use
+      const newRefreshToken = this.jwtService.sign(newPayload, {
+        secret: this.refreshSecret,
+        expiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
+      });
 
       return {
         access_token: newAccessToken,
+        refresh_token: newRefreshToken,
       };
     } catch (error) {
       this.logger.error(`Refresh token failed: ${error.message}`);
