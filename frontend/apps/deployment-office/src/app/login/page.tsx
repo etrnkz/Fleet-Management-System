@@ -101,9 +101,9 @@ required/>
 <buttontype="button"onClick={()=>setShowPassword(!showPassword)}
 className="absoluteright-3top-1/2-translate-y-1/2text-[#727975]hover:text-[#1B3D2F]">
 {showPassword?(
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424"><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M1512a33011-603300160z"/><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M2.45812C3.7327.9437.5235125c4.47808.2682.9439.5427-1.2744.057-5.0647-9.5427-4.4770-8.268-2.943-9.542-7z"/></svg>
+<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424"><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1512a33011-603300160z"/><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M2.45812C3.7327.9437.5235125c4.47808.2682.9439.5427-1.2744.057-5.0647-9.5427-4.4770-8.268-2.943-9.542-7z"/></svg>
 ):(
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424"><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={2}d="M13.87518.825A10.0510.050011219c-4.4780-8.268-2.943-9.543-7a9.979.970011.563-3.029m5.858.908a330114.2434.243M9.8789.878l4.2424.242M9.889.88l-3.29-3.29m7.5327.532l3.293.29M33l3.593.59m00A9.9539.953001125c4.47808.2682.9439.5437a10.02510.025001-4.1325.411m00L2121"/></svg>
+<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424"><pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M13.87518.825A10.0510.050011219c-4.4780-8.268-2.943-9.543-7a9.979.970011.563-3.029m5.858.908a330114.2434.243M9.8789.878l4.2424.242M9.889.88l-3.29-3.29m7.5327.532l3.293.29M33l3.593.59m00A9.9539.953001125c4.47808.2682.9439.5437a10.02510.025001-4.1325.411m00L2121"/></svg>
 )}
 </button>
 </div>
@@ -139,5 +139,6 @@ Allocatevehicles,assigndrivers,managetripdispatch,andoverseemaintenanceoperation
 </div>
 )
 }
+
 
 

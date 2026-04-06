@@ -1,29 +1,36 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter, Newsreader, Geist_Mono } from 'next/font/google'
+import './globals.css'
 
 const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+const newsreader = Newsreader({
+  variable: '--font-newsreader',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "Driver Portal - HUFMS",
-  description: "Haramaya University Fleet Management System - Driver Portal",
-};
+  title: 'Fleet Authority — Driver Portal',
+  description: 'Haramaya University Fleet Management System — Driver Portal',
+}
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${inter.variable} ${newsreader.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
     </html>
-  );
+  )
 }
-
 
