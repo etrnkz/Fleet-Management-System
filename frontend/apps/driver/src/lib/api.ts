@@ -207,3 +207,5 @@ export const userApi = {
   removeProfileImage: () =>
     apiFetch(`${API_BASE_URL}/users/me/profile-image`, { method: 'DELETE' }),
 }
+
+
