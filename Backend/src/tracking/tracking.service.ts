@@ -13,6 +13,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
+import { SmsService } from '../sms/sms.service';
 
 export type LocationSavePayload = {
   id: string;
@@ -44,6 +45,7 @@ export class TrackingService {
     private readonly tripRepository: Repository<TripRequest>,
     private readonly notificationsService: NotificationsService,
     private readonly usersService: UsersService,
+    private readonly smsService: SmsService,
   ) {}
 
   async saveLocation(
@@ -128,6 +130,15 @@ export class TrackingService {
       await this.notificationsService.create(
         trip.requester, notifType, title, message, notifData,
       ).catch(() => {});
+
+      // SMS to requester if they have a phone number
+      if (trip.requester.phoneNumber) {
+        if (newStatus === 'warning') {
+          this.smsService.sendGeofenceWarningSms(trip.requester.phoneNumber, plateNumber, zoneName).catch(() => {});
+        } else {
+          this.smsService.sendGeofenceShutdownSms(trip.requester.phoneNumber, plateNumber, zoneName).catch(() => {});
+        }
+      }
     }
 
     // Notify all transport office users
@@ -135,6 +146,14 @@ export class TrackingService {
       const transportUsers = await this.usersService.findByRole(UserRole.TransportOffice);
       for (const user of transportUsers) {
         await this.notificationsService.create(user, notifType, title, message, notifData).catch(() => {});
+        // SMS transport office too
+        if (user.phoneNumber) {
+          if (newStatus === 'warning') {
+            this.smsService.sendGeofenceWarningSms(user.phoneNumber, plateNumber, zoneName).catch(() => {});
+          } else {
+            this.smsService.sendGeofenceShutdownSms(user.phoneNumber, plateNumber, zoneName).catch(() => {});
+          }
+        }
       }
     } catch {}
   }

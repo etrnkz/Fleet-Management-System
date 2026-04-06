@@ -11,6 +11,7 @@ import { Department } from '../departments/entities/department.entity';
 import { College } from '../colleges/entities/college.entity';
 import { BulkInviteUsersDto } from './dto/bulk-invite-users.dto';
 import { EmailService } from '../email/email.service';
+import { SmsService } from '../sms/sms.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -23,6 +24,7 @@ export class UsersService {
     @InjectRepository(College)
     private readonly collegeRepository: Repository<College>,
     private readonly emailService: EmailService,
+    private readonly smsService: SmsService,
   ) {}
 
   async create(
@@ -294,6 +296,9 @@ export class UsersService {
           college: department?.college?.name || college?.name,
           welcomeMessage,
         });
+
+        // Send SMS if user has a phone number (phone may be set later, skip for now)
+        // SMS is sent when phone is available on the user record after profile completion
 
         invited.push(email);
       } catch (error) {
