@@ -107,7 +107,7 @@ export default function NotificationsPage() {
             <button
               type="button"
               onClick={handleMarkAllAsRead}
-              className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#1B365D] hover:bg-[#D1E1FF]/40 rounded-lg border border-[#1B365D]/30"
+              className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#1B3D2F] hover:bg-[#D1E1FF]/40 rounded-lg border border-[#1B3D2F]/30"
             >
               Mark all read
             </button>
@@ -138,7 +138,7 @@ export default function NotificationsPage() {
                 onClick={() => setFilter(f.id)}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide transition-colors ${
                   filter === f.id
-                    ? 'bg-[#1B365D] text-white'
+                    ? 'bg-[#1B3D2F] text-white'
                     : 'bg-[#eceef0] text-[#424845] hover:bg-[#e0e3e5]'
                 }`}
               >
@@ -164,17 +164,17 @@ export default function NotificationsPage() {
                   key={notification.id}
                   onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
                   className={`p-6 hover:bg-[#F8F9FA] cursor-pointer transition-colors ${
-                    !notification.isRead ? 'bg-[#D1E1FF]/25 border-l-4 border-[#1B365D]' : ''
+                    !notification.isRead ? 'bg-[#D1E1FF]/25 border-l-4 border-[#1B3D2F]' : ''
                   }`}
                 >
                   <div className="flex items-start gap-4">
                     <div className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
-                      !notification.isRead ? 'bg-[#1B365D]' : 'bg-[#c1c8c4]'
+                      !notification.isRead ? 'bg-[#1B3D2F]' : 'bg-[#c1c8c4]'
                     }`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-[#1B365D] mb-1">
+                          <p className="text-sm font-semibold text-[#1B3D2F] mb-1">
                             {notification.title || notification.type}
                           </p>
                           <p className="text-sm text-[#424845] mb-2">
@@ -191,7 +191,7 @@ export default function NotificationsPage() {
                               e.stopPropagation()
                               handleMarkAsRead(notification.id)
                             }}
-                            className="text-[#1B365D] hover:text-[#1B365D] text-xs font-semibold uppercase tracking-wide flex-shrink-0"
+                            className="text-[#1B3D2F] hover:text-[#1B3D2F] text-xs font-semibold uppercase tracking-wide flex-shrink-0"
                           >
                             Mark read
                           </button>
@@ -208,3 +208,4 @@ export default function NotificationsPage() {
     </EmployeeShell>
   )
 }
+

@@ -234,3 +234,4 @@ export const collegeApi = {
   
   getById: (id: string) => apiFetch(`/colleges/${id}`),
 };
+

@@ -2,7 +2,7 @@
 
 /* Fleet Authority — matches html.html reference (Material-style institutional) */
 :root {
-  --fa-primary: #1b365d;
+  --fa-primary: #1B3D2F;
   --fa-on-primary: #ffffff;
   --fa-primary-container: #d1e1ff;
   --fa-on-primary-container: #001b3d;
@@ -179,3 +179,4 @@ select option {
 select:invalid {
   color: var(--fa-secondary);
 }
+

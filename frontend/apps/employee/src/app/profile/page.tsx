@@ -112,7 +112,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B365D] border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
       </div>
     )
   }
@@ -126,7 +126,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setEditMode(true)}
-            className="px-4 py-2.5 bg-[#1B365D] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152a47]"
+            className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152e22]"
           >
             Edit Profile
           </button>
@@ -146,7 +146,7 @@ export default function ProfilePage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2.5 bg-[#1B365D] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#1e4a6e] disabled:opacity-50"
+              className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#1e4a6e] disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                 )}
               </div>
               {editMode && (
-                <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-[#1B365D] text-white p-3 rounded-lg cursor-pointer hover:bg-[#152a47] shadow-lg">
+                <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-[#1B3D2F] text-white p-3 rounded-lg cursor-pointer hover:bg-[#152e22] shadow-lg">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -195,14 +195,14 @@ export default function ProfilePage() {
                 disabled={!editMode}
               />
             </div>
-            <h2 className="text-2xl font-bold text-[#1B365D] mt-4 tracking-tight">{formData.name}</h2>
+            <h2 className="text-2xl font-bold text-[#1B3D2F] mt-4 tracking-tight">{formData.name}</h2>
             <p className="text-sm text-[#424845] font-medium uppercase tracking-wide">{user?.role}</p>
           </div>
         </div>
 
         {/* Personal Information */}
         <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
-          <h3 className="text-sm font-bold text-[#1B365D] uppercase tracking-wider mb-6">Personal Information</h3>
+          <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Personal Information</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -212,7 +212,7 @@ export default function ProfilePage() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
+                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
                   />
                 ) : (
                   <p className="text-base text-[#191c1e] py-2">{formData.name}</p>
@@ -232,7 +232,7 @@ export default function ProfilePage() {
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
+                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
                   />
                 ) : (
                   <p className="text-base text-[#191c1e] py-2">{formData.phoneNumber || 'Not provided'}</p>
@@ -245,7 +245,7 @@ export default function ProfilePage() {
                     type="text"
                     value={formData.employeeId}
                     onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
+                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
                   />
                 ) : (
                   <p className="text-base text-[#191c1e] py-2">{formData.employeeId || 'Not provided'}</p>
@@ -257,7 +257,7 @@ export default function ProfilePage() {
 
         {/* Organization Information */}
         <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
-          <h3 className="text-sm font-bold text-[#1B365D] uppercase tracking-wider mb-6">Organization Information</h3>
+          <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Organization Information</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Organization Type</label>
@@ -265,7 +265,7 @@ export default function ProfilePage() {
                 <select
                   value={formData.organizationType}
                   onChange={(e) => setFormData({ ...formData, organizationType: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
+                  className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
                 >
                   <option value="">Select type</option>
                   <option value="college">College</option>
@@ -285,7 +285,7 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.college}
                       onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
+                      className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
                     />
                   ) : (
                     <p className="text-base text-[#191c1e] py-2">{formData.college || 'Not provided'}</p>
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.department}
                       onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
+                      className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
                     />
                   ) : (
                     <p className="text-base text-[#191c1e] py-2">{formData.department || 'Not provided'}</p>
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                     type="text"
                     value={formData.office}
                     onChange={(e) => setFormData({ ...formData, office: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D] outline-none"
+                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
                   />
                 ) : (
                   <p className="text-base text-[#191c1e] py-2">{formData.office || 'Not provided'}</p>
@@ -328,3 +328,4 @@ export default function ProfilePage() {
     </EmployeeShell>
   )
 }
+

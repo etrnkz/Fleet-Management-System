@@ -65,3 +65,4 @@ export default function Toast({ message, type, onClose, duration = 4000 }: Toast
     </div>
   )
 }
+
