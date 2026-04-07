@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { authApi, notificationApi } from '@/lib/api'
 
@@ -487,11 +488,9 @@ export default function DashboardLayout({
                       </svg>
                       <span className="text-sm font-medium text-gray-700">Edit Profile</span>
                     </button>
-                    <button
-                      onClick={() => {
-                        setShowProfileDropdown(false)
-                        setShowSettingsModal(true)
-                      }}
+                    <Link
+                      href="/settings"
+                      onClick={() => setShowProfileDropdown(false)}
                       className="w-full flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-100 text-left"
                     >
                       <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -499,7 +498,7 @@ export default function DashboardLayout({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <span className="text-sm font-medium text-gray-700">Settings</span>
-                    </button>
+                    </Link>
                     <button
                       onClick={() => {
                         setShowProfileDropdown(false)
@@ -834,290 +833,6 @@ export default function DashboardLayout({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Modal */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-[#1B3D2F] to-green-50 rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#1B3D2F] to-green-600 p-4 md:p-6 text-white flex-shrink-0">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl md:text-2xl font-bold">Settings</h3>
-                  <p className="text-[#1B3D2F] mt-1 text-sm md:text-base">Customize your experience</p>
-                </div>
-                <button
-                  onClick={() => setShowSettingsModal(false)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-                >
-                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-              {/* Sidebar */}
-              <div className="w-full md:w-64 bg-white/50 backdrop-blur-sm p-3 md:p-4 overflow-y-auto border-b md:border-b-0 md:border-r border-[#1B3D2F] flex-shrink-0">
-                <nav className="flex md:flex-col md:space-y-2 space-x-2 md:space-x-0 overflow-x-auto md:overflow-x-visible">
-                  <button
-                    onClick={() => setActiveSettingsTab('account')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'account'
-                        ? 'bg-gradient-to-r from-[#1B3D2F] to-[#152e22] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span className="font-medium">Account</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSettingsTab('security')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'security'
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span className="font-medium">Security</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSettingsTab('notifications')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'notifications'
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    <span className="font-medium">Notifications</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSettingsTab('preferences')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'preferences'
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="font-medium">Preferences</span>
-                  </button>
-                </nav>
-              </div>
-
-              {/* Content Area */}
-              <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-                {activeSettingsTab === 'account' && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </span>
-                        Account Information
-                      </h4>
-                      <div className="p-4 bg-gradient-to-r from-green-50 to-[#152e22] border-l-4 border-[#1B3D2F] rounded-lg">
-                        <p className="text-sm text-gray-700">
-                          Update your personal information from the profile menu in the top right corner.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                        </span>
-                        Change Password
-                      </h4>
-                      <div className="space-y-4">
-                        <input
-                          type="password"
-                          placeholder="Current Password"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all"
-                        />
-                        <input
-                          type="password"
-                          placeholder="New Password"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all"
-                        />
-                        <input
-                          type="password"
-                          placeholder="Confirm New Password"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all"
-                        />
-                        <button className="px-6 py-3 bg-gradient-to-r from-[#1B3D2F] to-green-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-medium">
-                          Update Password
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeSettingsTab === 'security' && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                          </svg>
-                        </span>
-                        Two-Factor Authentication
-                      </h4>
-                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-[#152e22] rounded-xl">
-                        <div>
-                          <p className="font-medium text-gray-800">Enable 2FA</p>
-                          <p className="text-sm text-gray-600 mt-1">Extra security for your account</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" className="sr-only peer" />
-                          <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1B3D2F] peer-checked:to-green-600"></div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </span>
-                        Session Timeout
-                      </h4>
-                      <select className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all">
-                        <option>15 minutes</option>
-                        <option>30 minutes</option>
-                        <option>1 hour</option>
-                        <option>2 hours</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {activeSettingsTab === 'notifications' && (
-                  <div className="space-y-4">
-                    {[
-                      { name: 'Email Notifications', desc: 'Receive updates via email', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> },
-                      { name: 'Push Notifications', desc: 'Browser notifications', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg> },
-                      { name: 'Approval Alerts', desc: 'Get notified for approvals', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-                      { name: 'Weekly Reports', desc: 'Fleet summary reports', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
-                    ].map((item, idx) => (
-                      <div key={idx} className="bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-[#1B3D2F]">{item.icon}</span>
-                            <div>
-                              <p className="font-medium text-gray-800">{item.name}</p>
-                              <p className="text-sm text-gray-600">{item.desc}</p>
-                            </div>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" defaultChecked className="sr-only peer" />
-                            <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-[#152e22]"></div>
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeSettingsTab === 'preferences' && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </span>
-                        Language & Region
-                      </h4>
-                      <div className="space-y-4">
-                        <select className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all">
-                          <option>English</option>
-                          <option>Amharic (አማርኛ)</option>
-                          <option>Oromo (Afaan Oromoo)</option>
-                        </select>
-                        <select className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all">
-                          <option>East Africa Time (EAT)</option>
-                          <option>UTC</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                          </svg>
-                        </span>
-                        Theme
-                      </h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        {['Light', 'Dark', 'Auto'].map((theme) => (
-                          <button
-                            key={theme}
-                            className="p-4 border-2 border-[#1B3D2F]/20 rounded-xl hover:border-[#1B3D2F] hover:shadow-lg transition-all"
-                          >
-                            <div className={`w-full h-20 rounded-lg mb-2 ${
-                              theme === 'Light' ? 'bg-white border-2 border-gray-200' :
-                              theme === 'Dark' ? 'bg-gray-800' :
-                              'bg-gradient-to-r from-white to-gray-800'
-                            }`}></div>
-                            <p className="text-sm font-medium">{theme}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-white border-t border-[#1B3D2F] p-3 md:p-4 flex flex-col sm:flex-row justify-end gap-2 md:gap-3 flex-shrink-0">
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="px-4 md:px-6 py-2 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-all text-sm md:text-base"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowSuccessToast(true)
-                  setTimeout(() => setShowSuccessToast(false), 3000)
-                }}
-                className="px-4 md:px-6 py-2 bg-gradient-to-r from-[#1B3D2F] to-green-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-medium text-sm md:text-base"
-              >
-                Save Changes
-              </button>
-            </div>
           </div>
         </div>
       )}
