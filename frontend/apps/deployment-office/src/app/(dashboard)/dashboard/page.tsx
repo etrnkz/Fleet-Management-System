@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -97,17 +97,17 @@ export default function DashboardPage() {
   const maintDash = (vehicleStats.maintenance / total) * circ
 
   const stateLabel: Record<string, { label: string; color: string }> = {
-    APPROVED_FOR_ALLOCATION: { label: 'APPROVED', color: 'bg-emerald-100 text-emerald-700' },
+    APPROVED_FOR_ALLOCATION: { label: 'APPROVED', color: 'bg-[#1B3D2F]/15 text-emerald-700' },
     CAR_ALLOCATED: { label: 'ALLOCATED', color: 'bg-blue-100 text-blue-700' },
     PENDING_TRANSPORT_CONFIRM: { label: 'CONFIRMING', color: 'bg-yellow-100 text-yellow-700' },
     READY: { label: 'READY', color: 'bg-indigo-100 text-indigo-700' },
-    IN_PROGRESS: { label: 'ON ROUTE', color: 'bg-emerald-100 text-emerald-700' },
+    IN_PROGRESS: { label: 'ON ROUTE', color: 'bg-[#1B3D2F]/15 text-emerald-700' },
   }
-  const gradients = ['from-cyan-400 to-blue-500','from-teal-400 to-cyan-500','from-blue-400 to-indigo-500','from-purple-400 to-pink-500']
+  const gradients = ['from-cyan-400 to-blue-500','from-[#1B3D2F]-400 to-cyan-500','from-blue-400 to-indigo-500','from-purple-400 to-pink-500']
 
   if (loading) return (
     <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#152e22]"></div>
     </div>
   )
 
@@ -115,7 +115,7 @@ export default function DashboardPage() {
     <div className="p-4 md:p-6 space-y-6">
       {showToast && (
         <div className="fixed top-4 right-4 z-50">
-          <div className={`px-6 py-3 rounded-lg shadow-lg text-white ${toastType === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}>{toastMessage}</div>
+          <div className={`px-6 py-3 rounded-lg shadow-lg text-white ${toastType === 'success' ? 'bg-[#152e22]' : 'bg-red-600'}`}>{toastMessage}</div>
         </div>
       )}
 
@@ -128,7 +128,7 @@ export default function DashboardPage() {
         <div className="flex gap-2">
           {['day','week','month','year'].map(p => (
             <button key={p} onClick={() => setSelectedPeriod(p)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors capitalize ${selectedPeriod === p ? 'bg-emerald-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
+              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors capitalize ${selectedPeriod === p ? 'bg-[#1B3D2F] text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}>
               {p}
             </button>
           ))}
@@ -138,7 +138,7 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Fleet', value: vehicleStats.total, icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z', bg: 'bg-emerald-100', color: 'text-emerald-600' },
+          { label: 'Total Fleet', value: vehicleStats.total, icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z', bg: 'bg-[#1B3D2F]/15', color: 'text-[#152e22]' },
           { label: 'Available', value: vehicleStats.available, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', bg: 'bg-blue-100', color: 'text-blue-600' },
           { label: 'In Use', value: vehicleStats.inUse, icon: 'M13 10V3L4 14h7v7l9-11h-7z', bg: 'bg-purple-100', color: 'text-purple-600' },
           { label: 'Maintenance', value: vehicleStats.maintenance, icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', bg: 'bg-orange-100', color: 'text-orange-600' },
@@ -169,7 +169,7 @@ export default function DashboardPage() {
                 <div key={day} className="flex items-center gap-3">
                   <span className="text-xs font-medium text-gray-600 w-10">{day}</span>
                   <div className="flex-1 bg-gray-100 rounded-full h-7 overflow-hidden">
-                    <div className="bg-emerald-500 h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
+                    <div className="bg-[#1B3D2F] h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
                       style={{ width: `${pct}%`, minWidth: dayCounts[idx] > 0 ? '20px' : '0' }}>
                       {dayCounts[idx] > 0 && <span className="text-xs font-medium text-white">{dayCounts[idx]}</span>}
                     </div>
@@ -203,7 +203,7 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-3 flex-1">
               {[
-                { label: 'Available', count: vehicleStats.available, color: 'bg-emerald-500' },
+                { label: 'Available', count: vehicleStats.available, color: 'bg-[#1B3D2F]' },
                 { label: 'In Use', count: vehicleStats.inUse, color: 'bg-blue-500' },
                 { label: 'Maintenance', count: vehicleStats.maintenance, color: 'bg-orange-500' },
               ].map(s => (
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                       <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                         {m.count} trips
                       </div>
-                      <div className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t hover:from-emerald-700 hover:to-emerald-500 transition-colors"
+                      <div className="w-full bg-gradient-to-t from-[#152e22] to-emerald-400 rounded-t hover:from-emerald-700 hover:to-[#1B3D2F] transition-colors"
                         style={{ height: `${(m.count / maxVal) * 120}px`, minHeight: m.count > 0 ? '4px' : '0' }}></div>
                     </div>
                     <span className="text-xs text-gray-400">{m.label}</span>
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                 ))}
               </div>
               <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
-                <div className="w-3 h-3 bg-emerald-500 rounded"></div>
+                <div className="w-3 h-3 bg-[#1B3D2F] rounded"></div>
                 <span>Total: {allTrips.length} trips</span>
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold text-gray-900">Trips Awaiting Allocation</h2>
-            <button onClick={() => router.push('/trips')} className="text-emerald-500 text-sm font-medium hover:text-emerald-600">View All →</button>
+            <button onClick={() => router.push('/trips')} className="text-[#1B3D2F] text-sm font-medium hover:text-[#152e22]">View All →</button>
           </div>
           <div className="space-y-3">
             {approvedRequests.length === 0 ? (
@@ -294,7 +294,7 @@ export default function DashboardPage() {
                   </div>
                   <span className={`px-3 py-1 ${sl.color} text-xs font-medium rounded-full`}>{sl.label}</span>
                   <button onClick={() => { setSelectedRequest(trip); setShowAssignModal(true); setAssignmentData({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' }) }}
-                    className="px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700 flex-shrink-0">
+                    className="px-3 py-1.5 bg-[#152e22] text-white text-xs rounded-lg hover:bg-emerald-700 flex-shrink-0">
                     Assign
                   </button>
                 </div>
@@ -335,7 +335,7 @@ export default function DashboardPage() {
               <h2 className="text-base font-bold text-gray-900">Live Operations</h2>
               <span className="text-xs text-gray-500">{vehicleStats.inUse} Active Units</span>
             </div>
-            <div className="h-48 bg-gradient-to-br from-blue-50 to-emerald-50 rounded-lg flex items-center justify-center">
+            <div className="h-48 bg-gradient-to-br from-blue-50 to-[#1B3D2F]/10 rounded-lg flex items-center justify-center">
               <div className="text-center">
                 <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -363,7 +363,7 @@ export default function DashboardPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
                 <select value={assignmentData.vehicleId} onChange={e => setAssignmentData({ ...assignmentData, vehicleId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]">
                   <option value="">Select vehicle...</option>
                   {availableVehicles.map((v: any) => (
                     <option key={v.id} value={v.id}>{v.make} {v.model} ({v.plateNumber})</option>
@@ -373,7 +373,7 @@ export default function DashboardPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Driver</label>
                 <select value={assignmentData.driverId} onChange={e => setAssignmentData({ ...assignmentData, driverId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]">
                   <option value="">Select driver...</option>
                   {availableDrivers.map((d: any) => (
                     <option key={d.id} value={d.id}>{d.user?.name || d.name} ({d.licenseNumber})</option>
@@ -417,7 +417,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowAssignModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-              <button onClick={handleAssign} className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Assign</button>
+              <button onClick={handleAssign} className="flex-1 px-4 py-2 bg-[#152e22] text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Assign</button>
             </div>
           </div>
         </div>

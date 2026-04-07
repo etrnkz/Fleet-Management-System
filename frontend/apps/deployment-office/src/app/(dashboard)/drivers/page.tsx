@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { driverApi } from '@/lib/api'
 
@@ -20,7 +20,7 @@ export default function DriversPage() {
     }
   }
 
-  if (loading) return <div className="p-8 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div></div>
+  if (loading) return <div className="p-8 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#152e22] mx-auto"></div></div>
   if (error) return <div className="p-8 text-center text-red-600">{error} <button onClick={loadDrivers} className="ml-2 underline">Retry</button></div>
 
   return (
@@ -32,7 +32,7 @@ export default function DriversPage() {
           return (
             <div key={driver.id} className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center">
                   <span className="text-emerald-700 font-bold text-lg">{name.charAt(0).toUpperCase()}</span>
                 </div>
                 <div>
