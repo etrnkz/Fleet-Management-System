@@ -41,6 +41,8 @@ export default function SettingsPage() {
         .finally(() => setLoadingNotifs(false))
     }
   }, [activeTab])
+
+  useEffect(() => {
     if (toast) { const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t) }
   }, [toast])
 
