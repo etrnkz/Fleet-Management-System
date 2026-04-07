@@ -59,7 +59,16 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem('departmentRememberedUser')
       }
-      
+
+      // Role check — only DepartmentHead allowed
+      const role = response.user?.role
+      if (role !== 'DepartmentHead') {
+        ;['accessToken', 'access_token', 'refreshToken', 'user'].forEach(k => localStorage.removeItem(k))
+        setError('Access denied. This portal is for Department Heads only.')
+        setLoading(false)
+        return
+      }
+
       router.push('/dashboard')
     } catch (error: any) {
       setError(error.message || 'Invalid email or password')

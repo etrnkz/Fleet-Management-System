@@ -37,6 +37,15 @@ export default function LoginPage() {
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
       if (rememberMe) localStorage.setItem('driver_rememberedEmail', email)
       else localStorage.removeItem('driver_rememberedEmail')
+
+      // Role check — only Driver allowed
+      const role = response.user?.role
+      if (role !== 'Driver') {
+        ;['access_token', 'user'].forEach(k => { storage.removeItem(k) })
+        setError('Access denied. This portal is for drivers only.')
+        return
+      }
+
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.')
