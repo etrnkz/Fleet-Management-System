@@ -224,21 +224,33 @@ export default function ApprovalsPage() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl p-3 md:p-4 text-white shadow-lg">
-          <p className="text-xs md:text-sm opacity-90">Pending</p>
-          <p className="text-2xl md:text-3xl font-bold mt-1">{stats.pending}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-3 md:p-4">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs md:text-sm text-gray-500">Pending</p>
+            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.pending}</p>
         </div>
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-3 md:p-4 text-white shadow-lg">
-          <p className="text-xs md:text-sm opacity-90">Approved</p>
-          <p className="text-2xl md:text-3xl font-bold mt-1">{stats.approved}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-3 md:p-4">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs md:text-sm text-gray-500">Approved</p>
+            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.approved}</p>
         </div>
-        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-3 md:p-4 text-white shadow-lg">
-          <p className="text-xs md:text-sm opacity-90">Rejected</p>
-          <p className="text-2xl md:text-3xl font-bold mt-1">{stats.rejected}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-3 md:p-4">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs md:text-sm text-gray-500">Rejected</p>
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.rejected}</p>
         </div>
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-3 md:p-4 text-white shadow-lg">
-          <p className="text-xs md:text-sm opacity-90">Urgent</p>
-          <p className="text-2xl md:text-3xl font-bold mt-1">{stats.urgent}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-3 md:p-4">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs md:text-sm text-gray-500">Urgent</p>
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+          </div>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.urgent}</p>
         </div>
       </div>
 

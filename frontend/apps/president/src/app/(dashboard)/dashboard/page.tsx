@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { tripApi, vehicleApi, statsApi, userApi } from '../../../lib/api'
+import { tripApi, vehicleApi } from '../../../lib/api'
 
 interface DashboardStats {
   totalVehicles: number
@@ -64,117 +64,129 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     setLoading(true)
     try {
-      // Load all dashboard data in parallel
-      const [
-        vehicles,
-        trips,
-        pendingTrips,
-        tripStats
-      ] = await Promise.all([
+      const [vehicles, trips, pendingTrips] = await Promise.all([
         vehicleApi.getAllVehicles(),
         tripApi.getAllTrips(),
         tripApi.getPendingApprovals(),
-        statsApi.getDashboardStats().catch(() => null) // Optional endpoint
       ])
 
-      // Calculate dashboard stats
-      const totalVehicles = vehicles?.length || 0
-      const activeTrips = trips?.filter((trip: any) => trip.status === 'in_progress')?.length || 0
-      const pendingApprovals = pendingTrips?.length || 0
-      
-      // Calculate fleet efficiency (active vehicles / total vehicles)
-      const activeVehicles = vehicles?.filter((v: any) => v.status === 'active')?.length || 0
-      const fleetEfficiency = totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0
+      const allTrips = trips || []
+      const allVehicles = vehicles || []
 
-      setDashboardStats({
-        totalVehicles,
-        activeTrips,
-        pendingApprovals,
-        fleetEfficiency
+      // Filter trips by selected period
+      const now = new Date()
+      const periodStart = new Date()
+      if (selectedPeriod === 'week') {
+        periodStart.setDate(now.getDate() - 7)
+      } else if (selectedPeriod === 'month') {
+        periodStart.setMonth(now.getMonth() - 1)
+      } else {
+        periodStart.setFullYear(now.getFullYear() - 1)
+      }
+      const filteredTrips = allTrips.filter((t: any) => {
+        const d = new Date(t.createdAt || t.startDateTime)
+        return d >= periodStart
       })
 
-      // Process vehicle status data
-      if (vehicles) {
-        const statusCounts = vehicles.reduce((acc: any, vehicle: any) => {
-          const status = vehicle.status || 'idle'
-          acc[status] = (acc[status] || 0) + 1
-          return acc
-        }, {})
+      // Stats from filtered trips
+      const totalVehicles = allVehicles.length
+      const activeTrips = filteredTrips.filter((t: any) =>
+        ['IN_PROGRESS', 'in_progress', 'READY', 'ready'].includes(t.status || t.state || '')
+      ).length
+      const pendingApprovals = (pendingTrips || []).length
+      const activeVehicles = allVehicles.filter((v: any) =>
+        ['Active', 'active', 'ACTIVE'].includes(v.status || '')
+      ).length
+      const fleetEfficiency = totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0
 
-        const statusData = [
-          { status: 'Active', count: statusCounts.active || 0, color: '#10b981' },
-          { status: 'Maintenance', count: statusCounts.maintenance || 0, color: '#f59e0b' },
-          { status: 'Idle', count: statusCounts.idle || 0, color: '#6b7280' },
-        ].map(item => ({
-          ...item,
-          percentage: totalVehicles > 0 ? Math.round((item.count / totalVehicles) * 100) : 0
-        }))
+      setDashboardStats({ totalVehicles, activeTrips, pendingApprovals, fleetEfficiency })
 
-        setVehicleStatus(statusData)
+      // Vehicle status breakdown
+      const statusMap: any = {}
+      allVehicles.forEach((v: any) => {
+        const s = v.status || 'Idle'
+        statusMap[s] = (statusMap[s] || 0) + 1
+      })
+      setVehicleStatus([
+        { status: 'Active', count: statusMap['Active'] || statusMap['active'] || 0, color: '#10b981' },
+        { status: 'Maintenance', count: statusMap['Maintenance'] || statusMap['maintenance'] || 0, color: '#f59e0b' },
+        { status: 'Idle', count: statusMap['Idle'] || statusMap['idle'] || 0, color: '#6b7280' },
+      ].map(item => ({
+        ...item,
+        percentage: totalVehicles > 0 ? Math.round((item.count / totalVehicles) * 100) : 0
+      })))
+
+      // Monthly chart — number of bars depends on period
+      const barCount = selectedPeriod === 'week' ? 7 : selectedPeriod === 'month' ? 4 : 12
+      const labels: string[] = []
+      const counts: number[] = []
+
+      if (selectedPeriod === 'week') {
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(); d.setDate(now.getDate() - i)
+          labels.push(d.toLocaleDateString('en-US', { weekday: 'short' }))
+          counts.push(allTrips.filter((t: any) => {
+            const td = new Date(t.createdAt || t.startDateTime)
+            return td.toDateString() === d.toDateString()
+          }).length)
+        }
+      } else if (selectedPeriod === 'month') {
+        for (let i = 3; i >= 0; i--) {
+          const weekStart = new Date(); weekStart.setDate(now.getDate() - i * 7 - 6)
+          const weekEnd = new Date(); weekEnd.setDate(now.getDate() - i * 7)
+          labels.push(`W${4 - i}`)
+          counts.push(allTrips.filter((t: any) => {
+            const td = new Date(t.createdAt || t.startDateTime)
+            return td >= weekStart && td <= weekEnd
+          }).length)
+        }
+      } else {
+        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+          labels.push(monthNames[d.getMonth()])
+          counts.push(allTrips.filter((t: any) => {
+            const td = new Date(t.createdAt || t.startDateTime)
+            return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth()
+          }).length)
+        }
       }
+      setMonthlyTrips(labels.map((month, i) => ({ month, trips: counts[i] })))
 
-      // Process monthly trips data
-      if (trips) {
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        const currentYear = new Date().getFullYear()
-        const monthlyData = monthNames.map(month => {
-          const monthIndex = monthNames.indexOf(month)
-          const monthTrips = trips.filter((trip: any) => {
-            const tripDate = new Date(trip.createdAt)
-            return tripDate.getFullYear() === currentYear && tripDate.getMonth() === monthIndex
-          })
-          return { month, trips: monthTrips.length }
-        }).slice(0, 6) // Show last 6 months
+      setTrips(filteredTrips)
 
-        setMonthlyTrips(monthlyData)
-      }
-
-      // Store trips data for other components
-      setTrips(trips || [])
+      // Pending requests list
       if (pendingTrips) {
-        const requestsData = pendingTrips.slice(0, 5).map((trip: any) => ({
+        setPendingRequests(pendingTrips.slice(0, 5).map((trip: any) => ({
           id: trip.id,
           department: trip.requester?.department?.name || 'Unknown',
           purpose: trip.purpose || 'No purpose specified',
           requestedDate: new Date(trip.createdAt).toLocaleDateString(),
           status: trip.state || trip.status || 'unknown',
           requesterName: trip.requester?.name || 'Unknown',
-        }))
-        setPendingRequests(requestsData)
+        })))
       }
 
-      // Process fleet utilization by department
-      if (trips && vehicles) {
-        // Get departments from trips and calculate utilization
-        const departmentUsage = trips.reduce((acc: any, trip: any) => {
-          const deptName = trip.requester?.department?.name || 'Unknown'
-          if (!acc[deptName]) {
-            acc[deptName] = { trips: 0, vehicles: new Set() }
-          }
-          acc[deptName].trips += 1
-          const vid = trip.allocatedVehicle?.id || trip.vehicle?.id
-          if (vid) {
-            acc[deptName].vehicles.add(vid)
-          }
-          return acc
-        }, {})
-
-        const utilizationData = Object.entries(departmentUsage)
-          .map(([dept, data]: [string, any], index) => {
-            const uniqueVehicles = data.vehicles.size
-            const utilizationRate = totalVehicles > 0 ? Math.round((uniqueVehicles / totalVehicles) * 100) : 0
-            const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500']
-            
-            return {
-              department: dept,
-              percentage: Math.max(utilizationRate, Math.floor(data.trips / 10 * 100)), // Fallback calculation
-              color: colors[index % colors.length]
-            }
-          })
-          .slice(0, 5) // Show top 5 departments
-
-        setFleetUtilization(utilizationData)
-      }
+      // Fleet utilization by department (from filtered trips)
+      const deptUsage: any = {}
+      filteredTrips.forEach((trip: any) => {
+        const dept = trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown'
+        if (!deptUsage[dept]) deptUsage[dept] = { trips: 0, vehicles: new Set() }
+        deptUsage[dept].trips += 1
+        const vid = trip.allocatedVehicle?.id
+        if (vid) deptUsage[dept].vehicles.add(vid)
+      })
+      const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500']
+      setFleetUtilization(
+        Object.entries(deptUsage)
+          .map(([dept, data]: [string, any], i) => ({
+            department: dept,
+            percentage: Math.min(Math.round((data.trips / Math.max(filteredTrips.length, 1)) * 100), 100),
+            color: colors[i % colors.length]
+          }))
+          .sort((a, b) => b.percentage - a.percentage)
+          .slice(0, 5)
+      )
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error)
@@ -238,48 +250,40 @@ export default function Dashboard() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 md:p-6 text-white shadow-lg">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs md:text-sm font-medium opacity-90">Total Fleet</h3>
-            <svg className="w-6 h-6 md:w-8 md:h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-            </svg>
+            <h3 className="text-xs md:text-sm font-medium text-gray-500">Total Fleet</h3>
+            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.totalVehicles}</p>
-          <p className="text-xs md:text-sm opacity-80 mt-1">Vehicles</p>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{dashboardStats.totalVehicles}</p>
+          <p className="text-xs md:text-sm text-gray-400 mt-1">Vehicles</p>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 md:p-6 text-white shadow-lg">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs md:text-sm font-medium opacity-90">Active Trips</h3>
-            <svg className="w-6 h-6 md:w-8 md:h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
+            <h3 className="text-xs md:text-sm font-medium text-gray-500">Active Trips</h3>
+            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.activeTrips}</p>
-          <p className="text-xs md:text-sm opacity-80 mt-1">In Progress</p>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{dashboardStats.activeTrips}</p>
+          <p className="text-xs md:text-sm text-gray-400 mt-1">In Progress</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500 to-emerald-600 rounded-xl p-4 md:p-6 text-white shadow-lg">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs md:text-sm font-medium opacity-90">Pending Approvals</h3>
-            <svg className="w-6 h-6 md:w-8 md:h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <h3 className="text-xs md:text-sm font-medium text-gray-500">Pending Approvals</h3>
+            <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.pendingApprovals}</p>
-          <p className="text-xs md:text-sm opacity-80 mt-1">Awaiting Review</p>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{dashboardStats.pendingApprovals}</p>
+          <p className="text-xs md:text-sm text-gray-400 mt-1">Awaiting Review</p>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 md:p-6 text-white shadow-lg">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs md:text-sm font-medium opacity-90">Fleet Efficiency</h3>
-            <svg className="w-6 h-6 md:w-8 md:h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+            <h3 className="text-xs md:text-sm font-medium text-gray-500">Fleet Efficiency</h3>
+            <div className="w-2.5 h-2.5 bg-orange-500 rounded-full"></div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold">{dashboardStats.fleetEfficiency}%</p>
-          <p className="text-xs md:text-sm opacity-80 mt-1">Utilization Rate</p>
+          <p className="text-2xl md:text-3xl font-bold text-gray-900">{dashboardStats.fleetEfficiency}%</p>
+          <p className="text-xs md:text-sm text-gray-400 mt-1">Utilization Rate</p>
         </div>
       </div>
 

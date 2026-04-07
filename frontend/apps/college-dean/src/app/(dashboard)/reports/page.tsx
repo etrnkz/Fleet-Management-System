@@ -70,7 +70,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
       </div>
     )
   }
@@ -87,7 +87,7 @@ export default function ReportsPage() {
 
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Reports & Analytics</h1>
           <p className="text-sm text-gray-500 mt-1">Department fleet management overview</p>
         </div>
         <div className="flex gap-2">
@@ -102,7 +102,7 @@ export default function ReportsPage() {
           </button>
           <button
             onClick={handleExportExcel}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-2"
+            className="px-4 py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

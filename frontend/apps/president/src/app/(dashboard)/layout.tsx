@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { authApi, notificationApi } from '@/lib/api'
 
 export default function DashboardLayout({
@@ -37,6 +37,17 @@ export default function DashboardLayout({
     educationLevel: ''
   })
   const [photoPreview, setPhotoPreview] = useState('')
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     const token = localStorage.getItem('access_token')
@@ -149,7 +160,7 @@ export default function DashboardLayout({
     localStorage.removeItem('presidentUser')
     localStorage.removeItem('presidentLoggedIn')
     localStorage.removeItem('presidentRememberedUser')
-    router.push('/login')
+    router.push('/')
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -290,11 +301,12 @@ export default function DashboardLayout({
               </svg>
             </button>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">P</span>
+              <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                <span className="text-emerald-600 font-bold text-sm">H</span>
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-gray-800">President Portal</h1>
+                <div className="font-bold text-emerald-600 tracking-tight">Haramaya University</div>
+                <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
               </div>
             </div>
           </div>
@@ -314,12 +326,9 @@ export default function DashboardLayout({
             </div>
 
             {/* Notifications */}
-            <div 
-              className="relative"
-              onMouseEnter={() => setShowNotifications(true)}
-              onMouseLeave={() => setShowNotifications(false)}
-            >
+            <div className="relative" ref={notifRef}>
               <button
+                onClick={() => setShowNotifications(prev => !prev)}
                 className="p-2 rounded-lg hover:bg-gray-100 relative"
               >
                 <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,79 +342,76 @@ export default function DashboardLayout({
               </button>
 
               {showNotifications && (
-                <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-96 max-w-md bg-white rounded-lg shadow-xl border border-gray-200 max-h-[70vh] sm:max-h-[600px] overflow-y-auto z-50">
-                  <div className="p-3 md:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm md:text-base font-semibold text-gray-800">Notifications</h3>
-                      <div className="flex items-center gap-2">
-                        {notifications.filter((n: any) => !n.isRead).length > 0 && (
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation()
-                              try {
-                                await notificationApi.markAllAsRead()
-                                setNotifications((prev: any[]) => prev.map((n: any) => ({ ...n, isRead: true })))
-                              } catch {}
-                            }}
-                            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
-                          >
-                            Mark all read
-                          </button>
-                        )}
-                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${notifications.filter((n: any) => !n.isRead).length > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-                          {notifications.filter((n: any) => !n.isRead).length} New
-                        </span>
-                      </div>
-                    </div>
+                <div className="absolute right-0 mt-2 w-96 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-xl border border-gray-200 max-h-[70vh] overflow-y-auto z-50">
+                  <div className="p-3 md:p-4 border-b border-gray-200 sticky top-0 bg-white z-10 flex items-center justify-between">
+                    <h3 className="text-sm md:text-base font-semibold text-gray-800">Notifications</h3>
+                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${notifications.filter((n: any) => !n.isRead).length > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                      {notifications.filter((n: any) => !n.isRead).length} Unread
+                    </span>
                   </div>
+
                   <div className="divide-y divide-gray-100">
-                    {notifications.map((notif: any) => (
-                      <div 
-                        key={notif.id} 
-                        className={`p-3 md:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!notif.isRead ? 'bg-blue-50 border-l-4 border-blue-400' : ''}`}
-                        onClick={async () => {
-                          if (!notif.isRead) {
-                            try {
-                              await notificationApi.markAsRead(notif.id)
-                              setNotifications((prev: any[]) => prev.map((n: any) => n.id === notif.id ? { ...n, isRead: true } : n))
-                            } catch {}
-                          }
+                    {notifications.length > 0 ? notifications.map((notif: any) => (
+                      <div
+                        key={notif.id}
+                        className={`p-3 md:p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50' : ''}`}
+                        onClick={() => {
                           setSelectedNotification(notif)
                           setShowNotificationDetail(true)
                           setShowNotifications(false)
                         }}
                       >
-                        <div className="flex items-start space-x-2 md:space-x-3">
+                        <div className="flex items-start gap-2 md:gap-3">
                           <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                             notif.type === 'urgent' ? 'bg-red-500' :
                             notif.type === 'warning' ? 'bg-yellow-500' :
-                            notif.type === 'approval' ? 'bg-green-500' :
-                            notif.type === 'success' ? 'bg-green-500' : 'bg-gray-400'
+                            notif.type === 'approval' || notif.type === 'success' ? 'bg-green-500' : 'bg-gray-400'
                           }`}></div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs md:text-sm font-medium text-gray-800 truncate">{notif.title}</p>
-                                <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded mt-1">
-                                  {notif.category}
-                                </span>
-                              </div>
-                              {notif.type === 'urgent' && (
-                                <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full font-medium flex-shrink-0">
-                                  Urgent
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-600 mt-2 line-clamp-2">{notif.message}</p>
-                            <p className="text-xs text-gray-400 mt-2">{notif.time || (notif.sentAt ? new Date(notif.sentAt).toLocaleString() : notif.createdAt ? new Date(notif.createdAt).toLocaleString() : '')}</p>
+                            <p className="text-xs md:text-sm font-medium text-gray-800 truncate">{notif.title}</p>
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
+                            <p className="text-xs text-gray-400 mt-1">{notif.sentAt ? new Date(notif.sentAt).toLocaleString() : notif.createdAt ? new Date(notif.createdAt).toLocaleString() : ''}</p>
                           </div>
+                          {!notif.isRead && (
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                try {
+                                  await notificationApi.markAsRead(notif.id)
+                                  setNotifications((prev: any[]) => prev.map((n: any) => n.id === notif.id ? { ...n, isRead: true } : n))
+                                } catch {}
+                              }}
+                              className="text-[10px] text-emerald-600 hover:text-emerald-700 font-medium whitespace-nowrap flex-shrink-0 mt-1"
+                            >
+                              Mark read
+                            </button>
+                          )}
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="p-8 text-center text-sm text-gray-500">No notifications</div>
+                    )}
                   </div>
-                  <div className="p-2 md:p-3 border-t border-gray-200 bg-gray-50 sticky bottom-0">
-                    <button className="w-full text-center text-xs md:text-sm text-emerald-600 hover:text-emerald-700 font-medium">
-                      View All Notifications
+
+                  <div className="p-2 md:p-3 border-t border-gray-200 bg-gray-50 sticky bottom-0 flex items-center justify-between gap-2">
+                    {notifications.filter((n: any) => !n.isRead).length > 0 && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await notificationApi.markAllAsRead()
+                            setNotifications((prev: any[]) => prev.map((n: any) => ({ ...n, isRead: true })))
+                          } catch {}
+                        }}
+                        className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="text-xs text-gray-500 hover:text-gray-700 font-medium ml-auto"
+                    >
+                      Close
                     </button>
                   </div>
                 </div>
@@ -537,7 +543,7 @@ export default function DashboardLayout({
                 </svg>
               </button>
             </div>
-            <nav className="p-4 space-y-2">
+            <nav className="p-4 space-y-1">
               {navigation.map((item) => (
                 <a
                   key={item.name}
@@ -546,61 +552,40 @@ export default function DashboardLayout({
                     handleNavigation(e, item.href)
                     setShowMobileMenu(false)
                   }}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     pathname === item.href
-                      ? 'bg-emerald-50 text-emerald-600'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                      : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
                   }`}
                 >
                   {item.icon}
-                  <span className="font-medium">{item.name}</span>
+                  <span className="antialiased tracking-tight">{item.name}</span>
                 </a>
               ))}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="font-medium">Logout</span>
-              </button>
             </nav>
           </div>
         </div>
       )}
 
       {/* Fixed Sidebar - Desktop */}
-      <aside className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg overflow-y-auto">
-        <nav className="p-4 space-y-2">
+      <aside className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-gray-200 overflow-y-auto">
+        <nav className="p-4 space-y-1">
           {navigation.map((item) => (
             <a
               key={item.name}
               href={item.href}
               onClick={(e) => handleNavigation(e, item.href)}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 pathname === item.href
-                  ? 'bg-emerald-50 text-emerald-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               {item.icon}
-              <span className="font-medium">{item.name}</span>
+              <span className="antialiased tracking-tight">{item.name}</span>
             </a>
           ))}
         </nav>
-
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className="font-medium">Logout</span>
-          </button>
-        </div>
       </aside>
 
       {/* Main Content */}

@@ -54,6 +54,7 @@ export default function DashboardLayout({
     role: '',
   })
   const [tempProfileImage, setTempProfileImage] = useState<string | null>(null)
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -158,6 +159,7 @@ export default function DashboardLayout({
   const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setSelectedPhotoFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setTempProfileImage(reader.result as string)
@@ -168,10 +170,20 @@ export default function DashboardLayout({
 
   const handleSaveProfile = async () => {
     try {
-      await userApi.updateProfile(editedProfile)
-      const updatedUser = { ...user, ...editedProfile }
-      setUser(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      // Upload photo first if a new one was selected
+      if (selectedPhotoFile) {
+        const result: any = await userApi.uploadProfileImage(selectedPhotoFile)
+        const updatedUser = { ...user, ...editedProfile, profileImage: result.profileImage || tempProfileImage }
+        setUser(updatedUser)
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+      } else {
+        await userApi.updateProfile(editedProfile)
+        const updatedUser = { ...user, ...editedProfile }
+        setUser(updatedUser)
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+      }
+      setSelectedPhotoFile(null)
+      setTempProfileImage(null)
       setShowProfileModal(false)
       showToast('Profile updated successfully!', 'success')
     } catch (error: any) {
@@ -203,15 +215,12 @@ export default function DashboardLayout({
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
-            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-              </svg>
+            <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+              <span className="text-emerald-600 font-bold text-sm">H</span>
             </div>
             <div>
-              <p className="font-bold text-gray-900">HUFMS</p>
-              <p className="text-xs text-gray-500">Transport Admin</p>
+              <div className="font-bold text-emerald-600 tracking-tight">Haramaya University</div>
+              <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
             </div>
           </div>
 
@@ -222,8 +231,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/dashboard')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/dashboard')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,8 +246,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/vehicles')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/vehicles')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -253,8 +262,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/tracking')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/tracking')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,8 +278,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/drivers')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/drivers')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,8 +293,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/trips')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/trips')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,8 +308,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/approvals')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/approvals')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,8 +323,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/fuel')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/fuel')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,8 +338,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/maintenance')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/maintenance')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,8 +354,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/documents')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/documents')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,8 +369,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/reports')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/reports')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,8 +384,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/notifications')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/notifications')
-                  ? 'text-emerald-600 bg-emerald-50'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
               }`}
             >
               <div className="relative">
@@ -443,37 +452,77 @@ export default function DashboardLayout({
 
                 {/* Notifications Dropdown */}
                 {showNotifications && (
-                  <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <div className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                       <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
-                      <span className="text-xs text-emerald-600 font-medium">{unreadCount} new</span>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${unreadCount > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>{unreadCount} Unread</span>
                     </div>
-                    <div className="overflow-y-auto max-h-[420px]">
+                    <div className="overflow-y-auto flex-1">
                       {notifications.filter(n => !n.read && !n.isRead).length === 0 ? (
                         <div className="py-10 text-center text-gray-400">
                           <p className="text-sm">No new notifications</p>
                         </div>
                       ) : notifications.filter(n => !n.read && !n.isRead).map((notification) => (
-                        <button
+                        <div
                           key={notification.id}
-                          onClick={() => { handleNotificationClick(notification); setShowNotifications(false) }}
-                          className="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors bg-emerald-50"
+                          className="p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors bg-blue-50"
                         >
                           <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-100">
-                              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                            <div
+                              className="flex-1 min-w-0 cursor-pointer"
+                              onClick={() => { handleNotificationClick(notification); setShowNotifications(false) }}
+                            >
                               <p className="font-semibold text-gray-900 text-sm mb-1">{notification.title}</p>
                               <p className="text-xs text-gray-600 line-clamp-2">{notification.message}</p>
                               <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
                             </div>
-                            <div className="w-2 h-2 bg-emerald-600 rounded-full flex-shrink-0 mt-2"></div>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                const token = typeof window !== 'undefined'
+                                  ? localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+                                  : null
+                                if (token) {
+                                  await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'}/notifications/${notification.id}/read`, {
+                                    method: 'PATCH', headers: { Authorization: `Bearer ${token}` }
+                                  }).catch(() => {})
+                                }
+                                setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true, isRead: true } : n))
+                              }}
+                              className="text-[10px] text-emerald-600 hover:text-emerald-700 font-medium whitespace-nowrap flex-shrink-0 mt-1"
+                            >
+                              Mark read
+                            </button>
                           </div>
-                        </button>
+                        </div>
                       ))}
+                    </div>
+                    <div className="p-3 border-t border-gray-200 bg-gray-50 flex-shrink-0 flex items-center justify-between gap-2">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={async () => {
+                            const token = typeof window !== 'undefined'
+                              ? localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+                              : null
+                            if (token) {
+                              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'}/notifications/read-all`, {
+                                method: 'PATCH', headers: { Authorization: `Bearer ${token}` }
+                              }).catch(() => {})
+                            }
+                            setNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })))
+                          }}
+                          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                        >
+                          Mark all as read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-xs text-gray-500 hover:text-gray-700 font-medium ml-auto"
+                      >
+                        Close
+                      </button>
                     </div>
                   </div>
                 )}
@@ -501,10 +550,14 @@ export default function DashboardLayout({
                   onClick={() => setShowProfileDropdown(prev => !prev)}
                   className="hidden md:flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">
-                      {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
-                    </span>
+                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center overflow-hidden">
+                    {user?.profileImage ? (
+                      <img src={user.profileImage} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+                    ) : (
+                      <span className="text-white font-bold text-sm">
+                        {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
+                      </span>
+                    )}
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-medium text-gray-900 leading-tight">{user?.name || 'User'}</p>
@@ -520,8 +573,12 @@ export default function DashboardLayout({
                     {/* Profile Header */}
                     <div className="p-4 bg-emerald-50 border-b border-emerald-100">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white text-lg font-bold">
-                          {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
+                        <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white text-lg font-bold overflow-hidden">
+                          {user?.profileImage ? (
+                            <img src={user.profileImage} alt="Profile" className="w-12 h-12 rounded-full object-cover" />
+                          ) : (
+                            user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-gray-900 truncate">{user?.name || 'User'}</p>
@@ -811,10 +868,10 @@ export default function DashboardLayout({
               {/* Profile Photo Section */}
               <div className="mb-6 flex flex-col items-center">
                 <div className="relative">
-                  {tempProfileImage ? (
+                  {tempProfileImage || user?.profileImage ? (
                     <img 
-                      src={tempProfileImage} 
-                      alt="Profile Preview" 
+                      src={tempProfileImage || user?.profileImage} 
+                      alt="Profile" 
                       className="w-32 h-32 rounded-full object-cover border-4 border-emerald-200"
                     />
                   ) : (
