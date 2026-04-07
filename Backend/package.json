@@ -26,6 +26,7 @@
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:api": "newman run postman/collections/Fleet_Management_API.postman_collection.json -e postman/environments/Fleet_Management_Environment.postman_environment.json --bail",
     "pm2:print-env": "node scripts/echo-pm2-env.cjs"
   },
   "dependencies": {
