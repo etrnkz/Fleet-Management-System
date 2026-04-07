@@ -1,4 +1,4 @@
-// API Client for Department App
+﻿// API Client for Department App
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
@@ -107,7 +107,7 @@ export const authApi = {
   login: (email: string, password: string) =>
     apiFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, appType: 'department' }),
     }),
 
   logout: () =>

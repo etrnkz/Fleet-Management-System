@@ -1,4 +1,4 @@
-const API_BASE_URL =
+﻿const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'
 
 const getAuthToken = () => {
@@ -82,7 +82,7 @@ export const authApi = {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, appType: 'driver' }),
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: 'Login failed' }))

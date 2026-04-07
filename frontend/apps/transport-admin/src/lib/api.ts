@@ -1,4 +1,4 @@
-// API client — Transport Admin app (Transport Office / fleet operations roles)
+﻿// API client — Transport Admin app (Transport Office / fleet operations roles)
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
@@ -102,7 +102,7 @@ export const authApi = {
   login: (email: string, password: string) =>
     apiFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, appType: 'transport-admin' }),
     }),
 
   logout: () =>
