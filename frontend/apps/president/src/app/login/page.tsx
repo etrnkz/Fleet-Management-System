@@ -77,6 +77,15 @@ export default function Login() {
         /* optional profile enrichment */
       }
 
+      // Role check — only President allowed
+      const role = data.user?.role
+      if (role !== 'President') {
+        ;['accessToken', 'access_token', 'user', 'presidentUser'].forEach(k => localStorage.removeItem(k))
+        setError('Access denied. This portal is for the President only.')
+        setIsLoading(false)
+        return
+      }
+
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Invalid email or password')

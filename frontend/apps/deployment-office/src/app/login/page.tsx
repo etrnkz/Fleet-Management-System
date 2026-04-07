@@ -39,6 +39,15 @@ export default function LoginPage() {
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
       if (rememberMe) localStorage.setItem('do_rememberedEmail', email)
       else localStorage.removeItem('do_rememberedEmail')
+
+      // Role check — only DeploymentTeam allowed
+      const role = response.user?.role
+      if (role !== 'DeploymentTeam') {
+        ;['access_token', 'accessToken', 'user'].forEach(k => { storage.removeItem(k) })
+        setError('Access denied. This portal is for Deployment Office staff only.')
+        return
+      }
+
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.')

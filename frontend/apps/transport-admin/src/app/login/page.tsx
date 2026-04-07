@@ -33,6 +33,15 @@ export default function LoginPage() {
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
       if (rememberMe) localStorage.setItem('transport_admin_rememberedEmail', email)
       else localStorage.removeItem('transport_admin_rememberedEmail')
+
+      // Role check — only TransportOffice allowed
+      const role = response.user?.role
+      if (role !== 'TransportOffice') {
+        ;['access_token', 'user'].forEach(k => { storage.removeItem(k) })
+        setError('Access denied. This portal is for Transport Office staff only.')
+        return
+      }
+
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.')

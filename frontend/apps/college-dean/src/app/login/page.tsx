@@ -40,7 +40,16 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem('collegeDeanRememberedUser')
       }
-      
+
+      // Role check — only Dean or CollegeHead allowed
+      const role = response.user?.role
+      if (role !== 'Dean' && role !== 'CollegeHead') {
+        ;['accessToken', 'access_token', 'refreshToken', 'user'].forEach(k => localStorage.removeItem(k))
+        setError('Access denied. This portal is for College Deans only.')
+        setLoading(false)
+        return
+      }
+
       router.push('/dashboard')
     } catch (error: any) {
       setError(error.message || 'Invalid email or password')

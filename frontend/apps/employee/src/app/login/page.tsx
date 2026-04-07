@@ -73,6 +73,15 @@ export default function LoginPage() {
         localStorage.removeItem('rememberedEmail')
       }
 
+      // Role check — only User (employee) allowed
+      const role = data.user?.role
+      if (role !== 'User') {
+        ;['accessToken', 'access_token', 'refreshToken', 'user'].forEach(k => { storage.removeItem(k) })
+        setIsLoading(false)
+        alert('Access denied. This portal is for employees only.')
+        return
+      }
+
       router.push('/dashboard')
     } catch (error: any) {
       setIsLoading(false)
