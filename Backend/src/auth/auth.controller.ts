@@ -69,7 +69,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true, forbidNonWhitelisted: false }))
   @ApiOperation({
     summary: 'User login',
     description: 'Authenticate user and return JWT token',
