@@ -1,266 +1,111 @@
 'use client'
-
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'
-
+import { authApi } from '@/lib/api'
 export default function LoginPage() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
-  const [errors, setErrors] = useState<{email?: string; password?: string}>({})
-  const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-
-  const validateForm = () => {
-    const newErrors: {email?: string; password?: string} = {}
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required'
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid'
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('transport_admin_rememberedEmail')
+      if (saved) { setEmail(saved); setRememberMe(true) }
+      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
+      if (token) router.replace('/dashboard')
     }
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  }, [])
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!validateForm()) {
-      return
-    }
-
+    setError('')
     setIsLoading(true)
-
     try {
-      // Call backend API
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed')
+      const response = await authApi.login(email, password)
+      const storage = rememberMe ? localStorage : sessionStorage
+      if (!rememberMe) {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('user')
       }
-
-      // Save tokens and user data
-      localStorage.setItem('accessToken', data.access_token)
-      localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('refreshToken', data.refresh_token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      
-      // Save email if remember me is checked
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', formData.email)
-      } else {
-        localStorage.removeItem('rememberedEmail')
-      }
-
-      // Redirect to dashboard
+      storage.setItem('access_token', response.access_token)
+      if (response.user) storage.setItem('user', JSON.stringify(response.user))
+      if (rememberMe) localStorage.setItem('transport_admin_rememberedEmail', email)
+      else localStorage.removeItem('transport_admin_rememberedEmail')
       router.push('/dashboard')
-    } catch (error: any) {
-      setErrors({ email: error.message || 'Invalid credentials' })
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.')
+    } finally {
       setIsLoading(false)
     }
   }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    // Clear error when user starts typing
-    if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }))
-    }
-  }
-
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+      {isLoading && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-gray-50/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-xl flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-emerald-700 border-t-transparent" />
+            <p className="mt-4 text-gray-600 text-sm font-semibold uppercase tracking-wide">Authenticating…</p>
+          </div>
+        </div>
+      )}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-10 bg-gray-50">
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Transport Admin sign-in</h1>
-            <p className="text-gray-600 text-sm">Use your university transport office credentials.</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                className={`w-full px-4 py-3 border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all`}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-              )}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                <span className="text-emerald-600 font-bold text-sm">H</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Haramaya University</p>
+                <h1 className="text-lg font-bold text-emerald-700 tracking-tight">Transport Admin Portal</h1>
+              </div>
             </div>
-
-            {/* Password */}
+            <h2 className="text-2xl font-bold text-emerald-700 font-serif tracking-tight">Secure sign in</h2>
+            <p className="text-gray-600 text-sm mt-2 font-medium">Use your assigned transport admin credentials to access the portal.</p>
+          </div>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
+          )}
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+              <label htmlFor="email" className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Email address</label>
+              <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@haramaya.edu.et" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700 outline-none transition-all bg-white" required />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
+              </div>
               <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  className={`w-full px-4 py-3 pr-12 border ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  } rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                >
+                <input type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700 outline-none transition-all bg-white" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-700">
                   {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
                   )}
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-500">{errors.password}</p>
-              )}
             </div>
-
-            {/* Remember Me */}
             <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="remember"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-emerald-500 border-gray-300 rounded focus:ring-emerald-500"
-              />
-              <label htmlFor="remember" className="ml-2 text-sm text-gray-700">
-                Remember this device (30 days)
-              </label>
+              <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-emerald-700 focus:ring-emerald-700" />
+              <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Keep me signed in</label>
             </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-emerald-500 text-white py-3 rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Signing in...
-                </span>
-              ) : (
-                'Signin'
-              )}
+            <button type="submit" disabled={isLoading} className="w-full bg-emerald-700 text-white py-3 rounded-lg font-semibold text-sm hover:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {isLoading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
-
-          <div className="mt-8 text-center border-t border-gray-100 pt-6">
-            <Link
-              href="/"
-              className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors"
-            >
-              ← Back to portal overview
-            </Link>
-          </div>
         </div>
       </div>
-
-      {/* Right Side - Image/Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-400 via-teal-500 to-cyan-600 items-center justify-center p-12 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 text-center">
-          <div className="mb-8 flex justify-center">
-            <div className="relative">
-              <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl">
-                <svg className="w-20 h-20 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          
-          <h2 className="text-5xl font-bold text-white mb-4">HUFMS</h2>
-          
-          <p className="text-teal-50 text-lg max-w-md mx-auto">
-            Transport administration — fleet, fuel, and operations
-          </p>
-
-          {/* Decorative Elements */}
-          <div className="mt-12 flex justify-center gap-4">
-            <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-            <div className="w-3 h-3 bg-white rounded-full animate-pulse delay-75"></div>
-            <div className="w-3 h-3 bg-white rounded-full animate-pulse delay-150"></div>
-          </div>
-        </div>
-
-        {/* Truck Silhouettes */}
-        <div className="absolute bottom-0 left-0 right-0 h-48 opacity-20">
-          <svg className="w-full h-full" viewBox="0 0 1200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="50" y="100" width="120" height="60" fill="white" rx="4"/>
-            <rect x="170" y="120" width="80" height="40" fill="white" rx="4"/>
-            <circle cx="90" cy="170" r="15" fill="white"/>
-            <circle cx="210" cy="170" r="15" fill="white"/>
-            
-            <rect x="400" y="90" width="140" height="70" fill="white" rx="4"/>
-            <rect x="540" y="115" width="90" height="45" fill="white" rx="4"/>
-            <circle cx="445" cy="170" r="15" fill="white"/>
-            <circle cx="585" cy="170" r="15" fill="white"/>
-            
-            <rect x="800" y="105" width="110" height="55" fill="white" rx="4"/>
-            <rect x="910" y="125" width="75" height="35" fill="white" rx="4"/>
-            <circle cx="835" cy="170" r="15" fill="white"/>
-            <circle cx="950" cy="170" r="15" fill="white"/>
-          </svg>
+      <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-700 flex-col justify-center px-12 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.07] bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%221%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]" />
+        <div className="relative z-10 max-w-md">
+          <p className="text-emerald-100 text-xs font-semibold uppercase tracking-[0.2em] mb-4">Transport Admin access</p>
+          <h2 className="text-3xl font-bold font-serif tracking-tight leading-tight">Fleet Management System</h2>
+          <p className="mt-4 text-white/85 text-sm leading-relaxed font-medium">Manage fleet operations, track vehicles, coordinate trips, and oversee transport logistics through this secure admin portal.</p>
+          <div className="mt-10 h-px w-24 bg-[#D1E1FF]/50" />
+          <p className="mt-6 text-xs text-white/60 uppercase tracking-widest font-semibold">Authorized admins only</p>
         </div>
       </div>
     </div>
