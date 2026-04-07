@@ -1,10 +1,14 @@
 {
-  "workspaceId": "",
-  "collectionId": "",
-  "environmentId": "",
-  "collectionName": "Fleet Management - Complete Trip Workflow",
+  "collectionName": "Fleet Management API",
   "workspaceName": "Fleet Management System",
-  "environmentName": "Local Development",
-  "baseUrl": "http://localhost:3000",
-  "description": "Fleet Management System API testing configuration"
+  "description": "Haramaya University Fleet Management System API collection",
+  "collection": "postman/collections/Fleet_Management_API.postman_collection.json",
+  "environments": {
+    "local": "postman/environments/Fleet_Management_Environment.postman_environment.json",
+    "production": "postman/environments/Fleet_Management_Production.postman_environment.json"
+  },
+  "usage": {
+    "run_local": "npm run test:api",
+    "run_production": "npx newman run postman/collections/Fleet_Management_API.postman_collection.json -e postman/environments/Fleet_Management_Production.postman_environment.json"
+  }
 }
