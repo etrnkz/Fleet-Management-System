@@ -247,7 +247,7 @@ export class UsersService {
       case UserRole.DepartmentHead:
         return [UserRole.User];
       case UserRole.TransportOffice:
-        return [UserRole.Driver, UserRole.MaintenanceTeam, UserRole.Gate, UserRole.User];
+        return [UserRole.Driver, UserRole.MaintenanceTeam, UserRole.Gate, UserRole.DeploymentTeam, UserRole.DepartmentHead, UserRole.CollegeHead, UserRole.Dean, UserRole.User];
       default:
         return [UserRole.User];
     }
