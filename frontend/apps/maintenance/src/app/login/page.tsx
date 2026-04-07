@@ -62,7 +62,7 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-400 to-orange-600 items-center justify-center p-12">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-700 flex-col justify-center px-12 text-white overflow-hidden">
         <div className="text-center text-white">
           <h2 className="text-4xl font-bold mb-4">HUFMS</h2>
           <p className="text-orange-100 text-lg">Fleet Maintenance Management System</p>
