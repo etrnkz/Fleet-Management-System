@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { driverApi } from '@/lib/api'
@@ -95,7 +95,7 @@ export default function DriversPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
       </div>
     )
   }
@@ -113,7 +113,7 @@ export default function DriversPage() {
           onClick={() => setActiveFilter('All Drivers')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             activeFilter === 'All Drivers'
-              ? 'bg-emerald-600 text-white'
+              ? 'bg-[#1B3D2F] text-white'
               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
           }`}
         >
@@ -123,7 +123,7 @@ export default function DriversPage() {
           onClick={() => setActiveFilter('Available')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
             activeFilter === 'Available'
-              ? 'bg-emerald-600 text-white'
+              ? 'bg-[#1B3D2F] text-white'
               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
           }`}
         >
@@ -134,7 +134,7 @@ export default function DriversPage() {
           onClick={() => setActiveFilter('On Trip')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
             activeFilter === 'On Trip'
-              ? 'bg-emerald-600 text-white'
+              ? 'bg-[#1B3D2F] text-white'
               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
           }`}
         >
@@ -145,7 +145,7 @@ export default function DriversPage() {
           onClick={() => setActiveFilter('Off Duty')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
             activeFilter === 'Off Duty'
-              ? 'bg-emerald-600 text-white'
+              ? 'bg-[#1B3D2F] text-white'
               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
           }`}
         >
@@ -176,7 +176,7 @@ export default function DriversPage() {
                     key={driver.id}
                     onClick={() => setSelectedDriver(driver.id)}
                     className={`bg-white rounded-xl p-6 border-2 transition-all hover:shadow-lg cursor-pointer ${
-                      isSelected ? 'border-emerald-500' : 'border-gray-200'
+                      isSelected ? 'border-[#1B3D2F]' : 'border-gray-200'
                     }`}
                   >
                     <div className="flex items-start gap-4 mb-4">
@@ -223,7 +223,7 @@ export default function DriversPage() {
                           View Trip
                         </button>
                       ) : status.label === 'AVAILABLE' ? (
-                        <button className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
+                        <button className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium">
                           Assign Trip
                         </button>
                       ) : (
@@ -249,7 +249,7 @@ export default function DriversPage() {
             <div className="bg-white rounded-xl p-6 border border-gray-200">
               <h3 className="font-bold text-gray-900 mb-2">Driver Details</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Selected: <span className="text-emerald-600 font-medium">
+                Selected: <span className="text-[#1B3D2F] font-medium">
                   {selectedDriverData.user.firstName} {selectedDriverData.user.lastName}
                 </span>
               </p>
@@ -285,23 +285,23 @@ export default function DriversPage() {
 
               <button 
                 onClick={() => showToast('Driver details viewed', 'info')}
-                className="w-full mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                className="w-full mt-4 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
               >
                 View Full Profile
               </button>
             </div>
           )}
 
-          <div className="bg-emerald-600 rounded-xl p-6 text-white">
+          <div className="bg-[#1B3D2F] rounded-xl p-6 text-white">
             <h3 className="font-bold mb-2">FLEET PERFORMANCE</h3>
             
             <div className="mb-4">
-              <p className="text-sm text-emerald-100 mb-2">Active Drivers</p>
+              <p className="text-sm text-[#1B3D2F] mb-2">Active Drivers</p>
               <p className="text-4xl font-bold">{availableCount + onTripCount}</p>
             </div>
 
             <div className="mb-2">
-              <div className="w-full bg-emerald-500 rounded-full h-2">
+              <div className="w-full bg-[#1B3D2F] rounded-full h-2">
                 <div 
                   className="bg-white rounded-full h-2" 
                   style={{ width: `${drivers.length > 0 ? ((availableCount + onTripCount) / drivers.length) * 100 : 0}%` }}
@@ -309,7 +309,7 @@ export default function DriversPage() {
               </div>
             </div>
 
-            <p className="text-sm text-emerald-100">
+            <p className="text-sm text-[#1B3D2F]">
               {drivers.length > 0 ? Math.round(((availableCount + onTripCount) / drivers.length) * 100) : 0}% of drivers currently active.
             </p>
           </div>

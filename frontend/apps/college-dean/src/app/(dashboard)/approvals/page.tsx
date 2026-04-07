@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -108,7 +108,7 @@ export default function ApprovalsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
       </div>
     )
   }
@@ -124,7 +124,7 @@ export default function ApprovalsPage() {
       )}
 
       <div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Trip Approvals</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Trip Approvals</h1>
         <p className="text-xs md:text-sm text-gray-500 mt-1">Review and manage trip requests from faculty and staff</p>
       </div>
 
@@ -141,9 +141,9 @@ export default function ApprovalsPage() {
         <div className="bg-white p-4 md:p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs md:text-sm text-gray-500">Approved</span>
-            <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-emerald-700 rounded-full"></div>
+            <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-[#152e22] rounded-full"></div>
           </div>
-          <div className="text-2xl md:text-3xl font-bold text-emerald-600">{stats.approved}</div>
+          <div className="text-2xl md:text-3xl font-bold text-[#1B3D2F]">{stats.approved}</div>
         </div>
 
         <div className="bg-white p-4 md:p-6 rounded-xl border border-gray-200">
@@ -172,7 +172,7 @@ export default function ApprovalsPage() {
             onClick={() => setActiveFilter('approved')}
             className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors whitespace-nowrap ${
               activeFilter === 'approved'
-                ? 'bg-emerald-700 text-white'
+                ? 'bg-[#152e22] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -270,7 +270,7 @@ export default function ApprovalsPage() {
             <div className="px-4 md:px-6 pb-4 md:pb-6">
               <button
                 onClick={() => setSelectedRequest(request)}
-                className="w-full px-4 py-2 md:py-2.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors text-xs md:text-sm font-medium"
+                className="w-full px-4 py-2 md:py-2.5 bg-[#1B3D2F]/10 text-[#1B3D2F] rounded-lg hover:bg-[#1B3D2F]/15 transition-colors text-xs md:text-sm font-medium"
               >
                 View Details
               </button>
@@ -386,7 +386,7 @@ export default function ApprovalsPage() {
                   <div className="flex flex-col sm:flex-row items-center gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
                     <button
                       onClick={() => setShowApproveModal(true)}
-                      className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium flex items-center justify-center gap-2 text-sm md:text-base"
+                      className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-[#152e22] text-white rounded-lg hover:bg-[#1B3D2F] transition-colors font-medium flex items-center justify-center gap-2 text-sm md:text-base"
                     >
                       <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -422,8 +422,8 @@ export default function ApprovalsPage() {
             <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-3">
               <div className="p-4 md:p-6">
                 {/* Icon */}
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                  <svg className="w-6 h-6 md:w-8 md:h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                  <svg className="w-6 h-6 md:w-8 md:h-8 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -446,7 +446,7 @@ export default function ApprovalsPage() {
                   </button>
                   <button
                     onClick={() => handleApprove(selectedRequest.id)}
-                    className="w-full sm:flex-1 px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium text-sm md:text-base"
+                    className="w-full sm:flex-1 px-4 py-2 bg-[#152e22] text-white rounded-lg hover:bg-[#1B3D2F] transition-colors font-medium text-sm md:text-base"
                   >
                     Approve
                   </button>

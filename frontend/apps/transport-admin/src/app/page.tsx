@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 rounded flex items-center justify-center">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#1B3D2F] rounded flex items-center justify-center">
               <span className="text-white font-bold text-xs sm:text-sm">H</span>
             </div>
             <span className="font-semibold text-gray-900 text-sm sm:text-base">HUFMS</span>
@@ -27,7 +27,7 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/login" className="bg-emerald-500 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md hover:bg-emerald-600 transition-all duration-300 hover:scale-105 hover:shadow-lg transform text-sm sm:text-base">
+            <Link href="/login" className="bg-[#1B3D2F] text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-md hover:bg-[#1B3D2F] transition-all duration-300 hover:scale-105 hover:shadow-lg transform text-sm sm:text-base">
               Sign In
             </Link>
             
@@ -90,7 +90,7 @@ export default function LandingPage() {
       <section id="home" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20 mt-16 sm:mt-20">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="animate-fade-in-up">
-            <div className="inline-block bg-emerald-50 text-emerald-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm mb-4 sm:mb-6 flex items-center gap-2 animate-bounce-slow">
+            <div className="inline-block bg-[#1B3D2F]/10 text-[#1B3D2F] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm mb-4 sm:mb-6 flex items-center gap-2 animate-bounce-slow">
               <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -99,14 +99,14 @@ export default function LandingPage() {
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
               Smart Fleet Control<br />
-              for <span className="text-emerald-500">Haramaya<br />University</span>
+              for <span className="text-[#1B3D2F]">Haramaya<br />University</span>
             </h1>
             <p className="text-gray-600 text-sm sm:text-base lg:text-lg mb-6 sm:mb-8">
               Our AI-powered system for managing and monitoring fleet operations, fuel consumption, 
               and maintenance schedules for Haramaya University vehicles in a single, easy-to-use platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Link href="/login" className="bg-emerald-500 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-md hover:bg-emerald-600 font-medium transition-all duration-300 hover:scale-105 hover:shadow-xl transform text-center text-sm sm:text-base">
+              <Link href="/login" className="bg-[#1B3D2F] text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-md hover:bg-[#1B3D2F] font-medium transition-all duration-300 hover:scale-105 hover:shadow-xl transform text-center text-sm sm:text-base">
                 Sign in to portal →
               </Link>
               <button className="border border-gray-300 text-gray-700 px-6 sm:px-8 py-2.5 sm:py-3 rounded-md hover:bg-gray-50 font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg transform text-sm sm:text-base">
@@ -115,16 +115,16 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="relative animate-fade-in-right mt-8 md:mt-0">
-            <div className="bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+            <div className="bg-gradient-to-br from-[#1B3D2F] to-[#152e22] rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl hover:shadow-2xl transition-shadow duration-300">
               <div className="bg-white rounded-lg p-4 sm:p-6 shadow-lg">
                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-full"></div>
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#1B3D2F] rounded-full"></div>
                   <div>
                     <p className="font-semibold text-gray-900 text-sm sm:text-base">Transport admin console</p>
                     <p className="text-xs sm:text-sm text-gray-500">Fleet and transport operations</p>
                   </div>
                 </div>
-                <div className="h-24 sm:h-32 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-lg"></div>
+                <div className="h-24 sm:h-32 bg-gradient-to-r from-[#1B3D2F] to-teal-400 rounded-lg"></div>
               </div>
             </div>
           </div>
@@ -153,8 +153,8 @@ export default function LandingPage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105 hover:-translate-y-2 animate-fade-in-up">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -238,8 +238,8 @@ export default function LandingPage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="text-center animate-fade-in-up">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -301,7 +301,7 @@ export default function LandingPage() {
       </section>
 
       {/* Operational Coverage & Restricted Access */}
-      <section className="bg-emerald-500 text-white py-12 sm:py-16 animate-fade-in">
+      <section className="bg-[#1B3D2F] text-white py-12 sm:py-16 animate-fade-in">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid sm:grid-cols-2 gap-8 sm:gap-12">
             <div className="flex gap-4 animate-fade-in-up">
@@ -314,7 +314,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg sm:text-xl font-semibold mb-2">Operational Coverage</h3>
-                <p className="text-emerald-50 text-sm sm:text-base">
+                <p className="text-[#1B3D2F] text-sm sm:text-base">
                   The system is designed to serve all parts and campuses of Haramaya University for streamlined operations.
                 </p>
               </div>
@@ -330,7 +330,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-lg sm:text-xl font-semibold mb-2">Restricted Access</h3>
-                <p className="text-emerald-50 text-sm sm:text-base">
+                <p className="text-[#1B3D2F] text-sm sm:text-base">
                   Only authorized personnel with valid credentials can access the system, ensuring data security and privacy.
                 </p>
               </div>
@@ -353,8 +353,8 @@ export default function LandingPage() {
               <div className="space-y-4 sm:space-y-6">
                 <div className="flex gap-3 sm:gap-4 animate-fade-in-up">
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
@@ -362,7 +362,7 @@ export default function LandingPage() {
                   <div>
                     <p className="font-semibold text-gray-900 text-sm sm:text-base">Transport Office</p>
                     <p className="text-gray-600 text-xs sm:text-sm">For general inquiries and support</p>
-                    <a href="mailto:transport@hu.edu.et" className="text-emerald-500 hover:underline text-sm">
+                    <a href="mailto:transport@hu.edu.et" className="text-[#1B3D2F] hover:underline text-sm">
                       transport@hu.edu.et
                     </a>
                   </div>
@@ -379,7 +379,7 @@ export default function LandingPage() {
                   <div>
                     <p className="font-semibold text-gray-900 text-sm sm:text-base">IT Helpdesk</p>
                     <p className="text-gray-600 text-xs sm:text-sm">For technical issues: 📞 +251 25 553 0325</p>
-                    <a href="mailto:ithelpdesk@hu.edu.et" className="text-emerald-500 hover:underline text-sm">
+                    <a href="mailto:ithelpdesk@hu.edu.et" className="text-[#1B3D2F] hover:underline text-sm">
                       ithelpdesk@hu.edu.et
                     </a>
                   </div>
@@ -392,15 +392,15 @@ export default function LandingPage() {
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between animate-fade-in-up">
                   <span className="text-gray-600 text-sm sm:text-base">Trip Request Module</span>
-                  <span className="text-emerald-500 font-medium text-sm">✓ Active</span>
+                  <span className="text-[#1B3D2F] font-medium text-sm">✓ Active</span>
                 </div>
                 <div className="flex items-center justify-between animate-fade-in-up">
                   <span className="text-gray-600 text-sm sm:text-base">Tracking System</span>
-                  <span className="text-emerald-500 font-medium text-sm">✓ Active</span>
+                  <span className="text-[#1B3D2F] font-medium text-sm">✓ Active</span>
                 </div>
                 <div className="flex items-center justify-between animate-fade-in-up">
                   <span className="text-gray-600 text-sm sm:text-base">Mobile Platform</span>
-                  <span className="text-emerald-500 font-medium text-sm">✓ Active</span>
+                  <span className="text-[#1B3D2F] font-medium text-sm">✓ Active</span>
                 </div>
               </div>
             </div>
@@ -414,7 +414,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
             <div className="col-span-2 sm:col-span-1 animate-fade-in-up">
               <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-emerald-500 rounded flex items-center justify-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-[#1B3D2F] rounded flex items-center justify-center">
                   <span className="text-white font-bold text-xs sm:text-sm">H</span>
                 </div>
                 <span className="font-semibold text-sm sm:text-base">HUFMS</span>
@@ -454,7 +454,7 @@ export default function LandingPage() {
           <div className="border-t border-gray-800 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 animate-fade-in-up">
             <p className="text-gray-400 text-xs sm:text-sm text-center sm:text-left">
               © 2025 by Haramaya University Fleet Management System - 
-              <a href="https://haramaya.edu.et" className="text-emerald-400 hover:underline ml-1">
+              <a href="https://haramaya.edu.et" className="text-[#1B3D2F] hover:underline ml-1">
                 haramaya.edu.et
               </a>
             </p>

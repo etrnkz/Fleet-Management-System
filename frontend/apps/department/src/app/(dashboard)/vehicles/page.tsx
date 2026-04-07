@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -62,7 +62,7 @@ export default function VehiclesPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
-        return 'bg-emerald-100 text-emerald-700'
+        return 'bg-[#1B3D2F]/15 text-[#1B3D2F]'
       case 'In Use':
         return 'bg-blue-100 text-blue-700'
       case 'Maintenance':
@@ -77,7 +77,7 @@ export default function VehiclesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
       </div>
     )
   }
@@ -93,7 +93,7 @@ export default function VehiclesPage() {
       )}
 
       <div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Fleet Vehicles</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Fleet Vehicles</h1>
         <p className="text-xs sm:text-sm text-gray-500 mt-1">View and manage all university vehicles</p>
       </div>
 
@@ -101,11 +101,11 @@ export default function VehiclesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <p className="text-xs text-gray-500">Total Vehicles</p>
-          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">{stats.total}</p>
+          <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">{stats.total}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <p className="text-xs text-gray-500">Available</p>
-          <p className="text-2xl font-bold text-emerald-800">{stats.available}</p>
+          <p className="text-2xl font-bold text-[#1B3D2F]">{stats.available}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <p className="text-xs text-gray-500">On Trip</p>
@@ -126,7 +126,7 @@ export default function VehiclesPage() {
               onClick={() => setActiveFilter('all')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 activeFilter === 'all'
-                  ? 'bg-emerald-700 text-white'
+                  ? 'bg-[#152e22] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -136,7 +136,7 @@ export default function VehiclesPage() {
               onClick={() => setActiveFilter('Active')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 activeFilter === 'Active'
-                  ? 'bg-emerald-700 text-white'
+                  ? 'bg-[#152e22] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -146,7 +146,7 @@ export default function VehiclesPage() {
               onClick={() => setActiveFilter('In Use')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 activeFilter === 'In Use'
-                  ? 'bg-emerald-700 text-white'
+                  ? 'bg-[#152e22] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -156,7 +156,7 @@ export default function VehiclesPage() {
               onClick={() => setActiveFilter('Maintenance')}
               className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 activeFilter === 'Maintenance'
-                  ? 'bg-emerald-700 text-white'
+                  ? 'bg-[#152e22] text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -171,7 +171,7 @@ export default function VehiclesPage() {
               placeholder="Search vehicles..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none w-full"
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none w-full"
             />
             <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

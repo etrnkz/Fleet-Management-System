@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -34,7 +34,7 @@ export default function MaintenanceSectionLayout({
                 href={item.href}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-[#1B3D2F] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                 }`}
               >

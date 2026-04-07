@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -39,7 +39,7 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-[#1B3D2F] rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">HU</span>
             </div>
             <div>
@@ -48,13 +48,13 @@ export default function Home() {
             </div>
           </div>
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-sm text-gray-700 hover:text-emerald-600">Home</a>
-            <a href="#" className="text-sm text-gray-700 hover:text-emerald-600">About</a>
-            <a href="#" className="text-sm text-gray-700 hover:text-emerald-600">Features</a>
-            <a href="#" className="text-sm text-gray-700 hover:text-emerald-600">Contact</a>
+            <a href="#" className="text-sm text-gray-700 hover:text-[#1B3D2F]">Home</a>
+            <a href="#" className="text-sm text-gray-700 hover:text-[#1B3D2F]">About</a>
+            <a href="#" className="text-sm text-gray-700 hover:text-[#1B3D2F]">Features</a>
+            <a href="#" className="text-sm text-gray-700 hover:text-[#1B3D2F]">Contact</a>
             <button
               onClick={() => router.push('/login')}
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+              className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-sm font-medium"
             >
               Sign In
             </button>
@@ -67,11 +67,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-block px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium mb-6">
+              <div className="inline-block px-4 py-2 bg-[#1B3D2F]/10 text-[#1B3D2F] rounded-full text-sm font-medium mb-6">
                 WELCOME - PRESIDENT PORTAL
               </div>
               <h2 className="text-5xl font-bold text-gray-900 mb-6">
-                Smart Fleet Control for <span className="text-emerald-600">Haramaya University</span>
+                Smart Fleet Control for <span className="text-[#1B3D2F]">Haramaya University</span>
               </h2>
               <p className="text-lg text-gray-600 mb-8">
                 High-level oversight for executive fleet operations, final approvals, and comprehensive analytics for informed decision-making across all university departments.
@@ -79,19 +79,19 @@ export default function Home() {
               <div className="flex space-x-4">
                 <button
                   onClick={() => router.push('/login')}
-                  className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                  className="px-8 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
                 >
                   Login as President
                 </button>
-                <button className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-emerald-600 hover:text-emerald-600 transition-colors font-medium">
+                <button className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-[#1B3D2F] hover:text-[#1B3D2F] transition-colors font-medium">
                   Learn More
                 </button>
               </div>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-8 shadow-2xl">
-                <div className="w-full h-80 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-32 h-32 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gradient-to-br from-[#1B3D2F] to-blue-50 rounded-2xl p-8 shadow-2xl">
+                <div className="w-full h-80 bg-gradient-to-br from-[#1B3D2F] to-blue-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-32 h-32 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
@@ -160,7 +160,7 @@ export default function Home() {
               }
             ].map((module, idx) => (
               <div key={idx} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600 mb-4">
+                <div className="w-12 h-12 bg-[#1B3D2F]/10 rounded-lg flex items-center justify-center text-[#1B3D2F] mb-4">
                   {module.icon}
                 </div>
                 <h4 className="text-lg font-bold text-gray-900 mb-2">{module.title}</h4>
@@ -196,7 +196,7 @@ export default function Home() {
               }
             ].map((benefit, idx) => (
               <div key={idx} className="text-center">
-                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mx-auto mb-4">
+                <div className="w-16 h-16 bg-[#1B3D2F]/10 rounded-full flex items-center justify-center text-[#1B3D2F] mx-auto mb-4">
                   {benefit.icon}
                 </div>
                 <h4 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h4>
@@ -222,7 +222,7 @@ export default function Home() {
               { name: 'Driver', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> }
             ].map((role, idx) => (
               <div key={idx} className="text-center">
-                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 mx-auto mb-3">
+                <div className="w-16 h-16 bg-[#1B3D2F]/10 rounded-full flex items-center justify-center text-[#1B3D2F] mx-auto mb-3">
                   {role.icon}
                 </div>
                 <p className="text-sm font-medium text-gray-800">{role.name}</p>
@@ -233,7 +233,7 @@ export default function Home() {
       </section>
 
       {/* Operational Coverage & Restricted Access */}
-      <section className="py-20 bg-emerald-600 text-white">
+      <section className="py-20 bg-[#1B3D2F] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
             <div className="flex items-start space-x-4">
@@ -244,7 +244,7 @@ export default function Home() {
               </div>
               <div>
                 <h4 className="text-2xl font-bold mb-3">Operational Coverage</h4>
-                <p className="text-emerald-50">
+                <p className="text-[#1B3D2F]">
                   Real-time monitoring and management of all fleet operations across all university campuses and departments.
                 </p>
               </div>
@@ -257,7 +257,7 @@ export default function Home() {
               </div>
               <div>
                 <h4 className="text-2xl font-bold mb-3">Restricted Access</h4>
-                <p className="text-emerald-50">
+                <p className="text-[#1B3D2F]">
                   Role-based access control ensures data security and appropriate authorization levels for all system users.
                 </p>
               </div>
@@ -278,7 +278,7 @@ export default function Home() {
               </p>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[#1B3D2F] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                   <div>
@@ -288,7 +288,7 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <svg className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-[#1B3D2F] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   <div>
@@ -325,7 +325,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#1B3D2F] rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-xl">HU</span>
                 </div>
                 <div>
@@ -340,18 +340,18 @@ export default function Home() {
             <div>
               <h5 className="font-bold mb-4">Quick Links</h5>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-emerald-400">Home</a></li>
-                <li><a href="#" className="hover:text-emerald-400">About</a></li>
-                <li><a href="#" className="hover:text-emerald-400">Features</a></li>
-                <li><a href="#" className="hover:text-emerald-400">Contact</a></li>
+                <li><a href="#" className="hover:text-[#1B3D2F]">Home</a></li>
+                <li><a href="#" className="hover:text-[#1B3D2F]">About</a></li>
+                <li><a href="#" className="hover:text-[#1B3D2F]">Features</a></li>
+                <li><a href="#" className="hover:text-[#1B3D2F]">Contact</a></li>
               </ul>
             </div>
             <div>
               <h5 className="font-bold mb-4">Legal</h5>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-emerald-400">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-emerald-400">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-emerald-400">Cookie Policy</a></li>
+                <li><a href="#" className="hover:text-[#1B3D2F]">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-[#1B3D2F]">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-[#1B3D2F]">Cookie Policy</a></li>
               </ul>
             </div>
             <div>

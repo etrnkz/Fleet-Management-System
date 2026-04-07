@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { collegeApi, departmentApi } from '@/lib/api'
@@ -84,7 +84,7 @@ export default function DepartmentsPage() {
           <p className="text-sm md:text-base text-gray-600 mt-1">Fleet usage and cost analysis by college and department</p>
         </div>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
         </div>
       </div>
     )
@@ -107,7 +107,7 @@ export default function DepartmentsPage() {
           <div key={college.name} className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* College Header */}
             <div 
-              className="p-4 md:p-6 bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-emerald-500 cursor-pointer hover:bg-emerald-100 transition-colors"
+              className="p-4 md:p-6 bg-gradient-to-r from-[#1B3D2F] to-green-50 border-l-4 border-[#1B3D2F] cursor-pointer hover:bg-[#1B3D2F]/15 transition-colors"
               onClick={() => toggleCollege(college.name)}
             >
               <div className="flex items-start justify-between gap-3">
@@ -134,7 +134,7 @@ export default function DepartmentsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-600">Total Cost</p>
-                      <p className="text-sm md:text-base font-bold text-emerald-600">ETB {(college.totalCost / 1000).toFixed(0)}K</p>
+                      <p className="text-sm md:text-base font-bold text-[#1B3D2F]">ETB {(college.totalCost / 1000).toFixed(0)}K</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-600">Utilization</p>
@@ -174,7 +174,7 @@ export default function DepartmentsPage() {
                         
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-gray-600">Cost</span>
-                          <span className="text-xs md:text-sm font-bold text-emerald-600">ETB {(dept.cost / 1000).toFixed(0)}K</span>
+                          <span className="text-xs md:text-sm font-bold text-[#1B3D2F]">ETB {(dept.cost / 1000).toFixed(0)}K</span>
                         </div>
                         
                         <div>
@@ -184,7 +184,7 @@ export default function DepartmentsPage() {
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-1.5">
                             <div
-                              className="bg-emerald-500 h-1.5 rounded-full"
+                              className="bg-[#1B3D2F] h-1.5 rounded-full"
                               style={{ width: `${dept.utilization}%` }}
                             ></div>
                           </div>

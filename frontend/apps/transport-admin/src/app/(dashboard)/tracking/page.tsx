@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
@@ -11,7 +11,7 @@ const Map = dynamic(() => import('@/components/Map'), {
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-gray-100">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F] mx-auto mb-4"></div>
         <p className="text-gray-600">Loading map...</p>
       </div>
     </div>
@@ -215,7 +215,7 @@ export default function LiveTrackingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
       </div>
     )
   }
@@ -272,7 +272,7 @@ export default function LiveTrackingPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search vehicles..."
-                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                     autoFocus
                   />
                 )}
@@ -282,7 +282,7 @@ export default function LiveTrackingPage() {
                   <button
                     onClick={() => setFollowMode(!followMode)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      followMode ? 'bg-emerald-600' : 'bg-gray-300'
+                      followMode ? 'bg-[#1B3D2F]' : 'bg-gray-300'
                     }`}
                   >
                     <span
@@ -344,7 +344,7 @@ export default function LiveTrackingPage() {
 
         <div className="space-y-4">
           {selectedVehicleData && (
-            <div className="bg-emerald-50 border-2 border-emerald-500 rounded-xl p-4">
+            <div className="bg-[#1B3D2F]/10 border-2 border-[#1B3D2F] rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-gray-900">Selected Vehicle</h3>
                 <span className={`w-3 h-3 rounded-full ${
@@ -382,7 +382,7 @@ export default function LiveTrackingPage() {
               </div>
               <button 
                 onClick={handleViewDetails}
-                className="w-full mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                className="w-full mt-4 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-sm font-medium"
               >
                 View Details
               </button>
@@ -398,7 +398,7 @@ export default function LiveTrackingPage() {
                   onClick={() => setSelectedVehicle(vehicle.id)}
                   className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                     selectedVehicle === vehicle.id
-                      ? 'border-emerald-500 bg-emerald-50'
+                      ? 'border-[#1B3D2F] bg-[#1B3D2F]/10'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >

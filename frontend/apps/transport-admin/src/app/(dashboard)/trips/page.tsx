@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { tripApi, vehicleApi, driverApi } from '@/lib/api'
@@ -110,7 +110,7 @@ export default function TripsPage() {
   // Map trip state to display status
   const getTripStatus = (state: string) => {
     const statusMap: Record<string, { text: string; color: string; bgColor: string }> = {
-      'IN_PROGRESS': { text: 'On Route', color: 'bg-emerald-500', bgColor: 'bg-emerald-50' },
+      'IN_PROGRESS': { text: 'On Route', color: 'bg-[#1B3D2F]', bgColor: 'bg-[#1B3D2F]/10' },
       'READY': { text: 'Ready', color: 'bg-blue-500', bgColor: 'bg-blue-50' },
       'CAR_ALLOCATED': { text: 'Awaiting Approval', color: 'bg-orange-500', bgColor: 'bg-orange-50' },
       'PENDING_DEPARTMENT': { text: 'Pending', color: 'bg-yellow-500', bgColor: 'bg-yellow-50' },
@@ -233,7 +233,7 @@ export default function TripsPage() {
     return (
       <div className="p-6 h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B3D2F] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading trips...</p>
         </div>
       </div>
@@ -255,7 +255,7 @@ export default function TripsPage() {
         {/* Left Panel - Trip List */}
         <div className="w-full lg:w-96 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden max-h-[400px] lg:max-h-none">
           {/* Header */}
-          <div className="p-3 md:p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-white">
+          <div className="p-3 md:p-6 border-b border-gray-200 bg-gradient-to-r from-[#1B3D2F] to-white">
             <div className="flex items-center justify-between mb-3 md:mb-4">
               <div>
                 <h2 className="text-base md:text-xl font-bold text-gray-900">
@@ -272,7 +272,7 @@ export default function TripsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search trips..."
-                className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 md:py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white"
+                className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 md:py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white"
               />
               <svg className="w-4 h-4 md:w-5 md:h-5 text-gray-400 absolute left-2.5 md:left-3 top-2.5 md:top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -288,7 +288,7 @@ export default function TripsPage() {
                 onClick={() => setFilterStatus(filter)}
                 className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                   filterStatus === filter
-                    ? 'bg-emerald-600 text-white shadow-sm'
+                    ? 'bg-[#1B3D2F] text-white shadow-sm'
                     : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
@@ -314,7 +314,7 @@ export default function TripsPage() {
                     key={trip.id}
                     onClick={() => handleSelectTrip(trip)}
                     className={`w-full text-left p-3 md:p-4 border-b border-gray-100 hover:bg-gray-50 transition-all ${
-                      selectedTrip?.id === trip.id ? 'bg-emerald-50 border-l-4 border-l-emerald-600' : ''
+                      selectedTrip?.id === trip.id ? 'bg-[#1B3D2F]/10 border-l-4 border-l-[#1B3D2F]' : ''
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2 md:mb-3">
@@ -341,7 +341,7 @@ export default function TripsPage() {
                     </div>
                     
                     <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-gray-600 mb-2">
-                      <svg className="w-3 h-3 md:w-4 md:h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 md:w-4 md:h-4 text-[#1B3D2F] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       </svg>
                       <span className="truncate">{trip.destination}</span>
@@ -352,7 +352,7 @@ export default function TripsPage() {
                         {formatDateTime(trip.startDateTime)}
                       </span>
                       {trip.estimatedDistance && (
-                        <span className="text-[10px] md:text-xs font-semibold text-emerald-600">
+                        <span className="text-[10px] md:text-xs font-semibold text-[#1B3D2F]">
                           {trip.estimatedDistance} km
                         </span>
                       )}
@@ -370,7 +370,7 @@ export default function TripsPage() {
             <>
               {/* Map Area */}
               <div className="flex-1 min-h-[300px] md:min-h-0 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#1B3D2F] via-blue-50 to-purple-50">
                   {/* Map decorative elements */}
                   <div className="absolute top-1/4 left-1/4 w-20 h-20 md:w-32 md:h-32 bg-white rounded-lg opacity-40 shadow-sm"></div>
                   <div className="absolute top-1/3 right-1/3 w-16 h-16 md:w-24 md:h-24 bg-white rounded-lg opacity-40 shadow-sm"></div>
@@ -392,8 +392,8 @@ export default function TripsPage() {
                   {selectedTrip.state === 'IN_PROGRESS' && (
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                       <div className="relative">
-                        <div className="absolute inset-0 w-12 h-12 md:w-16 md:h-16 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
-                        <div className="relative w-10 h-10 md:w-14 md:h-14 bg-emerald-600 rounded-full flex items-center justify-center shadow-xl border-2 md:border-4 border-white">
+                        <div className="absolute inset-0 w-12 h-12 md:w-16 md:h-16 bg-[#1B3D2F] rounded-full animate-ping opacity-30"></div>
+                        <div className="relative w-10 h-10 md:w-14 md:h-14 bg-[#1B3D2F] rounded-full flex items-center justify-center shadow-xl border-2 md:border-4 border-white">
                           <svg className="w-5 h-5 md:w-7 md:h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                             <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
@@ -420,9 +420,9 @@ export default function TripsPage() {
                     </div>
                     
                     <div className="flex gap-3 md:gap-4">
-                      <div className="flex-1 bg-emerald-50 rounded-lg p-2.5 md:p-3 border border-emerald-200">
-                        <p className="text-[10px] md:text-xs text-emerald-600 font-medium mb-1">Type</p>
-                        <p className="text-base md:text-lg font-bold text-emerald-700">{selectedTrip.tripType}</p>
+                      <div className="flex-1 bg-[#1B3D2F]/10 rounded-lg p-2.5 md:p-3 border border-[#1B3D2F]/20">
+                        <p className="text-[10px] md:text-xs text-[#1B3D2F] font-medium mb-1">Type</p>
+                        <p className="text-base md:text-lg font-bold text-[#1B3D2F]">{selectedTrip.tripType}</p>
                       </div>
                       <div className="flex-1 bg-blue-50 rounded-lg p-2.5 md:p-3 border border-blue-200">
                         <p className="text-[10px] md:text-xs text-blue-600 font-medium mb-1">Passengers</p>
@@ -451,8 +451,8 @@ export default function TripsPage() {
                     
                     <div className="space-y-2.5 md:space-y-3">
                       <div className="flex items-start gap-2 md:gap-3">
-                        <div className="w-7 h-7 md:w-8 md:h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="w-7 h-7 md:w-8 md:h-8 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#1B3D2F]" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                         </div>
@@ -471,7 +471,7 @@ export default function TripsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs md:text-sm font-semibold text-gray-900">In Progress</p>
-                            <p className="text-[10px] md:text-xs text-emerald-600 font-medium">On Route</p>
+                            <p className="text-[10px] md:text-xs text-[#1B3D2F] font-medium">On Route</p>
                           </div>
                         </div>
                       )}
@@ -530,7 +530,7 @@ export default function TripsPage() {
 
                         {selectedTrip.allocatedDriver && (
                           <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200 text-xs">
-                            <div className="w-7 h-7 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-bold text-xs">
+                            <div className="w-7 h-7 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center text-[#1B3D2F] font-bold text-xs">
                               {(selectedTrip.allocatedDriver.user?.name || selectedTrip.allocatedDriver.name || 'DR').split(' ').map((n: string) => n[0]).join('').slice(0,2)}
                             </div>
                             <div>
@@ -551,7 +551,7 @@ export default function TripsPage() {
                             type="button"
                             onClick={handleFuelApprove}
                             disabled={fuelSubmitting || processingTrip === selectedTrip.id}
-                            className="flex-1 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                            className="flex-1 py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22] disabled:opacity-50 transition-colors"
                           >
                             {fuelSubmitting ? 'Approving...' : '✓ Approve & Mark Ready'}
                           </button>
@@ -570,7 +570,7 @@ export default function TripsPage() {
                         {selectedTrip.allocatedDriver ? (
                           <>
                             <div className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 bg-gray-50 rounded-lg border border-gray-200">
-                              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-lg">
+                              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#1B3D2F] to-[#152e22] rounded-full flex items-center justify-center text-white font-bold text-sm md:text-lg">
                                 {(selectedTrip.allocatedDriver.user?.name || selectedTrip.allocatedDriver.name || 'DR').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                               </div>
                               <div className="flex-1 min-w-0">

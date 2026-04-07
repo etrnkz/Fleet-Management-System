@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { vehicleApi, driverApi } from '@/lib/api'
@@ -165,7 +165,7 @@ export default function DocumentsPage() {
   return (
     <div className="p-4 md:p-6 space-y-5">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-lg text-sm">
+        <div className="fixed top-4 right-4 z-50 bg-[#1B3D2F] text-white px-5 py-3 rounded-lg shadow-lg text-sm">
           {toast}
         </div>
       )}
@@ -182,14 +182,14 @@ export default function DocumentsPage() {
         <div className="flex gap-2">
           <input ref={csvImportRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
           <button onClick={() => csvImportRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50 text-sm font-medium">
+            className="flex items-center gap-2 px-4 py-2 border border-[#1B3D2F] text-[#1B3D2F] rounded-lg hover:bg-[#1B3D2F]/10 text-sm font-medium">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             Import CSV
           </button>
           <button onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium">
+            className="flex items-center gap-2 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] text-sm font-medium">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
@@ -217,12 +217,12 @@ export default function DocumentsPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search by owner or document type..."
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
         <div className="flex gap-2">
           {['all', 'valid', 'expiring', 'expired', 'unknown'].map(f => (
             <button key={f} onClick={() => setFilterStatus(f)}
               className={`px-3 py-2 rounded-lg text-xs font-medium capitalize transition-colors ${
-                filterStatus === f ? 'bg-emerald-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                filterStatus === f ? 'bg-[#1B3D2F] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}>
               {f}
             </button>
@@ -265,7 +265,7 @@ export default function DocumentsPage() {
                     <td className="px-4 py-3">
                       {row.uploadedFile ? (
                         <a href={row.uploadedFile.url} download={row.uploadedFile.name}
-                          className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 text-xs font-medium">
+                          className="flex items-center gap-1 text-[#1B3D2F] hover:text-[#1B3D2F] text-xs font-medium">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                           </svg>
@@ -277,7 +277,7 @@ export default function DocumentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <button onClick={() => handleUploadClick(row.id)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600 rounded-lg text-xs font-medium transition-colors">
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-[#1B3D2F]/10 hover:text-[#1B3D2F] text-gray-600 rounded-lg text-xs font-medium transition-colors">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>

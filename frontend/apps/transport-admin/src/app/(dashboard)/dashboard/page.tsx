@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Toast, { ToastType } from '@/components/Toast'
@@ -105,7 +105,7 @@ export default function DashboardPage() {
           type: 'Active Trip',
           message: `Trip to ${t.destination} is in progress`,
           time: new Date(t.startDateTime).toLocaleString(),
-          color: 'border-emerald-500',
+          color: 'border-[#1B3D2F]',
           details: {
             destination: t.destination,
             purpose: t.purpose,
@@ -114,7 +114,7 @@ export default function DashboardPage() {
             status: t.state,
           },
           icon: (
-            <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 text-[#1B3D2F]" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
           )
@@ -141,8 +141,8 @@ export default function DashboardPage() {
           <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
         </svg>
       ),
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600'
+      iconBg: 'bg-[#1B3D2F]/15',
+      iconColor: 'text-[#1B3D2F]'
     },
     {
       label: 'ACTIVE TRIPS',
@@ -239,7 +239,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
       </div>
     )
   }
@@ -277,7 +277,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button 
                 onClick={() => setShowAddVehicleForm(true)}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-bold text-gray-900">Fuel Consumption Trend</h2>
                 <p className="text-sm text-gray-500">Weekly usage in liters across fleet</p>
               </div>
-              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none">
+              <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none">
                 <option>Last 7 Days</option>
                 <option>Last 30 Days</option>
                 <option>Last 90 Days</option>
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                     </div>
                     {/* Bar */}
                     <div 
-                      className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-lg hover:from-emerald-700 hover:to-emerald-500 transition-all cursor-pointer shadow-sm"
+                      className="w-full bg-gradient-to-t from-[#1B3D2F] to-[#152e22] rounded-t-lg hover:from-[#1B3D2F] hover:to-[#152e22] transition-all cursor-pointer shadow-sm"
                       style={{ height: `${bar.height}%`, minHeight: '20px' }}
                     ></div>
                   </div>
@@ -344,7 +344,7 @@ export default function DashboardPage() {
             {/* Legend */}
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-500">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-500 rounded"></div>
+                <div className="w-3 h-3 bg-[#1B3D2F] rounded"></div>
                 <span>Fuel Usage (Liters)</span>
               </div>
             </div>
@@ -364,7 +364,7 @@ export default function DashboardPage() {
                 const circ = 2 * Math.PI * 38
                 const segments = [
                   { label: 'Pending', count: pending, color: '#eab308', bg: 'bg-yellow-400' },
-                  { label: 'Approved', count: approved, color: '#10b981', bg: 'bg-emerald-500' },
+                  { label: 'Approved', count: approved, color: '#10b981', bg: 'bg-[#1B3D2F]' },
                   { label: 'In Progress', count: inProgress, color: '#3b82f6', bg: 'bg-blue-500' },
                   { label: 'Completed', count: completed, color: '#6366f1', bg: 'bg-indigo-500' },
                 ]
@@ -406,7 +406,7 @@ export default function DashboardPage() {
                 const total = Math.max(active + maintenance + inactive, 1)
                 const circ = 2 * Math.PI * 38
                 const segments = [
-                  { label: 'Active', count: active, color: '#10b981', bg: 'bg-emerald-500' },
+                  { label: 'Active', count: active, color: '#10b981', bg: 'bg-[#1B3D2F]' },
                   { label: 'Maintenance', count: maintenance, color: '#f97316', bg: 'bg-orange-500' },
                   { label: 'Inactive', count: inactive, color: '#ef4444', bg: 'bg-red-500' },
                 ]
@@ -465,7 +465,7 @@ export default function DashboardPage() {
                       <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
                         <div className="relative w-full">
                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{counts[i]} trips</div>
-                          <div className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t hover:from-emerald-700 hover:to-emerald-500 transition-colors"
+                          <div className="w-full bg-gradient-to-t from-[#1B3D2F] to-[#152e22] rounded-t hover:from-[#1B3D2F] hover:to-[#152e22] transition-colors"
                             style={{ height: `${(counts[i] / maxVal) * 100}px`, minHeight: counts[i] > 0 ? '4px' : '0' }}></div>
                         </div>
                         <span className="text-xs text-gray-400">{m.label}</span>
@@ -540,7 +540,7 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <button className="w-full mt-4 text-emerald-600 hover:text-emerald-700 font-medium text-sm py-2">
+          <button className="w-full mt-4 text-[#1B3D2F] hover:text-[#1B3D2F] font-medium text-sm py-2">
             View All Activity
           </button>
         </div>
@@ -595,7 +595,7 @@ export default function DashboardPage() {
 
               {/* Action Buttons */}
               <div className="mt-6 flex gap-3">
-                <button className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
+                <button className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium">
                   Take Action
                 </button>
                 <button 
@@ -617,8 +617,8 @@ export default function DashboardPage() {
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-[#1B3D2F]" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                     <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
                   </svg>
@@ -652,7 +652,7 @@ export default function DashboardPage() {
                     name="vehicleId"
                     required
                     placeholder="e.g., VEH-001"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -665,7 +665,7 @@ export default function DashboardPage() {
                     name="plateNumber"
                     required
                     placeholder="e.g., ET-3-12345"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -676,7 +676,7 @@ export default function DashboardPage() {
                   <select
                     name="vehicleType"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   >
                     <option value="">Select Type</option>
                     <option value="Truck">Truck</option>
@@ -696,7 +696,7 @@ export default function DashboardPage() {
                     name="make"
                     required
                     placeholder="e.g., Toyota"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -709,7 +709,7 @@ export default function DashboardPage() {
                     name="model"
                     required
                     placeholder="e.g., Hilux"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -724,7 +724,7 @@ export default function DashboardPage() {
                     placeholder="e.g., 2024"
                     min="1990"
                     max="2026"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -736,7 +736,7 @@ export default function DashboardPage() {
                     type="text"
                     name="color"
                     placeholder="e.g., White"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -748,7 +748,7 @@ export default function DashboardPage() {
                     type="text"
                     name="vinNumber"
                     placeholder="Vehicle Identification Number"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -764,7 +764,7 @@ export default function DashboardPage() {
                   <select
                     name="fuelType"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   >
                     <option value="">Select Fuel Type</option>
                     <option value="Gasoline">Gasoline</option>
@@ -782,7 +782,7 @@ export default function DashboardPage() {
                     type="number"
                     name="fuelCapacity"
                     placeholder="e.g., 80"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -794,7 +794,7 @@ export default function DashboardPage() {
                     type="number"
                     name="capacity"
                     placeholder="e.g., 5"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -806,7 +806,7 @@ export default function DashboardPage() {
                     type="number"
                     name="currentMileage"
                     placeholder="e.g., 15000"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -822,7 +822,7 @@ export default function DashboardPage() {
                   <select
                     name="status"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   >
                     <option value="">Select Status</option>
                     <option value="Active">Active</option>
@@ -838,7 +838,7 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     name="purchaseDate"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -849,7 +849,7 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     name="insuranceExpiryDate"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -860,7 +860,7 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     name="nextServiceDate"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
 
@@ -872,7 +872,7 @@ export default function DashboardPage() {
                     name="notes"
                     rows={3}
                     placeholder="Additional information about the vehicle..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none"
                   ></textarea>
                 </div>
               </div>
@@ -881,7 +881,7 @@ export default function DashboardPage() {
               <div className="mt-6 flex gap-3">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                  className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
                 >
                   Add Vehicle
                 </button>

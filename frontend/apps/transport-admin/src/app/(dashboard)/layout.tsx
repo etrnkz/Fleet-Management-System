@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
@@ -216,10 +216,10 @@ export default function DashboardLayout({
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
             <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-              <span className="text-emerald-600 font-bold text-sm">H</span>
+              <span className="text-[#1B3D2F] font-bold text-sm">H</span>
             </div>
             <div>
-              <div className="font-bold text-emerald-600 tracking-tight">Haramaya University</div>
+              <div className="font-bold text-[#1B3D2F] tracking-tight">Haramaya University</div>
               <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
             </div>
           </div>
@@ -231,8 +231,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/dashboard')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/dashboard')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,8 +246,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/vehicles')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/vehicles')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -262,8 +262,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/tracking')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/tracking')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,8 +278,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/drivers')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/drivers')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,8 +293,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/trips')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/trips')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -308,8 +308,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/approvals')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/approvals')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,8 +323,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/fuel')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/fuel')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,8 +338,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/maintenance')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/maintenance')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -354,8 +354,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/documents')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/documents')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -369,8 +369,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/reports')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/reports')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,8 +384,8 @@ export default function DashboardLayout({
               onClick={(e) => handleNavigation(e, '/notifications')}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/notifications')
-                  ? 'text-emerald-600 font-bold border-l-4 border-emerald-600'
-                  : 'text-gray-600 hover:text-emerald-600 hover:bg-gray-100'
+                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
               }`}
             >
               <div className="relative">
@@ -490,7 +490,7 @@ export default function DashboardLayout({
                                 }
                                 setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true, isRead: true } : n))
                               }}
-                              className="text-[10px] text-emerald-600 hover:text-emerald-700 font-medium whitespace-nowrap flex-shrink-0 mt-1"
+                              className="text-[10px] text-[#1B3D2F] hover:text-[#1B3D2F] font-medium whitespace-nowrap flex-shrink-0 mt-1"
                             >
                               Mark read
                             </button>
@@ -512,7 +512,7 @@ export default function DashboardLayout({
                             }
                             setNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })))
                           }}
-                          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                          className="text-xs text-[#1B3D2F] hover:text-[#1B3D2F] font-medium"
                         >
                           Mark all as read
                         </button>
@@ -550,7 +550,7 @@ export default function DashboardLayout({
                   onClick={() => setShowProfileDropdown(prev => !prev)}
                   className="hidden md:flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center overflow-hidden">
+                  <div className="w-8 h-8 bg-[#1B3D2F] rounded-full flex items-center justify-center overflow-hidden">
                     {user?.profileImage ? (
                       <img src={user.profileImage} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
                     ) : (
@@ -571,9 +571,9 @@ export default function DashboardLayout({
                 {showProfileDropdown && (
                   <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
                     {/* Profile Header */}
-                    <div className="p-4 bg-emerald-50 border-b border-emerald-100">
+                    <div className="p-4 bg-[#1B3D2F]/10 border-b border-[#1B3D2F]">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center text-white text-lg font-bold overflow-hidden">
+                        <div className="w-12 h-12 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white text-lg font-bold overflow-hidden">
                           {user?.profileImage ? (
                             <img src={user.profileImage} alt="Profile" className="w-12 h-12 rounded-full object-cover" />
                           ) : (
@@ -639,7 +639,7 @@ export default function DashboardLayout({
       {isLoading && (
         <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
             <p className="mt-4 text-gray-700 font-medium">Loading...</p>
           </div>
         </div>
@@ -775,7 +775,7 @@ export default function DashboardLayout({
                       required
                       placeholder="e.g., 80"
                       min="1"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                     />
                     <p className="text-xs text-gray-500 mt-1">Estimated: ~45 liters for {selectedTrip.details.estimatedDistance}</p>
                   </div>
@@ -786,7 +786,7 @@ export default function DashboardLayout({
                     </label>
                     <select
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                     >
                       <option value="">Select Fuel Type</option>
                       <option value="diesel">Diesel</option>
@@ -801,7 +801,7 @@ export default function DashboardLayout({
                     <textarea
                       rows={3}
                       placeholder="Any notes regarding fuel allocation..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none"
                     ></textarea>
                   </div>
                 </div>
@@ -810,7 +810,7 @@ export default function DashboardLayout({
                 <div className="mt-6 flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                    className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
                   >
                     Allocate Fuel & Confirm
                   </button>
@@ -842,10 +842,10 @@ export default function DashboardLayout({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4" onClick={() => setShowProfileModal(false)}>
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-200 bg-emerald-50">
+            <div className="p-6 border-b border-gray-200 bg-[#1B3D2F]/10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#1B3D2F] rounded-full flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -872,16 +872,16 @@ export default function DashboardLayout({
                     <img 
                       src={tempProfileImage || user?.profileImage} 
                       alt="Profile" 
-                      className="w-32 h-32 rounded-full object-cover border-4 border-emerald-200"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-[#1B3D2F]/20"
                     />
                   ) : (
-                    <div className="w-32 h-32 bg-emerald-100 rounded-full flex items-center justify-center border-4 border-emerald-200">
-                      <span className="text-emerald-600 text-4xl font-bold">
+                    <div className="w-32 h-32 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center border-4 border-[#1B3D2F]/20">
+                      <span className="text-[#1B3D2F] text-4xl font-bold">
                         {editedProfile.name ? editedProfile.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : 'AD'}
                       </span>
                     </div>
                   )}
-                  <label className="absolute bottom-0 right-0 bg-emerald-600 text-white p-2 rounded-full cursor-pointer hover:bg-emerald-700 transition-colors shadow-lg">
+                  <label className="absolute bottom-0 right-0 bg-[#1B3D2F] text-white p-2 rounded-full cursor-pointer hover:bg-[#152e22] transition-colors shadow-lg">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -904,7 +904,7 @@ export default function DashboardLayout({
                     <tr className="hover:bg-gray-50">
                       <td className="px-4 py-4 bg-gray-50 font-medium text-gray-700 w-1/3">
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           Full Name
@@ -915,7 +915,7 @@ export default function DashboardLayout({
                           type="text" 
                           value={editedProfile.name}
                           onChange={(e) => setEditedProfile(prev => ({ ...prev, name: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F]"
                           placeholder="Enter your full name"
                         />
                       </td>
@@ -924,7 +924,7 @@ export default function DashboardLayout({
                     <tr className="hover:bg-gray-50">
                       <td className="px-4 py-4 bg-gray-50 font-medium text-gray-700">
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                           Email Address
@@ -935,7 +935,7 @@ export default function DashboardLayout({
                           type="email" 
                           value={editedProfile.email}
                           onChange={(e) => setEditedProfile(prev => ({ ...prev, email: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F]"
                           placeholder="your.email@example.com"
                         />
                       </td>
@@ -944,7 +944,7 @@ export default function DashboardLayout({
                     <tr className="hover:bg-gray-50">
                       <td className="px-4 py-4 bg-gray-50 font-medium text-gray-700">
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                           Role/Position
@@ -955,7 +955,7 @@ export default function DashboardLayout({
                           type="text" 
                           value={editedProfile.role}
                           onChange={(e) => setEditedProfile(prev => ({ ...prev, role: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F]"
                           placeholder="e.g., Transport Administrator"
                           disabled
                         />
@@ -965,7 +965,7 @@ export default function DashboardLayout({
                     <tr className="hover:bg-gray-50">
                       <td className="px-4 py-4 bg-gray-50 font-medium text-gray-700">
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
                           Phone Number
@@ -976,7 +976,7 @@ export default function DashboardLayout({
                           type="tel" 
                           value={editedProfile.phoneNumber}
                           onChange={(e) => setEditedProfile(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F]"
                           placeholder="+251-91-234-5678"
                         />
                       </td>
@@ -995,7 +995,7 @@ export default function DashboardLayout({
                 </button>
                 <button 
                   onClick={handleSaveProfile}
-                  className="flex-1 bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#1B3D2F] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#152e22] transition-colors flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

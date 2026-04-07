@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { tripApi } from '@/lib/api'
@@ -97,14 +97,14 @@ export default function ScanPage() {
 
         {!scanning && !scannedData && (
           <div className="text-center py-8">
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-20 h-20 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
               </svg>
             </div>
             <p className="text-gray-500 text-sm mb-4">Point camera at driver's QR code</p>
             <button onClick={startScanner}
-              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors">
+              className="px-6 py-3 bg-[#1B3D2F] text-white rounded-lg font-medium hover:bg-[#152e22] transition-colors">
               Start Camera Scan
             </button>
           </div>
@@ -122,10 +122,10 @@ export default function ScanPage() {
 
       {/* Scanned Result */}
       {scannedData && (
-        <div className="bg-white rounded-xl border border-emerald-200 p-5 space-y-4">
+        <div className="bg-white rounded-xl border border-[#1B3D2F]/20 p-5 space-y-4">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -149,7 +149,7 @@ export default function ScanPage() {
               Cancel
             </button>
             <button onClick={handleConfirmStart} disabled={confirming}
-              className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50">
+              className="flex-1 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22] disabled:opacity-50">
               {confirming ? 'Starting...' : '✓ Confirm & Start Trip'}
             </button>
           </div>
@@ -162,7 +162,7 @@ export default function ScanPage() {
         <div className="flex gap-2">
           <input type="text" value={manualInput} onChange={e => setManualInput(e.target.value)}
             placeholder='Paste QR JSON data...'
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
           <button onClick={handleManualSubmit}
             className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-800">
             Parse

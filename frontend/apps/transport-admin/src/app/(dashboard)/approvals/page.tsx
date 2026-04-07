@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { tripApi } from '@/lib/api'
@@ -132,7 +132,7 @@ export default function ApprovalsPage() {
     return (
       <div className="p-6 h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B3D2F] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading pending approvals...</p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function ApprovalsPage() {
           </div>
           <button
             onClick={fetchPendingApprovals}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+            className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors"
           >
             Refresh
           </button>
@@ -181,7 +181,7 @@ export default function ApprovalsPage() {
         <div className="flex-1 flex gap-6 min-h-0">
           {/* Left Panel - Trip List */}
           <div className="w-96 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-white">
+            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-[#1B3D2F] to-white">
               <h3 className="text-lg font-bold text-gray-900">Awaiting Approval</h3>
               <p className="text-sm text-gray-500">{trips.length} trips</p>
             </div>
@@ -192,7 +192,7 @@ export default function ApprovalsPage() {
                   key={trip.id}
                   onClick={() => setSelectedTrip(trip)}
                   className={`w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-all ${
-                    selectedTrip?.id === trip.id ? 'bg-emerald-50 border-l-4 border-l-emerald-600' : ''
+                    selectedTrip?.id === trip.id ? 'bg-[#1B3D2F]/10 border-l-4 border-l-[#1B3D2F]' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -219,7 +219,7 @@ export default function ApprovalsPage() {
                   </div>
                   
                   <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                    <svg className="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-[#1B3D2F] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     </svg>
                     <span className="truncate">{trip.destination}</span>
@@ -230,7 +230,7 @@ export default function ApprovalsPage() {
                       {formatDateTime(trip.startDateTime)}
                     </span>
                     {trip.estimatedDistance && (
-                      <span className="text-xs font-semibold text-emerald-600">
+                      <span className="text-xs font-semibold text-[#1B3D2F]">
                         {trip.estimatedDistance} km
                       </span>
                     )}
@@ -324,19 +324,19 @@ export default function ApprovalsPage() {
                       )}
 
                       {selectedTrip.allocatedDriver && (
-                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <div className="p-4 bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white font-bold text-sm">
                               {selectedTrip.allocatedDriver?.user?.name ? 
                                 selectedTrip.allocatedDriver.user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2) : 
                                 'DR'
                               }
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-emerald-900">
+                              <p className="text-sm font-semibold text-[#152e22]">
                                 {selectedTrip.allocatedDriver?.user?.name || 'Driver Name'}
                               </p>
-                              <p className="text-xs text-emerald-700">
+                              <p className="text-xs text-[#1B3D2F]">
                                 License: {selectedTrip.allocatedDriver?.licenseNumber || 'N/A'}
                               </p>
                             </div>
@@ -387,7 +387,7 @@ export default function ApprovalsPage() {
                         setShowApprovalModal(true)
                       }}
                       disabled={processingTrip === selectedTrip.id}
-                      className="flex-1 bg-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="flex-1 bg-[#1B3D2F] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#152e22] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {processingTrip === selectedTrip.id ? 'Processing...' : 'Approve Transport'}
                     </button>
@@ -421,8 +421,8 @@ export default function ApprovalsPage() {
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -433,15 +433,15 @@ export default function ApprovalsPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg">
                   <input
                     type="checkbox"
                     id="fuelApproved"
                     checked={fuelApproved}
                     onChange={(e) => setFuelApproved(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                    className="w-4 h-4 text-[#1B3D2F] border-gray-300 rounded focus:ring-[#1B3D2F]"
                   />
-                  <label htmlFor="fuelApproved" className="text-sm font-medium text-emerald-900">
+                  <label htmlFor="fuelApproved" className="text-sm font-medium text-[#152e22]">
                     Fuel allocation approved and ready for dispatch
                   </label>
                 </div>
@@ -463,7 +463,7 @@ export default function ApprovalsPage() {
                         }))
                       }
                       placeholder="From deployment"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm"
                     />
                     <p className="text-xs text-gray-500 mt-1">Leave blank to keep deployment value</p>
                   </div>
@@ -483,7 +483,7 @@ export default function ApprovalsPage() {
                         }))
                       }
                       placeholder="From deployment"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm"
                     />
                     <p className="text-xs text-gray-500 mt-1">Leave blank to keep deployment value</p>
                   </div>
@@ -497,7 +497,7 @@ export default function ApprovalsPage() {
                     value={comments}
                     onChange={(e) => setComments(e.target.value)}
                     placeholder="Add any comments about the approval..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent resize-none"
                     rows={3}
                   />
                 </div>
@@ -518,7 +518,7 @@ export default function ApprovalsPage() {
                 <button
                   onClick={handleApproveTransport}
                   disabled={!fuelApproved || processingTrip === selectedTrip?.id}
-                  className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {processingTrip === selectedTrip?.id ? 'Processing...' : 'Approve Transport'}
                 </button>

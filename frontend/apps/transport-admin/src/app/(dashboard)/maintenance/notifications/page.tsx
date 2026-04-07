@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { notificationApi } from '@/lib/api'
@@ -49,7 +49,7 @@ export default function MaintenanceNotificationsPage() {
     if (type?.toLowerCase().includes('reject'))
       return { icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-red-500', bg: 'bg-red-100' }
     if (type?.toLowerCase().includes('complet'))
-      return { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-emerald-500', bg: 'bg-emerald-100' }
+      return { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-[#1B3D2F]', bg: 'bg-[#1B3D2F]/15' }
     if (type?.toLowerCase().includes('approv'))
       return { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-blue-500', bg: 'bg-blue-100' }
     return {
@@ -72,7 +72,7 @@ export default function MaintenanceNotificationsPage() {
           <button
             type="button"
             onClick={markAllRead}
-            className="px-4 py-2 text-sm text-emerald-600 border border-emerald-300 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 font-medium"
+            className="px-4 py-2 text-sm text-[#1B3D2F] border border-[#1B3D2F]/30 rounded-lg hover:bg-[#1B3D2F]/10 dark:hover:bg-[#1B3D2F]/20 font-medium"
           >
             Mark all read
           </button>
@@ -91,7 +91,7 @@ export default function MaintenanceNotificationsPage() {
             onClick={() => setFilter(val)}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
               filter === val
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-[#1B3D2F] text-white'
                 : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'
             }`}
           >
@@ -125,7 +125,7 @@ export default function MaintenanceNotificationsPage() {
                 onClick={() => !n.isRead && markRead(n.id)}
                 onKeyDown={(e) => e.key === 'Enter' && !n.isRead && markRead(n.id)}
                 className={`bg-white dark:bg-gray-800 rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md ${
-                  !n.isRead ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-900/10' : 'border-gray-200 dark:border-gray-700'
+                  !n.isRead ? 'border-[#1B3D2F]/20 dark:border-[#1B3D2F] bg-[#1B3D2F]/10/30 dark:bg-[#1B3D2F]/10' : 'border-gray-200 dark:border-gray-700'
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -139,7 +139,7 @@ export default function MaintenanceNotificationsPage() {
                       <p className={`text-sm font-semibold ${!n.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                         {n.title || n.type}
                       </p>
-                      {!n.isRead && <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0 mt-1.5" />}
+                      {!n.isRead && <span className="w-2 h-2 bg-[#1B3D2F] rounded-full flex-shrink-0 mt-1.5" />}
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{n.message}</p>
                     <p className="text-xs text-gray-400 mt-1">
