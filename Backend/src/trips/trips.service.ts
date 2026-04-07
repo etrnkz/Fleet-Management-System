@@ -224,7 +224,7 @@ export class TripsService {
     ) {
       // President and Dean skip all approval levels — go straight to allocation
       initialState = TripState.APPROVED_FOR_ALLOCATION;
-      approvalLevel = null;
+      approvalLevel = undefined as any;
     } else if (
       requesterRole === UserRole.CollegeHead ||
       requesterRole === UserRole.DepartmentHead
