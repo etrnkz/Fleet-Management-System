@@ -1,6 +1,6 @@
 // login.dto.ts
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
   @ApiProperty({
@@ -19,4 +19,12 @@ export class LoginDto {
   @IsNotEmpty({ message: 'Password is required' })
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password: string;
+
+  @ApiPropertyOptional({
+    example: 'employee',
+    description: 'App type for role enforcement: employee | department | college-dean | president | transport-admin | deployment-office | driver | system-admin',
+  })
+  @IsOptional()
+  @IsString()
+  appType?: string;
 }

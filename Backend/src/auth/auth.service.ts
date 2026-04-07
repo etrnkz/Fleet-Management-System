@@ -63,6 +63,25 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Enforce app-type role restrictions
+    if (loginDto.appType) {
+      const allowedRoles: Record<string, string[]> = {
+        'employee':          ['User'],
+        'department':        ['DepartmentHead'],
+        'college-dean':      ['Dean', 'CollegeHead'],
+        'president':         ['President'],
+        'transport-admin':   ['TransportOffice'],
+        'deployment-office': ['DeploymentTeam'],
+        'driver':            ['Driver'],
+        'system-admin':      ['SystemAdmin', 'Developer'],
+      };
+      const allowed = allowedRoles[loginDto.appType];
+      if (allowed && !allowed.includes(user.role)) {
+        this.logger.warn(`Login denied: role ${user.role} not allowed for app ${loginDto.appType} - ${loginDto.email}`);
+        throw new UnauthorizedException(`Access denied. This portal is for ${loginDto.appType} users only.`);
+      }
+    }
+
     const payload = {
       sub: user.id,
       email: user.email,

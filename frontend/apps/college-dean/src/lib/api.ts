@@ -1,4 +1,4 @@
-// API client — College Dean app (API role: Dean)
+﻿// API client — College Dean app (API role: Dean)
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
@@ -45,7 +45,7 @@ export const authApi = {
   login: (email: string, password: string) =>
     apiFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, appType: 'college-dean' }),
     }),
 
   logout: () =>

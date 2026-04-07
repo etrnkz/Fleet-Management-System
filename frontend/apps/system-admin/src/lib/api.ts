@@ -1,4 +1,4 @@
-const API_BASE_URL =
+﻿const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
 
 // Get auth token from localStorage or sessionStorage
@@ -87,7 +87,7 @@ export const authApi = {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, appType: 'system-admin' }),
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Login failed' }));
