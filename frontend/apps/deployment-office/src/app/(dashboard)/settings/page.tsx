@@ -142,18 +142,18 @@ export default function SettingsPage() {
     finally { setInviting(false) }
   }
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-12">
-      <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
-    </div>
-  )
-
   const tabs = [
     { id: 'profile', label: 'Profile' },
     { id: 'password', label: 'Change Password' },
     { id: 'notifications', label: 'Notifications' },
     { id: 'invite', label: 'Invite Employees' },
   ]
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
+    </div>
+  )
 
   return (
     <div className="space-y-6 max-w-3xl">
