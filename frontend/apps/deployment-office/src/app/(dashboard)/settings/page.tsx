@@ -1,460 +1,457 @@
-'useclient'
+'use client'
 
-import{useState}from'react'
+import { useState } from 'react'
 
-exportdefaultfunctionSettingsPage(){
-const[activeTab,setActiveTab]=useState('profile')
-const[toast,setToast]=useState<{message:string;type:'success'|'error'|'info'}|null>(null)
+export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState('profile')
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+  
+  // Profile Settings
+  const [profileData, setProfileData] = useState({
+    fullName: 'Alex Johnson',
+    email: 'deployment@hu.edu.et',
+    phone: '+251 911 234 567',
+    position: 'Head of Operations',
+    department: 'Deployment Office',
+    employeeId: 'EMP-2024-001'
+  })
 
-//ProfileSettings
-const[profileData,setProfileData]=useState({
-fullName:'AlexJohnson',
-email:'deployment@hu.edu.et',
-phone:'+251911234567',
-position:'HeadofOperations',
-department:'DeploymentOffice',
-employeeId:'EMP-2024-001'
-})
+  // Notification Settings
+  const [notifications, setNotifications] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    tripAssignments: true,
+    fuelRequests: true,
+    maintenanceAlerts: true,
+    driverUpdates: false
+  })
 
-//NotificationSettings
-const[notifications,setNotifications]=useState({
-emailNotifications:true,
-smsNotifications:false,
-pushNotifications:true,
-tripAssignments:true,
-fuelRequests:true,
-maintenanceAlerts:true,
-driverUpdates:false
-})
+  // System Settings
+  const [systemSettings, setSystemSettings] = useState({
+    language: 'en',
+    timezone: 'Africa/Addis_Ababa',
+    dateFormat: 'MM/DD/YYYY',
+    theme: 'light'
+  })
 
-//SystemSettings
-const[systemSettings,setSystemSettings]=useState({
-language:'en',
-timezone:'Africa/Addis_Ababa',
-dateFormat:'MM/DD/YYYY',
-theme:'light'
-})
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
 
-constshowToast=(message:string,type:'success'|'error'|'info')=>{
-setToast({message,type})
-setTimeout(()=>setToast(null),3000)
+  const handleSaveProfile = () => {
+    showToast('Profile updated successfully!', 'success')
+  }
+
+  const handleSaveNotifications = () => {
+    showToast('Notification preferences saved!', 'success')
+  }
+
+  const handleSaveSystem = () => {
+    showToast('System settings updated!', 'success')
+  }
+
+  const handleChangePassword = () => {
+    showToast('Password change functionality will be implemented', 'info')
+  }
+
+  const tabs = [
+    { 
+      id: 'profile', 
+      name: 'Profile', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      )
+    },
+    { 
+      id: 'notifications', 
+      name: 'Notifications', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      )
+    },
+    { 
+      id: 'security', 
+      name: 'Security', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      )
+    },
+    { 
+      id: 'system', 
+      name: 'System', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    }
+  ]
+
+  return (
+    <div className="p-4 md:p-6 h-full overflow-y-auto">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
+          <p className="text-gray-600">Manage your account settings and preferences</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div className="border-b border-gray-200">
+            <div className="flex overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-emerald-600 text-emerald-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <span className="text-xl">{tab.icon}</span>
+                  {tab.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Profile Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                      <input
+                        type="text"
+                        value={profileData.fullName}
+                        onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                      <input
+                        type="tel"
+                        value={profileData.phone}
+                        onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                      <input
+                        type="text"
+                        value={profileData.position}
+                        onChange={(e) => setProfileData({ ...profileData, position: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                      <input
+                        type="text"
+                        value={profileData.department}
+                        disabled
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
+                      <input
+                        type="text"
+                        value={profileData.employeeId}
+                        disabled
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <button
+                      onClick={handleSaveProfile}
+                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Notifications Tab */}
+            {activeTab === 'notifications' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Notification Preferences</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-gray-900">Email Notifications</p>
+                        <p className="text-sm text-gray-600">Receive notifications via email</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notifications.emailNotifications}
+                          onChange={(e) => setNotifications({ ...notifications, emailNotifications: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-gray-900">SMS Notifications</p>
+                        <p className="text-sm text-gray-600">Receive notifications via SMS</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notifications.smsNotifications}
+                          onChange={(e) => setNotifications({ ...notifications, smsNotifications: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-gray-900">Push Notifications</p>
+                        <p className="text-sm text-gray-600">Receive push notifications</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={notifications.pushNotifications}
+                          onChange={(e) => setNotifications({ ...notifications, pushNotifications: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      <h3 className="font-medium text-gray-900 mb-3">Notification Types</h3>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-700">Trip Assignments</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifications.tripAssignments}
+                              onChange={(e) => setNotifications({ ...notifications, tripAssignments: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                          </label>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-700">Fuel Requests</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifications.fuelRequests}
+                              onChange={(e) => setNotifications({ ...notifications, fuelRequests: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                          </label>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-700">Maintenance Alerts</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifications.maintenanceAlerts}
+                              onChange={(e) => setNotifications({ ...notifications, maintenanceAlerts: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                          </label>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-700">Driver Updates</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={notifications.driverUpdates}
+                              onChange={(e) => setNotifications({ ...notifications, driverUpdates: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <button
+                      onClick={handleSaveNotifications}
+                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                    >
+                      Save Preferences
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Security Tab */}
+            {activeTab === 'security' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">Security Settings</h2>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-medium text-gray-900 mb-2">Change Password</h3>
+                      <p className="text-sm text-gray-600 mb-4">Update your password regularly to keep your account secure</p>
+                      <button
+                        onClick={handleChangePassword}
+                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm"
+                      >
+                        Change Password
+                      </button>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-medium text-gray-900 mb-2">Two-Factor Authentication</h3>
+                      <p className="text-sm text-gray-600 mb-4">Add an extra layer of security to your account</p>
+                      <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm">
+                        Enable 2FA
+                      </button>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-medium text-gray-900 mb-2">Active Sessions</h3>
+                      <p className="text-sm text-gray-600 mb-4">Manage your active sessions across devices</p>
+                      <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm">
+                        Sign Out All Devices
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* System Tab */}
+            {activeTab === 'system' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-4">System Preferences</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                      <select
+                        value={systemSettings.language}
+                        onChange={(e) => setSystemSettings({ ...systemSettings, language: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      >
+                        <option value="en">English</option>
+                        <option value="am">Amharic</option>
+                        <option value="or">Oromo</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                      <select
+                        value={systemSettings.timezone}
+                        onChange={(e) => setSystemSettings({ ...systemSettings, timezone: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      >
+                        <option value="Africa/Addis_Ababa">Africa/Addis Ababa (EAT)</option>
+                        <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
+                        <option value="UTC">UTC</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Date Format</label>
+                      <select
+                        value={systemSettings.dateFormat}
+                        onChange={(e) => setSystemSettings({ ...systemSettings, dateFormat: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      >
+                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+                      <select
+                        value={systemSettings.theme}
+                        onChange={(e) => setSystemSettings({ ...systemSettings, theme: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                      >
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="auto">Auto</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <button
+                      onClick={handleSaveSystem}
+                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                    >
+                      Save Settings
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50 animate-slide-in-bottom">
+          <div className={`px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
+            toast.type === 'success' ? 'bg-green-600' :
+            toast.type === 'error' ? 'bg-red-600' :
+            'bg-blue-600'
+          } text-white`}>
+            <span>{toast.message}</span>
+            <button onClick={() => setToast(null)} className="hover:opacity-80">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
-
-consthandleSaveProfile=()=>{
-showToast('Profileupdatedsuccessfully!','success')
-}
-
-consthandleSaveNotifications=()=>{
-showToast('Notificationpreferencessaved!','success')
-}
-
-consthandleSaveSystem=()=>{
-showToast('Systemsettingsupdated!','success')
-}
-
-consthandleChangePassword=()=>{
-showToast('Passwordchangefunctionalitywillbeimplemented','info')
-}
-
-consttabs=[
-{
-id:'profile',
-name:'Profile',
-icon:(
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M167a44011-804400180zM1214a77000-77h14a77000-7-7z"/>
-</svg>
-)
-},
-{
-id:'notifications',
-name:'Notifications',
-icon:(
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1517h5l-1.405-1.405A2.0322.0320011814.158V11a6.0026.002000-4-5.659V5a22010-40v.341C7.676.16568.388611v3.159c0.538-.2141.055-.5951.436L417h5m60v1a33011-60v-1m60H9"/>
-</svg>
-)
-},
-{
-id:'security',
-name:'Security',
-icon:(
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1215v2m-64h12a220002-2v-6a22000-2-2H6a22000-22v6a2200022zm10-10V7a44000-80v4h8z"/>
-</svg>
-)
-},
-{
-id:'system',
-name:'System',
-icon:(
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M10.3254.317c.426-1.7562.924-1.7563.350a1.7241.7240002.5731.066c1.543-.943.31.8262.372.37a1.7241.7240001.0652.572c1.756.4261.7562.92403.35a1.7241.724000-1.0662.573c.941.543-.8263.31-2.372.37a1.7241.724000-2.5721.065c-.4261.756-2.9241.756-3.350a1.7241.724000-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.7241.724000-1.065-2.572c-1.756-.426-1.756-2.9240-3.35a1.7241.7240001.066-2.573c-.94-1.543.826-3.312.37-2.37.996.6082.296.072.572-1.065z"/>
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M1512a33011-603300160z"/>
-</svg>
-)
-}
-]
-
-return(
-<divclassName="p-4md:p-6h-fulloverflow-y-auto">
-<divclassName="max-w-6xlmx-auto">
-{/*Header*/}
-<divclassName="mb-6">
-<h1className="text-2xlfont-boldtext-gray-900mb-2">Settings</h1>
-<pclassName="text-gray-600">Manageyouraccountsettingsandpreferences</p>
-</div>
-
-{/*Tabs*/}
-<divclassName="bg-whiterounded-xlshadow-smborderborder-gray-200mb-6">
-<divclassName="border-bborder-gray-200">
-<divclassName="flexoverflow-x-auto">
-{tabs.map((tab)=>(
-<button
-key={tab.id}
-onClick={()=>setActiveTab(tab.id)}
-className={`flexitems-centergap-2px-6py-4font-mediumtext-smwhitespace-nowrapborder-b-2transition-colors${
-activeTab===tab.id
-?'border-emerald-600text-emerald-600'
-:'border-transparenttext-gray-600hover:text-gray-900'
-}`}
->
-<spanclassName="text-xl">{tab.icon}</span>
-{tab.name}
-</button>
-))}
-</div>
-</div>
-
-{/*TabContent*/}
-<divclassName="p-6">
-{/*ProfileTab*/}
-{activeTab==='profile'&&(
-<divclassName="space-y-6">
-<div>
-<h2className="text-lgfont-boldtext-gray-900mb-4">ProfileInformation</h2>
-<divclassName="gridgrid-cols-1md:grid-cols-2gap-6">
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">FullName</label>
-<input
-type="text"
-value={profileData.fullName}
-onChange={(e)=>setProfileData({...profileData,fullName:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
-/>
-</div>
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">Email</label>
-<input
-type="email"
-value={profileData.email}
-onChange={(e)=>setProfileData({...profileData,email:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
-/>
-</div>
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">Phone</label>
-<input
-type="tel"
-value={profileData.phone}
-onChange={(e)=>setProfileData({...profileData,phone:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
-/>
-</div>
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">Position</label>
-<input
-type="text"
-value={profileData.position}
-onChange={(e)=>setProfileData({...profileData,position:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
-/>
-</div>
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">Department</label>
-<input
-type="text"
-value={profileData.department}
-disabled
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgbg-gray-50cursor-not-allowed"
-/>
-</div>
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">EmployeeID</label>
-<input
-type="text"
-value={profileData.employeeId}
-disabled
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgbg-gray-50cursor-not-allowed"
-/>
-</div>
-</div>
-<divclassName="mt-6">
-<button
-onClick={handleSaveProfile}
-className="px-6py-2bg-emerald-600text-whiterounded-lghover:bg-emerald-700transition-colorsfont-medium"
->
-SaveChanges
-</button>
-</div>
-</div>
-</div>
-)}
-
-{/*NotificationsTab*/}
-{activeTab==='notifications'&&(
-<divclassName="space-y-6">
-<div>
-<h2className="text-lgfont-boldtext-gray-900mb-4">NotificationPreferences</h2>
-<divclassName="space-y-4">
-<divclassName="flexitems-centerjustify-betweenp-4bg-gray-50rounded-lg">
-<div>
-<pclassName="font-mediumtext-gray-900">EmailNotifications</p>
-<pclassName="text-smtext-gray-600">Receivenotificationsviaemail</p>
-</div>
-<labelclassName="relativeinline-flexitems-centercursor-pointer">
-<input
-type="checkbox"
-checked={notifications.emailNotifications}
-onChange={(e)=>setNotifications({...notifications,emailNotifications:e.target.checked})}
-className="sr-onlypeer"
-/>
-<divclassName="w-11h-6bg-gray-300peer-focus:outline-nonepeer-focus:ring-2peer-focus:ring-emerald-500rounded-fullpeerpeer-checked:after:translate-x-fullpeer-checked:after:border-whiteafter:content-['']after:absoluteafter:top-[2px]after:left-[2px]after:bg-whiteafter:border-gray-300after:borderafter:rounded-fullafter:h-5after:w-5after:transition-allpeer-checked:bg-emerald-600"></div>
-</label>
-</div>
-
-<divclassName="flexitems-centerjustify-betweenp-4bg-gray-50rounded-lg">
-<div>
-<pclassName="font-mediumtext-gray-900">SMSNotifications</p>
-<pclassName="text-smtext-gray-600">ReceivenotificationsviaSMS</p>
-</div>
-<labelclassName="relativeinline-flexitems-centercursor-pointer">
-<input
-type="checkbox"
-checked={notifications.smsNotifications}
-onChange={(e)=>setNotifications({...notifications,smsNotifications:e.target.checked})}
-className="sr-onlypeer"
-/>
-<divclassName="w-11h-6bg-gray-300peer-focus:outline-nonepeer-focus:ring-2peer-focus:ring-emerald-500rounded-fullpeerpeer-checked:after:translate-x-fullpeer-checked:after:border-whiteafter:content-['']after:absoluteafter:top-[2px]after:left-[2px]after:bg-whiteafter:border-gray-300after:borderafter:rounded-fullafter:h-5after:w-5after:transition-allpeer-checked:bg-emerald-600"></div>
-</label>
-</div>
-
-<divclassName="flexitems-centerjustify-betweenp-4bg-gray-50rounded-lg">
-<div>
-<pclassName="font-mediumtext-gray-900">PushNotifications</p>
-<pclassName="text-smtext-gray-600">Receivepushnotifications</p>
-</div>
-<labelclassName="relativeinline-flexitems-centercursor-pointer">
-<input
-type="checkbox"
-checked={notifications.pushNotifications}
-onChange={(e)=>setNotifications({...notifications,pushNotifications:e.target.checked})}
-className="sr-onlypeer"
-/>
-<divclassName="w-11h-6bg-gray-300peer-focus:outline-nonepeer-focus:ring-2peer-focus:ring-emerald-500rounded-fullpeerpeer-checked:after:translate-x-fullpeer-checked:after:border-whiteafter:content-['']after:absoluteafter:top-[2px]after:left-[2px]after:bg-whiteafter:border-gray-300after:borderafter:rounded-fullafter:h-5after:w-5after:transition-allpeer-checked:bg-emerald-600"></div>
-</label>
-</div>
-
-<divclassName="border-tborder-gray-200pt-4mt-4">
-<h3className="font-mediumtext-gray-900mb-3">NotificationTypes</h3>
-
-<divclassName="space-y-3">
-<divclassName="flexitems-centerjustify-between">
-<spanclassName="text-smtext-gray-700">TripAssignments</span>
-<labelclassName="relativeinline-flexitems-centercursor-pointer">
-<input
-type="checkbox"
-checked={notifications.tripAssignments}
-onChange={(e)=>setNotifications({...notifications,tripAssignments:e.target.checked})}
-className="sr-onlypeer"
-/>
-<divclassName="w-11h-6bg-gray-300peer-focus:outline-nonepeer-focus:ring-2peer-focus:ring-emerald-500rounded-fullpeerpeer-checked:after:translate-x-fullpeer-checked:after:border-whiteafter:content-['']after:absoluteafter:top-[2px]after:left-[2px]after:bg-whiteafter:border-gray-300after:borderafter:rounded-fullafter:h-5after:w-5after:transition-allpeer-checked:bg-emerald-600"></div>
-</label>
-</div>
-
-<divclassName="flexitems-centerjustify-between">
-<spanclassName="text-smtext-gray-700">FuelRequests</span>
-<labelclassName="relativeinline-flexitems-centercursor-pointer">
-<input
-type="checkbox"
-checked={notifications.fuelRequests}
-onChange={(e)=>setNotifications({...notifications,fuelRequests:e.target.checked})}
-className="sr-onlypeer"
-/>
-<divclassName="w-11h-6bg-gray-300peer-focus:outline-nonepeer-focus:ring-2peer-focus:ring-emerald-500rounded-fullpeerpeer-checked:after:translate-x-fullpeer-checked:after:border-whiteafter:content-['']after:absoluteafter:top-[2px]after:left-[2px]after:bg-whiteafter:border-gray-300after:borderafter:rounded-fullafter:h-5after:w-5after:transition-allpeer-checked:bg-emerald-600"></div>
-</label>
-</div>
-
-<divclassName="flexitems-centerjustify-between">
-<spanclassName="text-smtext-gray-700">MaintenanceAlerts</span>
-<labelclassName="relativeinline-flexitems-centercursor-pointer">
-<input
-type="checkbox"
-checked={notifications.maintenanceAlerts}
-onChange={(e)=>setNotifications({...notifications,maintenanceAlerts:e.target.checked})}
-className="sr-onlypeer"
-/>
-<divclassName="w-11h-6bg-gray-300peer-focus:outline-nonepeer-focus:ring-2peer-focus:ring-emerald-500rounded-fullpeerpeer-checked:after:translate-x-fullpeer-checked:after:border-whiteafter:content-['']after:absoluteafter:top-[2px]after:left-[2px]after:bg-whiteafter:border-gray-300after:borderafter:rounded-fullafter:h-5after:w-5after:transition-allpeer-checked:bg-emerald-600"></div>
-</label>
-</div>
-
-<divclassName="flexitems-centerjustify-between">
-<spanclassName="text-smtext-gray-700">DriverUpdates</span>
-<labelclassName="relativeinline-flexitems-centercursor-pointer">
-<input
-type="checkbox"
-checked={notifications.driverUpdates}
-onChange={(e)=>setNotifications({...notifications,driverUpdates:e.target.checked})}
-className="sr-onlypeer"
-/>
-<divclassName="w-11h-6bg-gray-300peer-focus:outline-nonepeer-focus:ring-2peer-focus:ring-emerald-500rounded-fullpeerpeer-checked:after:translate-x-fullpeer-checked:after:border-whiteafter:content-['']after:absoluteafter:top-[2px]after:left-[2px]after:bg-whiteafter:border-gray-300after:borderafter:rounded-fullafter:h-5after:w-5after:transition-allpeer-checked:bg-emerald-600"></div>
-</label>
-</div>
-</div>
-</div>
-</div>
-<divclassName="mt-6">
-<button
-onClick={handleSaveNotifications}
-className="px-6py-2bg-emerald-600text-whiterounded-lghover:bg-emerald-700transition-colorsfont-medium"
->
-SavePreferences
-</button>
-</div>
-</div>
-</div>
-)}
-
-{/*SecurityTab*/}
-{activeTab==='security'&&(
-<divclassName="space-y-6">
-<div>
-<h2className="text-lgfont-boldtext-gray-900mb-4">SecuritySettings</h2>
-<divclassName="space-y-4">
-<divclassName="p-4bg-gray-50rounded-lg">
-<h3className="font-mediumtext-gray-900mb-2">ChangePassword</h3>
-<pclassName="text-smtext-gray-600mb-4">Updateyourpasswordregularlytokeepyouraccountsecure</p>
-<button
-onClick={handleChangePassword}
-className="px-4py-2bg-emerald-600text-whiterounded-lghover:bg-emerald-700transition-colorsfont-mediumtext-sm"
->
-ChangePassword
-</button>
-</div>
-
-<divclassName="p-4bg-gray-50rounded-lg">
-<h3className="font-mediumtext-gray-900mb-2">Two-FactorAuthentication</h3>
-<pclassName="text-smtext-gray-600mb-4">Addanextralayerofsecuritytoyouraccount</p>
-<buttonclassName="px-4py-2bg-gray-200text-gray-700rounded-lghover:bg-gray-300transition-colorsfont-mediumtext-sm">
-Enable2FA
-</button>
-</div>
-
-<divclassName="p-4bg-gray-50rounded-lg">
-<h3className="font-mediumtext-gray-900mb-2">ActiveSessions</h3>
-<pclassName="text-smtext-gray-600mb-4">Manageyouractivesessionsacrossdevices</p>
-<buttonclassName="px-4py-2bg-red-600text-whiterounded-lghover:bg-red-700transition-colorsfont-mediumtext-sm">
-SignOutAllDevices
-</button>
-</div>
-</div>
-</div>
-</div>
-)}
-
-{/*SystemTab*/}
-{activeTab==='system'&&(
-<divclassName="space-y-6">
-<div>
-<h2className="text-lgfont-boldtext-gray-900mb-4">SystemPreferences</h2>
-<divclassName="gridgrid-cols-1md:grid-cols-2gap-6">
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">Language</label>
-<select
-value={systemSettings.language}
-onChange={(e)=>setSystemSettings({...systemSettings,language:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
->
-<optionvalue="en">English</option>
-<optionvalue="am">Amharic</option>
-<optionvalue="or">Oromo</option>
-</select>
-</div>
-
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">Timezone</label>
-<select
-value={systemSettings.timezone}
-onChange={(e)=>setSystemSettings({...systemSettings,timezone:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
->
-<optionvalue="Africa/Addis_Ababa">Africa/AddisAbaba(EAT)</option>
-<optionvalue="Africa/Nairobi">Africa/Nairobi(EAT)</option>
-<optionvalue="UTC">UTC</option>
-</select>
-</div>
-
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">DateFormat</label>
-<select
-value={systemSettings.dateFormat}
-onChange={(e)=>setSystemSettings({...systemSettings,dateFormat:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
->
-<optionvalue="MM/DD/YYYY">MM/DD/YYYY</option>
-<optionvalue="DD/MM/YYYY">DD/MM/YYYY</option>
-<optionvalue="YYYY-MM-DD">YYYY-MM-DD</option>
-</select>
-</div>
-
-<div>
-<labelclassName="blocktext-smfont-mediumtext-gray-700mb-2">Theme</label>
-<select
-value={systemSettings.theme}
-onChange={(e)=>setSystemSettings({...systemSettings,theme:e.target.value})}
-className="w-fullpx-4py-2borderborder-gray-300rounded-lgfocus:ring-2focus:ring-emerald-500outline-none"
->
-<optionvalue="light">Light</option>
-<optionvalue="dark">Dark</option>
-<optionvalue="auto">Auto</option>
-</select>
-</div>
-</div>
-<divclassName="mt-6">
-<button
-onClick={handleSaveSystem}
-className="px-6py-2bg-emerald-600text-whiterounded-lghover:bg-emerald-700transition-colorsfont-medium"
->
-SaveSettings
-</button>
-</div>
-</div>
-</div>
-)}
-</div>
-</div>
-</div>
-
-{/*ToastNotification*/}
-{toast&&(
-<divclassName="fixedbottom-4right-4z-50animate-slide-in-bottom">
-<divclassName={`px-6py-3rounded-lgshadow-lgflexitems-centergap-3${
-toast.type==='success'?'bg-green-600':
-toast.type==='error'?'bg-red-600':
-'bg-blue-600'
-}text-white`}>
-<span>{toast.message}</span>
-<buttononClick={()=>setToast(null)}className="hover:opacity-80">
-<svgclassName="w-5h-5"fill="none"stroke="currentColor"viewBox="002424">
-<pathstrokeLinecap="round"strokeLinejoin="round"strokeWidth={1.5}d="M618L186M66l1212"/>
-</svg>
-</button>
-</div>
-</div>
-)}
-</div>
-)
-}
-
-
-

@@ -1,368 +1,365 @@
-'useclient'
+'use client'
 
-import{useState,useEffect}from'react'
-import{tripApi,vehicleApi,driverApi,maintenanceApi}from'@/lib/api'
+import { useState, useEffect } from 'react'
+import { tripApi, vehicleApi, driverApi, maintenanceApi } from '@/lib/api'
 
-exportdefaultfunctionReportsPage(){
-const[selectedReport,setSelectedReport]=useState('trip-summary')
-const[dateRange,setDateRange]=useState('last-30-days')
-const[customStartDate,setCustomStartDate]=useState('')
-const[customEndDate,setCustomEndDate]=useState('')
-const[loading,setLoading]=useState(true)
-const[toast,setToast]=useState<{message:string;type:'success'|'error'|'info'}|null>(null)
+export default function ReportsPage() {
+  const [selectedReport, setSelectedReport] = useState('trip-summary')
+  const [dateRange, setDateRange] = useState('last-30-days')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
-//Realdata
-const[allTrips,setAllTrips]=useState<any[]>([])
-const[allVehicles,setAllVehicles]=useState<any[]>([])
-const[allDrivers,setAllDrivers]=useState<any[]>([])
-const[allMaintenance,setAllMaintenance]=useState<any[]>([])
+  // Real data
+  const [allTrips, setAllTrips] = useState<any[]>([])
+  const [allVehicles, setAllVehicles] = useState<any[]>([])
+  const [allDrivers, setAllDrivers] = useState<any[]>([])
+  const [allMaintenance, setAllMaintenance] = useState<any[]>([])
 
-useEffect(()=>{
-constload=async()=>{
-setLoading(true)
-const[trips,vehicles,drivers,maintenance]=awaitPromise.all([
-tripApi.getAllTrips().catch(()=>[]),
-vehicleApi.getAllVehicles().catch(()=>[]),
-driverApi.getAllDrivers().catch(()=>[]),
-maintenanceApi.getAllMaintenanceRequests().catch(()=>[]),
-])
-setAllTrips(Array.isArray(trips)?trips:[])
-setAllVehicles(Array.isArray(vehicles)?vehicles:[])
-setAllDrivers(Array.isArray(drivers)?drivers:[])
-setAllMaintenance(Array.isArray(maintenance)?maintenance:[])
-setLoading(false)
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      const [trips, vehicles, drivers, maintenance] = await Promise.all([
+        tripApi.getAllTrips().catch(() => []),
+        vehicleApi.getAllVehicles().catch(() => []),
+        driverApi.getAllDrivers().catch(() => []),
+        maintenanceApi.getAllMaintenanceRequests().catch(() => []),
+      ])
+      setAllTrips(Array.isArray(trips) ? trips : [])
+      setAllVehicles(Array.isArray(vehicles) ? vehicles : [])
+      setAllDrivers(Array.isArray(drivers) ? drivers : [])
+      setAllMaintenance(Array.isArray(maintenance) ? maintenance : [])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  // Filter trips by selected date range
+  const getDateBounds = () => {
+    const now = new Date()
+    const start = new Date()
+    if (dateRange === 'today') { start.setHours(0,0,0,0) }
+    else if (dateRange === 'yesterday') { start.setDate(now.getDate()-1); start.setHours(0,0,0,0) }
+    else if (dateRange === 'last-7-days') { start.setDate(now.getDate()-7) }
+    else if (dateRange === 'last-30-days') { start.setDate(now.getDate()-30) }
+    else if (dateRange === 'this-month') { start.setDate(1); start.setHours(0,0,0,0) }
+    else if (dateRange === 'last-month') { start.setMonth(now.getMonth()-1); start.setDate(1); start.setHours(0,0,0,0) }
+    else if (dateRange === 'this-quarter') { start.setMonth(Math.floor(now.getMonth()/3)*3); start.setDate(1) }
+    else if (dateRange === 'this-year') { start.setMonth(0); start.setDate(1); start.setHours(0,0,0,0) }
+    else if (dateRange === 'custom') {
+      return { start: customStartDate ? new Date(customStartDate) : new Date(0), end: customEndDate ? new Date(customEndDate) : now }
+    }
+    return { start, end: now }
+  }
+
+  const { start: rangeStart, end: rangeEnd } = getDateBounds()
+  const filteredTrips = allTrips.filter((t: any) => {
+    const d = new Date(t.createdAt)
+    return d >= rangeStart && d <= rangeEnd
+  })
+
+  // Trip summary stats
+  const totalTrips = filteredTrips.length
+  const completedTrips = filteredTrips.filter((t: any) => ['COMPLETED','completed'].includes(t.state || t.status || '')).length
+  const inProgressTrips = filteredTrips.filter((t: any) => ['IN_PROGRESS','in_progress'].includes(t.state || t.status || '')).length
+  const cancelledTrips = filteredTrips.filter((t: any) => ['REJECTED','rejected','CANCELLED','cancelled'].includes(t.state || t.status || '')).length
+  const completionRate = totalTrips > 0 ? Math.round((completedTrips / totalTrips) * 100) : 0
+
+  // Monthly trend (last 6 months)
+  const monthlyTrend = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(); d.setMonth(d.getMonth() - 5 + i)
+    const count = allTrips.filter((t: any) => {
+      const td = new Date(t.createdAt)
+      return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth()
+    }).length
+    return { label: d.toLocaleString('default', { month: 'short' }), count }
+  })
+  const maxMonthly = Math.max(...monthlyTrend.map(m => m.count), 1)
+
+  // Vehicle utilization
+  const totalVehicles = allVehicles.length
+  const activeVehicles = allVehicles.filter((v: any) => v.status === 'Active').length
+  const inUseVehicles = allVehicles.filter((v: any) => ['In Use','OnTrip'].includes(v.status)).length
+  const maintenanceVehicles = allVehicles.filter((v: any) => ['UnderMaintenance','Maintenance'].includes(v.status)).length
+  const utilizationRate = totalVehicles > 0 ? Math.round((inUseVehicles / totalVehicles) * 100) : 0
+
+  // Driver performance
+  const totalDrivers = allDrivers.length
+  const activeDrivers = allDrivers.filter((d: any) => d.status === 'Available' || d.isAvailable).length
+  const driverTrips = allDrivers.map((d: any) => ({
+    name: d.user?.name || d.name || 'Unknown',
+    license: d.licenseNumber || 'N/A',
+    trips: filteredTrips.filter((t: any) => t.driver?.id === d.id || t.driverId === d.id).length,
+    status: d.status || (d.isAvailable ? 'Available' : 'Busy'),
+  })).sort((a, b) => b.trips - a.trips).slice(0, 5)
+
+  // Maintenance stats
+  const totalMaint = allMaintenance.length
+  const pendingMaint = allMaintenance.filter((m: any) => ['Submitted','UnderInspection'].includes(m.status)).length
+  const completedMaint = allMaintenance.filter((m: any) => m.status === 'Completed').length
+  const urgentMaint = allMaintenance.filter((m: any) => m.priority === 'Critical' || m.priority === 'High').length
+
+  const reportCategories = [
+    { id: 'trip-summary', name: 'Trip Summary', color: 'emerald' },
+    { id: 'vehicle-utilization', name: 'Vehicle Utilization', color: 'blue' },
+    { id: 'driver-performance', name: 'Driver Performance', color: 'purple' },
+    { id: 'maintenance-report', name: 'Maintenance Report', color: 'orange' },
+  ]
+
+  const dateRanges = [
+    { value: 'today', label: 'Today' },
+    { value: 'last-7-days', label: 'Last 7 Days' },
+    { value: 'last-30-days', label: 'Last 30 Days' },
+    { value: 'this-month', label: 'This Month' },
+    { value: 'last-month', label: 'Last Month' },
+    { value: 'this-quarter', label: 'This Quarter' },
+    { value: 'this-year', label: 'This Year' },
+    { value: 'custom', label: 'Custom Range' },
+  ]
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+    </div>
+  )
+
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className={`px-5 py-3 rounded-lg shadow-lg text-white text-sm ${toast.type === 'success' ? 'bg-emerald-600' : toast.type === 'error' ? 'bg-red-600' : 'bg-blue-600'}`}>
+            {toast.message}
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+          <p className="text-sm text-gray-500 mt-1">Live data from fleet operations</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-3 items-end">
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Date Range</label>
+          <select value={dateRange} onChange={e => setDateRange(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+            {dateRanges.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </div>
+        {dateRange === 'custom' && (
+          <>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Start</label>
+              <input type="date" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">End</label>
+              <input type="date" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Report Tabs */}
+      <div className="flex flex-wrap gap-2">
+        {reportCategories.map(c => (
+          <button key={c.id} onClick={() => setSelectedReport(c.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedReport === c.id ? 'bg-emerald-600 text-white' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
+            {c.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Trip Summary */}
+      {selectedReport === 'trip-summary' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: 'Total Trips', value: totalTrips, sub: `in selected period` },
+              { label: 'Completed', value: completedTrips, sub: `${completionRate}% completion rate` },
+              { label: 'In Progress', value: inProgressTrips, sub: 'Currently active' },
+              { label: 'Cancelled', value: cancelledTrips, sub: totalTrips > 0 ? `${Math.round(cancelledTrips/totalTrips*100)}% cancellation` : '0%' },
+            ].map(s => (
+              <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5">
+                <p className="text-sm text-gray-500 mb-1">{s.label}</p>
+                <p className="text-3xl font-bold text-gray-900">{s.value}</p>
+                <p className="text-xs text-gray-500 mt-1">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Monthly trend */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-base font-bold text-gray-900 mb-4">Monthly Trip Trend (Last 6 Months)</h3>
+            <div className="flex items-end gap-3 h-40">
+              {monthlyTrend.map((m, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-xs text-gray-500">{m.count}</span>
+                  <div className="w-full bg-emerald-500 rounded-t transition-all"
+                    style={{ height: `${(m.count / maxMonthly) * 120}px`, minHeight: m.count > 0 ? '4px' : '0' }}></div>
+                  <span className="text-xs text-gray-400">{m.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent trips table */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-base font-bold text-gray-900 mb-4">Recent Trips ({filteredTrips.length})</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-100 text-left text-xs text-gray-500">
+                  <th className="pb-2 pr-4">ID</th><th className="pb-2 pr-4">Requester</th>
+                  <th className="pb-2 pr-4">Destination</th><th className="pb-2 pr-4">Status</th><th className="pb-2">Date</th>
+                </tr></thead>
+                <tbody>
+                  {filteredTrips.slice(0, 10).map((t: any) => (
+                    <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-2 pr-4 text-xs text-gray-400">{t.requestNumber || t.id?.slice(0,8)}</td>
+                      <td className="py-2 pr-4 font-medium text-gray-800">{t.requester?.name || 'N/A'}</td>
+                      <td className="py-2 pr-4 text-gray-600 truncate max-w-[140px]">{t.destination || 'N/A'}</td>
+                      <td className="py-2 pr-4"><span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">{t.state || t.status}</span></td>
+                      <td className="py-2 text-xs text-gray-400">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                  ))}
+                  {filteredTrips.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-gray-400">No trips in selected period</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vehicle Utilization */}
+      {selectedReport === 'vehicle-utilization' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: 'Total Fleet', value: totalVehicles },
+              { label: 'Available', value: activeVehicles },
+              { label: 'In Use', value: inUseVehicles },
+              { label: 'Maintenance', value: maintenanceVehicles },
+            ].map(s => (
+              <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5">
+                <p className="text-sm text-gray-500 mb-1">{s.label}</p>
+                <p className="text-3xl font-bold text-gray-900">{s.value}</p>
+                {s.label === 'In Use' && <p className="text-xs text-gray-500 mt-1">{utilizationRate}% utilization</p>}
+              </div>
+            ))}
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-base font-bold text-gray-900 mb-4">All Vehicles ({allVehicles.length})</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-100 text-left text-xs text-gray-500">
+                  <th className="pb-2 pr-4">Plate</th><th className="pb-2 pr-4">Make / Model</th>
+                  <th className="pb-2 pr-4">Type</th><th className="pb-2">Status</th>
+                </tr></thead>
+                <tbody>
+                  {allVehicles.map((v: any) => (
+                    <tr key={v.id} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-2 pr-4 font-medium text-gray-800">{v.plateNumber}</td>
+                      <td className="py-2 pr-4 text-gray-600">{v.make} {v.model}</td>
+                      <td className="py-2 pr-4 text-gray-500">{v.type || 'N/A'}</td>
+                      <td className="py-2"><span className={`px-2 py-0.5 rounded text-xs font-medium ${v.status === 'Active' ? 'bg-green-100 text-green-700' : v.status === 'OnTrip' || v.status === 'In Use' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{v.status}</span></td>
+                    </tr>
+                  ))}
+                  {allVehicles.length === 0 && <tr><td colSpan={4} className="py-8 text-center text-gray-400">No vehicles found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Driver Performance */}
+      {selectedReport === 'driver-performance' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { label: 'Total Drivers', value: totalDrivers },
+              { label: 'Available', value: activeDrivers },
+              { label: 'Trips (period)', value: filteredTrips.filter((t: any) => t.driverId || t.driver).length },
+            ].map(s => (
+              <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5">
+                <p className="text-sm text-gray-500 mb-1">{s.label}</p>
+                <p className="text-3xl font-bold text-gray-900">{s.value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-base font-bold text-gray-900 mb-4">Top Drivers by Trips</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-100 text-left text-xs text-gray-500">
+                  <th className="pb-2 pr-4">Driver</th><th className="pb-2 pr-4">License</th>
+                  <th className="pb-2 pr-4">Trips</th><th className="pb-2">Status</th>
+                </tr></thead>
+                <tbody>
+                  {driverTrips.map((d, i) => (
+                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-2 pr-4 font-medium text-gray-800">{d.name}</td>
+                      <td className="py-2 pr-4 text-gray-500">{d.license}</td>
+                      <td className="py-2 pr-4 font-bold text-emerald-600">{d.trips}</td>
+                      <td className="py-2"><span className={`px-2 py-0.5 rounded text-xs ${d.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{d.status}</span></td>
+                    </tr>
+                  ))}
+                  {driverTrips.length === 0 && <tr><td colSpan={4} className="py-8 text-center text-gray-400">No drivers found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maintenance Report */}
+      {selectedReport === 'maintenance-report' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: 'Total Requests', value: totalMaint },
+              { label: 'Pending', value: pendingMaint },
+              { label: 'Completed', value: completedMaint },
+              { label: 'Urgent', value: urgentMaint },
+            ].map(s => (
+              <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5">
+                <p className="text-sm text-gray-500 mb-1">{s.label}</p>
+                <p className="text-3xl font-bold text-gray-900">{s.value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-base font-bold text-gray-900 mb-4">Maintenance Requests ({allMaintenance.length})</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-100 text-left text-xs text-gray-500">
+                  <th className="pb-2 pr-4">Vehicle</th><th className="pb-2 pr-4">Issue</th>
+                  <th className="pb-2 pr-4">Priority</th><th className="pb-2 pr-4">Status</th><th className="pb-2">Date</th>
+                </tr></thead>
+                <tbody>
+                  {allMaintenance.map((m: any) => (
+                    <tr key={m.id} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-2 pr-4 font-medium text-gray-800">{m.vehicle?.plateNumber || 'N/A'}</td>
+                      <td className="py-2 pr-4 text-gray-600 truncate max-w-[160px]">{m.issueDescription?.slice(0,50) || 'N/A'}</td>
+                      <td className="py-2 pr-4"><span className={`px-2 py-0.5 rounded text-xs ${m.priority === 'Critical' ? 'bg-red-100 text-red-700' : m.priority === 'High' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>{m.priority || 'Normal'}</span></td>
+                      <td className="py-2 pr-4"><span className={`px-2 py-0.5 rounded text-xs ${m.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{m.status}</span></td>
+                      <td className="py-2 text-xs text-gray-400">{m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                  ))}
+                  {allMaintenance.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-gray-400">No maintenance records found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
-load()
-},[])
-
-//Filtertripsbyselecteddaterange
-constgetDateBounds=()=>{
-constnow=newDate()
-conststart=newDate()
-if(dateRange==='today'){start.setHours(0,0,0,0)}
-elseif(dateRange==='yesterday'){start.setDate(now.getDate()-1);start.setHours(0,0,0,0)}
-elseif(dateRange==='last-7-days'){start.setDate(now.getDate()-7)}
-elseif(dateRange==='last-30-days'){start.setDate(now.getDate()-30)}
-elseif(dateRange==='this-month'){start.setDate(1);start.setHours(0,0,0,0)}
-elseif(dateRange==='last-month'){start.setMonth(now.getMonth()-1);start.setDate(1);start.setHours(0,0,0,0)}
-elseif(dateRange==='this-quarter'){start.setMonth(Math.floor(now.getMonth()/3)*3);start.setDate(1)}
-elseif(dateRange==='this-year'){start.setMonth(0);start.setDate(1);start.setHours(0,0,0,0)}
-elseif(dateRange==='custom'){
-return{start:customStartDate?newDate(customStartDate):newDate(0),end:customEndDate?newDate(customEndDate):now}
-}
-return{start,end:now}
-}
-
-const{start:rangeStart,end:rangeEnd}=getDateBounds()
-constfilteredTrips=allTrips.filter((t:any)=>{
-constd=newDate(t.createdAt)
-returnd>=rangeStart&&d<=rangeEnd
-})
-
-//Tripsummarystats
-consttotalTrips=filteredTrips.length
-constcompletedTrips=filteredTrips.filter((t:any)=>['COMPLETED','completed'].includes(t.state||t.status||'')).length
-constinProgressTrips=filteredTrips.filter((t:any)=>['IN_PROGRESS','in_progress'].includes(t.state||t.status||'')).length
-constcancelledTrips=filteredTrips.filter((t:any)=>['REJECTED','rejected','CANCELLED','cancelled'].includes(t.state||t.status||'')).length
-constcompletionRate=totalTrips>0?Math.round((completedTrips/totalTrips)*100):0
-
-//Monthlytrend(last6months)
-constmonthlyTrend=Array.from({length:6},(_,i)=>{
-constd=newDate();d.setMonth(d.getMonth()-5+i)
-constcount=allTrips.filter((t:any)=>{
-consttd=newDate(t.createdAt)
-returntd.getFullYear()===d.getFullYear()&&td.getMonth()===d.getMonth()
-}).length
-return{label:d.toLocaleString('default',{month:'short'}),count}
-})
-constmaxMonthly=Math.max(...monthlyTrend.map(m=>m.count),1)
-
-//Vehicleutilization
-consttotalVehicles=allVehicles.length
-constactiveVehicles=allVehicles.filter((v:any)=>v.status==='Active').length
-constinUseVehicles=allVehicles.filter((v:any)=>['InUse','OnTrip'].includes(v.status)).length
-constmaintenanceVehicles=allVehicles.filter((v:any)=>['UnderMaintenance','Maintenance'].includes(v.status)).length
-constutilizationRate=totalVehicles>0?Math.round((inUseVehicles/totalVehicles)*100):0
-
-//Driverperformance
-consttotalDrivers=allDrivers.length
-constactiveDrivers=allDrivers.filter((d:any)=>d.status==='Available'||d.isAvailable).length
-constdriverTrips=allDrivers.map((d:any)=>({
-name:d.user?.name||d.name||'Unknown',
-license:d.licenseNumber||'N/A',
-trips:filteredTrips.filter((t:any)=>t.driver?.id===d.id||t.driverId===d.id).length,
-status:d.status||(d.isAvailable?'Available':'Busy'),
-})).sort((a,b)=>b.trips-a.trips).slice(0,5)
-
-//Maintenancestats
-consttotalMaint=allMaintenance.length
-constpendingMaint=allMaintenance.filter((m:any)=>['Submitted','UnderInspection'].includes(m.status)).length
-constcompletedMaint=allMaintenance.filter((m:any)=>m.status==='Completed').length
-consturgentMaint=allMaintenance.filter((m:any)=>m.priority==='Critical'||m.priority==='High').length
-
-constreportCategories=[
-{id:'trip-summary',name:'TripSummary',color:'emerald'},
-{id:'vehicle-utilization',name:'VehicleUtilization',color:'blue'},
-{id:'driver-performance',name:'DriverPerformance',color:'purple'},
-{id:'maintenance-report',name:'MaintenanceReport',color:'orange'},
-]
-
-constdateRanges=[
-{value:'today',label:'Today'},
-{value:'last-7-days',label:'Last7Days'},
-{value:'last-30-days',label:'Last30Days'},
-{value:'this-month',label:'ThisMonth'},
-{value:'last-month',label:'LastMonth'},
-{value:'this-quarter',label:'ThisQuarter'},
-{value:'this-year',label:'ThisYear'},
-{value:'custom',label:'CustomRange'},
-]
-
-if(loading)return(
-<divclassName="flexitems-centerjustify-centerh-64">
-<divclassName="animate-spinrounded-fullh-12w-12border-b-4border-emerald-600"></div>
-</div>
-)
-
-return(
-<divclassName="p-4md:p-6space-y-6">
-{toast&&(
-<divclassName="fixedtop-4right-4z-50">
-<divclassName={`px-5py-3rounded-lgshadow-lgtext-whitetext-sm${toast.type==='success'?'bg-emerald-600':toast.type==='error'?'bg-red-600':'bg-blue-600'}`}>
-{toast.message}
-</div>
-</div>
-)}
-
-{/*Header*/}
-<divclassName="flexflex-colsm:flex-rowsm:items-centersm:justify-betweengap-3">
-<div>
-<h1className="text-2xlfont-boldtext-gray-900">Reports&Analytics</h1>
-<pclassName="text-smtext-gray-500mt-1">Livedatafromfleetoperations</p>
-</div>
-</div>
-
-{/*Filters*/}
-<divclassName="bg-whiterounded-xlborderborder-gray-200p-4flexflex-wrapgap-3items-end">
-<div>
-<labelclassName="blocktext-xsfont-semiboldtext-gray-600mb-1">DateRange</label>
-<selectvalue={dateRange}onChange={e=>setDateRange(e.target.value)}
-className="px-3py-2borderborder-gray-300rounded-lgtext-smoutline-nonefocus:ring-2focus:ring-emerald-500">
-{dateRanges.map(r=><optionkey={r.value}value={r.value}>{r.label}</option>)}
-</select>
-</div>
-{dateRange==='custom'&&(
-<>
-<div>
-<labelclassName="blocktext-xsfont-semiboldtext-gray-600mb-1">Start</label>
-<inputtype="date"value={customStartDate}onChange={e=>setCustomStartDate(e.target.value)}
-className="px-3py-2borderborder-gray-300rounded-lgtext-smoutline-nonefocus:ring-2focus:ring-emerald-500"/>
-</div>
-<div>
-<labelclassName="blocktext-xsfont-semiboldtext-gray-600mb-1">End</label>
-<inputtype="date"value={customEndDate}onChange={e=>setCustomEndDate(e.target.value)}
-className="px-3py-2borderborder-gray-300rounded-lgtext-smoutline-nonefocus:ring-2focus:ring-emerald-500"/>
-</div>
-</>
-)}
-</div>
-
-{/*ReportTabs*/}
-<divclassName="flexflex-wrapgap-2">
-{reportCategories.map(c=>(
-<buttonkey={c.id}onClick={()=>setSelectedReport(c.id)}
-className={`px-4py-2rounded-lgtext-smfont-mediumtransition-colors${selectedReport===c.id?'bg-emerald-600text-white':'bg-whiteborderborder-gray-200text-gray-700hover:bg-gray-50'}`}>
-{c.name}
-</button>
-))}
-</div>
-
-{/*TripSummary*/}
-{selectedReport==='trip-summary'&&(
-<divclassName="space-y-6">
-<divclassName="gridgrid-cols-2lg:grid-cols-4gap-4">
-{[
-{label:'TotalTrips',value:totalTrips,sub:`inselectedperiod`},
-{label:'Completed',value:completedTrips,sub:`${completionRate}%completionrate`},
-{label:'InProgress',value:inProgressTrips,sub:'Currentlyactive'},
-{label:'Cancelled',value:cancelledTrips,sub:totalTrips>0?`${Math.round(cancelledTrips/totalTrips*100)}%cancellation`:'0%'},
-].map(s=>(
-<divkey={s.label}className="bg-whiterounded-xlborderborder-gray-200p-5">
-<pclassName="text-smtext-gray-500mb-1">{s.label}</p>
-<pclassName="text-3xlfont-boldtext-gray-900">{s.value}</p>
-<pclassName="text-xstext-gray-500mt-1">{s.sub}</p>
-</div>
-))}
-</div>
-
-{/*Monthlytrend*/}
-<divclassName="bg-whiterounded-xlborderborder-gray-200p-6">
-<h3className="text-basefont-boldtext-gray-900mb-4">MonthlyTripTrend(Last6Months)</h3>
-<divclassName="flexitems-endgap-3h-40">
-{monthlyTrend.map((m,i)=>(
-<divkey={i}className="flex-1flexflex-colitems-centergap-1">
-<spanclassName="text-xstext-gray-500">{m.count}</span>
-<divclassName="w-fullbg-emerald-500rounded-ttransition-all"
-style={{height:`${(m.count/maxMonthly)*120}px`,minHeight:m.count>0?'4px':'0'}}></div>
-<spanclassName="text-xstext-gray-400">{m.label}</span>
-</div>
-))}
-</div>
-</div>
-
-{/*Recenttripstable*/}
-<divclassName="bg-whiterounded-xlborderborder-gray-200p-6">
-<h3className="text-basefont-boldtext-gray-900mb-4">RecentTrips({filteredTrips.length})</h3>
-<divclassName="overflow-x-auto">
-<tableclassName="w-fulltext-sm">
-<thead><trclassName="border-bborder-gray-100text-lefttext-xstext-gray-500">
-<thclassName="pb-2pr-4">ID</th><thclassName="pb-2pr-4">Requester</th>
-<thclassName="pb-2pr-4">Destination</th><thclassName="pb-2pr-4">Status</th><thclassName="pb-2">Date</th>
-</tr></thead>
-<tbody>
-{filteredTrips.slice(0,10).map((t:any)=>(
-<trkey={t.id}className="border-bborder-gray-50hover:bg-gray-50">
-<tdclassName="py-2pr-4text-xstext-gray-400">{t.requestNumber||t.id?.slice(0,8)}</td>
-<tdclassName="py-2pr-4font-mediumtext-gray-800">{t.requester?.name||'N/A'}</td>
-<tdclassName="py-2pr-4text-gray-600truncatemax-w-[140px]">{t.destination||'N/A'}</td>
-<tdclassName="py-2pr-4"><spanclassName="px-2py-0.5bg-gray-100text-gray-700roundedtext-xs">{t.state||t.status}</span></td>
-<tdclassName="py-2text-xstext-gray-400">{t.createdAt?newDate(t.createdAt).toLocaleDateString():'N/A'}</td>
-</tr>
-))}
-{filteredTrips.length===0&&<tr><tdcolSpan={5}className="py-8text-centertext-gray-400">Notripsinselectedperiod</td></tr>}
-</tbody>
-</table>
-</div>
-</div>
-</div>
-)}
-
-{/*VehicleUtilization*/}
-{selectedReport==='vehicle-utilization'&&(
-<divclassName="space-y-6">
-<divclassName="gridgrid-cols-2lg:grid-cols-4gap-4">
-{[
-{label:'TotalFleet',value:totalVehicles},
-{label:'Available',value:activeVehicles},
-{label:'InUse',value:inUseVehicles},
-{label:'Maintenance',value:maintenanceVehicles},
-].map(s=>(
-<divkey={s.label}className="bg-whiterounded-xlborderborder-gray-200p-5">
-<pclassName="text-smtext-gray-500mb-1">{s.label}</p>
-<pclassName="text-3xlfont-boldtext-gray-900">{s.value}</p>
-{s.label==='InUse'&&<pclassName="text-xstext-gray-500mt-1">{utilizationRate}%utilization</p>}
-</div>
-))}
-</div>
-<divclassName="bg-whiterounded-xlborderborder-gray-200p-6">
-<h3className="text-basefont-boldtext-gray-900mb-4">AllVehicles({allVehicles.length})</h3>
-<divclassName="overflow-x-auto">
-<tableclassName="w-fulltext-sm">
-<thead><trclassName="border-bborder-gray-100text-lefttext-xstext-gray-500">
-<thclassName="pb-2pr-4">Plate</th><thclassName="pb-2pr-4">Make/Model</th>
-<thclassName="pb-2pr-4">Type</th><thclassName="pb-2">Status</th>
-</tr></thead>
-<tbody>
-{allVehicles.map((v:any)=>(
-<trkey={v.id}className="border-bborder-gray-50hover:bg-gray-50">
-<tdclassName="py-2pr-4font-mediumtext-gray-800">{v.plateNumber}</td>
-<tdclassName="py-2pr-4text-gray-600">{v.make}{v.model}</td>
-<tdclassName="py-2pr-4text-gray-500">{v.type||'N/A'}</td>
-<tdclassName="py-2"><spanclassName={`px-2py-0.5roundedtext-xsfont-medium${v.status==='Active'?'bg-green-100text-green-700':v.status==='OnTrip'||v.status==='InUse'?'bg-blue-100text-blue-700':'bg-orange-100text-orange-700'}`}>{v.status}</span></td>
-</tr>
-))}
-{allVehicles.length===0&&<tr><tdcolSpan={4}className="py-8text-centertext-gray-400">Novehiclesfound</td></tr>}
-</tbody>
-</table>
-</div>
-</div>
-</div>
-)}
-
-{/*DriverPerformance*/}
-{selectedReport==='driver-performance'&&(
-<divclassName="space-y-6">
-<divclassName="gridgrid-cols-2lg:grid-cols-3gap-4">
-{[
-{label:'TotalDrivers',value:totalDrivers},
-{label:'Available',value:activeDrivers},
-{label:'Trips(period)',value:filteredTrips.filter((t:any)=>t.driverId||t.driver).length},
-].map(s=>(
-<divkey={s.label}className="bg-whiterounded-xlborderborder-gray-200p-5">
-<pclassName="text-smtext-gray-500mb-1">{s.label}</p>
-<pclassName="text-3xlfont-boldtext-gray-900">{s.value}</p>
-</div>
-))}
-</div>
-<divclassName="bg-whiterounded-xlborderborder-gray-200p-6">
-<h3className="text-basefont-boldtext-gray-900mb-4">TopDriversbyTrips</h3>
-<divclassName="overflow-x-auto">
-<tableclassName="w-fulltext-sm">
-<thead><trclassName="border-bborder-gray-100text-lefttext-xstext-gray-500">
-<thclassName="pb-2pr-4">Driver</th><thclassName="pb-2pr-4">License</th>
-<thclassName="pb-2pr-4">Trips</th><thclassName="pb-2">Status</th>
-</tr></thead>
-<tbody>
-{driverTrips.map((d,i)=>(
-<trkey={i}className="border-bborder-gray-50hover:bg-gray-50">
-<tdclassName="py-2pr-4font-mediumtext-gray-800">{d.name}</td>
-<tdclassName="py-2pr-4text-gray-500">{d.license}</td>
-<tdclassName="py-2pr-4font-boldtext-emerald-600">{d.trips}</td>
-<tdclassName="py-2"><spanclassName={`px-2py-0.5roundedtext-xs${d.status==='Available'?'bg-green-100text-green-700':'bg-gray-100text-gray-600'}`}>{d.status}</span></td>
-</tr>
-))}
-{driverTrips.length===0&&<tr><tdcolSpan={4}className="py-8text-centertext-gray-400">Nodriversfound</td></tr>}
-</tbody>
-</table>
-</div>
-</div>
-</div>
-)}
-
-{/*MaintenanceReport*/}
-{selectedReport==='maintenance-report'&&(
-<divclassName="space-y-6">
-<divclassName="gridgrid-cols-2lg:grid-cols-4gap-4">
-{[
-{label:'TotalRequests',value:totalMaint},
-{label:'Pending',value:pendingMaint},
-{label:'Completed',value:completedMaint},
-{label:'Urgent',value:urgentMaint},
-].map(s=>(
-<divkey={s.label}className="bg-whiterounded-xlborderborder-gray-200p-5">
-<pclassName="text-smtext-gray-500mb-1">{s.label}</p>
-<pclassName="text-3xlfont-boldtext-gray-900">{s.value}</p>
-</div>
-))}
-</div>
-<divclassName="bg-whiterounded-xlborderborder-gray-200p-6">
-<h3className="text-basefont-boldtext-gray-900mb-4">MaintenanceRequests({allMaintenance.length})</h3>
-<divclassName="overflow-x-auto">
-<tableclassName="w-fulltext-sm">
-<thead><trclassName="border-bborder-gray-100text-lefttext-xstext-gray-500">
-<thclassName="pb-2pr-4">Vehicle</th><thclassName="pb-2pr-4">Issue</th>
-<thclassName="pb-2pr-4">Priority</th><thclassName="pb-2pr-4">Status</th><thclassName="pb-2">Date</th>
-</tr></thead>
-<tbody>
-{allMaintenance.map((m:any)=>(
-<trkey={m.id}className="border-bborder-gray-50hover:bg-gray-50">
-<tdclassName="py-2pr-4font-mediumtext-gray-800">{m.vehicle?.plateNumber||'N/A'}</td>
-<tdclassName="py-2pr-4text-gray-600truncatemax-w-[160px]">{m.issueDescription?.slice(0,50)||'N/A'}</td>
-<tdclassName="py-2pr-4"><spanclassName={`px-2py-0.5roundedtext-xs${m.priority==='Critical'?'bg-red-100text-red-700':m.priority==='High'?'bg-orange-100text-orange-700':'bg-gray-100text-gray-600'}`}>{m.priority||'Normal'}</span></td>
-<tdclassName="py-2pr-4"><spanclassName={`px-2py-0.5roundedtext-xs${m.status==='Completed'?'bg-green-100text-green-700':'bg-yellow-100text-yellow-700'}`}>{m.status}</span></td>
-<tdclassName="py-2text-xstext-gray-400">{m.createdAt?newDate(m.createdAt).toLocaleDateString():'N/A'}</td>
-</tr>
-))}
-{allMaintenance.length===0&&<tr><tdcolSpan={5}className="py-8text-centertext-gray-400">Nomaintenancerecordsfound</td></tr>}
-</tbody>
-</table>
-</div>
-</div>
-</div>
-)}
-</div>
-)
-}
-
-
-
