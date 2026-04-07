@@ -42,13 +42,20 @@ apt install -y postgresql postgresql-contrib
 # Start and enable
 systemctl enable --now postgresql
 
+# Verify postgres user exists and service is running
+systemctl status postgresql
+psql --version
+
 # Create database and user
-sudo -u postgres psql <<EOF
+sudo -u postgres psql <<'EOF'
 CREATE USER fleet_user WITH PASSWORD 'CHANGE_ME_STRONG_PASSWORD';
 CREATE DATABASE fleet_management OWNER fleet_user;
 GRANT ALL PRIVILEGES ON DATABASE fleet_management TO fleet_user;
+\q
 EOF
 ```
+
+> If you get `sudo: unknown user postgres` — PostgreSQL is not installed or the service hasn't started yet. Run `systemctl status postgresql` to confirm it's active before running the `psql` command.
 
 ---
 
@@ -314,3 +321,45 @@ npx newman run postman/collections/Fleet_Management_API.postman_collection.json 
 | `pm2 reload fleet-api` | Zero-downtime reload |
 | `pm2 stop fleet-api` | Stop app |
 | `pm2 monit` | Live CPU/memory monitor |
+
+---
+
+## Troubleshooting
+
+**`sudo: unknown user postgres` / `error initializing audit plugin`**
+PostgreSQL is not installed or not running yet. Run these in order:
+```bash
+apt install -y postgresql postgresql-contrib
+systemctl start postgresql
+systemctl status postgresql   # must show "active (running)"
+sudo -u postgres psql         # now this will work
+```
+
+**`psql: error: connection refused`**
+PostgreSQL is installed but not running:
+```bash
+systemctl start postgresql
+systemctl enable postgresql
+```
+
+**`npm run migrate` fails with "relation does not exist"**
+The database exists but tables haven't been created. Either:
+- Set `DB_SYNCHRONIZE=true` in `.env`, restart the app once, then set it back to `false`
+- Or run: `npm run migrate`
+
+**PM2 app crashes on start**
+Check logs: `pm2 logs fleet-api --lines 100`
+Common causes: wrong DB credentials, Redis not running, missing `.env` values.
+
+**Redis connection refused**
+```bash
+systemctl start redis-server
+systemctl enable redis-server
+redis-cli ping   # should return PONG
+```
+
+**Port 3000 already in use**
+```bash
+lsof -i :3000
+kill -9 <PID>
+```
