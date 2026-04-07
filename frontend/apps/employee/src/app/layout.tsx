@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Geist_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,9 +8,21 @@ const inter = Inter({
   display: "swap",
 });
 
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "HUFMS — Employee Portal",
-  description: "Official transport registry, trip requests, and fleet services for employees",
+  title: "Fleet Authority — University Portal",
+  description:
+    "Official transport registry, trip requests, and fleet services for employees",
 };
 
 export default function RootLayout({
@@ -20,7 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
+      <body
+        className={`${inter.variable} ${newsreader.variable} ${geistMono.variable} antialiased`}
+      >
         {children}
       </body>
     </html>
