@@ -20,8 +20,6 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
-  const [profileModalOpen, setProfileModalOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [user, setUser] = useState<any>(null)
@@ -37,14 +35,6 @@ export default function DashboardLayout({
       return
     }
     setUser(currentUser)
-    setFormData({
-      fullName: currentUser.name || '',
-      email: currentUser.email || '',
-      phone: currentUser.phoneNumber || '',
-      department: currentUser.department || currentUser.college || '',
-      office: currentUser.office || 'Main Campus',
-      bio: currentUser.bio || '',
-    })
     
     // Load notifications
     loadNotifications()
@@ -89,49 +79,7 @@ export default function DashboardLayout({
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }
 
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    department: '',
-    office: '',
-    bio: '',
-  })
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  })
-
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Profile updated:', formData)
-    showToast('Profile updated successfully!', 'success')
-    setProfileModalOpen(false)
-  }
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToast('New passwords do not match!', 'error')
-      return
-    }
-    console.log('Password changed')
-    showToast('Password changed successfully!', 'success')
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-    setProfileModalOpen(false)
-  }
-
-  const openProfileModal = () => {
-    setProfileDropdownOpen(false)
-    setProfileModalOpen(true)
-    setActiveTab('profile')
-  }
+  const [formData] = useState({ fullName: '', email: user?.email || '', phone: '', department: '', office: '', bio: '' })
 
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     if (pathname !== path) {
@@ -434,15 +382,16 @@ export default function DashboardLayout({
 
                     {/* Menu Items */}
                     <div className="p-2">
-                      <button
-                        onClick={openProfileModal}
+                      <Link
+                        href="/settings"
+                        onClick={() => setProfileDropdownOpen(false)}
                         className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <span className="text-sm font-medium">Edit Profile</span>
-                      </button>
+                      </Link>
                       <Link
                         href="/settings"
                         onClick={() => setProfileDropdownOpen(false)}
@@ -481,322 +430,6 @@ export default function DashboardLayout({
         </main>
       </div>
 
-      {/* Profile Edit Modal */}
-      {profileModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-            onClick={() => setProfileModalOpen(false)}
-          ></div>
-
-          {/* Modal */}
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Profile Settings</h2>
-                <button
-                  onClick={() => setProfileModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="border-b border-gray-200 px-4 sm:px-6">
-                <nav className="flex gap-4 sm:gap-8 overflow-x-auto">
-                  <button
-                    onClick={() => setActiveTab('profile')}
-                    className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                      activeTab === 'profile'
-                        ? 'border-[#1B3D2F] text-[#1B3D2F]'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Profile Information
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('password')}
-                    className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                      activeTab === 'password'
-                        ? 'border-[#1B3D2F] text-[#1B3D2F]'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Change Password
-                  </button>
-                </nav>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-4 sm:p-6">
-                {/* Profile Information Tab */}
-                {activeTab === 'profile' && (
-                  <form onSubmit={handleProfileSubmit} className="space-y-6">
-                    {/* Profile Picture */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-4">Profile Picture</label>
-                      <div className="flex items-center gap-6">
-                        <div className="w-24 h-24 bg-[#152e22] rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-3xl">AK</span>
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            className="px-4 py-2 bg-[#1B3D2F]/10 text-[#1B3D2F] rounded-lg hover:bg-[#1B3D2F]/15 transition-colors text-sm font-medium"
-                          >
-                            Change Photo
-                          </button>
-                          <p className="text-xs text-gray-500 mt-2">JPG, PNG or GIF. Max size 2MB</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {/* Full Name */}
-                      <div>
-                        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                          Full Name
-                        </label>
-                        <input
-                          id="fullName"
-                          type="text"
-                          value={formData.fullName}
-                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                        />
-                      </div>
-
-                      {/* Email */}
-                      <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                          Email Address
-                        </label>
-                        <input
-                          id="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                        />
-                      </div>
-
-                      {/* Phone */}
-                      <div>
-                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone Number
-                        </label>
-                        <input
-                          id="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                        />
-                      </div>
-
-                      {/* Department */}
-                      <div>
-                        <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
-                          Department
-                        </label>
-                        <input
-                          id="department"
-                          type="text"
-                          value={formData.department}
-                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Office Location */}
-                    <div>
-                      <label htmlFor="office" className="block text-sm font-medium text-gray-700 mb-2">
-                        Office Location
-                      </label>
-                      <input
-                        id="office"
-                        type="text"
-                        value={formData.office}
-                        onChange={(e) => setFormData({ ...formData, office: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                      />
-                    </div>
-
-                    {/* Bio */}
-                    <div>
-                      <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-                        Bio
-                      </label>
-                      <textarea
-                        id="bio"
-                        rows={4}
-                        value={formData.bio}
-                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none"
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
-                      <button
-                        type="button"
-                        onClick={() => setProfileModalOpen(false)}
-                        className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-[#1B3D2F] transition-colors"
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Change Password Tab */}
-                {activeTab === 'password' && (
-                  <form onSubmit={handlePasswordSubmit} className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Change Password</h3>
-                      <p className="text-sm text-gray-500">
-                        Ensure your account is using a long, random password to stay secure.
-                      </p>
-                    </div>
-
-                    {/* Current Password */}
-                    <div>
-                      <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                        Current Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="currentPassword"
-                          type={showCurrentPassword ? 'text' : 'password'}
-                          value={passwordData.currentPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                          {showCurrentPassword ? (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* New Password */}
-                    <div>
-                      <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                        New Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="newPassword"
-                          type={showNewPassword ? 'text' : 'password'}
-                          value={passwordData.newPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                          {showNewPassword ? (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Confirm New Password */}
-                    <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                        Confirm New Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="confirmPassword"
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          value={passwordData.confirmPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                          {showConfirmPassword ? (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-                          setProfileModalOpen(false)
-                        }}
-                        className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-[#1B3D2F] transition-colors"
-                      >
-                        Update Password
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
       {/* Toast Notifications */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] space-y-2 pointer-events-none">
         <div className="pointer-events-auto">
