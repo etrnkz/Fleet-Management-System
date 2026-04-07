@@ -139,7 +139,6 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'profile', label: 'Profile' },
     { id: 'password', label: 'Change Password' },
-    { id: 'account', label: 'Account' },
     { id: 'invite', label: 'Invite Employees' },
   ]
 
@@ -237,6 +236,27 @@ export default function SettingsPage() {
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>
               </div>
+
+              {/* Account info + sign out merged here */}
+              <div className="pt-4 border-t border-gray-100 space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-700">Email</p>
+                  <p className="text-sm text-gray-500">{user?.email}</p>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-700">Role</p>
+                  <p className="text-sm text-gray-500">{user?.role}</p>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Sign out</p>
+                    <p className="text-xs text-gray-400">Sign out of your account</p>
+                  </div>
+                  <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
+                    Sign out
+                  </button>
+                </div>
+              </div>
             </form>
           )}
 
@@ -279,18 +299,6 @@ export default function SettingsPage() {
               </div>
             </form>
           )}
-
-          {/* Account */}
-          {activeTab === 'account' && (
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-gray-700">Account Information</h3>
-                {[['Email', user?.email], ['Role', user?.role]].map(([label, value]) => (
-                  <div key={label as string} className="flex justify-between items-center py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">{label}</p>
-                    <p className="text-sm text-gray-500">{value}</p>
-                  </div>
-                ))}
               </div>
               <div className="border border-red-200 rounded-lg p-4">
                 <div className="flex justify-between items-center">
