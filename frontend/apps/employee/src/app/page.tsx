@@ -7,11 +7,11 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200/30 z-50 shadow-sm">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#191C20]">
+      <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-[#C4C6D0]/30 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded bg-emerald-700 flex items-center justify-center text-white shadow-sm">
+            <div className="w-10 h-10 rounded bg-[#1B3D2F] flex items-center justify-center text-white shadow-sm">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path
                   strokeLinecap="round"
@@ -22,22 +22,22 @@ export default function LandingPage() {
               </svg>
             </div>
             <div>
-              <p className="font-serif text-lg font-bold tracking-tight text-emerald-700 leading-none">Haramaya University</p>
-              <p className="text-[10px] uppercase tracking-widest text-gray-600 font-bold mt-0.5">FLEET MANAGEMENT</p>
+              <p className="font-serif text-lg font-bold tracking-tight text-[#1B3D2F] leading-none">Fleet Authority</p>
+              <p className="text-[10px] uppercase tracking-widest text-[#565F71] font-bold mt-0.5">University Portal</p>
             </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            <Link href="#home" className="text-sm font-medium text-gray-600 hover:text-emerald-700 transition-colors">
+            <Link href="#home" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
               Home
             </Link>
-            <Link href="#about" className="text-sm font-medium text-gray-600 hover:text-emerald-700 transition-colors">
+            <Link href="#about" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
               About
             </Link>
-            <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-emerald-700 transition-colors">
-              Features
+            <Link href="#modules" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
+              Services
             </Link>
-            <Link href="#support" className="text-sm font-medium text-gray-600 hover:text-emerald-700 transition-colors">
+            <Link href="#support" className="text-sm font-medium text-[#565F71] hover:text-[#1B3D2F] transition-colors">
               Support
             </Link>
           </nav>
@@ -45,14 +45,14 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="bg-emerald-700 text-white px-5 sm:px-6 py-2 rounded font-bold text-sm shadow hover:bg-emerald-800 active:scale-[0.98] transition-all"
+              className="bg-[#1B3D2F] text-white px-5 sm:px-6 py-2 rounded font-bold text-sm shadow hover:bg-[#152e22] active:scale-[0.98] transition-all"
             >
               Sign in
             </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-emerald-700"
+              className="md:hidden p-2 text-[#565F71] hover:text-[#1B3D2F]"
               aria-label="Menu"
             >
               {mobileMenuOpen ? (
@@ -69,15 +69,15 @@ export default function LandingPage() {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200/20 bg-white px-4 py-3 space-y-2">
-            {['#home', '#about', '#features', '#support'].map((h, i) => (
+          <div className="md:hidden border-t border-[#C4C6D0]/20 bg-white px-4 py-3 space-y-2">
+            {['#home', '#about', '#modules', '#support'].map((h, i) => (
               <Link
                 key={h}
                 href={h}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-2 text-gray-600 font-medium hover:text-emerald-700"
+                className="block py-2 text-[#565F71] font-medium hover:text-[#1B3D2F]"
               >
-                {['Home', 'About', 'Features', 'Support'][i]}
+                {['Home', 'About', 'Services', 'Support'][i]}
               </Link>
             ))}
           </div>
@@ -87,18 +87,18 @@ export default function LandingPage() {
       <section id="home" className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="animate-fade-in-up">
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-600 mb-4">Employee access portal</p>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-emerald-700 font-serif leading-tight">
-              University fleet trip coordination
+            <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-4">Official employee access</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-[#1B3D2F] font-serif leading-tight">
+              University fleet registry &amp; trip coordination
             </h1>
-            <p className="text-gray-700 mt-6 text-base sm:text-lg leading-relaxed font-medium max-w-xl">
+            <p className="text-[#44474E] mt-6 text-base sm:text-lg leading-relaxed font-medium max-w-xl">
               Submit travel requests, track approvals, and stay informed on vehicle assignments through a single
               institutional portal aligned with transport office procedures.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 bg-emerald-700 text-white px-8 py-3 rounded font-bold shadow hover:bg-emerald-800 active:scale-[0.98] transition-all text-center"
+                className="inline-flex items-center justify-center gap-2 bg-[#1B3D2F] text-white px-8 py-3 rounded font-bold shadow hover:bg-[#152e22] active:scale-[0.98] transition-all text-center"
               >
                 Employee sign in
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -107,16 +107,16 @@ export default function LandingPage() {
               </Link>
               <a
                 href="#about"
-                className="inline-flex items-center justify-center px-8 py-3 rounded font-semibold text-emerald-700 border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center px-8 py-3 rounded font-semibold text-[#1B3D2F] border border-[#C4C6D0] bg-white hover:bg-[#F2F3F7] transition-colors"
               >
                 Learn more
               </a>
             </div>
           </div>
           <div className="relative animate-fade-in-right">
-            <div className="bg-white rounded border border-gray-200/40 shadow-sm p-6 sm:p-8">
+            <div className="bg-white rounded border border-[#C4C6D0]/40 shadow-sm p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded bg-emerald-100/60 flex items-center justify-center text-emerald-700">
+                <div className="w-12 h-12 rounded bg-[#D1E1FF]/60 flex items-center justify-center text-[#1B3D2F]">
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -127,20 +127,20 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-serif font-bold text-emerald-700 text-lg">Trip requests preview</p>
-                  <p className="text-xs text-gray-600 font-semibold uppercase tracking-wider">Read-only illustration</p>
+                  <p className="font-serif font-bold text-[#1B3D2F] text-lg">Trip registry preview</p>
+                  <p className="text-xs text-[#565F71] font-semibold uppercase tracking-wider">Read-only illustration</p>
                 </div>
               </div>
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                    className="flex items-center justify-between py-3 border-b border-[#ECEEF3] last:border-0"
                   >
-                    <span className="text-sm font-mono font-bold text-emerald-700">REQ-{82000 + i * 11}</span>
+                    <span className="text-sm font-mono font-bold text-[#1B3D2F]">REQ-{82000 + i * 11}</span>
                     <span
                       className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm ${
-                        i === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                        i === 1 ? 'bg-[#D1E1FF] text-[#1B3D2F]' : 'bg-[#E0E2E8] text-[#565F71]'
                       }`}
                     >
                       {i === 1 ? 'Approved' : 'Pending'}
@@ -148,28 +148,28 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-600 mt-6 italic">Figures shown are illustrative.</p>
+              <p className="text-xs text-[#565F71] mt-6 italic">Figures shown are illustrative.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="about" className="bg-white border-y border-gray-200/20 py-16 sm:py-20">
+      <section id="about" className="bg-white border-y border-[#C4C6D0]/20 py-16 sm:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-emerald-700 font-serif tracking-tight mb-4">About the portal</h2>
-          <p className="text-gray-700 leading-relaxed font-medium">
-            The Employee Portal centralizes official transport workflows for Haramaya University. The system supports
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#1B3D2F] font-serif tracking-tight mb-4">About the portal</h2>
+          <p className="text-[#44474E] leading-relaxed font-medium">
+            Fleet Authority centralizes official transport workflows for Haramaya University. The system supports
             transparent approvals, documented trip records, and coordination with the transport office—consistent with
             institutional governance and duty-of-care standards.
           </p>
         </div>
       </section>
 
-      <section id="features" className="py-16 sm:py-20">
+      <section id="modules" className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl font-bold text-emerald-700 font-serif tracking-tight mb-2">Key capabilities</h2>
-            <p className="text-gray-600 text-sm font-medium">Tools available through the employee portal</p>
+            <h2 className="text-3xl font-bold text-[#1B3D2F] font-serif tracking-tight mb-2">Key capabilities</h2>
+            <p className="text-[#565F71] text-sm font-medium">Tools available through the employee portal</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
@@ -200,17 +200,17 @@ export default function LandingPage() {
             ].map((item) => (
               <div
                 key={item.t}
-                className="bg-white p-6 rounded border border-gray-200/40 shadow-sm hover:border-emerald-700/25 transition-colors"
+                className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B3D2F]/25 transition-colors"
               >
-                <h3 className="font-serif font-bold text-lg text-emerald-700 mb-2">{item.t}</h3>
-                <p className="text-sm text-gray-700 leading-relaxed">{item.d}</p>
+                <h3 className="font-serif font-bold text-lg text-[#1B3D2F] mb-2">{item.t}</h3>
+                <p className="text-sm text-[#44474E] leading-relaxed">{item.d}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-emerald-700 text-white py-16">
+      <section className="bg-[#1B3D2F] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-12">
           <div>
             <h3 className="font-serif text-xl font-bold mb-3">Operational coverage</h3>
@@ -232,37 +232,37 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <h2 className="font-serif text-3xl font-bold text-emerald-700 mb-4">Need support?</h2>
-              <p className="text-gray-700 mb-8 leading-relaxed">
+              <h2 className="font-serif text-3xl font-bold text-[#1B3D2F] mb-4">Need support?</h2>
+              <p className="text-[#44474E] mb-8 leading-relaxed">
                 For trip scheduling, approvals, or driver coordination, contact the transport office. For login or
                 technical issues, use the IT helpdesk.
               </p>
               <div className="space-y-6">
                 <div>
-                  <p className="font-bold text-emerald-700">Transport office</p>
-                  <p className="text-sm text-gray-600">General inquiries</p>
-                  <a href="mailto:transport@hu.edu.et" className="text-sm font-semibold text-emerald-700 hover:underline">
+                  <p className="font-bold text-[#1B3D2F]">Transport office</p>
+                  <p className="text-sm text-[#565F71]">General inquiries</p>
+                  <a href="mailto:transport@hu.edu.et" className="text-sm font-semibold text-[#1B3D2F] hover:underline">
                     transport@hu.edu.et
                   </a>
                 </div>
                 <div>
-                  <p className="font-bold text-emerald-700">IT helpdesk</p>
-                  <p className="text-sm text-gray-600">Technical issues</p>
-                  <a href="mailto:ithelpdesk@hu.edu.et" className="text-sm font-semibold text-emerald-700 hover:underline">
+                  <p className="font-bold text-[#1B3D2F]">IT helpdesk</p>
+                  <p className="text-sm text-[#565F71]">Technical issues</p>
+                  <a href="mailto:ithelpdesk@hu.edu.et" className="text-sm font-semibold text-[#1B3D2F] hover:underline">
                     ithelpdesk@hu.edu.et
                   </a>
                 </div>
               </div>
             </div>
-            <div className="bg-emerald-50 p-8 rounded border border-gray-200/40">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-4 border-b border-gray-200/30 pb-2">
+            <div className="bg-[#F2F3F7] p-8 rounded border border-[#C4C6D0]/40">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1B3D2F] mb-4 border-b border-[#C4C6D0]/30 pb-2">
                 System status
               </h3>
               <ul className="space-y-3 text-sm">
                 {['Trip request module', 'Employee notifications', 'Portal access'].map((x) => (
-                  <li key={x} className="flex justify-between text-gray-700">
+                  <li key={x} className="flex justify-between text-[#44474E]">
                     <span>{x}</span>
-                    <span className="font-bold text-emerald-700">Active</span>
+                    <span className="font-bold text-[#1B3D2F]">Active</span>
                   </li>
                 ))}
               </ul>
@@ -271,11 +271,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer id="contact" className="bg-gray-900 text-white py-12">
+      <footer id="contact" className="bg-[#191C20] text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between gap-8">
           <div>
-            <p className="font-serif font-bold text-lg text-white">Haramaya University</p>
-            <p className="text-xs uppercase tracking-widest text-white/60 mt-1">FLEET MANAGEMENT</p>
+            <p className="font-serif font-bold text-lg text-white">Fleet Authority</p>
+            <p className="text-xs uppercase tracking-widest text-white/60 mt-1">University Portal</p>
             <p className="text-sm text-white/50 mt-4 max-w-sm">
               Official fleet management and employee transport services for Haramaya University.
             </p>
@@ -285,7 +285,7 @@ export default function LandingPage() {
             <p>P.O. Box 138, Dire Dawa, Ethiopia</p>
             <p className="mt-4">
               © {new Date().getFullYear()} Haramaya University ·{' '}
-              <a href="https://haramaya.edu.et" className="text-emerald-400 hover:underline">
+              <a href="https://haramaya.edu.et" className="text-[#D1E1FF] hover:underline">
                 haramaya.edu.et
               </a>
             </p>
