@@ -82,7 +82,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none transition-all"
                 required
               />
             </div>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••"
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none transition-all"
                   required
                 />
                 <button
@@ -133,7 +133,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-700"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-gray-700">
                 Remember for 30 days
@@ -144,7 +144,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-500 text-white py-3 rounded-lg font-medium hover:bg-emerald-600 transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-emerald-700 text-white py-3 rounded-lg font-medium hover:bg-emerald-800 transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
@@ -153,7 +153,7 @@ export default function LoginPage() {
           <div className="mt-8 text-center border-t border-gray-100 pt-6">
             <Link
               href="/"
-              className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors"
+              className="text-sm font-medium text-gray-600 hover:text-emerald-700 transition-colors"
             >
               ← Back to portal overview
             </Link>

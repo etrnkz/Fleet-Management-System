@@ -108,7 +108,7 @@ export default function ApprovalsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
       </div>
     )
   }
@@ -124,7 +124,7 @@ export default function ApprovalsPage() {
       )}
 
       <div>
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Trip Approvals</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Trip Approvals</h1>
         <p className="text-xs md:text-sm text-gray-500 mt-1">Review and manage trip requests from faculty and staff</p>
       </div>
 
@@ -141,7 +141,7 @@ export default function ApprovalsPage() {
         <div className="bg-white p-4 md:p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs md:text-sm text-gray-500">Approved</span>
-            <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-emerald-500 rounded-full"></div>
+            <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-emerald-700 rounded-full"></div>
           </div>
           <div className="text-2xl md:text-3xl font-bold text-emerald-600">{stats.approved}</div>
         </div>
@@ -172,7 +172,7 @@ export default function ApprovalsPage() {
             onClick={() => setActiveFilter('approved')}
             className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors whitespace-nowrap ${
               activeFilter === 'approved'
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-emerald-700 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -319,19 +319,19 @@ export default function ApprovalsPage() {
                   <div className="grid sm:grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Name</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requestedBy}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requester?.name || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Department</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.department}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requester?.department?.name || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Email</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900 break-all">{selectedRequest.email}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900 break-all">{selectedRequest.requester?.email || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Phone</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.phone}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requester?.phoneNumber || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -345,34 +345,32 @@ export default function ApprovalsPage() {
                       <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.purpose}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Priority</p>
-                      <span className={`inline-block px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-medium ${getPriorityColor(selectedRequest.priority)}`}>
-                        {selectedRequest.priority}
-                      </span>
+                      <p className="text-[10px] md:text-xs text-gray-500">Trip Type</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.tripType || 'Normal'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">From</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.from}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">Main Campus</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">To</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.to}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Destination</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.destination}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Departure Date & Time</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.departureDate} at {selectedRequest.departureTime}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Departure</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.startDateTime ? new Date(selectedRequest.startDateTime).toLocaleString() : 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Return Date</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.returnDate}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Return</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.endDateTime ? new Date(selectedRequest.endDateTime).toLocaleString() : 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Number of Passengers</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.passengers}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Passengers</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.passengerCount}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Vehicle Type</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.vehicleType}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Status</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.state?.replace(/_/g, ' ')}</p>
                     </div>
                   </div>
                 </div>
@@ -388,7 +386,7 @@ export default function ApprovalsPage() {
                   <div className="flex flex-col sm:flex-row items-center gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
                     <button
                       onClick={() => setShowApproveModal(true)}
-                      className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium flex items-center justify-center gap-2 text-sm md:text-base"
+                      className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium flex items-center justify-center gap-2 text-sm md:text-base"
                     >
                       <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -435,7 +433,7 @@ export default function ApprovalsPage() {
                   Approve Trip Request?
                 </h3>
                 <p className="text-sm md:text-base text-gray-600 text-center mb-4 md:mb-6">
-                  Are you sure you want to approve the trip request from <span className="font-medium">{selectedRequest.requestedBy}</span> to <span className="font-medium">{selectedRequest.to}</span>?
+                  Are you sure you want to approve the trip request from <span className="font-medium">{selectedRequest.requester?.name || 'this user'}</span> to <span className="font-medium">{selectedRequest.destination}</span>?
                 </p>
 
                 {/* Actions */}
@@ -448,7 +446,7 @@ export default function ApprovalsPage() {
                   </button>
                   <button
                     onClick={() => handleApprove(selectedRequest.id)}
-                    className="w-full sm:flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium text-sm md:text-base"
+                    className="w-full sm:flex-1 px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium text-sm md:text-base"
                   >
                     Approve
                   </button>

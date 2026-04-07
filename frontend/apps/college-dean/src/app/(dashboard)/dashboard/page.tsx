@@ -101,7 +101,7 @@ export default function DashboardPage() {
         switch (log.action) {
           case 'APPROVE':
             title = `${log.entityType} Approved`
-            color = 'bg-emerald-500'
+            color = 'bg-emerald-700'
             break
           case 'REJECT':
             title = `${log.entityType} Rejected`
@@ -284,15 +284,42 @@ export default function DashboardPage() {
     }
   }
 
-  const fleetStatus = vehicles.slice(0, 3).map((vehicle: any, index: number) => ({
-    id: vehicle.id,
-    name: vehicle.plateNumber,
-    location: `${vehicle.status} / LOCATION`,
-    status: vehicle.status,
-    statusColor: vehicle.status === 'Active' ? 'text-emerald-600' : 'text-orange-600',
-    percentage: vehicle.status === 'Active' ? 85 : 12,
-    vehicle: `${vehicle.make} ${vehicle.model} • ${vehicle.plateNumber}`
-  }))
+  // Compute monthly trip counts from real data (last 6 months)
+  const monthlyChart = (() => {
+    const now = new Date()
+    const months = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+      return {
+        month: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+        year: d.getFullYear(),
+        monthIndex: d.getMonth(),
+        count: 0,
+      }
+    })
+    trips.forEach((t: any) => {
+      if (!t.startDateTime) return
+      const d = new Date(t.startDateTime)
+      const m = months.find(x => x.monthIndex === d.getMonth() && x.year === d.getFullYear())
+      if (m) m.count++
+    })
+    const max = Math.max(...months.map(m => m.count), 1)
+    return months.map(m => ({ ...m, pct: `${Math.round((m.count / max) * 100)}%` }))
+  })()
+
+  const fleetStatus = vehicles.slice(0, 5).map((vehicle: any) => {
+    const isActive = vehicle.status === 'Active' || vehicle.status === 'ACTIVE'
+    const isInUse = vehicle.status === 'IN_USE' || vehicle.status === 'On Trip'
+    const pct = isActive ? 90 : isInUse ? 100 : 20
+    return {
+      id: vehicle.id,
+      name: vehicle.plateNumber,
+      location: vehicle.status,
+      status: vehicle.status,
+      statusColor: isActive ? 'text-emerald-600' : isInUse ? 'text-blue-600' : 'text-orange-600',
+      percentage: pct,
+      vehicle: `${vehicle.make} ${vehicle.model} • ${vehicle.plateNumber}`
+    }
+  })
 
   // Filter trips based on search query - use real trips data
   const completedTrips = trips.filter((t: any) => t.state === 'COMPLETED')
@@ -324,83 +351,107 @@ export default function DashboardPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
         </div>
       ) : (
         <>
           {/* Header Info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <p className="text-xs sm:text-sm text-gray-500">
-            Semester II, 2024 | Last updated: {new Date().toLocaleString('en-US', { 
-              month: 'short', 
-              day: 'numeric', 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: true 
-            })}
-          </p>
-        </div>
-        <button 
-          onClick={() => setShowRequestModal(true)}
-          className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
-        >
-          <span className="text-lg">+</span>
-          <span className="text-sm font-medium">New Special Request</span>
-        </button>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Monthly Utilization */}
-        <div className="bg-white rounded-xl border border-gray-200">
-          <div className="p-4 md:p-6 border-b border-gray-200">
-            <h2 className="text-base md:text-lg font-semibold text-gray-900">Monthly Utilization</h2>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-emerald-600">Welcome, {user?.name?.split(' ')[0] || 'Dean'}</h1>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                {user?.college?.name || 'College'} · Last updated: {new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowRequestModal(true)}
+              className="bg-emerald-700 text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
+            >
+              <span className="text-lg">+</span>
+              <span className="text-sm font-medium">New Trip Request</span>
+            </button>
           </div>
-          <div className="p-4 md:p-6">
-            <div className="mb-4 md:mb-6">
-              {/* Chart Background */}
-              <div className="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
-                <div className="flex justify-between items-end h-32 md:h-48 gap-2 md:gap-3">
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-500 rounded-t shadow-sm" style={{ height: '45%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">MAY</span>
+
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            {[
+              { label: 'Total Trips (College)', value: trips.length, color: 'text-emerald-600', dot: 'bg-emerald-600', desc: 'All trips in your college' },
+              { label: 'Active / In Progress', value: trips.filter(t => t.state === 'IN_PROGRESS' || t.state === 'READY').length, color: 'text-blue-600', dot: 'bg-blue-500', desc: 'Currently on the road' },
+            ].map(({ label, value, color, dot, desc }) => (
+              <div key={label} className="bg-white rounded-xl border border-gray-200 p-4 md:p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs md:text-sm text-gray-500">{label}</span>
+                  <div className={`w-2.5 h-2.5 ${dot} rounded-full`}></div>
+                </div>
+                <div className={`text-2xl md:text-3xl font-bold ${color}`}>{value}</div>
+                <div className="text-xs text-gray-400 mt-1">{desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Trip Status Breakdown */}
+          <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
+              <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Trip Status Breakdown</h2>
+              <div className="space-y-3">
+                {[
+                  { label: 'Completed', count: trips.filter(t => t.state === 'COMPLETED').length, color: 'bg-emerald-500' },
+                  { label: 'In Progress', count: trips.filter(t => t.state === 'IN_PROGRESS' || t.state === 'READY').length, color: 'bg-blue-500' },
+                  { label: 'Pending', count: trips.filter(t => t.state?.startsWith('PENDING')).length, color: 'bg-yellow-500' },
+                  { label: 'Cancelled/Rejected', count: trips.filter(t => t.state === 'CANCELLED' || t.state === 'REJECTED').length, color: 'bg-red-400' },
+                ].map(({ label, count, color }) => {
+                  const pct = trips.length > 0 ? Math.round((count / trips.length) * 100) : 0
+                  return (
+                    <div key={label}>
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>{label}</span>
+                        <span className="font-medium">{count} ({pct}%)</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2">
+                        <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${pct}%` }}></div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+                <span className="text-xs text-gray-400">Total: {trips.length} trips in college</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 grid gap-4 md:gap-6">
+              {/* Monthly Utilization */}
+              <div className="bg-white rounded-xl border border-gray-200">
+                <div className="p-4 md:p-6 border-b border-gray-200">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-900">Monthly Utilization</h2>
+                </div>
+                <div className="p-4 md:p-6">
+                  <div className="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
+                    <div className="flex justify-between items-end h-32 md:h-40 gap-2 md:gap-3">
+                      {monthlyChart.map(({ month, count, pct }) => (
+                        <div key={month} className="flex flex-col justify-end items-center gap-1 flex-1">
+                          <span className="text-[10px] text-gray-500 mb-0.5">{count}</span>
+                          <div className="w-full bg-emerald-700 rounded-t shadow-sm transition-all" style={{ height: pct, minHeight: count > 0 ? '4px' : '2px' }}></div>
+                          <span className="text-[10px] md:text-xs text-gray-700 font-medium">{month}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-500 rounded-t shadow-sm" style={{ height: '60%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">JUN</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-500 rounded-t shadow-sm" style={{ height: '80%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">JUL</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-500 rounded-t shadow-sm" style={{ height: '100%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">AUG</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-500 rounded-t shadow-sm" style={{ height: '55%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">SEP</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-500 rounded-t shadow-sm" style={{ height: '70%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">OCT</span>
+                  <div className="text-center pt-3 border-t border-gray-200 mt-4">
+                    <div className="text-xs md:text-sm text-gray-500">Avg. Trips/Day</div>
+                    <div className="text-xl md:text-2xl font-bold text-emerald-600">
+                      {statistics?.averageTripsPerDay?.toFixed(1) ||
+                        (trips.length > 0 ? (trips.length / 180).toFixed(1) : '0.0')}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="text-center pt-3 md:pt-4 border-t border-gray-200">
-              <div className="text-xs md:text-sm text-gray-500">Avg. Trips/Day</div>
-              <div className="text-xl md:text-2xl font-bold text-gray-900">
-                {statistics?.averageTripsPerDay?.toFixed(1) || '0.0'}
-              </div>
-            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl border border-gray-200">
+          {/* Recent Activity + Fleet Status */}
+          <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="bg-white rounded-xl border border-gray-200">
           <div className="p-4 md:p-6 border-b border-gray-200">
             <h2 className="text-base md:text-lg font-semibold text-gray-900">Recent Activity</h2>
           </div>
@@ -449,7 +500,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 md:gap-3">
                     <div className="flex-1 bg-gray-200 rounded-full h-1.5 md:h-2">
                       <div 
-                        className={`h-1.5 md:h-2 rounded-full ${fleet.status === 'READY' ? 'bg-emerald-500' : 'bg-orange-500'}`}
+                        className={`h-1.5 md:h-2 rounded-full ${fleet.status === 'Active' || fleet.status === 'ACTIVE' ? 'bg-emerald-700' : fleet.status === 'IN_USE' ? 'bg-blue-500' : 'bg-orange-500'}`}
                         style={{ width: `${fleet.percentage}%` }}
                       ></div>
                     </div>
@@ -477,7 +528,7 @@ export default function DashboardPage() {
                   setSearchQuery(e.target.value)
                   setCurrentPage(1) // Reset to first page on search
                 }}
-                className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none w-full"
+                className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none w-full"
               />
               <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -556,7 +607,7 @@ export default function DashboardPage() {
                 onClick={() => handlePageChange(page)}
                 className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded ${
                   currentPage === page
-                    ? 'bg-emerald-500 text-white'
+                    ? 'bg-emerald-700 text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -650,7 +701,7 @@ export default function DashboardPage() {
                           value={formData.purpose}
                           onChange={handleInputChange}
                           placeholder="e.g., Academic Conference, Research Visit, Administrative Meeting"
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -665,7 +716,7 @@ export default function DashboardPage() {
                           name="from"
                           value={formData.from}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -681,7 +732,7 @@ export default function DashboardPage() {
                           value={formData.to}
                           onChange={handleInputChange}
                           placeholder="e.g., Addis Ababa, Dire Dawa"
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -696,7 +747,7 @@ export default function DashboardPage() {
                           name="departureDate"
                           value={formData.departureDate}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -711,7 +762,7 @@ export default function DashboardPage() {
                           name="departureTime"
                           value={formData.departureTime}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -726,7 +777,7 @@ export default function DashboardPage() {
                           name="returnDate"
                           value={formData.returnDate}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -743,7 +794,7 @@ export default function DashboardPage() {
                           onChange={handleInputChange}
                           min="1"
                           max="50"
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -757,7 +808,7 @@ export default function DashboardPage() {
                           name="vehicleType"
                           value={formData.vehicleType}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         >
                           <option value="">Select vehicle type</option>
@@ -779,7 +830,7 @@ export default function DashboardPage() {
                           name="priority"
                           value={formData.priority}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         >
                           <option value="LOW">Low</option>
@@ -799,7 +850,7 @@ export default function DashboardPage() {
                           onChange={handleInputChange}
                           rows={3}
                           placeholder="Provide any additional information about the trip..."
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none resize-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none resize-none text-xs md:text-sm"
                         />
                       </div>
                     </div>
@@ -817,7 +868,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     type="submit"
-                    className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2"
+                    className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -860,7 +911,7 @@ export default function DashboardPage() {
                 {/* Action */}
                 <button
                   onClick={() => setShowSuccessModal(false)}
-                  className="w-full px-4 py-2.5 md:py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium text-sm md:text-base"
+                  className="w-full px-4 py-2.5 md:py-3 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium text-sm md:text-base"
                 >
                   Done
                 </button>

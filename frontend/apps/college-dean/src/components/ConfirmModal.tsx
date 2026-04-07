@@ -22,11 +22,11 @@ export default function ConfirmModal({
   const getConfirmButtonClass = () => {
     switch (confirmColor) {
       case 'emerald':
-        return 'bg-emerald-500 hover:bg-emerald-600 text-white'
+        return 'bg-emerald-700 hover:bg-emerald-800 text-white'
       case 'red':
         return 'bg-red-500 hover:bg-red-600 text-white'
       case 'blue':
-        return 'bg-emerald-500 hover:bg-emerald-600 text-white'
+        return 'bg-emerald-700 hover:bg-emerald-800 text-white'
     }
   }
 

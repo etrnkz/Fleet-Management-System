@@ -12,7 +12,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
+            <div className="w-8 h-8 bg-emerald-700 rounded flex items-center justify-center">
               <span className="text-white font-bold text-sm">H</span>
             </div>
             <span className="font-semibold text-gray-900">HUFMS</span>
@@ -28,7 +28,7 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-4">
             {/* Sign In Button - Always Visible */}
-            <Link href="/login" className="bg-emerald-500 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-emerald-600 transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm font-medium">
+            <Link href="/login" className="bg-emerald-700 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-emerald-800 transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm font-medium">
               Sign In
             </Link>
 
@@ -118,7 +118,7 @@ export default function LandingPage() {
               </p>
               
               <div className="flex gap-4">
-                <Link href="/login" className="bg-emerald-500 text-white px-6 py-3 rounded-md hover:bg-emerald-600 transition-all duration-300 hover:scale-105 hover:shadow-xl font-medium">
+                <Link href="/login" className="bg-emerald-700 text-white px-6 py-3 rounded-md hover:bg-emerald-800 transition-all duration-300 hover:scale-105 hover:shadow-xl font-medium">
                   Login as System →
                 </Link>
                 <button className="border border-gray-300 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-50 transition-all duration-300 hover:scale-105 hover:shadow-lg font-medium">
@@ -131,7 +131,7 @@ export default function LandingPage() {
               <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
                 <div className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                   <div className="text-center p-8">
-                    <div className="w-24 h-24 bg-emerald-500 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+                    <div className="w-24 h-24 bg-emerald-700 rounded-2xl mx-auto mb-4 flex items-center justify-center">
                       <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
@@ -295,7 +295,7 @@ export default function LandingPage() {
       </section>
 
       {/* Operational Coverage & Restricted Access */}
-      <section className="bg-emerald-500 py-16">
+      <section className="bg-emerald-700 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
             <div className="flex gap-4">
@@ -408,7 +408,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-emerald-700 rounded flex items-center justify-center">
                   <span className="text-white font-bold text-sm">H</span>
                 </div>
                 <span className="font-semibold">HUFMS</span>
