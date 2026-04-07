@@ -304,10 +304,6 @@ export default function SettingsPage() {
                   <option value="User">Employee (User)</option>
                   <option value="DepartmentHead">Department Head</option>
                   <option value="CollegeHead">College Head</option>
-                  <option value="DeploymentTeam">Deployment Team</option>
-                  <option value="MaintenanceTeam">Maintenance Team</option>
-                  <option value="Driver">Driver</option>
-                  <option value="Gate">Gate / Security</option>
                 </select>
               </div>
 

@@ -240,10 +240,6 @@ export class UsersService {
         return [
           UserRole.DepartmentHead,
           UserRole.CollegeHead,
-          UserRole.DeploymentTeam,
-          UserRole.MaintenanceTeam,
-          UserRole.Gate,
-          UserRole.Driver,
           UserRole.User,
         ];
       case UserRole.Dean:
