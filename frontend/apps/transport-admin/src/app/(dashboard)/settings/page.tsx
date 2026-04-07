@@ -80,13 +80,13 @@ export default function SettingsPage() {
   }
 
   const tabs = [
-    { id: 'general', name: 'General', icon: '⚙️' },
-    { id: 'notifications', name: 'Notifications', icon: '🔔' },
-    { id: 'users', name: 'Users', icon: '👥' },
-    { id: 'security', name: 'Security', icon: '🔒' },
-    { id: 'integrations', name: 'Integrations', icon: '🔗' },
-    { id: 'backup', name: 'Backup', icon: '💾' },
-    { id: 'invite', name: 'Invite Employees', icon: '✉️' },
+    { id: 'general', name: 'General' },
+    { id: 'notifications', name: 'Notifications' },
+    { id: 'users', name: 'Users' },
+    { id: 'security', name: 'Security' },
+    { id: 'integrations', name: 'Integrations' },
+    { id: 'backup', name: 'Backup' },
+    { id: 'invite', name: 'Invite Employees' },
   ]
 
   // Invite state
@@ -148,7 +148,6 @@ export default function SettingsPage() {
                       : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="text-sm sm:text-base">{tab.icon}</span>
                   <span>{tab.name}</span>
                 </button>
               ))}
@@ -574,10 +573,10 @@ export default function SettingsPage() {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {[
-                    { name: 'Google Maps API', status: 'Connected', icon: '🗺️' },
-                    { name: 'SMS Gateway', status: 'Not Connected', icon: '📱' },
-                    { name: 'Payment Gateway', status: 'Connected', icon: '💳' },
-                    { name: 'Email Service', status: 'Connected', icon: '📧' }
+                    { name: 'Google Maps API', status: 'Connected', icon: 'Map' },
+                    { name: 'SMS Gateway', status: 'Not Connected', icon: 'SMS' },
+                    { name: 'Payment Gateway', status: 'Connected', icon: 'Pay' },
+                    { name: 'Email Service', status: 'Connected', icon: 'Mail' }
                   ].map((integration, index) => (
                     <div key={index} className="bg-gray-50 rounded-lg p-3 sm:p-4 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
@@ -691,9 +690,13 @@ export default function SettingsPage() {
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Role to Assign</label>
                   <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-xs sm:text-sm">
                     <option value="User">Employee (User)</option>
+                    <option value="DepartmentHead">Department Head</option>
+                    <option value="CollegeHead">College Head</option>
+                    <option value="Dean">Dean</option>
                     <option value="Driver">Driver</option>
                     <option value="MaintenanceTeam">Maintenance Team</option>
                     <option value="Gate">Gate / Security</option>
+                    <option value="DeploymentTeam">Deployment Team</option>
                   </select>
                 </div>
                 <div>
@@ -701,7 +704,7 @@ export default function SettingsPage() {
                   <textarea value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} rows={3} placeholder="Welcome to the Fleet Management System!" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-xs sm:text-sm" />
                 </div>
                 <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)} className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium flex items-center justify-center gap-2 text-xs sm:text-sm">
-                  {inviting ? <><div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <>✉️ Send Invitations</>}
+                  {inviting ? <><div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <>Send Invitations</>}
                 </button>
                 {inviteResult && (
                   <div className="space-y-3">
