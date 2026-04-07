@@ -223,6 +223,21 @@ export const userApi = {
     apiFetch(`${API_BASE_URL}/users/me`, { method: 'PATCH', body: JSON.stringify(data) }),
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     apiFetch(`${API_BASE_URL}/auth/change-password`, { method: 'POST', body: JSON.stringify(data) }),
+  uploadProfileImage: async (file: File) => {
+    const token = getAuthToken()
+    const formData = new FormData()
+    formData.append('profileImage', file)
+    const res = await fetch(`${API_BASE_URL}/users/me/profile-image`, {
+      method: 'POST',
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: formData,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: 'Upload failed' }))
+      throw new Error(err.message || 'Upload failed')
+    }
+    return res.json()
+  },
 }
 
 // Invite API
