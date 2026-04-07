@@ -17,6 +17,8 @@ export default function SettingsPage() {
   const [savingPassword, setSavingPassword] = useState(false)
   const [showCurrentPw, setShowCurrentPw] = useState(false)
   const [showNewPw, setShowNewPw] = useState(false)
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Invite state
   const [inviteEmails, setInviteEmails] = useState('')
@@ -39,6 +41,7 @@ export default function SettingsPage() {
       const u = await authApi.getCurrentUser()
       setUser(u)
       setFormData({ name: u?.name || '', email: u?.email || '', phoneNumber: u?.phoneNumber || '' })
+      if (u?.profileImage) setProfileImage(u.profileImage)
     } catch (err: any) {
       if (err?.message?.includes('401') || err?.message?.includes('expired')) router.push('/login')
     } finally { setLoading(false) }
@@ -71,8 +74,38 @@ export default function SettingsPage() {
     finally { setSavingPassword(false) }
   }
 
-  const handleLogout = () => {
-    ;['access_token', 'accessToken', 'user'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const compressed = await new Promise<File>((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      img.onload = () => {
+        const maxW = 400
+        let { width, height } = img
+        if (width > maxW) { height = (height * maxW) / width; width = maxW }
+        canvas.width = width; canvas.height = height
+        ctx?.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(blob => resolve(blob ? new File([blob], file.name, { type: file.type }) : file), file.type, 0.8)
+      }
+      img.src = URL.createObjectURL(file)
+    })
+    setUploadingImage(true)
+    try {
+      const result = await userApi.uploadProfileImage(compressed) as any
+      const url = result.profileImageUrl
+      setProfileImage(url)
+      setUser((p: any) => ({ ...p, profileImage: url }))
+      const storage = localStorage.getItem('access_token') ? localStorage : sessionStorage
+      const stored = storage.getItem('user')
+      if (stored) storage.setItem('user', JSON.stringify({ ...JSON.parse(stored), profileImage: url }))
+      showToast('Profile picture updated', 'success')
+    } catch (err: any) { showToast(err.message || 'Upload failed', 'error') }
+    finally { setUploadingImage(false) }
+  }
+
+  const handleLogout = () => {    ;['access_token', 'accessToken', 'user'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
     router.push('/login')
   }
 
@@ -140,15 +173,42 @@ export default function SettingsPage() {
           {/* Profile */}
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="space-y-5">
-              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
-                <div className="w-14 h-14 bg-[#1B3D2F] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-lg font-bold">
-                    {user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'DO'}
-                  </span>
+              <div className="flex items-center gap-5 pb-4 border-b border-gray-100">
+                <div className="relative flex-shrink-0">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-[#1B3D2F] flex items-center justify-center border-4 border-white shadow-md">
+                    {profileImage ? (
+                      <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-2xl font-bold">
+                        {user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'DO'}
+                      </span>
+                    )}
+                  </div>
+                  <label htmlFor="profileImageInput"
+                    className="absolute bottom-0 right-0 w-7 h-7 bg-[#1B3D2F] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#152e22] shadow-lg border-2 border-white">
+                    {uploadingImage ? (
+                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    )}
+                  </label>
+                  <input id="profileImageInput" type="file" accept="image/*" className="hidden"
+                    onChange={handleImageUpload} disabled={uploadingImage} />
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">{user?.name || 'Deployment Officer'}</p>
-                  <p className="text-sm text-gray-500">{user?.role || 'DeploymentTeam'}</p>
+                  <p className="text-sm text-gray-500 mb-1">{user?.role || 'DeploymentTeam'}</p>
+                  <label htmlFor="profileImageInput"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#1B3D2F] font-medium cursor-pointer hover:underline">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    {uploadingImage ? 'Uploading…' : 'Upload photo'}
+                  </label>
+                  <p className="text-xs text-gray-400 mt-0.5">JPG, PNG · max 5MB</p>
                 </div>
               </div>
 
