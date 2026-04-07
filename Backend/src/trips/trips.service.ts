@@ -203,20 +203,37 @@ export class TripsService {
       throw new ForbiddenException('Only the requester can submit this trip');
     }
 
-    // Determine initial state based on trip category
+    // Determine initial state based on trip category AND requester's role.
+    // Higher-ranking requesters skip approval levels at or below their own rank.
     let initialState: TripState;
     let approvalLevel: ApprovalLevel;
 
+    const requesterRole = user.role;
+
     if (trip.tripCategory === TripCategory.VIP || trip.tripCategory === TripCategory.SERVICE) {
-      // VIP and SERVICE go directly to President
+      // VIP and SERVICE always go directly to President
       initialState = TripState.PENDING_PRESIDENT;
       approvalLevel = ApprovalLevel.President;
     } else if (trip.tripType === TripType.VIP) {
       // Legacy VIP type goes directly to Dean
       initialState = TripState.PENDING_DEAN;
       approvalLevel = ApprovalLevel.Dean;
+    } else if (
+      requesterRole === UserRole.President ||
+      requesterRole === UserRole.Dean
+    ) {
+      // President and Dean skip all approval levels — go straight to allocation
+      initialState = TripState.APPROVED_FOR_ALLOCATION;
+      approvalLevel = null;
+    } else if (
+      requesterRole === UserRole.CollegeHead ||
+      requesterRole === UserRole.DepartmentHead
+    ) {
+      // Department/College heads skip department approval — go straight to President
+      initialState = TripState.PENDING_PRESIDENT;
+      approvalLevel = ApprovalLevel.President;
     } else {
-      // Normal/Standard goes to Department first
+      // Regular employees go through full chain: Department → College → President
       initialState = TripState.PENDING_DEPARTMENT;
       approvalLevel = ApprovalLevel.Department;
     }
@@ -227,15 +244,16 @@ export class TripsService {
     // Save trip first to ensure it has an ID
     const savedTrip = await this.tripRepository.save(trip);
 
-    // Create first approval record
-    const approval = this.approvalRepository.create({
-      tripRequest: savedTrip,
-      approvalLevel,
-      status: ApprovalStatus.Pending,
-      dueDate: this.calculateDueDate(48), // 48 hours timeout
-    });
-
-    await this.approvalRepository.save(approval);
+    // Only create an approval record if there is an approval level to wait on
+    if (approvalLevel) {
+      const approval = this.approvalRepository.create({
+        tripRequest: savedTrip,
+        approvalLevel,
+        status: ApprovalStatus.Pending,
+        dueDate: this.calculateDueDate(48), // 48 hours timeout
+      });
+      await this.approvalRepository.save(approval);
+    }
 
     // Send notification about submission
     try {
