@@ -1,5 +1,6 @@
-import { IsArray, IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsOptional, IsString, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserRole } from '../entities/user.entity';
 
 export class BulkInviteUsersDto {
   @ApiProperty({
@@ -10,6 +11,16 @@ export class BulkInviteUsersDto {
   @IsArray()
   @IsEmail({}, { each: true })
   emails: string[];
+
+  @ApiProperty({
+    description: 'Role to assign to invited users. Inviter can only assign roles below their own rank.',
+    enum: UserRole,
+    example: UserRole.User,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(UserRole)
+  role?: UserRole;
 
   @ApiProperty({
     description: 'Optional department ID to assign users to',

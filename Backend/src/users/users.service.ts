@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -226,12 +227,57 @@ export class UsersService {
   }
 
   /**
+   * Returns the roles that a given inviter role is allowed to assign.
+   * Hierarchy: SystemAdmin/Developer > President > Dean > DepartmentHead > User
+   *            TransportOffice can assign operational roles (Driver, MaintenanceTeam, Gate)
+   */
+  private getAllowedRolesForInviter(inviterRole: UserRole): UserRole[] {
+    switch (inviterRole) {
+      case UserRole.SystemAdmin:
+      case UserRole.Developer:
+        return Object.values(UserRole);
+      case UserRole.President:
+        return [
+          UserRole.Dean,
+          UserRole.CollegeHead,
+          UserRole.DepartmentHead,
+          UserRole.TransportOffice,
+          UserRole.DeploymentTeam,
+          UserRole.MaintenanceTeam,
+          UserRole.Gate,
+          UserRole.Driver,
+          UserRole.User,
+        ];
+      case UserRole.Dean:
+        return [UserRole.CollegeHead, UserRole.DepartmentHead, UserRole.User];
+      case UserRole.DepartmentHead:
+        return [UserRole.User];
+      case UserRole.TransportOffice:
+        return [UserRole.Driver, UserRole.MaintenanceTeam, UserRole.Gate, UserRole.User];
+      default:
+        return [UserRole.User];
+    }
+  }
+
+  /**
    * Bulk invite users via email addresses
    */
   async bulkInviteUsers(inviter: User, bulkInviteDto: BulkInviteUsersDto) {
     const { emails, departmentId, collegeId, welcomeMessage } = bulkInviteDto;
     const invited: string[] = [];
     const failed: { email: string; reason: string }[] = [];
+
+    // Validate and resolve the role to assign
+    const allowedRoles = this.getAllowedRolesForInviter(inviter.role);
+    const assignedRole = bulkInviteDto.role ?? UserRole.User;
+
+    if (!allowedRoles.includes(assignedRole)) {
+      throw new ForbiddenException(
+        `Your role (${inviter.role}) is not allowed to invite users with role (${assignedRole}). ` +
+        `Allowed roles: ${allowedRoles.join(', ')}`,
+      );
+    }
+
 
     // Get department and college if specified
     let department: Department | null = null;
@@ -277,7 +323,7 @@ export class UsersService {
           email: email.toLowerCase().trim(),
           password: hashedPassword,
           name,
-          role: UserRole.User,
+          role: assignedRole,
           department,
           college: department?.college || college,
           isActive: true,
@@ -357,7 +403,7 @@ export class UsersService {
   async bulkInviteUsersFromCsv(
     inviter: User,
     file: any,
-    options: { departmentId?: string; collegeId?: string; welcomeMessage?: string },
+    options: { departmentId?: string; collegeId?: string; welcomeMessage?: string; role?: UserRole },
   ) {
     try {
       const csvContent = file.buffer.toString('utf-8');
@@ -365,6 +411,7 @@ export class UsersService {
 
       const bulkInviteDto: BulkInviteUsersDto = {
         emails,
+        role: options.role,
         departmentId: options.departmentId,
         collegeId: options.collegeId,
         welcomeMessage: options.welcomeMessage,
@@ -372,7 +419,7 @@ export class UsersService {
 
       return await this.bulkInviteUsers(inviter, bulkInviteDto);
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      if (error instanceof BadRequestException || error instanceof ForbiddenException) {
         throw error;
       }
       throw new BadRequestException(`Failed to process CSV file: ${error.message}`);

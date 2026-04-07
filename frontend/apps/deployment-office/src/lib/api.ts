@@ -242,7 +242,7 @@ export const userApi = {
 
 // Invite API
 export const inviteApi = {
-  bulkInvite: (data: { emails: string[]; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
+  bulkInvite: (data: { emails: string[]; role?: string; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
     apiFetch(`${API_BASE_URL}/users/bulk-invite`, { method: 'POST', body: JSON.stringify(data) }),
   bulkInviteCsv: (formData: FormData) => {
     const token = getAuthToken()

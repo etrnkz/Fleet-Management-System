@@ -110,6 +110,7 @@ export default function DashboardLayout({
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault()

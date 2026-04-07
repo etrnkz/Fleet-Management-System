@@ -91,6 +91,7 @@ export default function SettingsPage() {
 
   // Invite state
   const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteRole, setInviteRole] = useState('User')
   const [inviteMessage, setInviteMessage] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
@@ -110,7 +111,7 @@ export default function SettingsPage() {
       } else {
         const emails = inviteEmails.split(/[\n,]+/).map((e) => e.trim()).filter((e) => e.includes('@'))
         if (emails.length === 0) { showToast('Please enter at least one valid email', 'error'); setInviting(false); return }
-        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined })
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined, role: inviteRole || undefined })
       }
       setInviteResult(result)
       showToast(result.message || 'Invitations sent!', 'success')
@@ -686,6 +687,15 @@ export default function SettingsPage() {
                     <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block">Download CSV template</a>
                   </div>
                 )}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Role to Assign</label>
+                  <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-xs sm:text-sm">
+                    <option value="User">Employee (User)</option>
+                    <option value="Driver">Driver</option>
+                    <option value="MaintenanceTeam">Maintenance Team</option>
+                    <option value="Gate">Gate / Security</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
                   <textarea value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} rows={3} placeholder="Welcome to the Fleet Management System!" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-xs sm:text-sm" />
