@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { maintenanceApi } from '@/lib/api'
@@ -44,7 +44,7 @@ export default function MaintenancePage() {
       case 'budgetapproved': return { label: 'Budget Approved', color: 'bg-blue-100 text-blue-700' }
       case 'inprogress':
       case 'in progress': return { label: 'In Progress', color: 'bg-blue-100 text-blue-700' }
-      case 'completed': return { label: 'Completed', color: 'bg-emerald-100 text-emerald-700' }
+      case 'completed': return { label: 'Completed', color: 'bg-[#1B3D2F]/15 text-emerald-700' }
       case 'rejected': return { label: 'Rejected', color: 'bg-red-100 text-red-700' }
       case 'pending': return { label: 'Pending', color: 'bg-gray-100 text-gray-700' }
       case 'scheduled': return { label: 'Scheduled', color: 'bg-yellow-100 text-yellow-700' }
@@ -143,7 +143,7 @@ export default function MaintenancePage() {
     <div className="p-4 sm:p-6 lg:p-8">
       {showToast && (
         <div className="fixed top-4 right-4 z-50">
-          <div className={`px-6 py-3 rounded-lg shadow-lg ${toastType === 'success' ? 'bg-emerald-600' : 'bg-red-600'} text-white`}>
+          <div className={`px-6 py-3 rounded-lg shadow-lg ${toastType === 'success' ? 'bg-[#152e22]' : 'bg-red-600'} text-white`}>
             {toastMessage}
           </div>
         </div>
@@ -169,7 +169,7 @@ export default function MaintenancePage() {
         </div>
         <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
           <span className="text-xs md:text-sm text-gray-600">Completed</span>
-          <h3 className="text-2xl md:text-3xl font-bold text-emerald-600 mt-2">{stats.completed}</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-[#152e22] mt-2">{stats.completed}</h3>
         </div>
         <div className="bg-white rounded-xl p-4 md:p-6 border border-gray-200">
           <span className="text-xs md:text-sm text-gray-600">Rejected</span>
@@ -185,7 +185,7 @@ export default function MaintenancePage() {
               placeholder="Search by ID, vehicle, or type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
             />
             <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -194,7 +194,7 @@ export default function MaintenancePage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
           >
             <option value="all">All Status</option>
             <option value="submitted">Submitted</option>
@@ -205,7 +205,7 @@ export default function MaintenancePage() {
             <option value="completed">Completed</option>
             <option value="rejected">Rejected</option>
           </select>
-          <button onClick={loadMaintenance} className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors">
+          <button onClick={loadMaintenance} className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] transition-colors">
             Refresh
           </button>
         </div>
@@ -225,7 +225,7 @@ export default function MaintenancePage() {
       {error && !loading && (
         <div className="bg-white rounded-xl p-12 text-center border border-red-200">
           <p className="text-red-600 mb-4">{error}</p>
-          <button onClick={loadMaintenance} className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">
+          <button onClick={loadMaintenance} className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22]">
             Retry
           </button>
         </div>
@@ -275,7 +275,7 @@ export default function MaintenancePage() {
                     {(maintenance.status === 'Submitted') && (
                       <button
                         onClick={() => handleApprove(maintenance)}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+                        className="px-4 py-2 bg-[#152e22] text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
                       >
                         Approve & Schedule
                       </button>
@@ -312,19 +312,19 @@ export default function MaintenancePage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Estimated Cost (ETB)</label>
                 <input type="number" min="0" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)}
-                  placeholder="e.g. 2000" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                  placeholder="e.g. 2000" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Schedule Notes (optional)</label>
                 <textarea rows={2} value={scheduleNotes} onChange={e => setScheduleNotes(e.target.value)}
                   placeholder="e.g. Take vehicle to workshop on Monday morning"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F] resize-none" />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
               <button onClick={() => setShowApproveModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
               <button onClick={handleApproveSubmit} disabled={approving}
-                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50">
+                className="flex-1 px-4 py-2 bg-[#152e22] text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50">
                 {approving ? 'Approving...' : 'Approve & Notify Driver'}
               </button>
             </div>

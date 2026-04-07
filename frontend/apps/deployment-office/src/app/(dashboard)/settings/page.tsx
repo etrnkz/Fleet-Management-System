@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 
@@ -115,7 +115,7 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-6 py-4 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-emerald-600 text-emerald-600'
+                      ? 'border-[#152e22] text-[#152e22]'
                       : 'border-transparent text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -140,7 +140,7 @@ export default function SettingsPage() {
                         type="text"
                         value={profileData.fullName}
                         onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       />
                     </div>
                     <div>
@@ -149,7 +149,7 @@ export default function SettingsPage() {
                         type="email"
                         value={profileData.email}
                         onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       />
                     </div>
                     <div>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                         type="tel"
                         value={profileData.phone}
                         onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       />
                     </div>
                     <div>
@@ -167,7 +167,7 @@ export default function SettingsPage() {
                         type="text"
                         value={profileData.position}
                         onChange={(e) => setProfileData({ ...profileData, position: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       />
                     </div>
                     <div>
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                   <div className="mt-6">
                     <button
                       onClick={handleSaveProfile}
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                      className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
                     >
                       Save Changes
                     </button>
@@ -219,7 +219,7 @@ export default function SettingsPage() {
                           onChange={(e) => setNotifications({ ...notifications, emailNotifications: e.target.checked })}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
                       </label>
                     </div>
 
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                           onChange={(e) => setNotifications({ ...notifications, smsNotifications: e.target.checked })}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
                       </label>
                     </div>
 
@@ -251,7 +251,7 @@ export default function SettingsPage() {
                           onChange={(e) => setNotifications({ ...notifications, pushNotifications: e.target.checked })}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
                       </label>
                     </div>
 
@@ -268,7 +268,7 @@ export default function SettingsPage() {
                               onChange={(e) => setNotifications({ ...notifications, tripAssignments: e.target.checked })}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
                           </label>
                         </div>
 
@@ -281,7 +281,7 @@ export default function SettingsPage() {
                               onChange={(e) => setNotifications({ ...notifications, fuelRequests: e.target.checked })}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
                           </label>
                         </div>
 
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                               onChange={(e) => setNotifications({ ...notifications, maintenanceAlerts: e.target.checked })}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
                           </label>
                         </div>
 
@@ -307,7 +307,7 @@ export default function SettingsPage() {
                               onChange={(e) => setNotifications({ ...notifications, driverUpdates: e.target.checked })}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
                           </label>
                         </div>
                       </div>
@@ -316,7 +316,7 @@ export default function SettingsPage() {
                   <div className="mt-6">
                     <button
                       onClick={handleSaveNotifications}
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                      className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
                     >
                       Save Preferences
                     </button>
@@ -336,7 +336,7 @@ export default function SettingsPage() {
                       <p className="text-sm text-gray-600 mb-4">Update your password regularly to keep your account secure</p>
                       <button
                         onClick={handleChangePassword}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm"
+                        className="px-4 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm"
                       >
                         Change Password
                       </button>
@@ -373,7 +373,7 @@ export default function SettingsPage() {
                       <select
                         value={systemSettings.language}
                         onChange={(e) => setSystemSettings({ ...systemSettings, language: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       >
                         <option value="en">English</option>
                         <option value="am">Amharic</option>
@@ -386,7 +386,7 @@ export default function SettingsPage() {
                       <select
                         value={systemSettings.timezone}
                         onChange={(e) => setSystemSettings({ ...systemSettings, timezone: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       >
                         <option value="Africa/Addis_Ababa">Africa/Addis Ababa (EAT)</option>
                         <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
@@ -399,7 +399,7 @@ export default function SettingsPage() {
                       <select
                         value={systemSettings.dateFormat}
                         onChange={(e) => setSystemSettings({ ...systemSettings, dateFormat: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       >
                         <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                         <option value="DD/MM/YYYY">DD/MM/YYYY</option>
@@ -412,7 +412,7 @@ export default function SettingsPage() {
                       <select
                         value={systemSettings.theme}
                         onChange={(e) => setSystemSettings({ ...systemSettings, theme: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
                       >
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                   <div className="mt-6">
                     <button
                       onClick={handleSaveSystem}
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                      className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
                     >
                       Save Settings
                     </button>

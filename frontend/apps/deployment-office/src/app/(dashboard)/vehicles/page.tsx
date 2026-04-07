@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { vehicleApi } from '@/lib/api'
@@ -34,7 +34,7 @@ export default function VehiclesPage() {
   // Map backend status to display label and badge color
   const getStatusDisplay = (status: string) => {
     switch (status) {
-      case 'Active': return { label: 'Available', color: 'bg-emerald-100 text-emerald-700' }
+      case 'Active': return { label: 'Available', color: 'bg-[#1B3D2F]/15 text-emerald-700' }
       case 'In Use': return { label: 'In Use', color: 'bg-blue-100 text-blue-700' }
       case 'Maintenance': return { label: 'Maintenance', color: 'bg-orange-100 text-orange-700' }
       default: return { label: status, color: 'bg-gray-100 text-gray-700' }
@@ -85,7 +85,7 @@ export default function VehiclesPage() {
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
-          <div className={`px-6 py-3 rounded-lg shadow-lg ${toastType === 'success' ? 'bg-emerald-600' : 'bg-red-600'} text-white`}>
+          <div className={`px-6 py-3 rounded-lg shadow-lg ${toastType === 'success' ? 'bg-[#152e22]' : 'bg-red-600'} text-white`}>
             {toastMessage}
           </div>
         </div>
@@ -110,8 +110,8 @@ export default function VehiclesPage() {
             </div>
             
             <div className="space-y-6">
-              <div className="h-48 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-xl flex items-center justify-center">
-                <svg className="w-24 h-24 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+              <div className="h-48 bg-gradient-to-br from-[#1B3D2F]/15 to-[#1B3D2F]-100 rounded-xl flex items-center justify-center">
+                <svg className="w-24 h-24 text-[#152e22]" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                   <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
                 </svg>
@@ -180,13 +180,13 @@ export default function VehiclesPage() {
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm text-gray-600">Available</span>
-            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-[#152e22]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
           </div>
-          <h3 className="text-3xl font-bold text-emerald-600">{stats.available}</h3>
+          <h3 className="text-3xl font-bold text-[#152e22]">{stats.available}</h3>
         </div>
 
         <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -225,7 +225,7 @@ export default function VehiclesPage() {
                 placeholder="Search by ID, model, plate, or location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
               />
               <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -236,7 +236,7 @@ export default function VehiclesPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
           >
             <option value="all">All Status</option>
             <option value="available">Available</option>
@@ -246,7 +246,7 @@ export default function VehiclesPage() {
 
           <button 
             onClick={loadVehicles}
-            className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2">
+            className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] transition-colors flex items-center justify-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -274,7 +274,7 @@ export default function VehiclesPage() {
       {error && !loading && (
         <div className="bg-white rounded-xl p-12 text-center border border-red-200">
           <p className="text-red-600 mb-4">{error}</p>
-          <button onClick={loadVehicles} className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">
+          <button onClick={loadVehicles} className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22]">
             Retry
           </button>
         </div>
@@ -285,8 +285,8 @@ export default function VehiclesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredVehicles.map((vehicle) => (
           <div key={vehicle.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-              <svg className="w-24 h-24 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="h-48 bg-gradient-to-br from-[#1B3D2F]/15 to-[#1B3D2F]-100 flex items-center justify-center">
+              <svg className="w-24 h-24 text-[#152e22]" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                 <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
               </svg>
@@ -317,7 +317,7 @@ export default function VehiclesPage() {
               <div className="flex gap-2 mt-6">
                 <button
                   onClick={() => handleViewDetails(vehicle)}
-                  className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors text-sm">
+                  className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg font-medium hover:bg-[#152e22] transition-colors text-sm">
                   View Details
                 </button>
               </div>

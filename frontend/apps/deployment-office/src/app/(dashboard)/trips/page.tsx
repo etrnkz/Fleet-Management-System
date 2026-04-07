@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -91,7 +91,7 @@ export default function TripsPage() {
           ? {
               ...trip,
               status: 'Assigned',
-              statusColor: 'bg-emerald-100 text-emerald-700',
+              statusColor: 'bg-[#1B3D2F]/15 text-emerald-700',
               vehicle: selectedVehicle ? { id: selectedVehicle.id, name: selectedVehicle.model || selectedVehicle.name, plate: selectedVehicle.plateNumber || selectedVehicle.plate, fuelLevel: selectedVehicle.fuelLevel || 100 } : null,
               driver: selectedDriver ? { id: selectedDriver.id, name: selectedDriver.name, phone: selectedDriver.phone } : null
             }
@@ -158,7 +158,7 @@ export default function TripsPage() {
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
-          <div className={`px-6 py-3 rounded-lg shadow-lg ${toastType === 'success' ? 'bg-emerald-600' : 'bg-red-600'} text-white`}>
+          <div className={`px-6 py-3 rounded-lg shadow-lg ${toastType === 'success' ? 'bg-[#152e22]' : 'bg-red-600'} text-white`}>
             {toastMessage}
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function TripsPage() {
                 placeholder="Search by ID, requester, department, or destination..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
               />
               <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -191,7 +191,7 @@ export default function TripsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
           >
             <option value="all">All Status</option>
             <option value="pending-assignment">Pending Assignment</option>
@@ -255,9 +255,9 @@ export default function TripsPage() {
                 {trip.vehicle && trip.driver && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="bg-emerald-50 rounded-lg p-3">
+                      <div className="bg-[#1B3D2F]/10 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 text-[#152e22]" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                             <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
                           </svg>
@@ -271,7 +271,7 @@ export default function TripsPage() {
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs text-gray-600">Fuel Level</span>
                             <span className={`text-xs font-medium ${
-                              trip.vehicle.fuelLevel >= 70 ? 'text-emerald-600' : 
+                              trip.vehicle.fuelLevel >= 70 ? 'text-[#152e22]' : 
                               trip.vehicle.fuelLevel >= 40 ? 'text-yellow-600' : 
                               'text-red-600'
                             }`}>
@@ -281,7 +281,7 @@ export default function TripsPage() {
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className={`h-2 rounded-full transition-all ${
-                                trip.vehicle.fuelLevel >= 70 ? 'bg-emerald-500' : 
+                                trip.vehicle.fuelLevel >= 70 ? 'bg-[#1B3D2F]' : 
                                 trip.vehicle.fuelLevel >= 40 ? 'bg-yellow-500' : 
                                 'bg-red-500'
                               }`}
@@ -316,7 +316,7 @@ export default function TripsPage() {
                 {trip.status === 'Pending Assignment' && (
                   <button
                     onClick={() => handleAssignTrip(trip)}
-                    className="flex-1 lg:flex-none px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors"
+                    className="flex-1 lg:flex-none px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] transition-colors"
                   >
                     Assign Vehicle
                   </button>
@@ -406,13 +406,13 @@ export default function TripsPage() {
                     onClick={() => setAssignmentData({...assignmentData, vehicleId: vehicle.id})}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       assignmentData.vehicleId === vehicle.id
-                        ? 'border-emerald-500 bg-emerald-50'
+                        ? 'border-[#1B3D2F] bg-[#1B3D2F]/10'
                         : 'border-gray-200 hover:border-emerald-300'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        assignmentData.vehicleId === vehicle.id ? 'bg-emerald-500' : 'bg-gray-100'
+                        assignmentData.vehicleId === vehicle.id ? 'bg-[#1B3D2F]' : 'bg-gray-100'
                       }`}>
                         <svg className={`w-6 h-6 ${assignmentData.vehicleId === vehicle.id ? 'text-white' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
                           <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
@@ -478,7 +478,7 @@ export default function TripsPage() {
               </button>
               <button
                 onClick={handleSaveAssignment}
-                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 Assign
               </button>
@@ -556,8 +556,8 @@ export default function TripsPage() {
               <h4 className="font-semibold text-gray-800 mb-4">Approval Chain</h4>
               <div className="space-y-3">
                 {selectedTrip.approvals.map((approval: any, index: number) => (
-                  <div key={index} className="flex items-center gap-4 p-3 bg-emerald-50 rounded-lg">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div key={index} className="flex items-center gap-4 p-3 bg-[#1B3D2F]/10 rounded-lg">
+                    <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center flex-shrink-0">
                       <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
                       </svg>
@@ -567,7 +567,7 @@ export default function TripsPage() {
                       <p className="text-sm text-gray-600">{approval.approver}</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded font-medium">
+                      <span className="text-xs px-2 py-1 bg-[#1B3D2F]/15 text-emerald-700 rounded font-medium">
                         {approval.status}
                       </span>
                       <p className="text-xs text-gray-500 mt-1">{approval.date}</p>
@@ -582,9 +582,9 @@ export default function TripsPage() {
               <div className="mb-6">
                 <h4 className="font-semibold text-gray-800 mb-4">Assignment Details</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-emerald-50 rounded-lg p-4">
+                  <div className="bg-[#1B3D2F]/10 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-5 h-5 text-[#152e22]" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                         <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
                       </svg>
@@ -657,7 +657,7 @@ export default function TripsPage() {
                     <div className="w-20 bg-gray-200 rounded-full h-2">
                       <div 
                         className={`h-2 rounded-full ${
-                          selectedTrip.vehicle.fuelLevel >= 70 ? 'bg-emerald-500' : 
+                          selectedTrip.vehicle.fuelLevel >= 70 ? 'bg-[#1B3D2F]' : 
                           selectedTrip.vehicle.fuelLevel >= 40 ? 'bg-yellow-500' : 
                           'bg-red-500'
                         }`}
@@ -665,7 +665,7 @@ export default function TripsPage() {
                       ></div>
                     </div>
                     <span className={`font-medium ${
-                      selectedTrip.vehicle.fuelLevel >= 70 ? 'text-emerald-600' : 
+                      selectedTrip.vehicle.fuelLevel >= 70 ? 'text-[#152e22]' : 
                       selectedTrip.vehicle.fuelLevel >= 40 ? 'text-yellow-600' : 
                       'text-red-600'
                     }`}>
@@ -684,7 +684,7 @@ export default function TripsPage() {
                   type="number"
                   value={fuelRequest.amount}
                   onChange={(e) => setFuelRequest({...fuelRequest, amount: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   placeholder="e.g., 50"
                   min="1"
                 />
@@ -695,7 +695,7 @@ export default function TripsPage() {
                 <select
                   value={fuelRequest.urgency}
                   onChange={(e) => setFuelRequest({...fuelRequest, urgency: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                 >
                   <option value="low">Low - Can wait</option>
                   <option value="normal">Normal - Within 24 hours</option>
@@ -709,7 +709,7 @@ export default function TripsPage() {
                 <textarea
                   value={fuelRequest.notes}
                   onChange={(e) => setFuelRequest({...fuelRequest, notes: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   placeholder="Any additional information..."
                   rows={3}
                 />
