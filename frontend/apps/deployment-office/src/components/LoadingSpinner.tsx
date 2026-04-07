@@ -1,15 +1,12 @@
-'useclient'
+'use client'
 
-exportdefaultfunctionLoadingSpinner({message='Loading...'}:{message?:string}){
-return(
-<divclassName="fixedinset-0backdrop-blur-smbg-white/30flexitems-centerjustify-centerz-50">
-<divclassName="bg-whiterounded-lgp-6shadow-xlflexflex-colitems-center">
-<divclassName="animate-spinrounded-fullh-16w-16border-b-4border-emerald-600"></div>
-<pclassName="mt-4text-gray-700font-medium">{message}</p>
-</div>
-</div>
-)
+export default function LoadingSpinner({ message = 'Loading...' }: { message?: string }) {
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+        <p className="mt-4 text-gray-700 font-medium">{message}</p>
+      </div>
+    </div>
+  )
 }
-
-
-
