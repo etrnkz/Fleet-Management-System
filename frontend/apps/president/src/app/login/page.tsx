@@ -222,7 +222,7 @@ export default function Login() {
       </div>
 
       {/* Right Side - Image with Logo */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-400 to-green-500 items-center justify-center p-12 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-700 flex-col justify-center px-12 text-white overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
