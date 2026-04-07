@@ -217,3 +217,30 @@ export const reportApi = {
   generateMaintenanceReport: async (filters: any) =>
     apiFetch(`${API_BASE_URL}/reports/maintenance`, { method: 'POST', body: JSON.stringify(filters) })
 }
+// User profile API
+export const userApi = {
+  updateProfile: (data: { name?: string; phoneNumber?: string }) =>
+    apiFetch(`${API_BASE_URL}/users/me`, { method: 'PATCH', body: JSON.stringify(data) }),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    apiFetch(`${API_BASE_URL}/auth/change-password`, { method: 'POST', body: JSON.stringify(data) }),
+}
+
+// Invite API
+export const inviteApi = {
+  bulkInvite: (data: { emails: string[]; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
+    apiFetch(`${API_BASE_URL}/users/bulk-invite`, { method: 'POST', body: JSON.stringify(data) }),
+  bulkInviteCsv: (formData: FormData) => {
+    const token = getAuthToken()
+    return fetch(`${API_BASE_URL}/users/bulk-invite-csv`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: 'Upload failed' }))
+        throw new Error(err.message || 'Upload failed')
+      }
+      return res.json()
+    })
+  },
+}

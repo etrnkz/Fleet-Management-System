@@ -1,457 +1,312 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { authApi, userApi, inviteApi } from '@/lib/api'
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
-  
-  // Profile Settings
-  const [profileData, setProfileData] = useState({
-    fullName: 'Alex Johnson',
-    email: 'deployment@hu.edu.et',
-    phone: '+251 911 234 567',
-    position: 'Head of Operations',
-    department: 'Deployment Office',
-    employeeId: 'EMP-2024-001'
-  })
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  // Notification Settings
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    pushNotifications: true,
-    tripAssignments: true,
-    fuelRequests: true,
-    maintenanceAlerts: true,
-    driverUpdates: false
-  })
+  const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '' })
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [showCurrentPw, setShowCurrentPw] = useState(false)
+  const [showNewPw, setShowNewPw] = useState(false)
 
-  // System Settings
-  const [systemSettings, setSystemSettings] = useState({
-    language: 'en',
-    timezone: 'Africa/Addis_Ababa',
-    dateFormat: 'MM/DD/YYYY',
-    theme: 'light'
-  })
+  // Invite state
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
+  useEffect(() => { loadUser() }, [])
+
+  useEffect(() => {
+    if (toast) { const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t) }
+  }, [toast])
+
+  const showToast = (message: string, type: 'success' | 'error') => setToast({ message, type })
+
+  const loadUser = async () => {
+    try {
+      const u = await authApi.getCurrentUser()
+      setUser(u)
+      setFormData({ name: u?.name || '', email: u?.email || '', phoneNumber: u?.phoneNumber || '' })
+    } catch (err: any) {
+      if (err?.message?.includes('401') || err?.message?.includes('expired')) router.push('/login')
+    } finally { setLoading(false) }
   }
 
-  const handleSaveProfile = () => {
-    showToast('Profile updated successfully!', 'success')
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await userApi.updateProfile({ name: formData.name, phoneNumber: formData.phoneNumber })
+      setUser((p: any) => ({ ...p, name: formData.name, phoneNumber: formData.phoneNumber }))
+      const storage = localStorage.getItem('access_token') ? localStorage : sessionStorage
+      const stored = storage.getItem('user')
+      if (stored) storage.setItem('user', JSON.stringify({ ...JSON.parse(stored), name: formData.name, phoneNumber: formData.phoneNumber }))
+      showToast('Profile updated successfully', 'success')
+    } catch (err: any) { showToast(err.message || 'Failed to update', 'error') }
+    finally { setSaving(false) }
   }
 
-  const handleSaveNotifications = () => {
-    showToast('Notification preferences saved!', 'success')
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) { showToast('Passwords do not match', 'error'); return }
+    if (passwordForm.newPassword.length < 8) { showToast('Min 8 characters', 'error'); return }
+    setSavingPassword(true)
+    try {
+      await userApi.changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword })
+      showToast('Password changed successfully', 'success')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (err: any) { showToast(err.message || 'Failed to change password', 'error') }
+    finally { setSavingPassword(false) }
   }
 
-  const handleSaveSystem = () => {
-    showToast('System settings updated!', 'success')
+  const handleLogout = () => {
+    ;['access_token', 'accessToken', 'user'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
+    router.push('/login')
   }
 
-  const handleChangePassword = () => {
-    showToast('Password change functionality will be implemented', 'info')
+  const handleInvite = async () => {
+    setInviting(true); setInviteResult(null)
+    try {
+      let result: any
+      if (inviteMode === 'csv' && csvFile) {
+        const fd = new FormData()
+        fd.append('csvFile', csvFile)
+        if (inviteMessage) fd.append('welcomeMessage', inviteMessage)
+        result = await inviteApi.bulkInviteCsv(fd)
+      } else {
+        const emails = inviteEmails.split(/[\n,]+/).map(e => e.trim()).filter(e => e.includes('@'))
+        if (emails.length === 0) { showToast('Enter at least one valid email', 'error'); setInviting(false); return }
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined })
+      }
+      setInviteResult(result)
+      showToast(result.message || 'Invitations sent!', 'success')
+      setInviteEmails(''); setCsvFile(null)
+    } catch (err: any) { showToast(err.message || 'Failed to send invitations', 'error') }
+    finally { setInviting(false) }
   }
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
+    </div>
+  )
 
   const tabs = [
-    { 
-      id: 'profile', 
-      name: 'Profile', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'notifications', 
-      name: 'Notifications', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-      )
-    },
-    { 
-      id: 'security', 
-      name: 'Security', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-      )
-    },
-    { 
-      id: 'system', 
-      name: 'System', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      )
-    }
+    { id: 'profile', label: 'Profile' },
+    { id: 'password', label: 'Change Password' },
+    { id: 'account', label: 'Account' },
+    { id: 'invite', label: 'Invite Employees' },
   ]
 
   return (
-    <div className="p-4 md:p-6 h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
-          <p className="text-gray-600">Manage your account settings and preferences</p>
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-          <div className="border-b border-gray-200">
-            <div className="flex overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-[#152e22] text-[#152e22]'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <span className="text-xl">{tab.icon}</span>
-                  {tab.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-6">
-            {/* Profile Tab */}
-            {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Profile Information</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                      <input
-                        type="text"
-                        value={profileData.fullName}
-                        onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      <input
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                      <input
-                        type="tel"
-                        value={profileData.phone}
-                        onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-                      <input
-                        type="text"
-                        value={profileData.position}
-                        onChange={(e) => setProfileData({ ...profileData, position: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                      <input
-                        type="text"
-                        value={profileData.department}
-                        disabled
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
-                      <input
-                        type="text"
-                        value={profileData.employeeId}
-                        disabled
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <button
-                      onClick={handleSaveProfile}
-                      className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Notifications Tab */}
-            {activeTab === 'notifications' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Notification Preferences</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">Email Notifications</p>
-                        <p className="text-sm text-gray-600">Receive notifications via email</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifications.emailNotifications}
-                          onChange={(e) => setNotifications({ ...notifications, emailNotifications: e.target.checked })}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">SMS Notifications</p>
-                        <p className="text-sm text-gray-600">Receive notifications via SMS</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifications.smsNotifications}
-                          onChange={(e) => setNotifications({ ...notifications, smsNotifications: e.target.checked })}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">Push Notifications</p>
-                        <p className="text-sm text-gray-600">Receive push notifications</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={notifications.pushNotifications}
-                          onChange={(e) => setNotifications({ ...notifications, pushNotifications: e.target.checked })}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
-                      </label>
-                    </div>
-
-                    <div className="border-t border-gray-200 pt-4 mt-4">
-                      <h3 className="font-medium text-gray-900 mb-3">Notification Types</h3>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">Trip Assignments</span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={notifications.tripAssignments}
-                              onChange={(e) => setNotifications({ ...notifications, tripAssignments: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">Fuel Requests</span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={notifications.fuelRequests}
-                              onChange={(e) => setNotifications({ ...notifications, fuelRequests: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">Maintenance Alerts</span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={notifications.maintenanceAlerts}
-                              onChange={(e) => setNotifications({ ...notifications, maintenanceAlerts: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">Driver Updates</span>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={notifications.driverUpdates}
-                              onChange={(e) => setNotifications({ ...notifications, driverUpdates: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#152e22]"></div>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <button
-                      onClick={handleSaveNotifications}
-                      className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-                    >
-                      Save Preferences
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Security Tab */}
-            {activeTab === 'security' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Security Settings</h2>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h3 className="font-medium text-gray-900 mb-2">Change Password</h3>
-                      <p className="text-sm text-gray-600 mb-4">Update your password regularly to keep your account secure</p>
-                      <button
-                        onClick={handleChangePassword}
-                        className="px-4 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm"
-                      >
-                        Change Password
-                      </button>
-                    </div>
-
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h3 className="font-medium text-gray-900 mb-2">Two-Factor Authentication</h3>
-                      <p className="text-sm text-gray-600 mb-4">Add an extra layer of security to your account</p>
-                      <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm">
-                        Enable 2FA
-                      </button>
-                    </div>
-
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h3 className="font-medium text-gray-900 mb-2">Active Sessions</h3>
-                      <p className="text-sm text-gray-600 mb-4">Manage your active sessions across devices</p>
-                      <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm">
-                        Sign Out All Devices
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* System Tab */}
-            {activeTab === 'system' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">System Preferences</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
-                      <select
-                        value={systemSettings.language}
-                        onChange={(e) => setSystemSettings({ ...systemSettings, language: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      >
-                        <option value="en">English</option>
-                        <option value="am">Amharic</option>
-                        <option value="or">Oromo</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
-                      <select
-                        value={systemSettings.timezone}
-                        onChange={(e) => setSystemSettings({ ...systemSettings, timezone: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      >
-                        <option value="Africa/Addis_Ababa">Africa/Addis Ababa (EAT)</option>
-                        <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
-                        <option value="UTC">UTC</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Date Format</label>
-                      <select
-                        value={systemSettings.dateFormat}
-                        onChange={(e) => setSystemSettings({ ...systemSettings, dateFormat: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      >
-                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Theme</label>
-                      <select
-                        value={systemSettings.theme}
-                        onChange={(e) => setSystemSettings({ ...systemSettings, theme: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none"
-                      >
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                        <option value="auto">Auto</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="mt-6">
-                    <button
-                      onClick={handleSaveSystem}
-                      className="px-6 py-2 bg-[#152e22] text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-                    >
-                      Save Settings
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Toast Notification */}
+    <div className="space-y-6 max-w-3xl">
       {toast && (
-        <div className="fixed bottom-4 right-4 z-50 animate-slide-in-bottom">
-          <div className={`px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
-            toast.type === 'success' ? 'bg-green-600' :
-            toast.type === 'error' ? 'bg-red-600' :
-            'bg-blue-600'
-          } text-white`}>
-            <span>{toast.message}</span>
-            <button onClick={() => setToast(null)} className="hover:opacity-80">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+        <div className={`fixed top-4 right-4 z-[100] px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}>
+          {toast.message}
         </div>
       )}
+
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        <p className="text-sm text-gray-500 mt-1">Manage your account settings and preferences</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <div className="flex gap-1 px-6 overflow-x-auto">
+            {tabs.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`py-4 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-[#1B3D2F] text-[#1B3D2F]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6">
+          {/* Profile */}
+          {activeTab === 'profile' && (
+            <form onSubmit={handleSaveProfile} className="space-y-5">
+              <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+                <div className="w-14 h-14 bg-[#1B3D2F] rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-lg font-bold">
+                    {user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'DO'}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{user?.name || 'Deployment Officer'}</p>
+                  <p className="text-sm text-gray-500">{user?.role || 'DeploymentTeam'}</p>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                  <input type="text" value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                  <input type="email" value={formData.email} disabled
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+                  <input type="tel" value={formData.phoneNumber} onChange={e => setFormData(p => ({ ...p, phoneNumber: e.target.value }))}
+                    placeholder="+251912345678"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button type="submit" disabled={saving}
+                  className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22] disabled:opacity-50">
+                  {saving ? 'Saving…' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Change Password */}
+          {activeTab === 'password' && (
+            <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
+                <div className="relative">
+                  <input type={showCurrentPw ? 'text' : 'password'} value={passwordForm.currentPassword}
+                    onChange={e => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
+                    className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required />
+                  <button type="button" onClick={() => setShowCurrentPw(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={showCurrentPw ? "M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" : "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"} /></svg>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
+                <div className="relative">
+                  <input type={showNewPw ? 'text' : 'password'} value={passwordForm.newPassword}
+                    onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
+                    className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required />
+                  <button type="button" onClick={() => setShowNewPw(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={showNewPw ? "M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" : "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"} /></svg>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
+                <input type="password" value={passwordForm.confirmPassword}
+                  onChange={e => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required />
+              </div>
+              <div className="flex justify-end pt-2">
+                <button type="submit" disabled={savingPassword}
+                  className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22] disabled:opacity-50">
+                  {savingPassword ? 'Changing…' : 'Change Password'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Account */}
+          {activeTab === 'account' && (
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-700">Account Information</h3>
+                {[['Email', user?.email], ['Role', user?.role]].map(([label, value]) => (
+                  <div key={label as string} className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{label}</p>
+                    <p className="text-sm text-gray-500">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="border border-red-200 rounded-lg p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Sign out</p>
+                    <p className="text-sm text-gray-500">Sign out of your account</p>
+                  </div>
+                  <button onClick={handleLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Invite Employees */}
+          {activeTab === 'invite' && (
+            <div className="space-y-5">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Invite Employees</h3>
+                <p className="text-sm text-gray-500 mt-1">Invited employees receive an email with a temporary password and must complete their profile before making trip requests.</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setInviteMode('email')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'email' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Paste Emails</button>
+                <button onClick={() => setInviteMode('csv')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'csv' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Upload CSV</button>
+              </div>
+              {inviteMode === 'email' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Addresses <span className="text-gray-400 font-normal">(comma or new line separated)</span></label>
+                  <textarea value={inviteEmails} onChange={e => setInviteEmails(e.target.value)} rows={5}
+                    placeholder="john@university.edu, jane@university.edu"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none font-mono text-sm" />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">CSV File <span className="text-gray-400 font-normal">(must have an "email" column)</span></label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#1B3D2F]/40 transition-colors">
+                    <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUpload" />
+                    <label htmlFor="csvUpload" className="cursor-pointer">
+                      <svg className="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                      {csvFile ? <p className="text-sm font-medium text-[#1B3D2F]">{csvFile.name}</p> : <p className="text-sm text-gray-500">Click to upload CSV</p>}
+                    </label>
+                  </div>
+                  <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block">Download CSV template</a>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                <textarea value={inviteMessage} onChange={e => setInviteMessage(e.target.value)} rows={3}
+                  placeholder="Welcome to the Fleet Management System!"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+              </div>
+              <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)}
+                className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22] disabled:opacity-50 flex items-center gap-2">
+                {inviting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending…</> : 'Send Invitations'}
+              </button>
+              {inviteResult && (
+                <div className="space-y-3">
+                  {inviteResult.invited.length > 0 && (
+                    <div className="bg-[#1B3D2F]/5 border border-[#1B3D2F]/20 rounded-lg p-4">
+                      <p className="text-sm font-medium text-[#1B3D2F] mb-2">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p>
+                      <div className="flex flex-wrap gap-1">{inviteResult.invited.map(e => <span key={e} className="text-xs bg-[#1B3D2F]/10 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div>
+                    </div>
+                  )}
+                  {inviteResult.failed.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <p className="text-sm font-medium text-red-800 mb-2">✗ {inviteResult.failed.length} failed</p>
+                      <div className="space-y-1">{inviteResult.failed.map(f => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
