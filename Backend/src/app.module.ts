@@ -20,7 +20,6 @@ import { FuelModule } from './fuel/fuel.module';
 import { TrackingModule } from './tracking/tracking.module';
 import { EmailModule } from './email/email.module';
 import { SystemAdminModule } from './system-admin/system-admin.module';
-import { EmailModule } from './email/email.module';
 import { SmsModule } from './sms/sms.module';
 import configuration from './config/configuration';
 import { typeOrmOptionsForNest } from './database/typeorm.factory';
