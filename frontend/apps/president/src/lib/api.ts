@@ -117,7 +117,17 @@ export const authApi = {
     )
   },
 
-  getCurrentUser: async () => apiFetch(`${API_BASE_URL}/users/me`)
+  getCurrentUser: async () => apiFetch(`${API_BASE_URL}/users/me`),
+
+  logout: async () => {
+    try { await apiFetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' }) } catch {}
+  }
+}
+
+export const getCurrentUser = () => {
+  if (typeof window === 'undefined') return null
+  const userStr = localStorage.getItem('user')
+  return userStr ? JSON.parse(userStr) : null
 }
 
 // User API
