@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [notifList, setNotifList] = useState<any[]>([])
   const [loadingNotifs, setLoadingNotifs] = useState(false)
   const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteRole, setInviteRole] = useState('User')
   const [inviteMessage, setInviteMessage] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
@@ -157,7 +158,7 @@ export default function SettingsPage() {
           setInviting(false)
           return
         }
-        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined })
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined, role: inviteRole || undefined })
       }
       setInviteResult(result)
       showToast(result.message || 'Invitations sent!', 'success')
@@ -403,6 +404,12 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Role to Assign</label>
+                <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm">
+                  <option value="User">Employee (User)</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Welcome Message (optional)</label>
                 <textarea value={inviteMessage} onChange={e => setInviteMessage(e.target.value)} rows={3}

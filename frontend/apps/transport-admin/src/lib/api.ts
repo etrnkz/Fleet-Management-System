@@ -367,9 +367,8 @@ export const WS_URL = WS_BASE_URL.endsWith('/tracking') ? WS_BASE_URL : `${WS_BA
 
 // Invite APIs
 export const inviteApi = {
-  bulkInvite: (data: { emails: string[]; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
+  bulkInvite: (data: { emails: string[]; role?: string; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
     apiFetch('/users/bulk-invite', { method: 'POST', body: JSON.stringify(data) }),
-
   bulkInviteCsv: (formData: FormData) => {
     const token = getAuthToken();
     return fetch(`${API_BASE_URL}/users/bulk-invite-csv`, {

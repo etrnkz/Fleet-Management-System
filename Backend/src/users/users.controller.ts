@@ -360,7 +360,7 @@ export class UsersController {
   async bulkInviteUsersFromCsv(
     @Request() req,
     @UploadedFile() file: any,
-    @Body() body: { departmentId?: string; collegeId?: string; welcomeMessage?: string },
+    @Body() body: { departmentId?: string; collegeId?: string; welcomeMessage?: string; role?: UserRole },
   ) {
     if (!file) {
       throw new BadRequestException('No CSV file uploaded');

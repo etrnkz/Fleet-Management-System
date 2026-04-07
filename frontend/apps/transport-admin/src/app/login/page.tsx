@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError('')
     setIsLoading(true)
     try {
-      const response = await authApi.login(email, password)
+      const response = await authApi.login(email, password) as any
       const storage = rememberMe ? localStorage : sessionStorage
       if (!rememberMe) {
         localStorage.removeItem('access_token')
