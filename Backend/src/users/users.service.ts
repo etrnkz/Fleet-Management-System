@@ -249,7 +249,7 @@ export class UsersService {
           UserRole.User,
         ];
       case UserRole.Dean:
-        return [UserRole.CollegeHead, UserRole.DepartmentHead, UserRole.User];
+        return [UserRole.DepartmentHead, UserRole.User];
       case UserRole.DepartmentHead:
         return [UserRole.User];
       case UserRole.TransportOffice:

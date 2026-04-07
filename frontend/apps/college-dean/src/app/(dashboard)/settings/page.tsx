@@ -245,7 +245,6 @@ export default function SettingsPage() {
                 <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm">
                   <option value="User">Employee (User)</option>
                   <option value="DepartmentHead">Department Head</option>
-                  <option value="CollegeHead">College Head</option>
                 </select>
               </div>
 
