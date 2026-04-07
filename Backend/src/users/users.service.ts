@@ -238,10 +238,8 @@ export class UsersService {
         return Object.values(UserRole);
       case UserRole.President:
         return [
-          UserRole.Dean,
-          UserRole.CollegeHead,
           UserRole.DepartmentHead,
-          UserRole.TransportOffice,
+          UserRole.CollegeHead,
           UserRole.DeploymentTeam,
           UserRole.MaintenanceTeam,
           UserRole.Gate,
