@@ -1,220 +1,219 @@
-constAPI_BASE_URL=
-process.env.NEXT_PUBLIC_API_URL||'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1'
 
-//GetauthtokenfromlocalStorageorsessionStorage
-constgetAuthToken=()=>{
-if(typeofwindow!=='undefined'){
-return(
-localStorage.getItem('accessToken')||
-sessionStorage.getItem('accessToken')||
-localStorage.getItem('access_token')||
-sessionStorage.getItem('access_token')||
-null
-)
-}
-returnnull
-}
-
-constgetRefreshToken=()=>{
-if(typeofwindow!=='undefined'){
-returnlocalStorage.getItem('refreshToken')||sessionStorage.getItem('refreshToken')||null
-}
-returnnull
+// Get auth token from localStorage or sessionStorage
+const getAuthToken = () => {
+  if (typeof window !== 'undefined') {
+    return (
+      localStorage.getItem('accessToken') ||
+      sessionStorage.getItem('accessToken') ||
+      localStorage.getItem('access_token') ||
+      sessionStorage.getItem('access_token') ||
+      null
+    )
+  }
+  return null
 }
 
-//Createheaderswithauthtoken
-constcreateHeaders=()=>{
-consttoken=getAuthToken()
-return{
-'Content-Type':'application/json',
-...(token&&{Authorization:`Bearer${token}`})
-}
+const getRefreshToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken') || null
+  }
+  return null
 }
 
-//Deduplicatedrefreshpromise
-let_refreshPromise:Promise<boolean>|null=null
-
-asyncfunctionrefreshAccessToken():Promise<boolean>{
-if(_refreshPromise)return_refreshPromise
-_refreshPromise=(async()=>{
-constrefreshToken=getRefreshToken()
-if(!refreshToken)returnfalse
-try{
-constres=awaitfetch(`${API_BASE_URL}/auth/refresh`,{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({refresh_token:refreshToken}),
-})
-if(!res.ok)returnfalse
-constdata=awaitres.json()
-conststorage=localStorage.getItem('refreshToken')?localStorage:sessionStorage
-storage.setItem('accessToken',data.access_token)
-if(data.refresh_token)storage.setItem('refreshToken',data.refresh_token)
-returntrue
-}catch{
-returnfalse
-}finally{
-_refreshPromise=null
-}
-})()
-return_refreshPromise
+// Create headers with auth token
+const createHeaders = () => {
+  const token = getAuthToken()
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` })
+  }
 }
 
-functionclearSession(){
-;['accessToken','access_token','refreshToken','user'].forEach((k)=>{
-localStorage.removeItem(k)
-sessionStorage.removeItem(k)
-})
+// Deduplicated refresh promise
+let _refreshPromise: Promise<boolean> | null = null
+
+async function refreshAccessToken(): Promise<boolean> {
+  if (_refreshPromise) return _refreshPromise
+  _refreshPromise = (async () => {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) return false
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      })
+      if (!res.ok) return false
+      const data = await res.json()
+      const storage = localStorage.getItem('refreshToken') ? localStorage : sessionStorage
+      storage.setItem('accessToken', data.access_token)
+      if (data.refresh_token) storage.setItem('refreshToken', data.refresh_token)
+      return true
+    } catch {
+      return false
+    } finally {
+      _refreshPromise = null
+    }
+  })()
+  return _refreshPromise
 }
 
-//HandleAPIresponseswithauto-refresh
-asyncfunctionhandleResponse(response:Response,retry:()=>Promise<Response>):Promise<any>{
-if(response.status===401){
-constrefreshed=awaitrefreshAccessToken()
-if(refreshed){
-constretried=awaitretry()
-if(!retried.ok){
-consterror=awaitretried.json().catch(()=>({message:'Networkerror'}))
-thrownewError(error.message||'APIrequestfailed')
-}
-returnretried.json()
-}
-clearSession()
-if(typeofwindow!=='undefined')window.location.href='/login'
-thrownewError('Sessionexpired.Pleaseloginagain.')
-}
-if(!response.ok){
-consterror=awaitresponse.json().catch(()=>({message:'Networkerror'}))
-thrownewError(error.message||'APIrequestfailed')
-}
-returnresponse.json()
+function clearSession() {
+  ;['accessToken', 'access_token', 'refreshToken', 'user'].forEach((k) => {
+    localStorage.removeItem(k)
+    sessionStorage.removeItem(k)
+  })
 }
 
-//Conveniencewrapper
-asyncfunctionapiFetch(url:string,options:RequestInit={}):Promise<any>{
-constheaders={...createHeaders(),...(options.headersasRecord<string,string>)}
-constresponse=awaitfetch(url,{...options,headers})
-returnhandleResponse(response,()=>{
-constnewHeaders={...createHeaders(),...(options.headersasRecord<string,string>)}
-returnfetch(url,{...options,headers:newHeaders})
-})
+// Handle API responses with auto-refresh
+async function handleResponse(response: Response, retry: () => Promise<Response>): Promise<any> {
+  if (response.status === 401) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) {
+      const retried = await retry()
+      if (!retried.ok) {
+        const error = await retried.json().catch(() => ({ message: 'Network error' }))
+        throw new Error(error.message || 'API request failed')
+      }
+      return retried.json()
+    }
+    clearSession()
+    if (typeof window !== 'undefined') window.location.href = '/login'
+    throw new Error('Session expired. Please log in again.')
+  }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Network error' }))
+    throw new Error(error.message || 'API request failed')
+  }
+  return response.json()
 }
 
-//AuthAPI
-exportconstauthApi={
-login:async(email:string,password:string)=>{
-constresponse=awaitfetch(`${API_BASE_URL}/auth/login`,{
-method:'POST',
-headers:{'Content-Type':'application/json'},
-body:JSON.stringify({email,password})
-})
-if(!response.ok){
-consterror=awaitresponse.json().catch(()=>({message:'Loginfailed'}))
-thrownewError(error.message||'Loginfailed')
-}
-returnresponse.json()
-},
-
-getCurrentUser:async()=>apiFetch(`${API_BASE_URL}/users/me`)
+// Convenience wrapper
+async function apiFetch(url: string, options: RequestInit = {}): Promise<any> {
+  const headers = { ...createHeaders(), ...(options.headers as Record<string, string>) }
+  const response = await fetch(url, { ...options, headers })
+  return handleResponse(response, () => {
+    const newHeaders = { ...createHeaders(), ...(options.headers as Record<string, string>) }
+    return fetch(url, { ...options, headers: newHeaders })
+  })
 }
 
-//TripAPI-DeploymentOfficemanagesapprovedtrips
-exportconsttripApi={
-getApprovedTrips:async()=>{
-consttrips=awaitapiFetch(`${API_BASE_URL}/trips`)
-returnArray.isArray(trips)
-?trips.filter((trip:any)=>trip.state==='APPROVED_FOR_ALLOCATION')
-:[]
-},
+// Auth API
+export const authApi = {
+  login: async (email: string, password: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Login failed' }))
+      throw new Error(error.message || 'Login failed')
+    }
+    return response.json()
+  },
 
-getAllTrips:async()=>apiFetch(`${API_BASE_URL}/trips`),
-
-assignVehicleAndDriver:async(tripId:string,vehicleId:string,driverId:string,estimatedFuelCost=0,estimatedDistance=0)=>
-apiFetch(`${API_BASE_URL}/trips/${tripId}/allocate`,{
-method:'POST',
-body:JSON.stringify({vehicleId,driverId,estimatedFuelCost,estimatedDistance})
-}),
-
-updateTripStatus:async(tripId:string,status:string,notes?:string)=>{
-constendpoint=status==='IN_PROGRESS'?'start':'complete'
-returnapiFetch(`${API_BASE_URL}/trips/${tripId}/${endpoint}`,{
-method:'POST',
-body:JSON.stringify({status,notes})
-})
-}
+  getCurrentUser: async () => apiFetch(`${API_BASE_URL}/users/me`)
 }
 
-//VehicleAPI
-exportconstvehicleApi={
-getAllVehicles:async()=>apiFetch(`${API_BASE_URL}/vehicles`),
-getAvailableVehicles:async()=>apiFetch(`${API_BASE_URL}/vehicles/available`),
-createVehicle:async(vehicleData:any)=>
-apiFetch(`${API_BASE_URL}/vehicles`,{method:'POST',body:JSON.stringify(vehicleData)}),
-updateVehicle:async(vehicleId:string,vehicleData:any)=>
-apiFetch(`${API_BASE_URL}/vehicles/${vehicleId}`,{method:'PATCH',body:JSON.stringify(vehicleData)}),
-deleteVehicle:async(vehicleId:string)=>
-apiFetch(`${API_BASE_URL}/vehicles/${vehicleId}`,{method:'DELETE'}),
-getVehicleStats:async()=>apiFetch(`${API_BASE_URL}/vehicles/statistics`)
+// Trip API - Deployment Office manages approved trips
+export const tripApi = {
+  getApprovedTrips: async () => {
+    const trips = await apiFetch(`${API_BASE_URL}/trips`)
+    return Array.isArray(trips)
+      ? trips.filter((trip: any) => trip.state === 'APPROVED_FOR_ALLOCATION')
+      : []
+  },
+
+  getAllTrips: async () => apiFetch(`${API_BASE_URL}/trips`),
+
+  assignVehicleAndDriver: async (tripId: string, vehicleId: string, driverId: string, estimatedFuelCost = 0, estimatedDistance = 0) =>
+    apiFetch(`${API_BASE_URL}/trips/${tripId}/allocate`, {
+      method: 'POST',
+      body: JSON.stringify({ vehicleId, driverId, estimatedFuelCost, estimatedDistance })
+    }),
+
+  updateTripStatus: async (tripId: string, status: string, notes?: string) => {
+    const endpoint = status === 'IN_PROGRESS' ? 'start' : 'complete'
+    return apiFetch(`${API_BASE_URL}/trips/${tripId}/${endpoint}`, {
+      method: 'POST',
+      body: JSON.stringify({ status, notes })
+    })
+  }
 }
 
-//DriverAPI
-exportconstdriverApi={
-getAllDrivers:async()=>apiFetch(`${API_BASE_URL}/drivers`),
-getAvailableDrivers:async()=>apiFetch(`${API_BASE_URL}/drivers/available`),
-createDriver:async(driverData:any)=>
-apiFetch(`${API_BASE_URL}/drivers`,{method:'POST',body:JSON.stringify(driverData)}),
-updateDriver:async(driverId:string,driverData:any)=>
-apiFetch(`${API_BASE_URL}/drivers/${driverId}`,{method:'PATCH',body:JSON.stringify(driverData)}),
-deleteDriver:async(driverId:string)=>
-apiFetch(`${API_BASE_URL}/drivers/${driverId}`,{method:'DELETE'})
+// Vehicle API
+export const vehicleApi = {
+  getAllVehicles: async () => apiFetch(`${API_BASE_URL}/vehicles`),
+  getAvailableVehicles: async () => apiFetch(`${API_BASE_URL}/vehicles/available`),
+  createVehicle: async (vehicleData: any) =>
+    apiFetch(`${API_BASE_URL}/vehicles`, { method: 'POST', body: JSON.stringify(vehicleData) }),
+  updateVehicle: async (vehicleId: string, vehicleData: any) =>
+    apiFetch(`${API_BASE_URL}/vehicles/${vehicleId}`, { method: 'PATCH', body: JSON.stringify(vehicleData) }),
+  deleteVehicle: async (vehicleId: string) =>
+    apiFetch(`${API_BASE_URL}/vehicles/${vehicleId}`, { method: 'DELETE' }),
+  getVehicleStats: async () => apiFetch(`${API_BASE_URL}/vehicles/statistics`)
 }
 
-//MaintenanceAPI
-exportconstmaintenanceApi={
-getAllMaintenanceRequests:async()=>apiFetch(`${API_BASE_URL}/maintenance`),
-createMaintenanceRequest:async(maintenanceData:any)=>
-apiFetch(`${API_BASE_URL}/maintenance`,{method:'POST',body:JSON.stringify(maintenanceData)}),
-updateMaintenanceRequest:async(requestId:string,data:any)=>
-apiFetch(`${API_BASE_URL}/maintenance/${requestId}/inspect`,{method:'POST',body:JSON.stringify(data)})
+// Driver API
+export const driverApi = {
+  getAllDrivers: async () => apiFetch(`${API_BASE_URL}/drivers`),
+  getAvailableDrivers: async () => apiFetch(`${API_BASE_URL}/drivers/available`),
+  createDriver: async (driverData: any) =>
+    apiFetch(`${API_BASE_URL}/drivers`, { method: 'POST', body: JSON.stringify(driverData) }),
+  updateDriver: async (driverId: string, driverData: any) =>
+    apiFetch(`${API_BASE_URL}/drivers/${driverId}`, { method: 'PATCH', body: JSON.stringify(driverData) }),
+  deleteDriver: async (driverId: string) =>
+    apiFetch(`${API_BASE_URL}/drivers/${driverId}`, { method: 'DELETE' })
 }
 
-//Statistics
-exportconststatsApi={
-getDeploymentStats:async()=>{
-const[vehicles,trips,maintenance]=awaitPromise.all([
-vehicleApi.getAllVehicles().catch(()=>[]),
-tripApi.getAllTrips().catch(()=>[]),
-maintenanceApi.getAllMaintenanceRequests().catch(()=>[]),
-])
-constvehiclesArr=Array.isArray(vehicles)?vehicles:[]
-consttripsArr=Array.isArray(trips)?trips:[]
-constmaintenanceArr=Array.isArray(maintenance)?maintenance:[]
-return{
-totalFleet:vehiclesArr.length,
-available:vehiclesArr.filter((v:any)=>v.status==='Active').length,
-inUse:tripsArr.filter((t:any)=>t.state==='IN_PROGRESS').length,
-maintenance:maintenanceArr.filter((m:any)=>m.status!=='Completed').length,
-activeTrips:tripsArr.filter((t:any)=>t.state==='IN_PROGRESS').length,
-pendingAllocation:tripsArr.filter((t:any)=>t.state==='APPROVED_FOR_ALLOCATION').length,
-}
-},
-getFleetUtilization:async()=>apiFetch(`${API_BASE_URL}/vehicles/statistics`)
+// Maintenance API
+export const maintenanceApi = {
+  getAllMaintenanceRequests: async () => apiFetch(`${API_BASE_URL}/maintenance`),
+  createMaintenanceRequest: async (maintenanceData: any) =>
+    apiFetch(`${API_BASE_URL}/maintenance`, { method: 'POST', body: JSON.stringify(maintenanceData) }),
+  updateMaintenanceRequest: async (requestId: string, data: any) =>
+    apiFetch(`${API_BASE_URL}/maintenance/${requestId}/inspect`, { method: 'POST', body: JSON.stringify(data) })
 }
 
-//NotificationsAPI
-exportconstnotificationApi={
-getNotifications:async()=>apiFetch(`${API_BASE_URL}/notifications`),
-markAsRead:async(notificationId:string)=>
-apiFetch(`${API_BASE_URL}/notifications/${notificationId}/read`,{method:'PATCH'})
+// Statistics
+export const statsApi = {
+  getDeploymentStats: async () => {
+    const [vehicles, trips, maintenance] = await Promise.all([
+      vehicleApi.getAllVehicles().catch(() => []),
+      tripApi.getAllTrips().catch(() => []),
+      maintenanceApi.getAllMaintenanceRequests().catch(() => []),
+    ])
+    const vehiclesArr = Array.isArray(vehicles) ? vehicles : []
+    const tripsArr = Array.isArray(trips) ? trips : []
+    const maintenanceArr = Array.isArray(maintenance) ? maintenance : []
+    return {
+      totalFleet: vehiclesArr.length,
+      available: vehiclesArr.filter((v: any) => v.status === 'Active').length,
+      inUse: tripsArr.filter((t: any) => t.state === 'IN_PROGRESS').length,
+      maintenance: maintenanceArr.filter((m: any) => m.status !== 'Completed').length,
+      activeTrips: tripsArr.filter((t: any) => t.state === 'IN_PROGRESS').length,
+      pendingAllocation: tripsArr.filter((t: any) => t.state === 'APPROVED_FOR_ALLOCATION').length,
+    }
+  },
+  getFleetUtilization: async () => apiFetch(`${API_BASE_URL}/vehicles/statistics`)
 }
 
-//ReportsAPI
-exportconstreportApi={
-generateDeploymentReport:async(filters:any)=>
-apiFetch(`${API_BASE_URL}/reports/deployment`,{method:'POST',body:JSON.stringify(filters)}),
-generateVehicleUtilizationReport:async(filters:any)=>
-apiFetch(`${API_BASE_URL}/reports/vehicle-utilization`,{method:'POST',body:JSON.stringify(filters)}),
-generateMaintenanceReport:async(filters:any)=>
-apiFetch(`${API_BASE_URL}/reports/maintenance`,{method:'POST',body:JSON.stringify(filters)})
+// Notifications API
+export const notificationApi = {
+  getNotifications: async () => apiFetch(`${API_BASE_URL}/notifications`),
+  markAsRead: async (notificationId: string) =>
+    apiFetch(`${API_BASE_URL}/notifications/${notificationId}/read`, { method: 'PATCH' })
 }
 
+// Reports API
+export const reportApi = {
+  generateDeploymentReport: async (filters: any) =>
+    apiFetch(`${API_BASE_URL}/reports/deployment`, { method: 'POST', body: JSON.stringify(filters) }),
+  generateVehicleUtilizationReport: async (filters: any) =>
+    apiFetch(`${API_BASE_URL}/reports/vehicle-utilization`, { method: 'POST', body: JSON.stringify(filters) }),
+  generateMaintenanceReport: async (filters: any) =>
+    apiFetch(`${API_BASE_URL}/reports/maintenance`, { method: 'POST', body: JSON.stringify(filters) })
+}
