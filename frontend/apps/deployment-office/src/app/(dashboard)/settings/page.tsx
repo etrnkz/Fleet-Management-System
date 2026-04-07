@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { authApi, userApi, inviteApi } from '@/lib/api'
+import { authApi, userApi, inviteApi, notificationApi } from '@/lib/api'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -19,6 +19,8 @@ export default function SettingsPage() {
   const [showNewPw, setShowNewPw] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [notifList, setNotifList] = useState<any[]>([])
+  const [loadingNotifs, setLoadingNotifs] = useState(false)
 
   // Invite state
   const [inviteEmails, setInviteEmails] = useState('')
@@ -31,6 +33,14 @@ export default function SettingsPage() {
   useEffect(() => { loadUser() }, [])
 
   useEffect(() => {
+    if (activeTab === 'notifications') {
+      setLoadingNotifs(true)
+      notificationApi.getNotifications()
+        .then(d => setNotifList(Array.isArray(d) ? d : []))
+        .catch(() => setNotifList([]))
+        .finally(() => setLoadingNotifs(false))
+    }
+  }, [activeTab])
     if (toast) { const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t) }
   }, [toast])
 
@@ -139,6 +149,7 @@ export default function SettingsPage() {
   const tabs = [
     { id: 'profile', label: 'Profile' },
     { id: 'password', label: 'Change Password' },
+    { id: 'notifications', label: 'Notifications' },
     { id: 'invite', label: 'Invite Employees' },
   ]
 
@@ -311,6 +322,51 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Notifications */}
+          {activeTab === 'notifications' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-gray-900">Notifications</h3>
+                {notifList.filter(n => !n.isRead).length > 0 && (
+                  <button onClick={async () => {
+                    await Promise.all(notifList.filter(n => !n.isRead).map(n => notificationApi.markAsRead(n.id).catch(() => {})))
+                    setNotifList(prev => prev.map(n => ({ ...n, isRead: true })))
+                    showToast('All marked as read', 'success')
+                  }} className="text-xs text-[#1B3D2F] hover:underline font-medium">
+                    Mark all as read
+                  </button>
+                )}
+              </div>
+              {loadingNotifs ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#1B3D2F] border-t-transparent" />
+                </div>
+              ) : notifList.length === 0 ? (
+                <div className="text-center py-12 text-gray-400 text-sm">No notifications</div>
+              ) : (
+                <div className="space-y-2">
+                  {notifList.map(n => (
+                    <div key={n.id} onClick={async () => {
+                      if (!n.isRead) {
+                        await notificationApi.markAsRead(n.id).catch(() => {})
+                        setNotifList(prev => prev.map(x => x.id === n.id ? { ...x, isRead: true } : x))
+                      }
+                    }} className={`p-4 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 ${!n.isRead ? 'bg-[#1B3D2F]/5 border-[#1B3D2F]/20 border-l-4 border-l-[#1B3D2F]' : 'bg-white border-gray-200'}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{n.title || n.type}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{new Date(n.sentAt || n.createdAt).toLocaleString()}</p>
+                        </div>
+                        {!n.isRead && <span className="w-2 h-2 bg-[#1B3D2F] rounded-full flex-shrink-0 mt-1.5" />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
