@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { vehicleApi, driverApi, tripApi, fuelApi, maintenanceApi } from '@/lib/api'
@@ -64,7 +64,7 @@ export default function ReportsPage() {
     return (
       <div className="p-6 h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B3D2F] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading reports...</p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function ReportsPage() {
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
             <p className="text-xs md:text-sm text-gray-600 mb-2">Total Fuel Cost</p>
-            <p className="text-2xl md:text-3xl font-bold text-emerald-600">
+            <p className="text-2xl md:text-3xl font-bold text-[#1B3D2F]">
               ETB {stats.totalFuelCost.toLocaleString()}
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function ReportsPage() {
             {drivers.slice(0, 6).map((driver) => (
               <div key={driver.id} className="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#1B3D2F] to-[#152e22] rounded-full flex items-center justify-center text-white font-bold text-sm">
                     {(driver.user?.name || driver.name || 'DR').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">

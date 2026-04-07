@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { maintenanceApi, vehicleApi, getCurrentUser } from '@/lib/api'
@@ -10,7 +10,7 @@ const STATUS_COLORS: Record<string, string> = {
   EstimateProvided: 'bg-purple-100 text-purple-700',
   BudgetApproved: 'bg-indigo-100 text-indigo-700',
   InProgress: 'bg-orange-100 text-orange-700',
-  Completed: 'bg-emerald-100 text-emerald-700',
+  Completed: 'bg-[#1B3D2F]/15 text-[#1B3D2F]',
   Rejected: 'bg-red-100 text-red-700',
 }
 
@@ -36,7 +36,7 @@ function getNextActions(status: string, role: string | undefined) {
     actions.push({ key: 'start', label: 'Start work', color: 'bg-orange-500 text-white' })
   }
   if (status === 'InProgress' && isMaint) {
-    actions.push({ key: 'complete', label: 'Complete', color: 'bg-emerald-500 text-white' })
+    actions.push({ key: 'complete', label: 'Complete', color: 'bg-[#1B3D2F] text-white' })
   }
   if (!['Completed', 'Rejected'].includes(status) && (isTransport || isMaint)) {
     actions.push({ key: 'reject', label: 'Reject', color: 'bg-red-500 text-white' })
@@ -164,7 +164,7 @@ export default function MaintenanceRequestsPage() {
                 setSelected(null)
                 setActionData({ priority: 'Medium' })
               }}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
+              className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]"
             >
               + New request
             </button>
@@ -178,12 +178,12 @@ export default function MaintenanceRequestsPage() {
           placeholder="Search by ID, plate, or description..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+          className="flex-1 px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#1B3D2F]"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+          className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-[#1B3D2F]"
         >
           <option value="all">All statuses</option>
           {Object.keys(STATUS_COLORS).map((s) => (
@@ -494,7 +494,7 @@ export default function MaintenanceRequestsPage() {
                 type="button"
                 onClick={handleAction}
                 disabled={submitting}
-                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] disabled:opacity-50"
               >
                 {submitting ? 'Processing…' : 'Confirm'}
               </button>

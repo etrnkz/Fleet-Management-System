@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { tripApi, vehicleApi } from '../../../lib/api'
@@ -224,7 +224,7 @@ export default function Dashboard() {
           <button
             onClick={() => setSelectedPeriod('week')}
             className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
-              selectedPeriod === 'week' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              selectedPeriod === 'week' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             Week
@@ -232,7 +232,7 @@ export default function Dashboard() {
           <button
             onClick={() => setSelectedPeriod('month')}
             className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
-              selectedPeriod === 'month' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              selectedPeriod === 'month' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             Month
@@ -240,7 +240,7 @@ export default function Dashboard() {
           <button
             onClick={() => setSelectedPeriod('year')}
             className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
-              selectedPeriod === 'year' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              selectedPeriod === 'year' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             Year
@@ -262,7 +262,7 @@ export default function Dashboard() {
         <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs md:text-sm font-medium text-gray-500">Active Trips</h3>
-            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></div>
+            <div className="w-2.5 h-2.5 bg-[#1B3D2F] rounded-full"></div>
           </div>
           <p className="text-2xl md:text-3xl font-bold text-gray-900">{dashboardStats.activeTrips}</p>
           <p className="text-xs md:text-sm text-gray-400 mt-1">In Progress</p>
@@ -351,7 +351,7 @@ export default function Dashboard() {
               <div key={item.month}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs md:text-sm font-medium text-gray-700">{item.month}</span>
-                  <span className="text-xs md:text-sm font-bold text-emerald-600">{item.trips}</span>
+                  <span className="text-xs md:text-sm font-bold text-[#1B3D2F]">{item.trips}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5 md:h-3">
                   <div
@@ -517,7 +517,7 @@ export default function Dashboard() {
                       </td>
                       <td className="py-2 md:py-3 px-3 md:px-4">
                         <button 
-                          className="text-emerald-600 hover:text-emerald-700 text-xs md:text-sm font-medium whitespace-nowrap"
+                          className="text-[#1B3D2F] hover:text-[#1B3D2F] text-xs md:text-sm font-medium whitespace-nowrap"
                           onClick={() => window.location.href = `/approvals?trip=${request.id}`}
                         >
                           Review

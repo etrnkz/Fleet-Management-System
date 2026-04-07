@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -10,7 +10,7 @@ const STATUS_COLORS: Record<string, string> = {
   EstimateProvided: 'bg-purple-100 text-purple-700',
   BudgetApproved: 'bg-indigo-100 text-indigo-700',
   InProgress: 'bg-orange-100 text-orange-700',
-  Completed: 'bg-emerald-100 text-emerald-700',
+  Completed: 'bg-[#1B3D2F]/15 text-[#1B3D2F]',
   Rejected: 'bg-red-100 text-red-700',
 }
 
@@ -125,7 +125,7 @@ export default function MaintenanceOverviewPage() {
         <button
           type="button"
           onClick={() => router.push('/maintenance/requests')}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+          className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] transition-colors"
         >
           + New request
         </button>
@@ -157,9 +157,9 @@ export default function MaintenanceOverviewPage() {
           {
             label: 'Completed',
             value: stats.completed,
-            color: 'text-emerald-700',
-            bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-            border: 'border-emerald-200 dark:border-emerald-800',
+            color: 'text-[#1B3D2F]',
+            bg: 'bg-[#1B3D2F]/10 dark:bg-[#1B3D2F]/20',
+            border: 'border-[#1B3D2F]/20 dark:border-[#1B3D2F]',
           },
           {
             label: 'Rejected',
@@ -275,7 +275,7 @@ export default function MaintenanceOverviewPage() {
                     {monthly.map((m, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-1">
                         <div
-                          className="w-full bg-emerald-500 rounded-t-sm min-h-0"
+                          className="w-full bg-[#1B3D2F] rounded-t-sm min-h-0"
                           style={{
                             height: `${(m.count / maxVal) * 100}%`,
                             minHeight: m.count > 0 ? '4px' : '0',
@@ -304,7 +304,7 @@ export default function MaintenanceOverviewPage() {
           <button
             type="button"
             onClick={() => router.push('/maintenance/requests')}
-            className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+            className="text-sm text-[#1B3D2F] hover:text-[#1B3D2F] font-medium"
           >
             View all →
           </button>

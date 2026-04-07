@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { fuelApi, vehicleApi } from '@/lib/api'
@@ -128,7 +128,7 @@ export default function FuelPage() {
     return (
       <div className="p-6 h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1B3D2F] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading fuel data...</p>
         </div>
       </div>
@@ -161,7 +161,7 @@ export default function FuelPage() {
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
               <p className="text-xs md:text-sm text-gray-600 mb-2">Total Cost</p>
-              <p className="text-2xl md:text-3xl font-bold text-emerald-600">
+              <p className="text-2xl md:text-3xl font-bold text-[#1B3D2F]">
                 {formatCurrency(statistics.totalCost)}
               </p>
             </div>
@@ -190,7 +190,7 @@ export default function FuelPage() {
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
-                className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white text-xs md:text-sm"
+                className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white text-xs md:text-sm"
               >
                 <option>Last 7 Days</option>
                 <option>Last 30 Days</option>
@@ -205,7 +205,7 @@ export default function FuelPage() {
               <select
                 value={selectedVehicle}
                 onChange={(e) => setSelectedVehicle(e.target.value)}
-                className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none bg-white text-xs md:text-sm"
+                className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white text-xs md:text-sm"
               >
                 <option value="all">All Vehicles</option>
                 {vehicles.map((vehicle) => (
@@ -233,7 +233,7 @@ export default function FuelPage() {
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Total Cost:</span>
-                      <span className="font-medium text-emerald-600">
+                      <span className="font-medium text-[#1B3D2F]">
                         {formatCurrency(data.totalCost)}
                       </span>
                     </div>

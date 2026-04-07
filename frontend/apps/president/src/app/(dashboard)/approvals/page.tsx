@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { tripApi } from '@/lib/api'
@@ -208,7 +208,7 @@ export default function ApprovalsPage() {
           <p className="text-gray-600 mt-1">Review and manage fleet request approvals</p>
         </div>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
         </div>
       </div>
     )
@@ -234,7 +234,7 @@ export default function ApprovalsPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-3 md:p-4">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs md:text-sm text-gray-500">Approved</p>
-            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-[#1B3D2F] rounded-full"></div>
           </div>
           <p className="text-2xl md:text-3xl font-bold text-gray-900">{stats.approved}</p>
         </div>
@@ -262,7 +262,7 @@ export default function ApprovalsPage() {
             onClick={() => setSelectedTab('pending')}
             className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-all text-sm ${
               selectedTab === 'pending'
-                ? 'bg-emerald-600 text-white shadow-md'
+                ? 'bg-[#1B3D2F] text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -296,7 +296,7 @@ export default function ApprovalsPage() {
             <select
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
-              className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm"
+              className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] text-sm"
             >
               <option value="all">All Departments</option>
               <option value="College of Engineering">Engineering</option>
@@ -310,7 +310,7 @@ export default function ApprovalsPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm"
+              className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] text-sm"
             >
               <option value="all">All Priorities</option>
               <option value="urgent">Urgent</option>
@@ -390,8 +390,8 @@ export default function ApprovalsPage() {
             {/* Card Body */}
             <div className="p-4 md:p-6">
               {/* Purpose */}
-              <div className="mb-4 p-3 md:p-4 bg-emerald-50 rounded-lg border-l-4 border-emerald-500">
-                <p className="text-xs md:text-sm font-semibold text-emerald-800 mb-1">Purpose</p>
+              <div className="mb-4 p-3 md:p-4 bg-[#1B3D2F]/10 rounded-lg border-l-4 border-[#1B3D2F]">
+                <p className="text-xs md:text-sm font-semibold text-[#1B3D2F] mb-1">Purpose</p>
                 <p className="text-sm md:text-base text-gray-800 font-medium line-clamp-2">{request.purpose}</p>
               </div>
 
@@ -469,7 +469,7 @@ export default function ApprovalsPage() {
                     <span className="text-gray-600 font-semibold">{request.estimatedCost}</span>
                   </div>
                 </div>
-                <button className="w-full sm:w-auto px-3 md:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-xs md:text-sm whitespace-nowrap">
+                <button className="w-full sm:w-auto px-3 md:px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium text-xs md:text-sm whitespace-nowrap">
                   View Details →
                 </button>
               </div>
@@ -478,7 +478,7 @@ export default function ApprovalsPage() {
                 <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleApprove(request) }}
-                    className="flex-1 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm transition-colors"
+                    className="flex-1 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] font-medium text-sm transition-colors"
                   >
                     ✓ Approve
                   </button>
@@ -501,7 +501,7 @@ export default function ApprovalsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
           <div className="bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-4 md:p-6 text-white">
+            <div className="bg-gradient-to-r from-[#1B3D2F] to-green-600 p-4 md:p-6 text-white">
               <div className="flex justify-between items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg md:text-2xl font-bold mb-1 md:mb-2 truncate">{selectedRequest.id}</h3>
@@ -546,7 +546,7 @@ export default function ApprovalsPage() {
               {/* Trip Details */}
               <div>
                 <h4 className="text-base md:text-lg font-bold text-gray-800 mb-2 md:mb-3">Trip Details</h4>
-                <div className="bg-emerald-50 rounded-xl p-3 md:p-4 border-l-4 border-emerald-500 space-y-3">
+                <div className="bg-[#1B3D2F]/10 rounded-xl p-3 md:p-4 border-l-4 border-[#1B3D2F] space-y-3">
                   <div>
                     <p className="text-xs md:text-sm text-gray-600">Purpose</p>
                     <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.purpose}</p>
@@ -656,7 +656,7 @@ export default function ApprovalsPage() {
                 </button>
                 <button
                   onClick={() => handleApprove(selectedRequest)}
-                  className="w-full sm:w-auto px-4 md:px-6 py-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-medium text-sm md:text-base"
+                  className="w-full sm:w-auto px-4 md:px-6 py-2 bg-gradient-to-r from-[#1B3D2F] to-green-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-medium text-sm md:text-base"
                 >
                   Approve
                 </button>

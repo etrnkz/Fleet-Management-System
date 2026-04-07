@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { vehicleApi, driverApi } from '@/lib/api'
@@ -153,7 +153,7 @@ export default function VehiclesPage() {
           <p className="text-gray-600 mt-1">Monitor and manage all university vehicles</p>
         </div>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
         </div>
       </div>
     )
@@ -174,7 +174,7 @@ export default function VehiclesPage() {
             onClick={() => setSelectedTab('all')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               selectedTab === 'all'
-                ? 'bg-emerald-600 text-white shadow-md'
+                ? 'bg-[#1B3D2F] text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -250,7 +250,7 @@ export default function VehiclesPage() {
             }}
           >
             {/* Vehicle Header */}
-            <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-4 text-white">
+            <div className="bg-gradient-to-r from-[#1B3D2F] to-green-600 p-4 text-white">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xl font-bold">{vehicle.plateNumber}</h3>
                 <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(vehicle.status)} bg-white`}>
@@ -327,7 +327,7 @@ export default function VehiclesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-6 text-white">
+            <div className="bg-gradient-to-r from-[#1B3D2F] to-green-600 p-6 text-white">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold mb-2">{selectedVehicle.plateNumber}</h3>
@@ -442,7 +442,7 @@ export default function VehiclesPage() {
               {selectedVehicle.driver ? (
                 <div>
                   <h4 className="text-lg font-bold text-gray-800 mb-3">Assigned Driver</h4>
-                  <div className="bg-emerald-50 rounded-xl p-4 border-l-4 border-emerald-500">
+                  <div className="bg-[#1B3D2F]/10 rounded-xl p-4 border-l-4 border-[#1B3D2F]">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-600">Driver Name</p>
@@ -518,7 +518,7 @@ export default function VehiclesPage() {
             <div className="bg-gray-50 border-t border-gray-200 p-4 flex justify-end">
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-medium transition-all"
+                className="px-6 py-2 bg-[#1B3D2F] text-white rounded-xl hover:bg-[#152e22] font-medium transition-all"
               >
                 Close
               </button>

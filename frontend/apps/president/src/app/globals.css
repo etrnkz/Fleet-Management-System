@@ -1,34 +1,47 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --fa-primary: #1b3d2f;
+  --fa-on-primary: #ffffff;
+  --fa-primary-container: #c8e6c9;
+  --fa-on-primary-container: #001b0a;
+  --fa-secondary: #565f71;
+  --fa-on-surface: #191c20;
+  --fa-on-surface-variant: #44474e;
+  --fa-background: #f8f9fa;
+  --fa-surface: #ffffff;
+  --fa-surface-container-low: #f2f3f7;
+  --fa-surface-container: #eceef3;
+  --fa-outline-variant: #c4c6d0;
+  --fa-error: #ba1a1a;
+  --background: var(--fa-background);
+  --foreground: var(--fa-on-surface);
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: var(--fa-background);
+  color: var(--fa-on-surface);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-@keyframes slide-in {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+html { scroll-behavior: smooth; }
+
+input::placeholder, textarea::placeholder, select::placeholder {
+  color: var(--fa-secondary);
+  opacity: 1;
 }
 
-.animate-slide-in {
-  animation: slide-in 0.3s ease-out;
+input[type="email"], input[type="password"], input[type="text"],
+input[type="number"], input[type="datetime-local"], select, textarea {
+  color: var(--fa-on-surface) !important;
+  background-color: var(--fa-surface) !important;
+  -webkit-text-fill-color: var(--fa-on-surface) !important;
+}
+
+input:-webkit-autofill, input:-webkit-autofill:hover,
+input:-webkit-autofill:focus, input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  -webkit-text-fill-color: var(--fa-on-surface) !important;
 }

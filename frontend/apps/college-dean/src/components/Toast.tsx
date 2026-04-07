@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
@@ -22,7 +22,7 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
     switch (type) {
       case 'success':
         return (
-          <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         )
@@ -40,7 +40,7 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
         )
       case 'info':
         return (
-          <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         )
@@ -50,13 +50,13 @@ export default function Toast({ message, type, onClose, duration = 3000 }: Toast
   const getBackgroundColor = () => {
     switch (type) {
       case 'success':
-        return 'bg-emerald-50 border-emerald-200'
+        return 'bg-[#1B3D2F]/10 border-[#1B3D2F]/20'
       case 'error':
         return 'bg-red-50 border-red-200'
       case 'warning':
         return 'bg-orange-50 border-orange-200'
       case 'info':
-        return 'bg-emerald-50 border-emerald-200'
+        return 'bg-[#1B3D2F]/10 border-[#1B3D2F]/20'
     }
   }
 

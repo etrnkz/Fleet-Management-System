@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+﻿/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -8,15 +8,12 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: [
-          'ui-sans-serif',
-          'system-ui',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'sans-serif',
-        ],
+        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-newsreader)', 'ui-serif', 'Georgia', 'serif'],
+      },
+      colors: {
+        primary: '#1b3d2f',
+        'primary-dark': '#152e22',
       },
     },
   },

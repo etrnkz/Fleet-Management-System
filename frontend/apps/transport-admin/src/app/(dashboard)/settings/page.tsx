@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import Toast, { ToastType } from '@/components/Toast'
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-2.5 rounded-lg text-[11px] sm:text-xs md:text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-1.5 sm:gap-2 ${
                     activeTab === tab.id
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-[#1B3D2F] text-white'
                       : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                   }`}
                 >
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                         type="text"
                         value={generalSettings.companyName}
                         onChange={(e) => setGeneralSettings({...generalSettings, companyName: e.target.value})}
-                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                       />
                     </div>
 
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                         type="email"
                         value={generalSettings.companyEmail}
                         onChange={(e) => setGeneralSettings({...generalSettings, companyEmail: e.target.value})}
-                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                       />
                     </div>
 
@@ -194,7 +194,7 @@ export default function SettingsPage() {
                         type="tel"
                         value={generalSettings.companyPhone}
                         onChange={(e) => setGeneralSettings({...generalSettings, companyPhone: e.target.value})}
-                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                       />
                     </div>
 
@@ -206,7 +206,7 @@ export default function SettingsPage() {
                         type="text"
                         value={generalSettings.address}
                         onChange={(e) => setGeneralSettings({...generalSettings, address: e.target.value})}
-                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                       />
                     </div>
 
@@ -217,7 +217,7 @@ export default function SettingsPage() {
                       <select
                         value={generalSettings.timezone}
                         onChange={(e) => setGeneralSettings({...generalSettings, timezone: e.target.value})}
-                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                       >
                         <option value="Africa/Addis_Ababa">Africa/Addis Ababa (EAT)</option>
                         <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
@@ -232,7 +232,7 @@ export default function SettingsPage() {
                       <select
                         value={generalSettings.dateFormat}
                         onChange={(e) => setGeneralSettings({...generalSettings, dateFormat: e.target.value})}
-                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                       >
                         <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                         <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -247,7 +247,7 @@ export default function SettingsPage() {
                       <select
                         value={generalSettings.currency}
                         onChange={(e) => setGeneralSettings({...generalSettings, currency: e.target.value})}
-                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                        className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                       >
                         <option value="ETB">Ethiopian Birr (ETB)</option>
                         <option value="USD">US Dollar (USD)</option>
@@ -260,7 +260,7 @@ export default function SettingsPage() {
                 <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-200">
                   <button
                     type="submit"
-                    className="w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2 md:py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors text-xs sm:text-sm"
+                    className="w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2 md:py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] font-medium transition-colors text-xs sm:text-sm"
                   >
                     Save Changes
                   </button>
@@ -299,20 +299,20 @@ export default function SettingsPage() {
                           }
                         ].map((item) => (
                           <div key={item.key} className="relative group">
-                            <div className="flex items-start justify-between p-2.5 sm:p-3 bg-white rounded-lg border border-gray-200 hover:border-emerald-500 transition-colors cursor-pointer">
+                            <div className="flex items-start justify-between p-2.5 sm:p-3 bg-white rounded-lg border border-gray-200 hover:border-[#1B3D2F] transition-colors cursor-pointer">
                               <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
                                 <input
                                   type="checkbox"
                                   checked={notificationSettings[item.key as keyof typeof notificationSettings] as boolean}
                                   onChange={(e) => setNotificationSettings({...notificationSettings, [item.key]: e.target.checked})}
-                                  className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 mt-0.5 flex-shrink-0"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B3D2F] border-gray-300 rounded focus:ring-[#1B3D2F] mt-0.5 flex-shrink-0"
                                 />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-[11px] sm:text-xs md:text-sm font-medium text-gray-900 break-words">{item.label}</p>
                                   <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{item.desc}</p>
                                 </div>
                               </div>
-                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-emerald-600 transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-[#1B3D2F] transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                               </svg>
                             </div>
@@ -325,7 +325,7 @@ export default function SettingsPage() {
                                     key={idx}
                                     type="button"
                                     onClick={() => showToast(`${item.label} set to: ${option}`, 'success')}
-                                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors"
+                                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-gray-700 hover:bg-[#1B3D2F]/10 hover:text-[#1B3D2F] rounded transition-colors"
                                   >
                                     {option}
                                   </button>
@@ -373,20 +373,20 @@ export default function SettingsPage() {
                           }
                         ].map((item) => (
                           <div key={item.key} className="relative group">
-                            <div className="flex items-start justify-between p-2.5 sm:p-3 bg-white rounded-lg border border-gray-200 hover:border-emerald-500 transition-colors cursor-pointer">
+                            <div className="flex items-start justify-between p-2.5 sm:p-3 bg-white rounded-lg border border-gray-200 hover:border-[#1B3D2F] transition-colors cursor-pointer">
                               <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
                                 <input
                                   type="checkbox"
                                   checked={notificationSettings[item.key as keyof typeof notificationSettings] as boolean}
                                   onChange={(e) => setNotificationSettings({...notificationSettings, [item.key]: e.target.checked})}
-                                  className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 mt-0.5 flex-shrink-0"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B3D2F] border-gray-300 rounded focus:ring-[#1B3D2F] mt-0.5 flex-shrink-0"
                                 />
                                 <div className="flex-1 min-w-0">
                                   <p className="text-[11px] sm:text-xs md:text-sm font-medium text-gray-900 break-words">{item.label}</p>
                                   <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{item.desc}</p>
                                 </div>
                               </div>
-                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-emerald-600 transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-[#1B3D2F] transition-colors flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                               </svg>
                             </div>
@@ -399,7 +399,7 @@ export default function SettingsPage() {
                                     key={idx}
                                     type="button"
                                     onClick={() => showToast(`${item.label} set to: ${option}`, 'success')}
-                                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors"
+                                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-gray-700 hover:bg-[#1B3D2F]/10 hover:text-[#1B3D2F] rounded transition-colors"
                                   >
                                     {option}
                                   </button>
@@ -416,7 +416,7 @@ export default function SettingsPage() {
                 <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-200">
                   <button
                     type="submit"
-                    className="w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2 md:py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors text-xs sm:text-sm"
+                    className="w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2 md:py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] font-medium transition-colors text-xs sm:text-sm"
                   >
                     Save Preferences
                   </button>
@@ -431,7 +431,7 @@ export default function SettingsPage() {
                   <h2 className="text-sm sm:text-base md:text-lg font-bold text-gray-900">User Management</h2>
                   <button
                     onClick={() => showToast('Add user feature coming soon', 'info')}
-                    className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors text-xs sm:text-sm whitespace-nowrap"
+                    className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] font-medium transition-colors text-xs sm:text-sm whitespace-nowrap"
                   >
                     + Add User
                   </button>
@@ -471,7 +471,7 @@ export default function SettingsPage() {
                                 <div className="flex gap-1.5 sm:gap-2">
                                   <button
                                     onClick={() => showToast(`Editing ${user.name}`, 'info')}
-                                    className="text-emerald-600 hover:text-emerald-700 text-[10px] sm:text-xs md:text-sm font-medium"
+                                    className="text-[#1B3D2F] hover:text-[#1B3D2F] text-[10px] sm:text-xs md:text-sm font-medium"
                                   >
                                     Edit
                                   </button>
@@ -506,7 +506,7 @@ export default function SettingsPage() {
                           type="checkbox"
                           checked={securitySettings.twoFactorAuth}
                           onChange={(e) => setSecuritySettings({...securitySettings, twoFactorAuth: e.target.checked})}
-                          className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500 mt-0.5 flex-shrink-0"
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B3D2F] border-gray-300 rounded focus:ring-[#1B3D2F] mt-0.5 flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs sm:text-sm font-semibold text-gray-900">Two-Factor Authentication</p>
@@ -524,7 +524,7 @@ export default function SettingsPage() {
                           type="number"
                           value={securitySettings.sessionTimeout}
                           onChange={(e) => setSecuritySettings({...securitySettings, sessionTimeout: e.target.value})}
-                          className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                          className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                         />
                       </div>
 
@@ -536,7 +536,7 @@ export default function SettingsPage() {
                           type="number"
                           value={securitySettings.passwordExpiry}
                           onChange={(e) => setSecuritySettings({...securitySettings, passwordExpiry: e.target.value})}
-                          className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                          className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                         />
                       </div>
 
@@ -548,7 +548,7 @@ export default function SettingsPage() {
                           type="number"
                           value={securitySettings.loginAttempts}
                           onChange={(e) => setSecuritySettings({...securitySettings, loginAttempts: e.target.value})}
-                          className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-[11px] sm:text-xs md:text-sm"
+                          className="w-full px-2.5 sm:px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-[11px] sm:text-xs md:text-sm"
                         />
                       </div>
                     </div>
@@ -558,7 +558,7 @@ export default function SettingsPage() {
                 <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-200">
                   <button
                     type="submit"
-                    className="w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2 md:py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors text-xs sm:text-sm"
+                    className="w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2 md:py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] font-medium transition-colors text-xs sm:text-sm"
                   >
                     Save Security Settings
                   </button>
@@ -590,7 +590,7 @@ export default function SettingsPage() {
                       </div>
                       <button
                         onClick={() => showToast(`${integration.name} configuration`, 'info')}
-                        className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-emerald-600 hover:text-emerald-700 whitespace-nowrap flex-shrink-0"
+                        className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-[#1B3D2F] hover:text-[#1B3D2F] whitespace-nowrap flex-shrink-0"
                       >
                         Configure
                       </button>
@@ -620,7 +620,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <button
                     onClick={() => showToast('Creating backup...', 'info')}
-                    className="px-3 sm:px-4 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors text-xs sm:text-sm flex items-center justify-center gap-2"
+                    className="px-3 sm:px-4 py-2.5 sm:py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] font-medium transition-colors text-xs sm:text-sm flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -642,15 +642,15 @@ export default function SettingsPage() {
                   <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3">Automatic Backup Schedule</h3>
                   <div className="space-y-1.5 sm:space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="backup" defaultChecked className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
+                      <input type="radio" name="backup" defaultChecked className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1B3D2F] flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-700">Daily at 2:00 AM</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="backup" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
+                      <input type="radio" name="backup" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1B3D2F] flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-700">Weekly on Sunday</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="backup" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 flex-shrink-0" />
+                      <input type="radio" name="backup" className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1B3D2F] flex-shrink-0" />
                       <span className="text-xs sm:text-sm text-gray-700">Monthly on 1st</span>
                     </label>
                   </div>
@@ -665,40 +665,40 @@ export default function SettingsPage() {
                   <p className="text-xs sm:text-sm text-gray-500 mt-1">Invited employees receive an email with a temporary password and must complete their profile before making trip requests.</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setInviteMode('email')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${inviteMode === 'email' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Paste Emails</button>
-                  <button onClick={() => setInviteMode('csv')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${inviteMode === 'csv' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Upload CSV</button>
+                  <button onClick={() => setInviteMode('email')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${inviteMode === 'email' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Paste Emails</button>
+                  <button onClick={() => setInviteMode('csv')} className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${inviteMode === 'csv' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Upload CSV</button>
                 </div>
                 {inviteMode === 'email' ? (
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Email Addresses <span className="text-gray-400 font-normal">(comma or new line separated)</span></label>
-                    <textarea value={inviteEmails} onChange={(e) => setInviteEmails(e.target.value)} rows={5} placeholder="john@university.edu, jane@university.edu" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-xs sm:text-sm" />
+                    <textarea value={inviteEmails} onChange={(e) => setInviteEmails(e.target.value)} rows={5} placeholder="john@university.edu, jane@university.edu" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent font-mono text-xs sm:text-sm" />
                   </div>
                 ) : (
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">CSV File <span className="text-gray-400 font-normal">(must have an "email" column)</span></label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-emerald-400 transition-colors">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-[#1B3D2F] transition-colors">
                       <input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUploadTransport" />
                       <label htmlFor="csvUploadTransport" className="cursor-pointer">
                         <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                        {csvFile ? <p className="text-xs sm:text-sm font-medium text-emerald-600">{csvFile.name}</p> : <p className="text-xs sm:text-sm text-gray-500">Click to upload CSV</p>}
+                        {csvFile ? <p className="text-xs sm:text-sm font-medium text-[#1B3D2F]">{csvFile.name}</p> : <p className="text-xs sm:text-sm text-gray-500">Click to upload CSV</p>}
                       </label>
                     </div>
-                    <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-emerald-600 hover:underline mt-2 inline-block">Download CSV template</a>
+                    <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block">Download CSV template</a>
                   </div>
                 )}
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
-                  <textarea value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} rows={3} placeholder="Welcome to the Fleet Management System!" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm" />
+                  <textarea value={inviteMessage} onChange={(e) => setInviteMessage(e.target.value)} rows={3} placeholder="Welcome to the Fleet Management System!" className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-xs sm:text-sm" />
                 </div>
-                <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)} className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2 text-xs sm:text-sm">
+                <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)} className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium flex items-center justify-center gap-2 text-xs sm:text-sm">
                   {inviting ? <><div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <>✉️ Send Invitations</>}
                 </button>
                 {inviteResult && (
                   <div className="space-y-3">
                     {inviteResult.invited.length > 0 && (
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 sm:p-4">
-                        <p className="text-xs sm:text-sm font-medium text-emerald-800 mb-2">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p>
-                        <div className="flex flex-wrap gap-1">{inviteResult.invited.map((e) => <span key={e} className="text-[10px] sm:text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">{e}</span>)}</div>
+                      <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3 sm:p-4">
+                        <p className="text-xs sm:text-sm font-medium text-[#1B3D2F] mb-2">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p>
+                        <div className="flex flex-wrap gap-1">{inviteResult.invited.map((e) => <span key={e} className="text-[10px] sm:text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div>
                       </div>
                     )}
                     {inviteResult.failed.length > 0 && (

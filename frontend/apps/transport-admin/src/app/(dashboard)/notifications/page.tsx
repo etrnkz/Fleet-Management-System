@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 
@@ -53,7 +53,7 @@ export default function NotificationsPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1B3D2F]"></div>
     </div>
   )
 
@@ -67,7 +67,7 @@ export default function NotificationsPage() {
         </div>
         {unreadCount > 0 && (
           <button onClick={markAllAsRead}
-            className="px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 rounded-lg font-medium">
+            className="px-4 py-2 text-sm text-[#1B3D2F] hover:bg-[#1B3D2F]/10 rounded-lg font-medium">
             Mark all as read
           </button>
         )}
@@ -78,7 +78,7 @@ export default function NotificationsPage() {
         {(['all', 'unread', 'read'] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-              filter === f ? 'bg-emerald-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              filter === f ? 'bg-[#1B3D2F] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
             }`}>
             {f} {f === 'all' ? `(${notifications.length})` : f === 'unread' ? `(${unreadCount})` : `(${notifications.length - unreadCount})`}
           </button>
@@ -112,7 +112,7 @@ export default function NotificationsPage() {
                       </div>
                       {!n.isRead && (
                         <button onClick={() => markAsRead(n.id)}
-                          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex-shrink-0 mt-0.5">
+                          className="text-xs text-[#1B3D2F] hover:text-[#1B3D2F] font-medium flex-shrink-0 mt-0.5">
                           Mark read
                         </button>
                       )}

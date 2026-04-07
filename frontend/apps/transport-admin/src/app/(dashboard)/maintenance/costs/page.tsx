@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { maintenanceApi, vehicleApi } from '@/lib/api'
@@ -59,12 +59,12 @@ export default function MaintenanceCostsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total estimated', value: `ETB ${totalEstimated.toLocaleString()}`, color: 'text-gray-900' },
-          { label: 'Total actual', value: `ETB ${totalActual.toLocaleString()}`, color: 'text-emerald-700' },
+          { label: 'Total actual', value: `ETB ${totalActual.toLocaleString()}`, color: 'text-[#1B3D2F]' },
           { label: 'Avg / job', value: `ETB ${avgCost.toFixed(0)}`, color: 'text-blue-700' },
           {
             label: savings >= 0 ? 'Savings' : 'Overrun',
             value: `ETB ${Math.abs(savings).toLocaleString()}`,
-            color: savings >= 0 ? 'text-emerald-700' : 'text-red-700',
+            color: savings >= 0 ? 'text-[#1B3D2F]' : 'text-red-700',
           },
         ].map((s) => (
           <div
@@ -109,7 +109,7 @@ export default function MaintenanceCostsPage() {
           <div className="flex items-end gap-6 h-40 border-b border-gray-100 dark:border-gray-700 pb-2">
             {[
               { label: 'Estimated', value: totalEstimated, color: 'bg-blue-400' },
-              { label: 'Actual', value: totalActual, color: 'bg-emerald-500' },
+              { label: 'Actual', value: totalActual, color: 'bg-[#1B3D2F]' },
             ].map((b) => {
               const max = Math.max(totalEstimated, totalActual, 1)
               return (
@@ -145,7 +145,7 @@ export default function MaintenanceCostsPage() {
                 </div>
                 <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-emerald-500 rounded-full"
+                    className="h-full bg-[#1B3D2F] rounded-full"
                     style={{ width: `${(v.total / maxVehicleCost) * 100}%` }}
                   />
                 </div>
@@ -201,7 +201,7 @@ export default function MaintenanceCostsPage() {
                       <td className="py-2 px-3 font-medium">ETB {act.toLocaleString()}</td>
                       <td className="py-2 px-3">
                         <span
-                          className={`text-xs font-semibold ${variance > 0 ? 'text-red-600' : 'text-emerald-600'}`}
+                          className={`text-xs font-semibold ${variance > 0 ? 'text-red-600' : 'text-[#1B3D2F]'}`}
                         >
                           {variance > 0 ? '+' : ''}
                           ETB {variance.toLocaleString()}

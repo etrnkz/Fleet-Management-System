@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -91,7 +91,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none transition-all"
                 required
               />
             </div>
@@ -102,7 +102,7 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-sm text-emerald-600 hover:text-emerald-700">
+                <Link href="/forgot-password" className="text-sm text-[#1B3D2F] hover:text-[#1B3D2F]">
                   Forgot password?
                 </Link>
               </div>
@@ -113,7 +113,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••"
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none transition-all"
                   required
                 />
                 <button
@@ -142,7 +142,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-700"
+                className="w-4 h-4 text-[#1B3D2F] border-gray-300 rounded focus:ring-[#1B3D2F]"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-gray-700">
                 Remember for 30 days
@@ -153,7 +153,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-700 text-white py-3 rounded-lg font-medium hover:bg-emerald-800 transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#152e22] text-white py-3 rounded-lg font-medium hover:bg-[#1B3D2F] transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
@@ -162,7 +162,7 @@ export default function LoginPage() {
           <div className="mt-8 text-center border-t border-gray-100 pt-6">
             <Link
               href="/"
-              className="text-sm font-medium text-gray-600 hover:text-emerald-700 transition-colors"
+              className="text-sm font-medium text-gray-600 hover:text-[#1B3D2F] transition-colors"
             >
               ← Back to portal overview
             </Link>
@@ -171,7 +171,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side - Image/Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-700 flex-col justify-center px-12 text-white overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#152e22] flex-col justify-center px-12 text-white overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -180,19 +180,19 @@ export default function LoginPage() {
         </div>
 
         {/* Vehicles Image Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-600/80 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1B3D2F]/80 to-transparent"></div>
         
         {/* Content */}
         <div className="relative z-10 text-center text-white">
           <div className="mb-8">
             <div className="w-24 h-24 bg-white rounded-full mx-auto mb-6 flex items-center justify-center shadow-2xl">
-              <svg className="w-12 h-12 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
             <h2 className="text-4xl font-bold mb-4">HUFMS</h2>
-            <p className="text-emerald-50 text-lg max-w-md mx-auto">
+            <p className="text-[#1B3D2F] text-lg max-w-md mx-auto">
               College dean portal — college-level approvals and fleet oversight
             </p>
           </div>

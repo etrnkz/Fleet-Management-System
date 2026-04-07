@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         switch (log.action) {
           case 'APPROVE':
             title = `${log.entityType} Approved`
-            color = 'bg-emerald-700'
+            color = 'bg-[#152e22]'
             break
           case 'REJECT':
             title = `${log.entityType} Rejected`
@@ -289,7 +289,7 @@ export default function DashboardPage() {
     name: vehicle.plateNumber,
     location: `${vehicle.status} / LOCATION`,
     status: vehicle.status,
-    statusColor: vehicle.status === 'Active' ? 'text-emerald-800' : 'text-orange-600',
+    statusColor: vehicle.status === 'Active' ? 'text-[#1B3D2F]' : 'text-orange-600',
     percentage: vehicle.status === 'Active' ? 85 : 12,
     vehicle: `${vehicle.make} ${vehicle.model} • ${vehicle.plateNumber}`
   }))
@@ -324,7 +324,7 @@ export default function DashboardPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
         </div>
       ) : (
         <>
@@ -343,7 +343,7 @@ export default function DashboardPage() {
         </div>
         <button 
           onClick={() => setShowRequestModal(true)}
-          className="bg-emerald-700 text-white px-4 py-2 rounded-lg hover:bg-emerald-800 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
+          className="bg-[#152e22] text-white px-4 py-2 rounded-lg hover:bg-[#1B3D2F] transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <span className="text-lg">+</span>
           <span className="text-sm font-medium">New Special Request</span>
@@ -362,27 +362,27 @@ export default function DashboardPage() {
               <div className="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
                 <div className="flex justify-between items-end h-32 md:h-48 gap-2 md:gap-3">
                   <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-700 rounded-t shadow-sm" style={{ height: '45%' }}></div>
+                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '45%' }}></div>
                     <span className="text-[10px] md:text-xs text-gray-700 font-medium">MAY</span>
                   </div>
                   <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-700 rounded-t shadow-sm" style={{ height: '60%' }}></div>
+                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '60%' }}></div>
                     <span className="text-[10px] md:text-xs text-gray-700 font-medium">JUN</span>
                   </div>
                   <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-700 rounded-t shadow-sm" style={{ height: '80%' }}></div>
+                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '80%' }}></div>
                     <span className="text-[10px] md:text-xs text-gray-700 font-medium">JUL</span>
                   </div>
                   <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-700 rounded-t shadow-sm" style={{ height: '100%' }}></div>
+                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '100%' }}></div>
                     <span className="text-[10px] md:text-xs text-gray-700 font-medium">AUG</span>
                   </div>
                   <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-700 rounded-t shadow-sm" style={{ height: '55%' }}></div>
+                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '55%' }}></div>
                     <span className="text-[10px] md:text-xs text-gray-700 font-medium">SEP</span>
                   </div>
                   <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-emerald-700 rounded-t shadow-sm" style={{ height: '70%' }}></div>
+                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '70%' }}></div>
                     <span className="text-[10px] md:text-xs text-gray-700 font-medium">OCT</span>
                   </div>
                 </div>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
             </div>
             <div className="text-center pt-3 md:pt-4 border-t border-gray-200">
               <div className="text-xs md:text-sm text-gray-500">Avg. Trips/Day</div>
-              <div className="text-xl md:text-2xl font-bold text-emerald-600">
+              <div className="text-xl md:text-2xl font-bold text-[#1B3D2F]">
                 {statistics?.averageTripsPerDay?.toFixed(1) || '0.0'}
               </div>
             </div>
@@ -449,7 +449,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 md:gap-3">
                     <div className="flex-1 bg-gray-200 rounded-full h-1.5 md:h-2">
                       <div 
-                        className={`h-1.5 md:h-2 rounded-full ${fleet.status === 'READY' ? 'bg-emerald-700' : 'bg-orange-500'}`}
+                        className={`h-1.5 md:h-2 rounded-full ${fleet.status === 'READY' ? 'bg-[#152e22]' : 'bg-orange-500'}`}
                         style={{ width: `${fleet.percentage}%` }}
                       ></div>
                     </div>
@@ -477,7 +477,7 @@ export default function DashboardPage() {
                   setSearchQuery(e.target.value)
                   setCurrentPage(1) // Reset to first page on search
                 }}
-                className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none w-full"
+                className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none w-full"
               />
               <svg className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -485,7 +485,7 @@ export default function DashboardPage() {
             </div>
             <button 
               onClick={handleExportTrips}
-              className="text-xs md:text-sm text-emerald-800 hover:text-emerald-700 flex items-center gap-1 whitespace-nowrap"
+              className="text-xs md:text-sm text-[#1B3D2F] hover:text-[#1B3D2F] flex items-center gap-1 whitespace-nowrap"
             >
               <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -522,7 +522,7 @@ export default function DashboardPage() {
                       {trip.fuelConsumed ? `${trip.fuelConsumed}L` : 'N/A'}
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4">
-                      <span className="inline-block px-2 md:px-3 py-0.5 md:py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap">
+                      <span className="inline-block px-2 md:px-3 py-0.5 md:py-1 bg-[#1B3D2F]/15 text-[#1B3D2F] rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap">
                         {trip.state}
                       </span>
                     </td>
@@ -556,7 +556,7 @@ export default function DashboardPage() {
                 onClick={() => handlePageChange(page)}
                 className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded ${
                   currentPage === page
-                    ? 'bg-emerald-700 text-white'
+                    ? 'bg-[#152e22] text-white'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -605,7 +605,7 @@ export default function DashboardPage() {
                   {/* Requestor Information (Read-only) */}
                   <div>
                     <h3 className="text-xs md:text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4 md:w-5 md:h-5 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 md:w-5 md:h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                       Requestor Information
@@ -633,7 +633,7 @@ export default function DashboardPage() {
                   {/* Trip Details */}
                   <div>
                     <h3 className="text-xs md:text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4 md:w-5 md:h-5 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 md:w-5 md:h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                       Trip Details
@@ -650,7 +650,7 @@ export default function DashboardPage() {
                           value={formData.purpose}
                           onChange={handleInputChange}
                           placeholder="e.g., Academic Conference, Research Visit, Administrative Meeting"
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -665,7 +665,7 @@ export default function DashboardPage() {
                           name="from"
                           value={formData.from}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -681,7 +681,7 @@ export default function DashboardPage() {
                           value={formData.to}
                           onChange={handleInputChange}
                           placeholder="e.g., Addis Ababa, Dire Dawa"
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -696,7 +696,7 @@ export default function DashboardPage() {
                           name="departureDate"
                           value={formData.departureDate}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -711,7 +711,7 @@ export default function DashboardPage() {
                           name="departureTime"
                           value={formData.departureTime}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -726,7 +726,7 @@ export default function DashboardPage() {
                           name="returnDate"
                           value={formData.returnDate}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -743,7 +743,7 @@ export default function DashboardPage() {
                           onChange={handleInputChange}
                           min="1"
                           max="50"
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
                       </div>
@@ -757,7 +757,7 @@ export default function DashboardPage() {
                           name="vehicleType"
                           value={formData.vehicleType}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         >
                           <option value="">Select vehicle type</option>
@@ -779,7 +779,7 @@ export default function DashboardPage() {
                           name="priority"
                           value={formData.priority}
                           onChange={handleInputChange}
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         >
                           <option value="LOW">Low</option>
@@ -799,7 +799,7 @@ export default function DashboardPage() {
                           onChange={handleInputChange}
                           rows={3}
                           placeholder="Provide any additional information about the trip..."
-                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent outline-none resize-none text-xs md:text-sm"
+                          className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none text-xs md:text-sm"
                         />
                       </div>
                     </div>
@@ -817,7 +817,7 @@ export default function DashboardPage() {
                   </button>
                   <button
                     type="submit"
-                    className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2"
+                    className="w-full sm:flex-1 px-4 py-2.5 md:py-3 bg-[#152e22] text-white rounded-lg hover:bg-[#1B3D2F] transition-colors font-medium text-sm md:text-base flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -843,8 +843,8 @@ export default function DashboardPage() {
             <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-3">
               <div className="p-4 md:p-6">
                 {/* Success Icon */}
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                  <svg className="w-6 h-6 md:w-8 md:h-8 text-emerald-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                  <svg className="w-6 h-6 md:w-8 md:h-8 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -860,7 +860,7 @@ export default function DashboardPage() {
                 {/* Action */}
                 <button
                   onClick={() => setShowSuccessModal(false)}
-                  className="w-full px-4 py-2.5 md:py-3 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800 transition-colors font-medium text-sm md:text-base"
+                  className="w-full px-4 py-2.5 md:py-3 bg-[#152e22] text-white rounded-lg hover:bg-[#1B3D2F] transition-colors font-medium text-sm md:text-base"
                 >
                   Done
                 </button>

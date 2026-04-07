@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 interface ConfirmModalProps {
   title: string
@@ -22,22 +22,22 @@ export default function ConfirmModal({
   const getConfirmButtonClass = () => {
     switch (confirmColor) {
       case 'emerald':
-        return 'bg-emerald-700 hover:bg-emerald-800 text-white'
+        return 'bg-[#152e22] hover:bg-[#1B3D2F] text-white'
       case 'red':
         return 'bg-red-500 hover:bg-red-600 text-white'
       case 'blue':
-        return 'bg-emerald-700 hover:bg-emerald-800 text-white'
+        return 'bg-[#152e22] hover:bg-[#1B3D2F] text-white'
     }
   }
 
   const getIconColor = () => {
     switch (confirmColor) {
       case 'emerald':
-        return 'bg-emerald-100 text-emerald-600'
+        return 'bg-[#1B3D2F]/15 text-[#1B3D2F]'
       case 'red':
         return 'bg-red-100 text-red-600'
       case 'blue':
-        return 'bg-emerald-100 text-emerald-600'
+        return 'bg-[#1B3D2F]/15 text-[#1B3D2F]'
     }
   }
 

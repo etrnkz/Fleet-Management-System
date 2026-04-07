@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { authApi } from '@/lib/api'
@@ -54,7 +54,7 @@ export default function LoginPage() {
       {isLoading && (
         <div className="fixed inset-0 backdrop-blur-sm bg-gray-50/80 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-xl flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-2 border-emerald-700 border-t-transparent" />
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
             <p className="mt-4 text-gray-600 text-sm font-semibold uppercase tracking-wide">Authenticating…</p>
           </div>
         </div>
@@ -64,14 +64,14 @@ export default function LoginPage() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-                <span className="text-emerald-600 font-bold text-sm">H</span>
+                <span className="text-[#1B3D2F] font-bold text-sm">H</span>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Haramaya University</p>
-                <h1 className="text-lg font-bold text-emerald-700 tracking-tight">Transport Admin Portal</h1>
+                <h1 className="text-lg font-bold text-[#1B3D2F] tracking-tight">Transport Admin Portal</h1>
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-emerald-700 font-serif tracking-tight">Secure sign in</h2>
+            <h2 className="text-2xl font-bold text-[#1B3D2F] font-serif tracking-tight">Secure sign in</h2>
             <p className="text-gray-600 text-sm mt-2 font-medium">Use your assigned transport admin credentials to access the portal.</p>
           </div>
           {error && (
@@ -80,15 +80,15 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Email address</label>
-              <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@haramaya.edu.et" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700 outline-none transition-all bg-white" required />
+              <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@haramaya.edu.et" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all bg-white" required />
             </div>
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label htmlFor="password" className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
               </div>
               <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700 outline-none transition-all bg-white" required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-700">
+                <input type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all bg-white" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1B3D2F]">
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                   ) : (
@@ -98,19 +98,19 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="flex items-center">
-              <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-emerald-700 focus:ring-emerald-700" />
+              <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-[#1B3D2F] focus:ring-[#1B3D2F]" />
               <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Keep me signed in</label>
             </div>
-            <button type="submit" disabled={isLoading} className="w-full bg-emerald-700 text-white py-3 rounded-lg font-semibold text-sm hover:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={isLoading} className="w-full bg-[#152e22] text-white py-3 rounded-lg font-semibold text-sm hover:bg-[#1B3D2F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
         </div>
       </div>
-      <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-700 flex-col justify-center px-12 text-white overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#152e22] flex-col justify-center px-12 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-[0.07] bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%221%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]" />
         <div className="relative z-10 max-w-md">
-          <p className="text-emerald-100 text-xs font-semibold uppercase tracking-[0.2em] mb-4">Transport Admin access</p>
+          <p className="text-[#1B3D2F] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Transport Admin access</p>
           <h2 className="text-3xl font-bold font-serif tracking-tight leading-tight">Fleet Management System</h2>
           <p className="mt-4 text-white/85 text-sm leading-relaxed font-medium">Manage fleet operations, track vehicles, coordinate trips, and oversee transport logistics through this secure admin portal.</p>
           <div className="mt-10 h-px w-24 bg-[#D1E1FF]/50" />

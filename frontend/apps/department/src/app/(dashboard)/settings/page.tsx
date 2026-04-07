@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -152,7 +152,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
       </div>
     )
   }
@@ -168,7 +168,7 @@ export default function SettingsPage() {
       )}
 
       <div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Settings</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Settings</h1>
         <p className="text-sm text-gray-500 mt-1">Manage your account settings and preferences</p>
       </div>
 
@@ -180,7 +180,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab('profile')}
               className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'profile'
-                  ? 'border-emerald-700 text-emerald-800'
+                  ? 'border-[#1B3D2F] text-[#1B3D2F]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -190,7 +190,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab('account')}
               className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'account'
-                  ? 'border-emerald-700 text-emerald-800'
+                  ? 'border-[#1B3D2F] text-[#1B3D2F]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -200,7 +200,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab('invite')}
               className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'invite'
-                  ? 'border-emerald-500 text-emerald-600'
+                  ? 'border-[#1B3D2F] text-[#1B3D2F]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -215,7 +215,7 @@ export default function SettingsPage() {
               {/* Profile Image */}
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-emerald-700">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-[#1B3D2F]">
                     {profileImage ? (
                       <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
-                  <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-emerald-700 text-white p-2 rounded-full cursor-pointer hover:bg-emerald-800 shadow-lg">
+                  <label htmlFor="profileImageUpload" className="absolute bottom-0 right-0 bg-[#152e22] text-white p-2 rounded-full cursor-pointer hover:bg-[#1B3D2F] shadow-lg">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent"
                   />
                 </div>
 
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent"
                   />
                 </div>
 
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                     type="text"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent"
                   />
                 </div>
 
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                     type="text"
                     value={formData.college}
                     onChange={(e) => setFormData({ ...formData, college: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-900 disabled:opacity-50 font-medium"
+                  className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#1B3D2F] disabled:opacity-50 font-medium"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -369,13 +369,13 @@ export default function SettingsPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setInviteMode('email')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'email' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'email' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   Paste Emails
                 </button>
                 <button
                   onClick={() => setInviteMode('csv')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'csv' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === 'csv' ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                 >
                   Upload CSV
                 </button>
@@ -391,7 +391,7 @@ export default function SettingsPage() {
                     onChange={(e) => setInviteEmails(e.target.value)}
                     rows={5}
                     placeholder="john@university.edu, jane@university.edu&#10;bob@university.edu"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono text-sm"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent font-mono text-sm"
                   />
                 </div>
               ) : (
@@ -399,7 +399,7 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     CSV File <span className="text-gray-400 font-normal">(must have an "email" column)</span>
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-400 transition-colors">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#1B3D2F] transition-colors">
                     <input
                       type="file"
                       accept=".csv"
@@ -412,7 +412,7 @@ export default function SettingsPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                       {csvFile ? (
-                        <p className="text-sm font-medium text-emerald-600">{csvFile.name}</p>
+                        <p className="text-sm font-medium text-[#1B3D2F]">{csvFile.name}</p>
                       ) : (
                         <p className="text-sm text-gray-500">Click to upload or drag and drop a CSV file</p>
                       )}
@@ -421,7 +421,7 @@ export default function SettingsPage() {
                   <a
                     href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu%0Ajane.smith%40university.edu"
                     download="invite_template.csv"
-                    className="text-xs text-emerald-600 hover:underline mt-2 inline-block"
+                    className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block"
                   >
                     Download CSV template
                   </a>
@@ -437,14 +437,14 @@ export default function SettingsPage() {
                   onChange={(e) => setInviteMessage(e.target.value)}
                   rows={3}
                   placeholder="Welcome to the Fleet Management System! Please complete your profile to start making trip requests."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm"
                 />
               </div>
 
               <button
                 onClick={handleInvite}
                 disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium flex items-center gap-2"
+                className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium flex items-center gap-2"
               >
                 {inviting ? (
                   <>
@@ -465,13 +465,13 @@ export default function SettingsPage() {
               {inviteResult && (
                 <div className="space-y-3">
                   {inviteResult.invited.length > 0 && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                      <p className="text-sm font-medium text-emerald-800 mb-2">
+                    <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-4">
+                      <p className="text-sm font-medium text-[#1B3D2F] mb-2">
                         ✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent successfully
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {inviteResult.invited.map((email) => (
-                          <span key={email} className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded">{email}</span>
+                          <span key={email} className="text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{email}</span>
                         ))}
                       </div>
                     </div>

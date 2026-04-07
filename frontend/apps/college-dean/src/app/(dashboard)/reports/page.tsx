@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -70,7 +70,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-800"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
       </div>
     )
   }
@@ -87,7 +87,7 @@ export default function ReportsPage() {
 
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">Reports & Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Reports & Analytics</h1>
           <p className="text-sm text-gray-500 mt-1">Department fleet management overview</p>
         </div>
         <div className="flex gap-2">
@@ -102,7 +102,7 @@ export default function ReportsPage() {
           </button>
           <button
             onClick={handleExportExcel}
-            className="px-4 py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium flex items-center gap-2"
+            className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] text-sm font-medium flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -130,8 +130,8 @@ export default function ReportsPage() {
         <div className="bg-white p-6 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-500">Active Vehicles</span>
-            <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-              <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 text-[#1B3D2F]" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
                 <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3z"/>
               </svg>
@@ -192,7 +192,7 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">{vehicle.vehicleType}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      vehicle.status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
+                      vehicle.status === 'Active' ? 'bg-[#1B3D2F]/15 text-[#1B3D2F]' :
                       vehicle.status === 'Maintenance' ? 'bg-orange-100 text-orange-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>
@@ -232,7 +232,7 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">{trip.requester?.name || 'N/A'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      trip.state === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
+                      trip.state === 'COMPLETED' ? 'bg-[#1B3D2F]/15 text-[#1B3D2F]' :
                       trip.state?.includes('PENDING') ? 'bg-yellow-100 text-yellow-700' :
                       'bg-blue-100 text-blue-700'
                     }`}>

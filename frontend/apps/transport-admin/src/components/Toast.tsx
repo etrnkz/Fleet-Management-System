@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
@@ -21,7 +21,7 @@ export default function Toast({ message, type, onClose, duration = 4000 }: Toast
   }, [duration, onClose])
 
   const styles = {
-    success: 'bg-emerald-600 border-emerald-700',
+    success: 'bg-[#1B3D2F] border-[#1B3D2F]',
     error: 'bg-red-600 border-red-700',
     warning: 'bg-yellow-600 border-yellow-700',
     info: 'bg-blue-600 border-blue-700'
