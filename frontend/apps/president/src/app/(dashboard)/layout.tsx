@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { authApi, notificationApi } from '@/lib/api'
 
@@ -18,7 +19,23 @@ export default function DashboardLayout({
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
-  const [activeSettingsTab, setActiveSettingsTab] = useState('account')
+  const [activeSettingsTab, setActiveSettingsTab] = useState('profile')
+  // Settings form state
+  const [settingsForm, setSettingsForm] = useState({ name: '', email: '', phoneNumber: '' })
+  const [settingsProfileImage, setSettingsProfileImage] = useState<string | null>(null)
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteRole, setInviteRole] = useState('User')
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
   const [selectedNotification, setSelectedNotification] = useState<any>(null)
   const [showNotificationDetail, setShowNotificationDetail] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -199,6 +216,79 @@ export default function DashboardLayout({
     }
   }
 
+  const openSettings = () => {
+    setShowProfileDropdown(false)
+    setSettingsForm({ name: user?.name || '', email: user?.email || '', phoneNumber: user?.phoneNumber || '' })
+    setSettingsProfileImage(user?.profileImage || null)
+    setActiveSettingsTab('profile')
+    setShowSettingsModal(true)
+  }
+
+  const handleSettingsSave = async () => {
+    try {
+      setSettingsSaving(true)
+      const { userApi } = await import('@/lib/api')
+      await userApi.updateProfile({ name: settingsForm.name, phoneNumber: settingsForm.phoneNumber })
+      const updatedUser = { ...user, name: settingsForm.name, phoneNumber: settingsForm.phoneNumber }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+    } catch (error: any) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setSettingsSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) return
+    if (passwordData.newPassword.length < 6) return
+    try {
+      setSavingPassword(true)
+      const { userApi } = await import('@/lib/api')
+      await userApi.updateProfile({ password: passwordData.newPassword, currentPassword: passwordData.currentPassword })
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (error: any) {
+      console.error('Failed to change password:', error)
+    } finally {
+      setSavingPassword(false)
+    }
+  }
+
+  const handleSettingsImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setSettingsProfileImage(reader.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleInvite = async () => {
+    setInviting(true)
+    setInviteResult(null)
+    try {
+      const { inviteApi } = await import('@/lib/api')
+      let result: any
+      if (inviteMode === 'csv' && csvFile) {
+        const fd = new FormData()
+        fd.append('csvFile', csvFile)
+        if (inviteMessage) fd.append('welcomeMessage', inviteMessage)
+        result = await inviteApi.bulkInviteCsv(fd)
+      } else {
+        const emails = inviteEmails.split(/[\n,]+/).map(e => e.trim()).filter(e => e.includes('@'))
+        if (emails.length === 0) { setInviting(false); return }
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined, role: inviteRole || undefined })
+      }
+      setInviteResult(result)
+      setInviteEmails('')
+      setCsvFile(null)
+    } catch (error: any) {
+      console.error('Failed to send invitations:', error)
+    } finally {
+      setInviting(false)
+    }
+  }
+
   const navigation = [
     { 
       name: 'Dashboard', 
@@ -272,15 +362,6 @@ export default function DashboardLayout({
         </svg>
       )
     },
-    { 
-      name: 'Policies', 
-      href: '/policies', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      )
-    },
   ]
 
   if (!user) return null
@@ -311,19 +392,8 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Right: Search, Notifications, Profile */}
+          {/* Right: Notifications, Profile */}
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Search - Hidden on mobile */}
-            <div className="hidden md:block relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent"
-              />
-              <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
 
             {/* Notifications */}
             <div className="relative" ref={notifRef}>
@@ -335,7 +405,7 @@ export default function DashboardLayout({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {notifications.filter((n: any) => !n.isRead).length > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
                     {notifications.filter((n: any) => !n.isRead).length > 9 ? '9+' : notifications.filter((n: any) => !n.isRead).length}
                   </span>
                 )}
@@ -351,45 +421,42 @@ export default function DashboardLayout({
                   </div>
 
                   <div className="divide-y divide-gray-100">
-                    {notifications.length > 0 ? notifications.map((notif: any) => (
+                    {notifications.filter((n: any) => !n.isRead).length > 0 ? notifications.filter((n: any) => !n.isRead).map((notif: any) => (
                       <div
                         key={notif.id}
-                        className={`p-3 md:p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50' : ''}`}
-                        onClick={() => {
-                          setSelectedNotification(notif)
-                          setShowNotificationDetail(true)
-                          setShowNotifications(false)
-                        }}
+                        className="p-3 md:p-4 hover:bg-gray-50 transition-colors bg-blue-50"
                       >
                         <div className="flex items-start gap-2 md:gap-3">
                           <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                             notif.type === 'urgent' ? 'bg-red-500' :
                             notif.type === 'warning' ? 'bg-yellow-500' :
-                            notif.type === 'approval' || notif.type === 'success' ? 'bg-green-500' : 'bg-gray-400'
+                            notif.type === 'approval' || notif.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
                           }`}></div>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 cursor-pointer" onClick={async () => {
+                            try { await notificationApi.markAsRead(notif.id) } catch {}
+                            setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== notif.id))
+                            setSelectedNotification(notif)
+                            setShowNotificationDetail(true)
+                            setShowNotifications(false)
+                          }}>
                             <p className="text-xs md:text-sm font-medium text-gray-800 truncate">{notif.title}</p>
                             <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
                             <p className="text-xs text-gray-400 mt-1">{notif.sentAt ? new Date(notif.sentAt).toLocaleString() : notif.createdAt ? new Date(notif.createdAt).toLocaleString() : ''}</p>
                           </div>
-                          {!notif.isRead && (
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation()
-                                try {
-                                  await notificationApi.markAsRead(notif.id)
-                                  setNotifications((prev: any[]) => prev.map((n: any) => n.id === notif.id ? { ...n, isRead: true } : n))
-                                } catch {}
-                              }}
-                              className="text-[10px] text-[#1B3D2F] hover:text-[#1B3D2F] font-medium whitespace-nowrap flex-shrink-0 mt-1"
-                            >
-                              Mark read
-                            </button>
-                          )}
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation()
+                              try { await notificationApi.markAsRead(notif.id) } catch {}
+                              setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== notif.id))
+                            }}
+                            className="text-[10px] text-[#1B3D2F] font-semibold border border-[#1B3D2F]/30 px-2 py-1 rounded hover:bg-[#1B3D2F]/10 transition-colors whitespace-nowrap flex-shrink-0"
+                          >
+                            Mark read
+                          </button>
                         </div>
                       </div>
                     )) : (
-                      <div className="p-8 text-center text-sm text-gray-500">No notifications</div>
+                      <div className="p-8 text-center text-sm text-gray-500">No new notifications</div>
                     )}
                   </div>
 
@@ -397,12 +464,11 @@ export default function DashboardLayout({
                     {notifications.filter((n: any) => !n.isRead).length > 0 && (
                       <button
                         onClick={async () => {
-                          try {
-                            await notificationApi.markAllAsRead()
-                            setNotifications((prev: any[]) => prev.map((n: any) => ({ ...n, isRead: true })))
-                          } catch {}
+                          try { await notificationApi.markAllAsRead() } catch {}
+                          setNotifications([])
+                          setShowNotifications(false)
                         }}
-                        className="text-xs text-[#1B3D2F] hover:text-[#1B3D2F] font-medium"
+                        className="text-sm font-bold text-[#1B3D2F] hover:text-[#1B3D2F]/80 transition-colors"
                       >
                         Mark all as read
                       </button>
@@ -443,7 +509,9 @@ export default function DashboardLayout({
 
               {/* Profile Dropdown */}
               {showProfileDropdown && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200">
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowProfileDropdown(false)} />
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
                   <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center space-x-3">
                       {user?.profilePhoto ? (
@@ -502,6 +570,7 @@ export default function DashboardLayout({
                       onClick={() => {
                         setShowProfileDropdown(false)
                         setShowSettingsModal(true)
+                        setActiveSettingsTab('profile')
                       }}
                       className="w-full flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-100 text-left"
                     >
@@ -525,6 +594,7 @@ export default function DashboardLayout({
                     </button>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>
@@ -849,290 +919,6 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Settings Modal */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-[#1B3D2F] to-green-50 rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#1B3D2F] to-green-600 p-4 md:p-6 text-white flex-shrink-0">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl md:text-2xl font-bold">Settings</h3>
-                  <p className="text-[#1B3D2F] mt-1 text-sm md:text-base">Customize your experience</p>
-                </div>
-                <button
-                  onClick={() => setShowSettingsModal(false)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-                >
-                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-              {/* Sidebar */}
-              <div className="w-full md:w-64 bg-white/50 backdrop-blur-sm p-3 md:p-4 overflow-y-auto border-b md:border-b-0 md:border-r border-[#1B3D2F] flex-shrink-0">
-                <nav className="flex md:flex-col md:space-y-2 space-x-2 md:space-x-0 overflow-x-auto md:overflow-x-visible">
-                  <button
-                    onClick={() => setActiveSettingsTab('account')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'account'
-                        ? 'bg-gradient-to-r from-[#1B3D2F] to-[#152e22] text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span className="font-medium">Account</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSettingsTab('security')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'security'
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span className="font-medium">Security</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSettingsTab('notifications')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'notifications'
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    <span className="font-medium">Notifications</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setActiveSettingsTab('preferences')}
-                    className={`flex-shrink-0 md:w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-sm md:text-base whitespace-nowrap ${
-                      activeSettingsTab === 'preferences'
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg transform scale-105'
-                        : 'text-gray-700 hover:bg-white/70'
-                    }`}
-                  >
-                    <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="font-medium">Preferences</span>
-                  </button>
-                </nav>
-              </div>
-
-              {/* Content Area */}
-              <div className="flex-1 p-4 md:p-6 overflow-y-auto">
-                {activeSettingsTab === 'account' && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        </span>
-                        Account Information
-                      </h4>
-                      <div className="p-4 bg-gradient-to-r from-green-50 to-[#152e22] border-l-4 border-[#1B3D2F] rounded-lg">
-                        <p className="text-sm text-gray-700">
-                          Update your personal information from the profile menu in the top right corner.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                        </span>
-                        Change Password
-                      </h4>
-                      <div className="space-y-4">
-                        <input
-                          type="password"
-                          placeholder="Current Password"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all"
-                        />
-                        <input
-                          type="password"
-                          placeholder="New Password"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all"
-                        />
-                        <input
-                          type="password"
-                          placeholder="Confirm New Password"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all"
-                        />
-                        <button className="px-6 py-3 bg-gradient-to-r from-[#1B3D2F] to-green-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-medium">
-                          Update Password
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeSettingsTab === 'security' && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                          </svg>
-                        </span>
-                        Two-Factor Authentication
-                      </h4>
-                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-[#152e22] rounded-xl">
-                        <div>
-                          <p className="font-medium text-gray-800">Enable 2FA</p>
-                          <p className="text-sm text-gray-600 mt-1">Extra security for your account</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" className="sr-only peer" />
-                          <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#1B3D2F] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-[#1B3D2F] peer-checked:to-green-600"></div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </span>
-                        Session Timeout
-                      </h4>
-                      <select className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all">
-                        <option>15 minutes</option>
-                        <option>30 minutes</option>
-                        <option>1 hour</option>
-                        <option>2 hours</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {activeSettingsTab === 'notifications' && (
-                  <div className="space-y-4">
-                    {[
-                      { name: 'Email Notifications', desc: 'Receive updates via email', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> },
-                      { name: 'Push Notifications', desc: 'Browser notifications', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg> },
-                      { name: 'Approval Alerts', desc: 'Get notified for approvals', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-                      { name: 'Weekly Reports', desc: 'Fleet summary reports', icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
-                    ].map((item, idx) => (
-                      <div key={idx} className="bg-white rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-[#1B3D2F]">{item.icon}</span>
-                            <div>
-                              <p className="font-medium text-gray-800">{item.name}</p>
-                              <p className="text-sm text-gray-600">{item.desc}</p>
-                            </div>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" defaultChecked className="sr-only peer" />
-                            <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-[#152e22]"></div>
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeSettingsTab === 'preferences' && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </span>
-                        Language & Region
-                      </h4>
-                      <div className="space-y-4">
-                        <select className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all">
-                          <option>English</option>
-                          <option>Amharic (አማርኛ)</option>
-                          <option>Oromo (Afaan Oromoo)</option>
-                        </select>
-                        <select className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#1B3D2F] focus:ring-2 focus:ring-[#1B3D2F] transition-all">
-                          <option>East Africa Time (EAT)</option>
-                          <option>UTC</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl p-6 shadow-lg">
-                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <span className="w-8 h-8 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                          </svg>
-                        </span>
-                        Theme
-                      </h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        {['Light', 'Dark', 'Auto'].map((theme) => (
-                          <button
-                            key={theme}
-                            className="p-4 border-2 border-[#1B3D2F]/20 rounded-xl hover:border-[#1B3D2F] hover:shadow-lg transition-all"
-                          >
-                            <div className={`w-full h-20 rounded-lg mb-2 ${
-                              theme === 'Light' ? 'bg-white border-2 border-gray-200' :
-                              theme === 'Dark' ? 'bg-gray-800' :
-                              'bg-gradient-to-r from-white to-gray-800'
-                            }`}></div>
-                            <p className="text-sm font-medium">{theme}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="bg-white border-t border-[#1B3D2F] p-3 md:p-4 flex flex-col sm:flex-row justify-end gap-2 md:gap-3 flex-shrink-0">
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="px-4 md:px-6 py-2 border-2 border-gray-300 rounded-xl hover:bg-gray-50 font-medium transition-all text-sm md:text-base"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowSuccessToast(true)
-                  setTimeout(() => setShowSuccessToast(false), 3000)
-                }}
-                className="px-4 md:px-6 py-2 bg-gradient-to-r from-[#1B3D2F] to-green-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all font-medium text-sm md:text-base"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Notification Detail Modal */}
       {showNotificationDetail && selectedNotification && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1292,6 +1078,187 @@ export default function DashboardLayout({
           <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
             <p className="mt-4 text-gray-700 font-medium">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowSettingsModal(false)} />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
+                <button onClick={() => setShowSettingsModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="border-b border-gray-200 overflow-x-auto">
+                <div className="flex gap-1 px-6 min-w-max">
+                  {[['profile','Profile'],['password','Password'],['account','Account'],['invite','Invite Employees']].map(([id,label]) => (
+                    <button key={id} onClick={() => setActiveSettingsTab(id)}
+                      className={`py-3 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeSettingsTab === id ? 'border-[#1B3D2F] text-[#1B3D2F]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6">
+                {/* Profile Tab */}
+                {activeSettingsTab === 'profile' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-4 border-[#1B3D2F]">
+                          {settingsProfileImage ? <img src={settingsProfileImage} alt="Profile" className="w-full h-full object-cover" /> : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#152e22] text-white text-2xl font-bold">
+                              {(settingsForm.name || 'P').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <label htmlFor="settingsImgUpload" className="absolute bottom-0 right-0 bg-[#152e22] text-white p-1.5 rounded-full cursor-pointer hover:bg-[#1B3D2F]">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </label>
+                        <input type="file" id="settingsImgUpload" accept="image/*" onChange={handleSettingsImageUpload} className="hidden" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{settingsForm.name}</p>
+                        <p className="text-sm text-gray-500">{user?.role}</p>
+                        <p className="text-xs text-gray-400">{settingsForm.email}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" value={settingsForm.name} onChange={e => setSettingsForm({...settingsForm, name: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" value={settingsForm.email} disabled className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="tel" value={settingsForm.phoneNumber} onChange={e => setSettingsForm({...settingsForm, phoneNumber: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none" />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button onClick={handleSettingsSave} disabled={settingsSaving} className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium">
+                        {settingsSaving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {/* Password Tab */}
+                {activeSettingsTab === 'password' && (
+                  <div className="space-y-5 max-w-md">
+                    <p className="text-sm text-gray-500">Update your password. You'll need your current password to confirm.</p>
+                    {[
+                      { label: 'Current Password', key: 'currentPassword', show: showCurrentPassword, toggle: () => setShowCurrentPassword(!showCurrentPassword) },
+                      { label: 'New Password', key: 'newPassword', show: showNewPassword, toggle: () => setShowNewPassword(!showNewPassword) },
+                      { label: 'Confirm New Password', key: 'confirmPassword', show: showConfirmPassword, toggle: () => setShowConfirmPassword(!showConfirmPassword) },
+                    ].map(({ label, key, show, toggle }) => (
+                      <div key={key}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                        <div className="relative">
+                          <input type={show ? 'text' : 'password'} value={(passwordData as any)[key]} onChange={e => setPasswordData({...passwordData, [key]: e.target.value})}
+                            className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none" />
+                          <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            {show ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={handlePasswordChange} disabled={savingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                      className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium">
+                      {savingPassword ? 'Updating...' : 'Update Password'}
+                    </button>
+                  </div>
+                )}
+                {/* Account Tab */}
+                {activeSettingsTab === 'account' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-3">Account Information</h3>
+                      <div className="space-y-3">
+                        {[['Email', settingsForm.email], ['Role', user?.role], ['Status', 'Active']].map(([label, value]) => (
+                          <div key={label} className="flex justify-between items-center py-3 border-b border-gray-100">
+                            <p className="text-sm font-medium text-gray-700">{label}</p>
+                            <p className="text-sm text-gray-500">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-3">Danger Zone</h3>
+                      <div className="border border-red-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center">
+                          <div><p className="text-sm font-medium text-gray-900">Sign out</p><p className="text-sm text-gray-500">Sign out of your account</p></div>
+                          <button onClick={() => { setShowSettingsModal(false); handleLogout() }} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Logout</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Invite Tab */}
+                {activeSettingsTab === 'invite' && (
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">Invite Employees</h3>
+                      <p className="text-sm text-gray-500 mt-1">Invited users receive an email with a temporary password.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {(['email','csv'] as const).map(mode => (
+                        <button key={mode} onClick={() => setInviteMode(mode)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === mode ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                          {mode === 'email' ? 'Paste Emails' : 'Upload CSV'}
+                        </button>
+                      ))}
+                    </div>
+                    {inviteMode === 'email' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Addresses <span className="text-gray-400 font-normal">(comma or new line)</span></label>
+                        <textarea value={inviteEmails} onChange={e => setInviteEmails(e.target.value)} rows={4} placeholder="john@university.edu, jane@university.edu" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent font-mono text-sm" />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">CSV File <span className="text-gray-400 font-normal">(must have "email" column)</span></label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1B3D2F] transition-colors">
+                          <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUploadSettings" />
+                          <label htmlFor="csvUploadSettings" className="cursor-pointer text-sm text-gray-500">{csvFile ? csvFile.name : 'Click to upload CSV'}</label>
+                        </div>
+                        <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block">Download CSV template</a>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Role to Assign</label>
+                      <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm">
+                        <option value="User">Employee (User)</option>
+                        <option value="DepartmentHead">Department Head</option>
+                        <option value="CollegeHead">College Head</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <textarea value={inviteMessage} onChange={e => setInviteMessage(e.target.value)} rows={2} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm" />
+                    </div>
+                    <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)}
+                      className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium flex items-center gap-2">
+                      {inviting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        Send Invitations
+                      </>}
+                    </button>
+                    {inviteResult && (
+                      <div className="space-y-2">
+                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3"><p className="text-sm font-medium text-[#1B3D2F]">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p><div className="flex flex-wrap gap-1 mt-1">{inviteResult.invited.map(e => <span key={e} className="text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div></div>}
+                        {inviteResult.failed.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-sm font-medium text-red-800">✗ {inviteResult.failed.length} failed</p><div className="space-y-1 mt-1">{inviteResult.failed.map(f => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div></div>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

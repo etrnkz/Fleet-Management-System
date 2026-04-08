@@ -206,7 +206,7 @@ export class TripsService {
     // Determine initial state based on trip category AND requester's role.
     // Higher-ranking requesters skip approval levels at or below their own rank.
     let initialState: TripState;
-    let approvalLevel: ApprovalLevel;
+    let approvalLevel: ApprovalLevel | null;
 
     const requesterRole = user.role;
 

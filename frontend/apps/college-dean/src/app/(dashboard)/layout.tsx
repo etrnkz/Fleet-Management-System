@@ -110,6 +110,21 @@ export default function DashboardLayout({
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+
+  // Settings modal state
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState('profile')
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsProfileImage, setSettingsProfileImage] = useState<string | null>(null)
+  const [settingsForm, setSettingsForm] = useState({ name: '', email: '', phoneNumber: '', department: '', college: '' })
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteRole, setInviteRole] = useState('User')
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,22 +151,98 @@ export default function DashboardLayout({
     setActiveTab('profile')
   }
 
+  const openSettings = () => {
+    setProfileDropdownOpen(false)
+    const currentUser = getCurrentUser()
+    const parsedData = (() => { try { return JSON.parse(localStorage.getItem('userData') || '{}') } catch { return {} } })()
+    setSettingsForm({
+      name: currentUser?.name || '',
+      email: currentUser?.email || '',
+      phoneNumber: currentUser?.phoneNumber || '',
+      department: parsedData.department || currentUser?.department || '',
+      college: parsedData.college || currentUser?.college || '',
+    })
+    setSettingsProfileImage(parsedData.profileImage || null)
+    setSettingsTab('profile')
+    setSettingsOpen(true)
+  }
+
+  const handleSettingsSave = async () => {
+    try {
+      setSettingsSaving(true)
+      const { userApi } = await import('@/lib/api')
+      await userApi.updateProfile({ name: settingsForm.name, phoneNumber: settingsForm.phoneNumber })
+      const updatedUser = { ...user, name: settingsForm.name, phoneNumber: settingsForm.phoneNumber }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      localStorage.setItem('userData', JSON.stringify({ ...settingsForm, profileImage: settingsProfileImage }))
+      showToast('Profile updated successfully!', 'success')
+    } catch (error: any) {
+      showToast(error.message || 'Failed to update profile', 'error')
+    } finally {
+      setSettingsSaving(false)
+    }
+  }
+
+  const handleSettingsImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setSettingsProfileImage(reader.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleSettingsLogout = async () => {
+    try { const { authApi } = await import('@/lib/api'); await authApi.logout() } catch {}
+    localStorage.clear()
+    router.push('/login')
+  }
+
+  const handleInvite = async () => {
+    setInviting(true)
+    setInviteResult(null)
+    try {
+      const { inviteApi } = await import('@/lib/api')
+      let result: any
+      if (inviteMode === 'csv' && csvFile) {
+        const fd = new FormData()
+        fd.append('csvFile', csvFile)
+        if (inviteMessage) fd.append('welcomeMessage', inviteMessage)
+        result = await inviteApi.bulkInviteCsv(fd)
+      } else {
+        const emails = inviteEmails.split(/[\n,]+/).map(e => e.trim()).filter(e => e.includes('@'))
+        if (emails.length === 0) { showToast('Please enter at least one valid email', 'error'); setInviting(false); return }
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined, role: inviteRole || undefined })
+      }
+      setInviteResult(result)
+      showToast(result.message || 'Invitations sent!', 'success')
+      setInviteEmails('')
+      setCsvFile(null)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to send invitations', 'error')
+    } finally {
+      setInviting(false)
+    }
+  }
+
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     if (pathname !== path) {
       e.preventDefault()
       setIsLoading(true)
-      
-      // Navigate quickly (after 300ms)
-      setTimeout(() => {
-        window.location.href = path
-      }, 300)
-      
-      // Keep spinner visible for ~2 seconds total
-      setTimeout(() => {
-        setIsLoading(false)
-      }, 2000)
+      router.push(path)
     }
   }
+
+  // Clear spinner once navigation completes, with minimum display time
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => setIsLoading(false), 600)
+      return () => clearTimeout(timer)
+    }
+  }, [pathname])
+
+  const unreadCount = notifications.length
 
   const navigation = [
     { 
@@ -200,10 +291,27 @@ export default function DashboardLayout({
         </svg>
       )
     },
+    { 
+      name: 'Notifications', 
+      href: '/notifications', 
+      badge: unreadCount,
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      )
+    },
   ]
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navigation Loading Spinner */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-[200] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
+        </div>
+      )}
+
       {/* Mobile Menu Overlay */}
       {sidebarOpen && (
         <div
@@ -247,6 +355,9 @@ export default function DashboardLayout({
               >
                 <span>{item.icon}</span>
                 <span className="flex-1 antialiased tracking-tight">{item.name}</span>
+                {(item as any).badge > 0 && (
+                  <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold">{(item as any).badge > 9 ? '9+' : (item as any).badge}</span>
+                )}
               </Link>
             )
           })}
@@ -372,10 +483,25 @@ export default function DashboardLayout({
                     )}
                   </div>
 
-                  <div className="p-2 sm:p-3 border-t border-gray-200">
-                    <Link href="/approvals" onClick={() => setNotificationDropdownOpen(false)}
-                      className="block text-center text-xs sm:text-sm text-[#1B3D2F] hover:text-[#1B3D2F] font-medium">
-                      View All Requests
+                  <div className="p-2 sm:p-3 border-t border-gray-200 flex items-center justify-between">
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { notificationApi } = await import('@/lib/api')
+                            await notificationApi.markAllAsRead()
+                          } catch {}
+                          setNotifications([])
+                          setNotificationDropdownOpen(false)
+                        }}
+                        className="text-sm font-bold text-[#1B3D2F] hover:text-[#1B3D2F]/80 transition-colors"
+                      >
+                        Mark all as read
+                      </button>
+                    )}
+                    <Link href="/notifications" onClick={() => setNotificationDropdownOpen(false)}
+                      className="text-xs text-gray-500 hover:text-[#1B3D2F] font-medium ml-auto">
+                      View all
                     </Link>
                   </div>
                 </div>
@@ -456,17 +582,16 @@ export default function DashboardLayout({
                         </svg>
                         <span className="text-sm font-medium">Edit Profile</span>
                       </button>
-                      <Link
-                        href="/settings"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                      <button
+                        onClick={openSettings}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <span className="text-sm font-medium">Settings</span>
-                      </Link>
+                      </button>
                     </div>
 
                     {/* Logout */}
@@ -811,6 +936,149 @@ export default function DashboardLayout({
         </div>
       )}
       
+      {/* Settings Modal */}
+      {settingsOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSettingsOpen(false)} />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
+                <button onClick={() => setSettingsOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="border-b border-gray-200 px-6">
+                <div className="flex gap-4">
+                  {[['profile', 'Profile'], ['account', 'Account'], ['invite', 'Invite Employees']].map(([id, label]) => (
+                    <button key={id} onClick={() => setSettingsTab(id)}
+                      className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${settingsTab === id ? 'border-[#1B3D2F] text-[#1B3D2F]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6">
+                {settingsTab === 'profile' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-4 border-[#1B3D2F]">
+                          {settingsProfileImage ? <img src={settingsProfileImage} alt="Profile" className="w-full h-full object-cover" /> : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                            </div>
+                          )}
+                        </div>
+                        <label htmlFor="settingsImageUpload" className="absolute bottom-0 right-0 bg-[#152e22] text-white p-1.5 rounded-full cursor-pointer hover:bg-[#1B3D2F]">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </label>
+                        <input type="file" id="settingsImageUpload" accept="image/*" onChange={handleSettingsImageUpload} className="hidden" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{settingsForm.name}</p>
+                        <p className="text-sm text-gray-500">{user?.role}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[['Full Name', 'name', 'text'], ['Phone Number', 'phoneNumber', 'tel'], ['Department', 'department', 'text'], ['College', 'college', 'text']].map(([label, key, type]) => (
+                        <div key={key}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                          <input type={type} value={(settingsForm as any)[key]} onChange={e => setSettingsForm({...settingsForm, [key]: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent" />
+                        </div>
+                      ))}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" value={settingsForm.email} disabled className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500" />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button onClick={handleSettingsSave} disabled={settingsSaving} className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium">
+                        {settingsSaving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {settingsTab === 'account' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-3">Account Information</h3>
+                      <div className="space-y-3">
+                        {[['Email', settingsForm.email], ['Role', user?.role]].map(([label, value]) => (
+                          <div key={label} className="flex justify-between items-center py-3 border-b border-gray-200">
+                            <div><p className="text-sm font-medium text-gray-900">{label}</p><p className="text-sm text-gray-500">{value}</p></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-3">Danger Zone</h3>
+                      <div className="border border-red-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center">
+                          <div><p className="text-sm font-medium text-gray-900">Logout</p><p className="text-sm text-gray-500">Sign out of your account</p></div>
+                          <button onClick={handleSettingsLogout} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Logout</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {settingsTab === 'invite' && (
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">Invite Employees</h3>
+                      <p className="text-sm text-gray-500 mt-1">Invited users receive an email with a temporary password.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {(['email', 'csv'] as const).map(mode => (
+                        <button key={mode} onClick={() => setInviteMode(mode)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === mode ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                          {mode === 'email' ? 'Paste Emails' : 'Upload CSV'}
+                        </button>
+                      ))}
+                    </div>
+                    {inviteMode === 'email' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Addresses <span className="text-gray-400 font-normal">(comma or new line)</span></label>
+                        <textarea value={inviteEmails} onChange={e => setInviteEmails(e.target.value)} rows={4} placeholder="john@university.edu, jane@university.edu" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent font-mono text-sm" />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">CSV File <span className="text-gray-400 font-normal">(must have "email" column)</span></label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1B3D2F] transition-colors">
+                          <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUploadModal" />
+                          <label htmlFor="csvUploadModal" className="cursor-pointer text-sm text-gray-500">{csvFile ? csvFile.name : 'Click to upload CSV'}</label>
+                        </div>
+                        <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block">Download CSV template</a>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Role to Assign</label>
+                      <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm">
+                        <option value="User">Employee (User)</option>
+                        <option value="DepartmentHead">Department Head</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <textarea value={inviteMessage} onChange={e => setInviteMessage(e.target.value)} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm" />
+                    </div>
+                    <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)}
+                      className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium flex items-center gap-2">
+                      {inviting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>Send Invitations</>}
+                    </button>
+                    {inviteResult && (
+                      <div className="space-y-2">
+                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3"><p className="text-sm font-medium text-[#1B3D2F]">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p><div className="flex flex-wrap gap-1 mt-1">{inviteResult.invited.map(e => <span key={e} className="text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div></div>}
+                        {inviteResult.failed.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-sm font-medium text-red-800">✗ {inviteResult.failed.length} failed</p><div className="space-y-1 mt-1">{inviteResult.failed.map(f => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div></div>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notifications */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] space-y-2 pointer-events-none">
         <div className="pointer-events-auto">

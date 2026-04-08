@@ -117,7 +117,17 @@ export const authApi = {
     )
   },
 
-  getCurrentUser: async () => apiFetch(`${API_BASE_URL}/users/me`)
+  getCurrentUser: async () => apiFetch(`${API_BASE_URL}/users/me`),
+
+  logout: async () => {
+    try { await apiFetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' }) } catch {}
+  }
+}
+
+export const getCurrentUser = () => {
+  if (typeof window === 'undefined') return null
+  const userStr = localStorage.getItem('user')
+  return userStr ? JSON.parse(userStr) : null
 }
 
 // User API
@@ -228,9 +238,8 @@ export const reportApi = {
 
 // Invite APIs
 export const inviteApi = {
-  bulkInvite: (data: { emails: string[]; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
+  bulkInvite: (data: { emails: string[]; role?: string; departmentId?: string; collegeId?: string; welcomeMessage?: string }) =>
     apiFetch(`${API_BASE_URL}/users/bulk-invite`, { method: 'POST', body: JSON.stringify(data) }),
-
   bulkInviteCsv: (formData: FormData) => {
     const token = getAuthToken()
     return fetch(`${API_BASE_URL}/users/bulk-invite-csv`, {
