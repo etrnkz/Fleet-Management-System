@@ -63,7 +63,9 @@ async function seed() {
     for (const deptName of cd.departments) {
       let dept = await departmentRepo.findOne({ where: { name: deptName } })
       if (!dept) {
-        const code = deptName.replace(/\s+/g, '').substring(0, 8).toUpperCase()
+        // Generate a unique code using college code prefix + dept abbreviation
+        const deptAbbr = deptName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 4)
+        const code = `${cd.code}_${deptAbbr}`
         dept = await departmentRepo.save(departmentRepo.create({ name: deptName, code, college }))
       }
       departments[deptName] = dept
