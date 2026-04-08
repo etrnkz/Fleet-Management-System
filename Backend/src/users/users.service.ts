@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from './entities/user.entity';
 import { Department } from '../departments/entities/department.entity';
 import { College } from '../colleges/entities/college.entity';
+import { Driver, DriverStatus } from '../drivers/entities/driver.entity';
 import { BulkInviteUsersDto } from './dto/bulk-invite-users.dto';
 import { EmailService } from '../email/email.service';
 import { SmsService } from '../sms/sms.service';
@@ -24,6 +25,8 @@ export class UsersService {
     private readonly departmentRepository: Repository<Department>,
     @InjectRepository(College)
     private readonly collegeRepository: Repository<College>,
+    @InjectRepository(Driver)
+    private readonly driverRepository: Repository<Driver>,
     private readonly emailService: EmailService,
     private readonly smsService: SmsService,
   ) {}
@@ -424,5 +427,44 @@ export class UsersService {
       }
       throw new BadRequestException(`Failed to process CSV file: ${error.message}`);
     }
+  }
+
+  /**
+   * Create or update the Driver profile for a user with Driver role.
+   * Called when a driver fills in their license details from the driver app.
+   */
+  async upsertDriverProfile(
+    userId: string,
+    data: { licenseNumber: string; licenseExpiry: string; experienceYears?: number; specializations?: string; notes?: string },
+  ): Promise<Driver> {
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    if (user.role !== UserRole.Driver) {
+      throw new BadRequestException('Only users with Driver role can have a driver profile');
+    }
+
+    let driver = await this.driverRepository.findOne({ where: { user: { id: userId } } });
+
+    if (driver) {
+      // Update existing
+      driver.licenseNumber = data.licenseNumber;
+      driver.licenseExpiry = new Date(data.licenseExpiry);
+      if (data.experienceYears !== undefined) driver.experienceYears = data.experienceYears;
+      if (data.specializations !== undefined) driver.specializations = data.specializations;
+      if (data.notes !== undefined) driver.notes = data.notes;
+    } else {
+      // Create new
+      driver = this.driverRepository.create({
+        user,
+        licenseNumber: data.licenseNumber,
+        licenseExpiry: new Date(data.licenseExpiry),
+        experienceYears: data.experienceYears ?? 0,
+        specializations: data.specializations,
+        notes: data.notes,
+        status: DriverStatus.Available,
+      });
+    }
+
+    return this.driverRepository.save(driver);
   }
 }

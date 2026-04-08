@@ -188,7 +188,9 @@ export const userApi = {
   updateProfile: (data: { name?: string; phoneNumber?: string }) =>
     apiFetch(`${API_BASE_URL}/users/me`, { method: 'PATCH', body: JSON.stringify(data) }),
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
-    apiFetch(`${API_BASE_URL}/auth/change-password`, { method: 'POST', body: JSON.stringify(data) }),
+    apiFetch(`${API_BASE_URL}/users/me/password`, { method: 'PATCH', body: JSON.stringify(data) }),
+  updateDriverProfile: (data: { licenseNumber: string; licenseExpiry: string; experienceYears?: number; specializations?: string; notes?: string }) =>
+    apiFetch(`${API_BASE_URL}/users/me/driver-profile`, { method: 'PATCH', body: JSON.stringify(data) }),
   uploadProfileImage: async (file: File) => {
     const token = getAuthToken()
     const formData = new FormData()
