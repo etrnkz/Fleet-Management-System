@@ -174,8 +174,6 @@ export default function DashboardPage() {
         startDateTime,
         endDateTime,
         passengerCount: parseInt(formData.passengers),
-        priority: formData.priority,
-        description: formData.description
       })
       
       setShowRequestModal(false)
@@ -322,11 +320,7 @@ export default function DashboardPage() {
         />
       )}
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
-        </div>
-      ) : (
+      {loading ? null : (
         <>
           {/* Header Info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

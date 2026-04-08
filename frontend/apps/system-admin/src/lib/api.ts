@@ -155,4 +155,22 @@ export const systemAdminApi = {
       method: 'POST',
       body: JSON.stringify(notification),
     }),
+
+  bulkImportUsers: (users: any[]) =>
+    apiFetch(`${API_BASE_URL}/system-admin/bulk/users/import`, {
+      method: 'POST',
+      body: JSON.stringify({ users }),
+    }),
+
+  exportUsers: (options: { format: 'csv' | 'json'; filters?: any }) =>
+    apiFetch(`${API_BASE_URL}/system-admin/bulk/users/export`, {
+      method: 'POST',
+      body: JSON.stringify(options),
+    }),
+
+  createBackup: () =>
+    apiFetch(`${API_BASE_URL}/system-admin/backup`, { method: 'POST' }),
+
+  listBackups: () =>
+    apiFetch(`${API_BASE_URL}/system-admin/backups`),
 };

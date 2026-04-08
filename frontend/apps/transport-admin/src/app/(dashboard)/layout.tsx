@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Toast, { ToastType } from '@/components/Toast'
-import { getCurrentUser, tripApi, userApi } from '@/lib/api'
+import { getCurrentUser, tripApi, userApi, inviteApi } from '@/lib/api'
 
 interface ToastMessage {
   message: string
@@ -42,8 +42,25 @@ export default function DashboardLayout({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
   const [showSettings, setShowSettings] = useState(false)
+  const [settingsTab, setSettingsTab] = useState('general')
+  const [settingsToast, setSettingsToast] = useState<{ message: string; type: string } | null>(null)
+  // General Settings
+  const [generalSettings, setGeneralSettings] = useState({ companyName: 'Fleet Management Co.', companyEmail: 'transport.office@haramaya.edu.et', companyPhone: '+251-911-234567', address: '123 Main Street, Addis Ababa', timezone: 'Africa/Addis_Ababa', dateFormat: 'DD/MM/YYYY', currency: 'ETB' })
+  // Notification Settings
+  const [notificationSettings, setNotificationSettings] = useState({ emailNotifications: true, smsNotifications: false, pushNotifications: true, maintenanceAlerts: true, fuelAlerts: true, documentExpiry: true, tripUpdates: false, weeklyReports: true })
+  // Security Settings
+  const [securitySettings, setSecuritySettings] = useState({ twoFactorAuth: false, sessionTimeout: '30', passwordExpiry: '90', loginAttempts: '5' })
+  // Users
+  const [settingsUsers, setSettingsUsers] = useState<any[]>([])
+  // Invite
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteRole, setInviteRole] = useState('User')
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
   const [selectedTrip, setSelectedTrip] = useState<any>(null)
-  const [darkMode, setDarkMode] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
@@ -97,15 +114,6 @@ export default function DashboardLayout({
     }
   }
 
-  // Apply dark mode class to document
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [darkMode])
-
   const unreadCount = notifications.filter((n: any) => !n.read && !n.isRead).length
 
   const handleLogout = () => {
@@ -119,6 +127,58 @@ export default function DashboardLayout({
       /* ignore */
     }
     router.push('/login')
+  }
+
+  const showSettingsToast = (message: string, type: string) => {
+    setSettingsToast({ message, type })
+    setTimeout(() => setSettingsToast(null), 3000)
+  }
+
+  const openSettings = async () => {
+    setShowProfileDropdown(false)
+    setSettingsTab('general')
+    setShowSettings(true)
+    // Load real user profile data
+    try {
+      const profile: any = await userApi.getProfile()
+      setGeneralSettings(p => ({
+        ...p,
+        companyName: profile.name || p.companyName,
+        companyEmail: profile.email || p.companyEmail,
+        companyPhone: profile.phoneNumber || p.companyPhone,
+      }))
+    } catch {}
+    // Load users
+    try {
+      const data = await userApi.getAll()
+      setSettingsUsers(Array.isArray(data) ? data : [])
+    } catch { setSettingsUsers([]) }
+  }
+
+  const handleInvite = async () => {
+    setInviting(true)
+    setInviteResult(null)
+    try {
+      let result: any
+      if (inviteMode === 'csv' && csvFile) {
+        const fd = new FormData()
+        fd.append('csvFile', csvFile)
+        if (inviteMessage) fd.append('welcomeMessage', inviteMessage)
+        result = await inviteApi.bulkInviteCsv(fd)
+      } else {
+        const emails = inviteEmails.split(/[\n,]+/).map(e => e.trim()).filter(e => e.includes('@'))
+        if (emails.length === 0) { showSettingsToast('Enter at least one valid email', 'error'); setInviting(false); return }
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined, role: inviteRole || undefined })
+      }
+      setInviteResult(result)
+      showSettingsToast(result.message || 'Invitations sent!', 'success')
+      setInviteEmails('')
+      setCsvFile(null)
+    } catch (error: any) {
+      showSettingsToast(error.message || 'Failed to send invitations', 'error')
+    } finally {
+      setInviting(false)
+    }
   }
 
   const handleNotificationClick = async (notification: any) => {
@@ -209,17 +269,25 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div className="flex h-screen bg-gray-50 transition-colors duration-300">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300`}>
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
-            <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-              <span className="text-[#1B3D2F] font-bold text-sm">H</span>
+            <div className="w-8 h-8 bg-emerald-100 rounded flex items-center justify-center">
+              <span className="text-emerald-700 font-bold text-sm">H</span>
             </div>
             <div>
-              <div className="font-bold text-[#1B3D2F] tracking-tight">Haramaya University</div>
+              <div className="font-bold text-emerald-700 tracking-tight">Haramaya University</div>
               <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
             </div>
           </div>
@@ -228,11 +296,14 @@ export default function DashboardLayout({
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             <Link 
               href="/dashboard" 
-              onClick={(e) => handleNavigation(e, '/dashboard')}
+              onClick={(e) => {
+                handleNavigation(e, '/dashboard')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/dashboard')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,11 +314,14 @@ export default function DashboardLayout({
             
             <Link 
               href="/vehicles" 
-              onClick={(e) => handleNavigation(e, '/vehicles')}
+              onClick={(e) => {
+                handleNavigation(e, '/vehicles')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/vehicles')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -259,11 +333,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/tracking" 
-              onClick={(e) => handleNavigation(e, '/tracking')}
+              onClick={(e) => {
+                handleNavigation(e, '/tracking')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/tracking')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,11 +352,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/drivers" 
-              onClick={(e) => handleNavigation(e, '/drivers')}
+              onClick={(e) => {
+                handleNavigation(e, '/drivers')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/drivers')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,11 +370,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/trips" 
-              onClick={(e) => handleNavigation(e, '/trips')}
+              onClick={(e) => {
+                handleNavigation(e, '/trips')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/trips')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,11 +388,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/approvals" 
-              onClick={(e) => handleNavigation(e, '/approvals')}
+              onClick={(e) => {
+                handleNavigation(e, '/approvals')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/approvals')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,11 +406,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/fuel" 
-              onClick={(e) => handleNavigation(e, '/fuel')}
+              onClick={(e) => {
+                handleNavigation(e, '/fuel')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/fuel')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,11 +424,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/maintenance" 
-              onClick={(e) => handleNavigation(e, '/maintenance')}
+              onClick={(e) => {
+                handleNavigation(e, '/maintenance')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/maintenance')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,11 +443,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/documents" 
-              onClick={(e) => handleNavigation(e, '/documents')}
+              onClick={(e) => {
+                handleNavigation(e, '/documents')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/documents')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,11 +461,14 @@ export default function DashboardLayout({
 
             <Link 
               href="/reports" 
-              onClick={(e) => handleNavigation(e, '/reports')}
+              onClick={(e) => {
+                handleNavigation(e, '/reports')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/reports')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,12 +478,33 @@ export default function DashboardLayout({
             </Link>
 
             <Link 
+              href="/feedback" 
+              onClick={(e) => {
+                handleNavigation(e, '/feedback')
+                setSidebarOpen(false)
+              }}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                isActive('/feedback')
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Feedback
+            </Link>
+
+            <Link 
               href="/notifications" 
-              onClick={(e) => handleNavigation(e, '/notifications')}
+              onClick={(e) => {
+                handleNavigation(e, '/notifications')
+                setSidebarOpen(false)
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
                 isActive('/notifications')
-                  ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                  : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                  ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
               }`}
             >
               <div className="relative">
@@ -407,9 +526,9 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 transition-colors duration-300">
+        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 transition-colors duration-300 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
@@ -418,7 +537,7 @@ export default function DashboardLayout({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
+              <h1 className="text-sm sm:text-base md:text-xl font-bold text-gray-900 transition-colors duration-300 truncate">
                 {pathname === '/dashboard' && 'Dashboard Overview'}
                 {pathname === '/drivers' && 'Drivers'}
                 {pathname === '/vehicles' && 'Vehicles'}
@@ -429,12 +548,13 @@ export default function DashboardLayout({
                 {pathname.startsWith('/maintenance') && 'Maintenance'}
                 {pathname === '/documents' && 'Documents'}
                 {pathname === '/reports' && 'Reports'}
+                {pathname === '/feedback' && 'Feedback'}
                 {pathname === '/settings' && 'Settings'}
                 {pathname === '/notifications' && 'Notifications'}
               </h1>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
               <div className="relative" ref={notifRef}>
                 <button 
                   onClick={() => setShowNotifications(prev => !prev)}
@@ -452,7 +572,7 @@ export default function DashboardLayout({
 
                 {/* Notifications Dropdown */}
                 {showNotifications && (
-                  <div className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-hidden flex flex-col">
+                  <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-hidden flex flex-col">
                     <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
                       <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${unreadCount > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>{unreadCount} Unread</span>
@@ -490,7 +610,7 @@ export default function DashboardLayout({
                                 }
                                 setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true, isRead: true } : n))
                               }}
-                              className="text-[10px] text-[#1B3D2F] hover:text-[#1B3D2F] font-medium whitespace-nowrap flex-shrink-0 mt-1"
+                              className="text-[10px] text-[#1B3D2F] hover:text-emerald-700 font-medium whitespace-nowrap flex-shrink-0 mt-1"
                             >
                               Mark read
                             </button>
@@ -512,7 +632,7 @@ export default function DashboardLayout({
                             }
                             setNotifications(prev => prev.map(n => ({ ...n, read: true, isRead: true })))
                           }}
-                          className="text-xs text-[#1B3D2F] hover:text-[#1B3D2F] font-medium"
+                          className="text-xs text-[#1B3D2F] hover:text-emerald-700 font-medium"
                         >
                           Mark all as read
                         </button>
@@ -528,29 +648,12 @@ export default function DashboardLayout({
                 )}
               </div>
 
-              {/* Dark mode toggle */}
-              <button
-                onClick={() => setDarkMode(prev => !prev)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {darkMode ? (
-                  <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.166 17.834a.75.75 0 00-1.06 1.06l1.59 1.591a.75.75 0 001.061-1.06l-1.59-1.591zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.166 6.166a.75.75 0 001.06 1.06l1.59-1.59a.75.75 0 00-1.06-1.061l-1.59 1.59z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                )}
-              </button>
-
               <div className="relative" ref={profileDropdownRef}>
                 <button
                   onClick={() => setShowProfileDropdown(prev => !prev)}
-                  className="hidden md:flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 py-1 sm:py-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <div className="w-8 h-8 bg-[#1B3D2F] rounded-full flex items-center justify-center overflow-hidden">
+                  <div className="w-8 h-8 bg-[#1B3D2F] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                     {user?.profileImage ? (
                       <img src={user.profileImage} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
                     ) : (
@@ -559,17 +662,17 @@ export default function DashboardLayout({
                       </span>
                     )}
                   </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900 leading-tight">{user?.name || 'User'}</p>
-                    <p className="text-xs text-gray-500 leading-tight">{user?.role || 'Transport Admin'}</p>
+                  <div className="text-left hidden sm:block">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 leading-tight truncate max-w-[100px] md:max-w-[150px]">{user?.name || 'User'}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 leading-tight truncate max-w-[100px] md:max-w-[150px]">{user?.role || 'Transport Admin'}</p>
                   </div>
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {showProfileDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-64 sm:w-72 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
                     {/* Profile Header */}
                     <div className="p-4 bg-[#1B3D2F]/10 border-b border-[#1B3D2F]">
                       <div className="flex items-center gap-3">
@@ -598,7 +701,7 @@ export default function DashboardLayout({
                           <p className="text-xs text-gray-500">View and edit profile</p>
                         </div>
                       </button>
-                      <button onClick={() => { setShowProfileDropdown(false); router.push('/settings') }}
+                      <button onClick={() => { setShowProfileDropdown(false); setShowSettings(true) }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left">
                         <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -643,14 +746,6 @@ export default function DashboardLayout({
             <p className="mt-4 text-gray-700 font-medium">Loading...</p>
           </div>
         </div>
-      )}
-
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
       )}
 
       {/* Trip Allocation Modal */}
@@ -1002,6 +1097,158 @@ export default function DashboardLayout({
                   </svg>
                   Save Changes
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Toast */}
+      {settingsToast && (
+        <div className={`fixed top-4 right-4 z-[300] px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${settingsToast.type === 'success' ? 'bg-emerald-600' : settingsToast.type === 'error' ? 'bg-red-600' : 'bg-blue-600'}`}>
+          {settingsToast.message}
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-[200] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowSettings(false)} />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
+                <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              {/* Tabs */}
+              <div className="border-b border-gray-200 overflow-x-auto">
+                <div className="flex gap-1 p-2 min-w-max">
+                  {[['general','General'],['users','Users'],['invite','Invite Employees']].map(([id,label]) => (
+                    <button key={id} onClick={() => setSettingsTab(id)}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${settingsTab === id ? 'bg-[#1B3D2F] text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6">
+                {/* General */}
+                {settingsTab === 'general' && (
+                  <form onSubmit={async e => { e.preventDefault(); try { await userApi.updateProfile({ name: generalSettings.companyName, phoneNumber: generalSettings.companyPhone }); showSettingsToast('General settings saved', 'success') } catch (err: any) { showSettingsToast(err.message || 'Failed to save', 'error') } }} className="space-y-4">
+                    <h3 className="text-base font-bold text-gray-900">General Settings</h3>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {[['Company Name','companyName','text'],['Company Email','companyEmail','email'],['Phone Number','companyPhone','tel'],['Address','address','text']].map(([label,key,type]) => (
+                        <div key={key}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                          <input type={type} value={(generalSettings as any)[key]} onChange={e => setGeneralSettings(p => ({...p, [key]: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none text-sm" />
+                        </div>
+                      ))}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                        <select value={generalSettings.timezone} onChange={e => setGeneralSettings(p => ({...p, timezone: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm">
+                          <option value="Africa/Addis_Ababa">Africa/Addis Ababa (EAT)</option>
+                          <option value="UTC">UTC</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                        <select value={generalSettings.currency} onChange={e => setGeneralSettings(p => ({...p, currency: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm">
+                          <option value="ETB">Ethiopian Birr (ETB)</option>
+                          <option value="USD">US Dollar (USD)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end pt-2 border-t border-gray-100">
+                      <button type="submit" className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] text-sm font-medium">Save Changes</button>
+                    </div>
+                  </form>
+                )}
+                {/* Users */}
+                {settingsTab === 'users' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-bold text-gray-900">User Management</h3>
+                      <button onClick={() => showSettingsToast('Add user feature coming soon', 'info')} className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]">+ Add User</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+                        <thead className="bg-gray-50"><tr>{['Name','Email','Role','Status','Actions'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{h}</th>)}</tr></thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {settingsUsers.map(u => (
+                            <tr key={u.id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{u.name}</td>
+                              <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
+                              <td className="px-4 py-3"><span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">{u.role}</span></td>
+                              <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
+                              <td className="px-4 py-3"><button onClick={() => showSettingsToast(`Editing ${u.name}`, 'info')} className="text-[#1B3D2F] text-xs font-medium mr-3">Edit</button><button onClick={() => showSettingsToast(`Deleting ${u.name}`, 'error')} className="text-red-600 text-xs font-medium">Delete</button></td>
+                            </tr>
+                          ))}
+                          {settingsUsers.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">No users found</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+                {/* Invite */}
+                {settingsTab === 'invite' && (
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">Invite Employees</h3>
+                      <p className="text-sm text-gray-500 mt-1">Invited employees receive an email with a temporary password.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {(['email','csv'] as const).map(mode => (
+                        <button key={mode} onClick={() => setInviteMode(mode)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === mode ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                          {mode === 'email' ? 'Paste Emails' : 'Upload CSV'}
+                        </button>
+                      ))}
+                    </div>
+                    {inviteMode === 'email' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Addresses <span className="text-gray-400 font-normal">(comma or new line)</span></label>
+                        <textarea value={inviteEmails} onChange={e => setInviteEmails(e.target.value)} rows={4} placeholder="john@university.edu, jane@university.edu" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none font-mono text-sm" />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">CSV File <span className="text-gray-400 font-normal">(must have "email" column)</span></label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1B3D2F] transition-colors">
+                          <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUploadTA" />
+                          <label htmlFor="csvUploadTA" className="cursor-pointer text-sm text-gray-500">{csvFile ? csvFile.name : 'Click to upload CSV'}</label>
+                        </div>
+                        <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block">Download CSV template</a>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Role to Assign</label>
+                      <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm">
+                        <option value="User">Employee (User)</option>
+                        <option value="DepartmentHead">Department Head</option>
+                        <option value="CollegeHead">College Head</option>
+                        <option value="Dean">Dean</option>
+                        <option value="Driver">Driver</option>
+                        <option value="MaintenanceTeam">Maintenance Team</option>
+                        <option value="Gate">Gate / Security</option>
+                        <option value="DeploymentTeam">Deployment Team</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <textarea value={inviteMessage} onChange={e => setInviteMessage(e.target.value)} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm" />
+                    </div>
+                    <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)}
+                      className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium flex items-center gap-2 text-sm">
+                      {inviting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : 'Send Invitations'}
+                    </button>
+                    {inviteResult && (
+                      <div className="space-y-2">
+                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3"><p className="text-sm font-medium text-[#1B3D2F]">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p><div className="flex flex-wrap gap-1 mt-1">{inviteResult.invited.map(e => <span key={e} className="text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div></div>}
+                        {inviteResult.failed.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-sm font-medium text-red-800">✗ {inviteResult.failed.length} failed</p><div className="space-y-1 mt-1">{inviteResult.failed.map(f => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div></div>}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

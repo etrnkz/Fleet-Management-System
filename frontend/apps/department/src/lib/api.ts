@@ -158,6 +158,9 @@ export const tripApi = {
   // Get pending approvals for current user
   getPendingApprovals: () => apiFetch('/trips/pending/approvals'),
   
+  // Cancel trip
+  cancel: (id: string) => apiFetch(`/trips/${id}/cancel`, { method: 'POST' }),
+  
   // Get trip statistics
   getStatistics: () => apiFetch('/trips/statistics/overview'),
 };

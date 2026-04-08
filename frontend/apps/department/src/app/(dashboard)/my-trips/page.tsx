@@ -96,17 +96,13 @@ export default function MyTripsPage() {
   const handleCancel = async (tripId: string) => {
     if (!confirm('Cancel this trip request?')) return
     try {
-      await tripApi.reject(tripId, 'Cancelled by requester')
+      await tripApi.cancel(tripId)
       showToast('Trip cancelled', 'success')
       loadMyTrips()
     } catch (err: any) { showToast(err.message || 'Failed to cancel', 'error') }
   }
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
-    </div>
-  )
+  if (loading) return null
 
   return (
     <div className="p-4 md:p-6 space-y-6">

@@ -210,21 +210,21 @@ export default function VehiclesPage() {
 
   return (
     <>
-    <div className="p-6 h-full flex flex-col gap-6">
+    <div className="p-3 sm:p-6 h-full flex flex-col gap-4 sm:gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Vehicle Management</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Vehicle Management</h1>
         <p className="text-sm text-gray-500">Monitor and manage your fleet status and assignments</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by Vehicle ID, plate number, make, or model..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+              placeholder="Search by plate, make, or model..."
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-sm"
             />
             <svg className="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -365,7 +365,7 @@ export default function VehiclesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <p className="text-sm text-gray-600 mb-2">{stat.label}</p>
