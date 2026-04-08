@@ -490,20 +490,54 @@ export default function DashboardPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
-      
-      // Show different messages based on trip type
-      let message = 'Trip request submitted successfully!'
-      if (formData.tripType === 'VIP') {
-        message = 'VIP trip request submitted! It will be sent directly to the President for approval.'
-      } else if (formData.tripType === 'SERVICE') {
-        message = 'Service trip request submitted! It will be sent directly to the President for approval.'
-      } else if (formData.tripType === 'STANDARD') {
-        message = 'Standard trip request submitted! It will follow the normal department approval process.'
+
+      if (new Date(formData.startDateTime).getTime() - Date.now() < 48 * 60 * 60 * 1000) {
+        showToast('Trip must be requested at least 48 hours in advance', 'error')
+        return
       }
-      
-      // TODO: Implement form submission with trip type routing
-      showToast(message, 'success')
-      setActiveSection('dashboard')
+      if (new Date(formData.endDateTime) <= new Date(formData.startDateTime)) {
+        showToast('End date must be after start date', 'error')
+        return
+      }
+
+      try {
+        // Map form tripType to backend tripType + tripCategory
+        const tripTypeMap: Record<string, { tripType: 'Normal' | 'VIP'; tripCategory: 'STANDARD' | 'VIP' | 'SERVICE' }> = {
+          STANDARD: { tripType: 'Normal', tripCategory: 'STANDARD' },
+          VIP:      { tripType: 'VIP',    tripCategory: 'VIP' },
+          SERVICE:  { tripType: 'Normal', tripCategory: 'SERVICE' },
+        }
+        const mapped = tripTypeMap[formData.tripType] || { tripType: 'Normal', tripCategory: 'STANDARD' }
+
+        const purposeText = [
+          formData.purposeCategory,
+          formData.purpose ? `Details: ${formData.purpose}` : '',
+        ].filter(Boolean).join(' | ')
+
+        const created: any = await tripApi.create({
+          destination: formData.destination,
+          purpose: purposeText,
+          startDateTime: formData.startDateTime,
+          endDateTime: formData.endDateTime,
+          passengerCount: Number(formData.passengerCount),
+          tripType: mapped.tripType,
+          tripCategory: mapped.tripCategory,
+          estimatedDistance: formData.estimatedDistance ? Number(formData.estimatedDistance) : undefined,
+        })
+
+        await tripApi.submit(created.id)
+
+        const messages: Record<string, string> = {
+          VIP: 'VIP trip submitted — sent directly to the President for approval.',
+          SERVICE: 'Service trip submitted — sent directly to the President for approval.',
+          STANDARD: 'Standard trip submitted — following the normal approval process.',
+        }
+        showToast(messages[formData.tripType] || 'Trip request submitted successfully!', 'success')
+        setActiveSection('dashboard')
+        loadTrips()
+      } catch (err: any) {
+        showToast(err.message || 'Failed to submit trip request', 'error')
+      }
     }
 
     return (
@@ -828,7 +862,7 @@ export default function DashboardPage() {
 
     const loadCompletedTrips = async () => {
       try {
-        const allTrips = await tripApi.getAll()
+        const allTrips = await tripApi.getAll() as any[]
         const completed = allTrips.filter((t: any) => t.state === 'COMPLETED')
         setCompletedTripsForFeedback(completed)
       } catch (error) {
