@@ -2,13 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LandingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
+    // Handle logout - clear all storage when redirected from logout
+    const fromLogout = searchParams.get('logout') === 'true'
+    if (fromLogout) {
+      localStorage.clear()
+      sessionStorage.clear()
+      return
+    }
+
     const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
     const user = localStorage.getItem('user') || sessionStorage.getItem('user')
     if (token && user) {
@@ -17,7 +26,7 @@ export default function LandingPage() {
         if (parsed.role === 'TransportOffice') router.replace('/dashboard')
       } catch {}
     }
-  }, [router])
+  }, [router, searchParams])
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#191C20]">

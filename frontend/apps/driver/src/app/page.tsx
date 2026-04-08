@@ -1,8 +1,21 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+
 import Link from 'next/link'
 
 export default function LandingPage() {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Handle logout - clear all storage when redirected from logout
+    const fromLogout = searchParams.get('logout') === 'true'
+    if (fromLogout) {
+      localStorage.clear()
+      sessionStorage.clear()
+    }
+  }, [searchParams])
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}

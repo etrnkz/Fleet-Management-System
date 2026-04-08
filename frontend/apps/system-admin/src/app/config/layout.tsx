@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     sessionStorage.clear()
     
     // Redirect to login with logout flag to prevent auto-login
-    router.push('/login?logout=true')
+    router.push('/?logout=true')
   }
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'SA'

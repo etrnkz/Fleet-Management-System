@@ -75,7 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     sessionStorage.clear()
     
     // Redirect to login with logout flag to prevent auto-login
-    router.push('/login?logout=true')
+    router.push('/?logout=true')
   }
 
   const showSettingsToast = (message: string, type: 'success' | 'error') => {

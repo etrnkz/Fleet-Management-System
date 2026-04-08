@@ -95,7 +95,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
     // Keep only essential userData (profile settings without images)
     // Profile image will be restored from backend on next login
     
-    router.push('/login')
+    router.push('/?logout=true')
   }
 
   const section = searchParams.get('section')
