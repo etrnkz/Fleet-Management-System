@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Toast, { ToastType } from '@/components/Toast'
-import { tripApi, vehicleApi, driverApi, maintenanceApi, fuelApi } from '@/lib/api'
+import { tripApi, vehicleApi, driverApi, maintenanceApi, fuelApi, userApi } from '@/lib/api'
 
 interface ToastMessage {
   message: string
@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [showLogTripForm, setShowLogTripForm] = useState(false)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showAddDriverSection, setShowAddDriverSection] = useState(false)
   
   // Data states
   const [stats, setStats] = useState({
@@ -215,7 +216,7 @@ export default function DashboardPage() {
         model: formData.get('model'),
         year: parseInt(formData.get('year') as string),
         fuelType: formData.get('fuelType'),
-        status: formData.get('status') || 'Active',
+        status: 'Inactive', // New vehicles start as Inactive until driver is assigned
       }
 
       // Add optional fields if provided
@@ -246,12 +247,63 @@ export default function DashboardPage() {
       const vehicleId = formData.get('vehicleId') as string
       const driverId = formData.get('driverId') as string
       
-      showToast('Driver assigned successfully!', 'success')
+      if (!vehicleId || !driverId) {
+        showToast('Please select both vehicle and driver', 'error')
+        return
+      }
+
+      // Assign driver to vehicle and mark as Active (ready for use)
+      await vehicleApi.update(vehicleId, {
+        assignedDriverId: driverId,
+        status: 'Active', // Mark vehicle as active once driver is assigned
+      })
+      
+      showToast('Driver assigned to vehicle successfully! Vehicle is now active.', 'success')
       setShowAssignDriverForm(false)
+      setShowAddDriverSection(false)
       ;(e.target as HTMLFormElement).reset()
       loadDashboardData()
     } catch (error: any) {
-      showToast(error.message || 'Failed to assign driver', 'error')
+      showToast(error.message || 'Failed to assign driver to vehicle', 'error')
+    }
+  }
+
+  const handleAddNewDriver = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const formData = new FormData(e.target as HTMLFormElement)
+    
+    try {
+      // First create the user account
+      const userData = {
+        email: formData.get('email') as string,
+        password: formData.get('password') as string,
+        firstName: formData.get('firstName') as string,
+        lastName: formData.get('lastName') as string,
+        phoneNumber: formData.get('phoneNumber') as string,
+        role: 'Driver',
+      }
+
+      const newUser: any = await userApi.create(userData)
+
+      // Then create the driver profile
+      const driverData = {
+        userId: newUser.id,
+        licenseNumber: formData.get('licenseNumber') as string,
+        licenseExpiry: formData.get('licenseExpiry') as string,
+        experienceYears: parseInt(formData.get('experienceYears') as string),
+        status: formData.get('status') as string || 'Available',
+        specializations: formData.get('specializations') as string || '',
+        notes: formData.get('notes') as string || '',
+      }
+
+      await driverApi.create(driverData)
+      
+      showToast('Driver added successfully! You can now assign them to a vehicle.', 'success')
+      ;(e.target as HTMLFormElement).reset()
+      setShowAddDriverSection(false)
+      loadDashboardData()
+    } catch (error: any) {
+      showToast(error.message || 'Failed to add driver', 'error')
     }
   }
 
@@ -261,16 +313,25 @@ export default function DashboardPage() {
     
     try {
       const tripId = formData.get('tripId') as string
-      const distance = formData.get('distance') as string
-      const fuelUsed = formData.get('fuelUsed') as string
+      const actualDistance = parseFloat(formData.get('actualDistance') as string)
+      const actualFuelCost = parseFloat(formData.get('actualFuelCost') as string)
+      const finalMileage = parseInt(formData.get('finalMileage') as string)
       const notes = formData.get('notes') as string
       
-      showToast('Trip logged successfully!', 'success')
+      // Complete the trip
+      await tripApi.completeTrip(tripId, {
+        actualDistance,
+        actualFuelCost,
+        finalMileage,
+        notes,
+      })
+      
+      showToast('Trip completed successfully!', 'success')
       setShowLogTripForm(false)
       ;(e.target as HTMLFormElement).reset()
       loadDashboardData()
     } catch (error: any) {
-      showToast(error.message || 'Failed to log trip', 'error')
+      showToast(error.message || 'Failed to complete trip', 'error')
     }
   }
 
@@ -861,18 +922,16 @@ export default function DashboardPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status <span className="text-red-500">*</span>
+                    Initial Status
                   </label>
-                  <select
-                    name="status"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  >
-                    <option value="">Select Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Maintenance">Under Maintenance</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
+                  <div className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold text-orange-600">Inactive</span> - Vehicle will be activated after driver assignment
+                    </p>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    New vehicles are inactive until a driver is assigned
+                  </p>
                 </div>
 
                 <div>
@@ -951,10 +1010,10 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Log Trip</h2>
+                <h2 className="text-xl font-bold text-gray-900">Complete Trip</h2>
               </div>
               <button
                 onClick={() => setShowLogTripForm(false)}
@@ -978,41 +1037,58 @@ export default function DashboardPage() {
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   >
-                    <option value="">Choose a trip</option>
-                    {allTrips.map((trip: any) => (
+                    <option value="">Choose a trip to complete</option>
+                    {allTrips.filter(t => t.state === 'IN_PROGRESS').map((trip: any) => (
                       <option key={trip.id} value={trip.id}>
-                        {trip.requestNumber} - {trip.destination}
+                        {trip.requestNumber} - {trip.destination} - {trip.allocatedVehicle?.plateNumber || 'N/A'}
                       </option>
                     ))}
                   </select>
+                  <p className="mt-1 text-xs text-gray-500">Only trips in progress are shown</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Actual Distance (km) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="actualDistance"
+                      required
+                      placeholder="e.g., 148.5"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Actual Fuel Cost (ETB) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="actualFuelCost"
+                      required
+                      placeholder="e.g., 1180.75"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Distance (km) <span className="text-red-500">*</span>
+                    Final Mileage (km) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
-                    step="0.1"
-                    name="distance"
+                    name="finalMileage"
                     required
-                    placeholder="e.g., 150.5"
+                    placeholder="e.g., 125480"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fuel Used (Liters) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    name="fuelUsed"
-                    required
-                    placeholder="e.g., 25.5"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  />
+                  <p className="mt-1 text-xs text-gray-500">Total odometer reading at trip completion</p>
                 </div>
 
                 <div>
@@ -1022,9 +1098,23 @@ export default function DashboardPage() {
                   <textarea
                     name="notes"
                     rows={3}
-                    placeholder="Additional trip notes..."
+                    placeholder="Any additional notes about the trip completion..."
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none"
                   ></textarea>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-green-900">Completion Note</p>
+                      <p className="text-sm text-green-700 mt-1">
+                        This will mark the trip as completed and update vehicle mileage and driver statistics.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1034,7 +1124,7 @@ export default function DashboardPage() {
                   type="submit"
                   className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
                 >
-                  Log Trip
+                  Complete Trip
                 </button>
                 <button
                   type="button"
@@ -1052,7 +1142,7 @@ export default function DashboardPage() {
       {/* Assign Driver Form Modal */}
       {showAssignDriverForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
@@ -1061,10 +1151,13 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Assign Driver</h2>
+                <h2 className="text-xl font-bold text-gray-900">Assign Driver to Vehicle</h2>
               </div>
               <button
-                onClick={() => setShowAssignDriverForm(false)}
+                onClick={() => {
+                  setShowAssignDriverForm(false)
+                  setShowAddDriverSection(false)
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1074,62 +1167,313 @@ export default function DashboardPage() {
             </div>
 
             {/* Form Content */}
-            <form onSubmit={handleAssignDriver} className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Vehicle <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="vehicleId"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  >
-                    <option value="">Choose a vehicle</option>
-                    {allVehicles.filter(v => v.status === 'Active').map((vehicle: any) => (
-                      <option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Driver <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="driverId"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  >
-                    <option value="">Choose a driver</option>
-                    {allDrivers.filter(d => d.status === 'Available').map((driver: any) => (
-                      <option key={driver.id} value={driver.id}>
-                        {driver.user?.name || driver.user?.firstName + ' ' + driver.user?.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="mt-6 flex gap-3">
+            <div className="p-6">
+              {/* Toggle between Assign and Add Driver */}
+              <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
                 <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
+                  type="button"
+                  onClick={() => setShowAddDriverSection(false)}
+                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                    !showAddDriverSection
+                      ? 'bg-white text-[#1B3D2F] shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
-                  Assign Driver
+                  Assign Existing Driver
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAssignDriverForm(false)}
-                  className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  onClick={() => setShowAddDriverSection(true)}
+                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                    showAddDriverSection
+                      ? 'bg-white text-[#1B3D2F] shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
-                  Cancel
+                  Add New Driver
                 </button>
               </div>
-            </form>
+
+              {/* Assign Existing Driver Form */}
+              {!showAddDriverSection && (
+                <form onSubmit={handleAssignDriver}>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Vehicle <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="vehicleId"
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                      >
+                        <option value="">Choose a vehicle</option>
+                        {allVehicles.map((vehicle: any) => (
+                          <option key={vehicle.id} value={vehicle.id}>
+                            {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.vehicleType}) - {vehicle.status}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">Select the vehicle to assign a driver to</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Driver <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="driverId"
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                      >
+                        <option value="">Choose a driver</option>
+                        {allDrivers.map((driver: any) => (
+                          <option key={driver.id} value={driver.id}>
+                            {driver.user?.firstName} {driver.user?.lastName} - License: {driver.licenseNumber} - {driver.status}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {allDrivers.length === 0 ? 'No drivers available. Please add a new driver.' : 'Select from existing drivers'}
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex gap-3">
+                        <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-blue-900">Assignment Note</p>
+                          <p className="text-sm text-blue-700 mt-1">
+                            Assigning a driver will automatically activate the vehicle and make it available for trip allocation.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
+                    >
+                      Assign Driver to Vehicle
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAssignDriverForm(false)
+                        setShowAddDriverSection(false)
+                      }}
+                      className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Add New Driver Form */}
+              {showAddDriverSection && (
+                <form onSubmit={handleAddNewDriver}>
+                  <div className="space-y-6">
+                    {/* Personal Information */}
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            First Name <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="firstName"
+                            required
+                            placeholder="e.g., John"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Last Name <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="lastName"
+                            required
+                            placeholder="e.g., Doe"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="email"
+                            name="email"
+                            required
+                            placeholder="e.g., john.doe@example.com"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Phone Number <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="tel"
+                            name="phoneNumber"
+                            required
+                            placeholder="e.g., +251912345678"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Password <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="password"
+                            name="password"
+                            required
+                            placeholder="Create a password for the driver"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                          <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* License Information */}
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">License Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            License Number <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="licenseNumber"
+                            required
+                            placeholder="e.g., DL-123456"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            License Expiry Date <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="date"
+                            name="licenseExpiry"
+                            required
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Experience (Years) <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            name="experienceYears"
+                            required
+                            min="0"
+                            placeholder="e.g., 5"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Status <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            name="status"
+                            required
+                            defaultValue="Available"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          >
+                            <option value="Available">Available</option>
+                            <option value="OnTrip">On Trip</option>
+                            <option value="OnLeave">On Leave</option>
+                            <option value="Inactive">Inactive</option>
+                          </select>
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Specializations
+                          </label>
+                          <input
+                            type="text"
+                            name="specializations"
+                            placeholder="e.g., Heavy vehicles, Long distance"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Notes
+                          </label>
+                          <textarea
+                            name="notes"
+                            rows={3}
+                            placeholder="Additional information about the driver..."
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none"
+                          ></textarea>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex gap-3">
+                        <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-green-900">New Driver Account</p>
+                          <p className="text-sm text-green-700 mt-1">
+                            This will create a new user account and driver profile. The driver can log in using the provided email and password.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
+                    >
+                      Add Driver
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAssignDriverForm(false)
+                        setShowAddDriverSection(false)
+                      }}
+                      className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}
