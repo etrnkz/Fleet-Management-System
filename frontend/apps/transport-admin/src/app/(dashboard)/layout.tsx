@@ -117,16 +117,12 @@ export default function DashboardLayout({
   const unreadCount = notifications.filter((n: any) => !n.read && !n.isRead).length
 
   const handleLogout = () => {
-    try {
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
-      localStorage.removeItem('rememberedEmail')
-    } catch {
-      /* ignore */
-    }
-    router.push('/login')
+    // Clear all authentication tokens and user session
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Redirect to login with logout flag to prevent auto-login
+    router.push('/login?logout=true')
   }
 
   const showSettingsToast = (message: string, type: string) => {

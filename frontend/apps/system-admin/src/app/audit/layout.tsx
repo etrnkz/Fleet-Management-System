@@ -26,9 +26,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('user')
-    router.push('/login')
+    // Clear all authentication tokens and user session
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Redirect to login with logout flag to prevent auto-login
+    router.push('/login?logout=true')
   }
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'SA'

@@ -70,8 +70,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const handleLogout = () => {
-    ;['access_token', 'accessToken', 'user'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
-    router.push('/login')
+    // Clear all authentication tokens and user session
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Redirect to login with logout flag to prevent auto-login
+    router.push('/login?logout=true')
   }
 
   const showSettingsToast = (message: string, type: 'success' | 'error') => {

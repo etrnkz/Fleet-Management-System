@@ -85,8 +85,12 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     try { await authApi.logout() } catch {}
+    // Clear all authentication tokens and user session
     localStorage.clear()
-    router.push('/login')
+    sessionStorage.clear()
+    
+    // Redirect to login with logout flag to prevent auto-login
+    router.push('/login?logout=true')
   }
 
   const handleInvite = async () => {

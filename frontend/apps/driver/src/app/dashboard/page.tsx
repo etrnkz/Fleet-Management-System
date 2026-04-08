@@ -185,8 +185,12 @@ export default function DriverDashboard() {
   }
 
   const handleLogout = () => {
-    ;['access_token', 'refreshToken', 'user'].forEach(k => { localStorage.removeItem(k); sessionStorage.removeItem(k) })
-    router.push('/')
+    // Clear all authentication tokens and user session
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Redirect to login with logout flag to prevent auto-login
+    router.push('/login?logout=true')
   }
 
   const unreadCount = notifications.filter(n => !n.isRead).length
