@@ -128,7 +128,12 @@ export const tripApi = {
     body: JSON.stringify({ reason }),
   }),
 
-  allocate: (id: string, data: { vehicleId: string; driverId: string }) =>
+  allocate: (id: string, data: { 
+    vehicleId: string; 
+    driverId: string;
+    estimatedFuelCost: number;
+    estimatedDistance: number;
+  }) =>
     apiFetch(`/trips/${id}/allocate`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -165,6 +170,17 @@ export const tripApi = {
     },
   ) =>
     apiFetch(`/trips/${id}/allocate`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  completeTrip: (id: string, data: {
+    actualDistance: number;
+    actualFuelCost: number;
+    finalMileage: number;
+    notes?: string;
+  }) =>
+    apiFetch(`/trips/${id}/complete`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
