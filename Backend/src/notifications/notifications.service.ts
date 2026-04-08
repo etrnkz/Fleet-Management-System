@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification, NotificationType } from './entities/notification.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { SmsService } from '../sms/sms.service';
+import { NotificationsGateway } from './notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
@@ -13,6 +14,8 @@ export class NotificationsService {
     private readonly notificationRepository: Repository<Notification>,
     private readonly usersService: UsersService,
     private readonly smsService: SmsService,
+    @Inject(forwardRef(() => NotificationsGateway))
+    private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(
@@ -34,21 +37,21 @@ export class NotificationsService {
       await this.notificationRepository.save(notification);
 
     // Send real-time notification if gateway is available
-    // if (this.notificationsGateway) {
-    //   try {
-    //     await this.notificationsGateway.sendNotificationToUser(recipient.id, {
-    //       id: savedNotification.id,
-    //       type: savedNotification.type,
-    //       title: savedNotification.title,
-    //       message: savedNotification.message,
-    //       data: savedNotification.data,
-    //       sentAt: savedNotification.sentAt,
-    //       isRead: savedNotification.isRead,
-    //     });
-    //   } catch (error) {
-    //     console.error('Failed to send real-time notification:', error);
-    //   }
-    // }
+    if (this.notificationsGateway) {
+      try {
+        await this.notificationsGateway.sendNotificationToUser(recipient.id, {
+          id: savedNotification.id,
+          type: savedNotification.type,
+          title: savedNotification.title,
+          message: savedNotification.message,
+          data: savedNotification.data,
+          sentAt: savedNotification.sentAt,
+          isRead: savedNotification.isRead,
+        });
+      } catch (error) {
+        console.error('Failed to send real-time notification:', error);
+      }
+    }
 
     return savedNotification;
   }
@@ -117,23 +120,23 @@ export class NotificationsService {
       await this.notificationRepository.save(notifications);
 
     // Send real-time notifications if gateway is available
-    // if (this.notificationsGateway) {
-    //   try {
-    //     for (const notification of savedNotifications) {
-    //       await this.notificationsGateway.sendNotificationToUser(notification.recipient.id, {
-    //         id: notification.id,
-    //         type: notification.type,
-    //         title: notification.title,
-    //         message: notification.message,
-    //         data: notification.data,
-    //         sentAt: notification.sentAt,
-    //         isRead: notification.isRead,
-    //       });
-    //     }
-    //   } catch (error) {
-    //     console.error('Failed to send bulk real-time notifications:', error);
-    //   }
-    // }
+    if (this.notificationsGateway) {
+      try {
+        for (const notification of savedNotifications) {
+          await this.notificationsGateway.sendNotificationToUser(notification.recipient.id, {
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            data: notification.data,
+            sentAt: notification.sentAt,
+            isRead: notification.isRead,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to send bulk real-time notifications:', error);
+      }
+    }
 
     return savedNotifications;
   }
