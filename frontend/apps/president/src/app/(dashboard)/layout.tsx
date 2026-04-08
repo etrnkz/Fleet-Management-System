@@ -171,13 +171,12 @@ export default function DashboardLayout({
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('user')
-    localStorage.removeItem('presidentUser')
-    localStorage.removeItem('presidentLoggedIn')
-    localStorage.removeItem('presidentRememberedUser')
-    router.push('/')
+    // Clear all authentication tokens and user session
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Redirect to login with logout flag to prevent auto-login
+    router.push('/login?logout=true')
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
