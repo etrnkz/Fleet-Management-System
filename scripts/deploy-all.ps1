@@ -18,17 +18,17 @@ $apps = @(
 
 foreach ($app in $apps) {
     $name = Split-Path $app -Leaf
-    Write-Host "`n==> Deploying $name ..." -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "==> Deploying $name ..." -ForegroundColor Cyan
 
-    npx vercel deploy $app --prod --yes `
-        --env NEXT_PUBLIC_API_URL=$API_URL `
-        --env NEXT_PUBLIC_WS_URL=$WS_URL
+    npx vercel deploy $app --prod --yes --env "NEXT_PUBLIC_API_URL=$API_URL" --env "NEXT_PUBLIC_WS_URL=$WS_URL"
 
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✓ $name deployed" -ForegroundColor Green
+        Write-Host "OK $name deployed" -ForegroundColor Green
     } else {
-        Write-Host "✗ $name failed" -ForegroundColor Red
+        Write-Host "FAILED $name" -ForegroundColor Red
     }
 }
 
-Write-Host "`nAll done." -ForegroundColor Cyan
+Write-Host ""
+Write-Host "All done." -ForegroundColor Cyan
