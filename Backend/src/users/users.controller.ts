@@ -154,11 +154,14 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    // Users can only update their own name, email, and phone
-    const allowedFields = {
+    // Users can update their own profile fields including department/college assignment
+    const allowedFields: any = {
       name: updateUserDto.name,
       phoneNumber: updateUserDto.phoneNumber,
     };
+    // Allow users to set their own department and college (needed for trip routing)
+    if (updateUserDto.departmentId !== undefined) allowedFields.departmentId = updateUserDto.departmentId;
+    if (updateUserDto.collegeId !== undefined) allowedFields.collegeId = updateUserDto.collegeId;
     return this.usersService.update(req.user.id, allowedFields);
   }
 
