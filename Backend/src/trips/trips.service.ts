@@ -43,6 +43,8 @@ export class TripsService {
     private readonly approvalRepository: Repository<Approval>,
     @InjectRepository(TripFeedback)
     private readonly feedbackRepository: Repository<TripFeedback>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly vehiclesService: VehiclesService,
     private readonly driversService: DriversService,
     private readonly notificationsService: NotificationsService,
@@ -203,6 +205,12 @@ export class TripsService {
       throw new ForbiddenException('Only the requester can submit this trip');
     }
 
+    // Load requester with department and college relations
+    const requester = await this.userRepository.findOne({
+      where: { id: user.id },
+      relations: ['department', 'department.college', 'college'],
+    });
+
     // Determine initial state based on trip category AND requester's role.
     // Higher-ranking requesters skip approval levels at or below their own rank.
     let initialState: TripState;
@@ -233,7 +241,23 @@ export class TripsService {
       initialState = TripState.PENDING_PRESIDENT;
       approvalLevel = ApprovalLevel.President;
     } else {
-      // Regular employees go through full chain: Department → College → President
+      // Regular employees — must have department AND college set for routing to work
+      const dept = requester?.department;
+      const college = requester?.college || dept?.college;
+      if (!dept) {
+        throw new BadRequestException(
+          'Your profile does not have a department assigned. Please update your profile with your department before submitting a standard trip request.',
+        );
+      }
+      if (!college) {
+        throw new BadRequestException(
+          'Your department does not have a college assigned. Please contact your system administrator.',
+        );
+      }
+      // Ensure trip requester has college set for approval routing
+      if (!requester.college && dept.college) {
+        await this.userRepository.update(user.id, { college: dept.college });
+      }
       initialState = TripState.PENDING_DEPARTMENT;
       approvalLevel = ApprovalLevel.Department;
     }
