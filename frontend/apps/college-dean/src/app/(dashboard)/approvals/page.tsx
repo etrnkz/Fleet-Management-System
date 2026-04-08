@@ -49,9 +49,13 @@ export default function ApprovalsPage() {
 
   // Map trip states to status for filtering
   const getStatusFromState = (state: string) => {
-    if (state?.includes('PENDING')) return 'pending'
-    if (state === 'APPROVED' || state === 'CAR_ALLOCATED' || state === 'READY' || state === 'IN_PROGRESS' || state === 'COMPLETED') return 'approved'
-    if (state === 'REJECTED' || state === 'CANCELLED') return 'rejected'
+    // Pending: trips waiting for college dean approval
+    if (state === 'PENDING_COLLEGE' || state === 'PENDING_DEAN') return 'pending'
+    // Approved: trips that college dean has approved (moved to president or beyond)
+    if (state === 'PENDING_PRESIDENT' || state === 'APPROVED_FOR_ALLOCATION' || 
+        state === 'CAR_ALLOCATED' || state === 'PENDING_TRANSPORT_CONFIRM' ||
+        state === 'READY' || state === 'IN_PROGRESS' || state === 'COMPLETED') return 'approved'
+    if (state === 'REJECTED' || state === 'CANCELLED' || state === 'AUTO_REJECTED_TIMEOUT') return 'rejected'
     return 'pending'
   }
 
