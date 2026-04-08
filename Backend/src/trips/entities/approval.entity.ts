@@ -1,4 +1,4 @@
-﻿import {
+import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
@@ -45,10 +45,10 @@ export class Approval {
   @Column({ type: 'text', nullable: true })
   comments: string | null;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   dueDate: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   approvedAt: Date;
 
   @CreateDateColumn()
