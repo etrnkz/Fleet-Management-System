@@ -154,20 +154,27 @@ export default function LoginPage() {
               <label htmlFor="email" className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">
                 Email address
               </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  if (error?.type === 'email') setError(null) // Clear error when user types
-                }}
-                placeholder="name@institution.edu"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${
-                  error?.type === 'email' ? 'border-red-500 bg-red-50' : 'border-[#c1c8c4]'
-                }`}
-                required
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#727975]">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    if (error?.type === 'email') setError(null) // Clear error when user types
+                  }}
+                  placeholder="name@institution.edu"
+                  className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${
+                    error?.type === 'email' ? 'border-red-500 bg-red-50' : 'border-[#c1c8c4]'
+                  }`}
+                  required
+                />
+              </div>
               {error && error.type === 'email' && (
                 <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,6 +195,11 @@ export default function LoginPage() {
                 </Link>
               </div>
               <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#727975]">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -197,7 +209,7 @@ export default function LoginPage() {
                     if (error?.type === 'password') setError(null) // Clear error when user types
                   }}
                   placeholder="Enter password"
-                  className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${
+                  className={`w-full pl-11 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${
                     error?.type === 'password' ? 'border-red-500 bg-red-50' : 'border-[#c1c8c4]'
                   }`}
                   required
