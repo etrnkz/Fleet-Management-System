@@ -44,8 +44,17 @@ export class VehiclesController {
   @Get()
   @ApiOperation({ summary: 'Get all vehicles' })
   @ApiQuery({ name: 'status', enum: VehicleStatus, required: false })
+  @ApiQuery({ name: 'availableOnly', type: Boolean, required: false, description: 'If true, exclude vehicles currently allocated to active trips' })
   @ApiResponse({ status: 200, description: 'List of all vehicles' })
-  findAll(@Query('status') status?: VehicleStatus) {
+  findAll(
+    @Query('status') status?: VehicleStatus,
+    @Query('availableOnly') availableOnly?: string,
+  ) {
+    // If status=Active and availableOnly=true (or just status=Active from employee dashboard),
+    // exclude vehicles currently on active trips
+    if (status === VehicleStatus.Active || availableOnly === 'true') {
+      return this.vehiclesService.findAvailable();
+    }
     if (status) {
       return this.vehiclesService.findByStatus(status);
     }
