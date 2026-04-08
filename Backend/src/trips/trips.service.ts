@@ -205,6 +205,14 @@ export class TripsService {
       throw new ForbiddenException('Only the requester can submit this trip');
     }
 
+    // Check that at least one active vehicle exists in the fleet
+    const availableVehicles = await this.vehiclesService.findAvailable();
+    if (availableVehicles.length === 0) {
+      throw new BadRequestException(
+        'No vehicles are currently available in the fleet. Please contact the transport office.',
+      );
+    }
+
     // Load requester with department and college relations
     const requester = await this.userRepository.findOne({
       where: { id: user.id },
