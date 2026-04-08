@@ -31,7 +31,7 @@ export default function DriverDashboard() {
   const [rejecting, setRejecting] = useState(false)
   const [maintenanceForm, setMaintenanceForm] = useState({ issueDescription: '', priority: 'Medium' })
   const [settingsTab, setSettingsTab] = useState<'profile' | 'password'>('profile')
-  const [profileForm, setProfileForm] = useState({ name: '', phoneNumber: '' })
+  const [profileForm, setProfileForm] = useState({ name: '', phoneNumber: '', licenseNumber: '', licenseExpiry: '', experienceYears: 0 })
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
@@ -80,7 +80,7 @@ export default function DriverDashboard() {
       setAssignedVehicle(vehicle)
       setStats(driverStats)
       setNotifications(Array.isArray(notifs) ? notifs : [])
-      setProfileForm({ name: user?.name || '', phoneNumber: user?.phoneNumber || '' })
+      setProfileForm({ name: user?.name || '', phoneNumber: user?.phoneNumber || '', licenseNumber: '', licenseExpiry: '', experienceYears: 0 })
       if (user?.profileImage) setProfileImage(user.profileImage)
       await loadActiveTrips()
     } catch (err: any) {
@@ -162,6 +162,14 @@ export default function DriverDashboard() {
     setSavingProfile(true)
     try {
       await userApi.updateProfile({ name: profileForm.name, phoneNumber: profileForm.phoneNumber })
+      // If license details provided, upsert driver profile
+      if (profileForm.licenseNumber && profileForm.licenseExpiry) {
+        await userApi.updateDriverProfile({
+          licenseNumber: profileForm.licenseNumber,
+          licenseExpiry: profileForm.licenseExpiry,
+          experienceYears: profileForm.experienceYears || 0,
+        })
+      }
       setUserData((p: any) => ({ ...p, name: profileForm.name, phoneNumber: profileForm.phoneNumber }))
       const storage = localStorage.getItem('access_token') ? localStorage : sessionStorage
       const stored = storage.getItem('user')
@@ -617,6 +625,22 @@ export default function DriverDashboard() {
                           <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
                           <input type="tel" value={profileForm.phoneNumber} onChange={e => setProfileForm(p => ({ ...p, phoneNumber: e.target.value }))}
                             placeholder="+251912345678"
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">License Number</label>
+                          <input type="text" value={profileForm.licenseNumber} onChange={e => setProfileForm(p => ({ ...p, licenseNumber: e.target.value }))}
+                            placeholder="e.g. ETH-DL-123456"
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">License Expiry Date</label>
+                          <input type="date" value={profileForm.licenseExpiry} onChange={e => setProfileForm(p => ({ ...p, licenseExpiry: e.target.value }))}
+                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">Years of Experience</label>
+                          <input type="number" min={0} max={50} value={profileForm.experienceYears} onChange={e => setProfileForm(p => ({ ...p, experienceYears: Number(e.target.value) }))}
                             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
                         </div>
                         <div>

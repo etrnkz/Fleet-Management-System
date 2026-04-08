@@ -165,6 +165,20 @@ export class UsersController {
     return this.usersService.update(req.user.id, allowedFields);
   }
 
+  @Patch('me/driver-profile')
+  @ApiOperation({
+    summary: 'Create or update driver profile for current user',
+    description: 'Allows a user with Driver role to set their license details. Auto-creates the driver record if it does not exist.',
+  })
+  @ApiResponse({ status: 200, description: 'Driver profile updated' })
+  @ApiResponse({ status: 400, description: 'User is not a Driver' })
+  updateDriverProfile(
+    @Request() req,
+    @Body() body: { licenseNumber: string; licenseExpiry: string; experienceYears?: number; specializations?: string; notes?: string },
+  ) {
+    return this.usersService.upsertDriverProfile(req.user.id, body);
+  }
+
   @Patch('me/password')
   @ApiOperation({
     summary: 'Change current user password',
