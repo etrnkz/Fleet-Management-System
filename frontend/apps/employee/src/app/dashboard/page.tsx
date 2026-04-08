@@ -476,8 +476,7 @@ export default function DashboardPage() {
       purpose: '',
       startDateTime: '',
       endDateTime: '',
-      passengerCount: 1,
-      estimatedDistance: ''
+      passengerCount: 1
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -522,7 +521,6 @@ export default function DashboardPage() {
           passengerCount: Number(formData.passengerCount),
           tripType: mapped.tripType,
           tripCategory: mapped.tripCategory,
-          estimatedDistance: formData.estimatedDistance ? Number(formData.estimatedDistance) : undefined,
         })
 
         await tripApi.submit(created.id)
@@ -715,23 +713,6 @@ export default function DashboardPage() {
                   min="1"
                   max="50"
                   placeholder="1"
-                  style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="estimatedDistance" className="block text-sm font-medium text-gray-700 mb-2">
-                  Estimated Distance (km)
-                </label>
-                <input
-                  type="number"
-                  id="estimatedDistance"
-                  name="estimatedDistance"
-                  value={formData.estimatedDistance}
-                  onChange={handleChange}
-                  min="1"
-                  placeholder="Enter estimated distance"
                   style={{ color: '#111827', backgroundColor: '#ffffff' }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
                   required
