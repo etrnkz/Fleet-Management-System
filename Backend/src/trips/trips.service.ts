@@ -569,6 +569,13 @@ export class TripsService {
 
     const savedTrip = await this.tripRepository.save(trip);
 
+    // Update driver status to OnTrip
+    try {
+      await this.driversService.updateStatus(driver.id, 'OnTrip' as any);
+    } catch (error) {
+      console.error('Failed to update driver status:', error);
+    }
+
     // Send notification
     try {
       await this.notificationsService.notifyTripAllocated(savedTrip);
@@ -647,9 +654,14 @@ export class TripsService {
     }
 
     // Reset allocation — send back for reassignment
+    const prevDriver = trip.allocatedDriver;
     trip.allocatedDriver = null as any;
     trip.allocatedVehicle = null as any;
     trip.state = TripState.APPROVED_FOR_ALLOCATION;
+    // Reset driver status
+    if (prevDriver) {
+      await this.driversService.updateStatus(prevDriver.id, 'Available' as any).catch(() => {});
+    }
     trip.rejectionReason = `Driver rejected: ${reason}`;
 
     return this.tripRepository.save(trip);
@@ -783,10 +795,15 @@ export class TripsService {
     }
 
     // Reset allocation and move back to approved for allocation
+    const prevDriverOnReject = trip.allocatedDriver;
     trip.allocatedVehicle = null as any;
     trip.allocatedDriver = null as any;
     trip.deploymentTeamMember = null as any;
     trip.estimatedFuelCost = null as any;
+    // Reset driver status
+    if (prevDriverOnReject) {
+      await this.driversService.updateStatus(prevDriverOnReject.id, 'Available' as any).catch(() => {});
+    }
     trip.estimatedDistance = null as any;
     trip.state = TripState.APPROVED_FOR_ALLOCATION;
     trip.rejectionReason = rejectTransportDto.reason;
@@ -926,6 +943,8 @@ export class TripsService {
         trip.allocatedDriver.id,
         completeTripDto.actualDistance,
       );
+      // Reset driver status back to Available
+      await this.driversService.updateStatus(trip.allocatedDriver.id, 'Available' as any).catch(() => {});
     }
 
     const savedTrip = await this.tripRepository.save(trip);
