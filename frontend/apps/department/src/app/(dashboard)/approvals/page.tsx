@@ -34,7 +34,7 @@ export default function ApprovalsPage() {
   const loadRequests = async () => {
     try {
       setLoading(true)
-      const data = await tripApi.getAll()
+      const data = await tripApi.getPendingApprovals()
       setRequests(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to load requests:', error)
@@ -106,11 +106,7 @@ export default function ApprovalsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
-      </div>
-    )
+    return null
   }
 
   return (
@@ -319,19 +315,19 @@ export default function ApprovalsPage() {
                   <div className="grid sm:grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Name</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requestedBy}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requester?.name || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Department</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.department}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requester?.department?.name || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Email</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900 break-all">{selectedRequest.email}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900 break-all">{selectedRequest.requester?.email || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Phone</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.phone}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.requester?.phoneNumber || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -345,42 +341,26 @@ export default function ApprovalsPage() {
                       <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.purpose}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Priority</p>
-                      <span className={`inline-block px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-medium ${getPriorityColor(selectedRequest.priority)}`}>
-                        {selectedRequest.priority}
-                      </span>
+                      <p className="text-[10px] md:text-xs text-gray-500">Trip Type</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.tripType}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">From</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.from}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Destination</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.destination}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">To</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.to}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Passengers</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.passengerCount}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Departure Date & Time</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.departureDate} at {selectedRequest.departureTime}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">Start Date & Time</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.startDateTime ? new Date(selectedRequest.startDateTime).toLocaleString() : 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Return Date</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.returnDate}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Number of Passengers</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.passengers}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] md:text-xs text-gray-500">Vehicle Type</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.vehicleType}</p>
+                      <p className="text-[10px] md:text-xs text-gray-500">End Date & Time</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.endDateTime ? new Date(selectedRequest.endDateTime).toLocaleString() : 'N/A'}</p>
                     </div>
                   </div>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <h3 className="text-xs md:text-sm font-medium text-gray-500 mb-2">Description</h3>
-                  <p className="text-xs md:text-sm text-gray-700">{selectedRequest.description}</p>
                 </div>
 
                 {/* Actions */}
@@ -435,7 +415,7 @@ export default function ApprovalsPage() {
                   Approve Trip Request?
                 </h3>
                 <p className="text-sm md:text-base text-gray-600 text-center mb-4 md:mb-6">
-                  Are you sure you want to approve the trip request from <span className="font-medium">{selectedRequest.requestedBy}</span> to <span className="font-medium">{selectedRequest.to}</span>?
+                  Are you sure you want to approve the trip request from <span className="font-medium">{selectedRequest.requester?.name || 'N/A'}</span> to <span className="font-medium">{selectedRequest.destination}</span>?
                 </p>
 
                 {/* Actions */}
@@ -485,7 +465,7 @@ export default function ApprovalsPage() {
                   Reject Trip Request
                 </h3>
                 <p className="text-sm md:text-base text-gray-600 text-center mb-4 md:mb-6">
-                  Please provide a reason for rejecting the trip request from <span className="font-medium">{selectedRequest.requestedBy}</span>.
+                  Please provide a reason for rejecting the trip request from <span className="font-medium">{selectedRequest.requester?.name || 'N/A'}</span>.
                 </p>
 
                 {/* Reason Input */}

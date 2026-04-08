@@ -246,9 +246,9 @@ export default function DashboardPage() {
 
   return (
     <>
-    <div className="p-6">
+    <div className="p-3 sm:p-6">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
         {statsDisplay.map((stat, index) => (
           <div key={index} className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between mb-4">

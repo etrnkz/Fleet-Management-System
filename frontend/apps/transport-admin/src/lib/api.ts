@@ -168,6 +168,8 @@ export const tripApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+
+  getFeedbackStatistics: () => apiFetch('/trips/feedback/statistics'),
 };
 
 // Vehicle APIs

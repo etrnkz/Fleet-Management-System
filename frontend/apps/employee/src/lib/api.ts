@@ -158,6 +158,20 @@ export const tripApi = {
     apiFetch<void>(`/trips/${id}`, {
       method: 'DELETE',
     }),
+
+  submitFeedback: (id: string, feedback: {
+    overallRating: number;
+    driverRating?: number;
+    vehicleRating?: number;
+    punctualityRating?: number;
+    comments?: string;
+    suggestions?: string;
+    wouldRecommend?: boolean;
+    issues?: string[];
+  }) => apiFetch(`/trips/${id}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify(feedback),
+  }),
 };
 
 // Notification APIs
