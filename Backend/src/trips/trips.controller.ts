@@ -27,6 +27,7 @@ import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { EarlyCompleteTripDto } from './dto/early-complete-trip.dto';
 import { ConfirmTransportDto } from './dto/confirm-transport.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Trips')
 @ApiBearerAuth('JWT-auth')
@@ -72,6 +73,13 @@ export class TripsController {
   @ApiResponse({ status: 200, description: 'List of trip requests' })
   findAll(@Request() req) {
     return this.tripsService.findAll(req.user.id, req.user.role);
+  }
+
+  @Get('my')
+  @ApiOperation({ summary: 'Get current user\'s own trips' })
+  @ApiResponse({ status: 200, description: 'List of trips belonging to the authenticated user' })
+  findMyTrips(@Request() req) {
+    return this.tripsService.findAll(req.user.id, UserRole.User);
   }
 
   @Get(':id')
@@ -350,7 +358,7 @@ export class TripsController {
           DRAFT: 5,
           PENDING_DEPARTMENT: 10,
           PENDING_COLLEGE: 8,
-          PENDING_DEAN: 3,
+          PENDING_PRESIDENT: 3,
           APPROVED_FOR_ALLOCATION: 2,
           CAR_ALLOCATED: 5,
           READY: 3,

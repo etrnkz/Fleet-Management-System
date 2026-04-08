@@ -7,15 +7,18 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { TokenBlacklistService } from './token-blacklist.service';
 import { UsersModule } from '../users/users.module';
 import { CollegesModule } from '../colleges/colleges.module';
 import { DepartmentsModule } from '../departments/departments.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     UsersModule,
     CollegesModule,
     DepartmentsModule,
+    EmailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -33,7 +36,7 @@ import { DepartmentsModule } from '../departments/departments.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
-  exports: [AuthService, JwtAuthGuard, RolesGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard, TokenBlacklistService],
+  exports: [AuthService, JwtAuthGuard, RolesGuard, TokenBlacklistService],
 })
 export class AuthModule {}

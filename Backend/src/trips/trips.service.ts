@@ -32,6 +32,8 @@ import { VehiclesService } from '../vehicles/vehicles.service';
 import { DriversService } from '../drivers/drivers.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WorkflowService } from '../workflow/workflow.service';
+import { AuditService } from '../audit/audit.service';
+import { AuditAction, AuditEntity } from '../audit/entities/audit-log.entity';
 import { parseTripQrPayload } from './utils/trip-qr.util';
 
 @Injectable()
@@ -49,6 +51,7 @@ export class TripsService {
     private readonly driversService: DriversService,
     private readonly notificationsService: NotificationsService,
     private readonly workflowService: WorkflowService,
+    private readonly auditService: AuditService,
   ) {}
 
   async create(createTripDto: CreateTripDto, user: User): Promise<TripRequest> {
@@ -70,8 +73,7 @@ export class TripsService {
     }
 
     // Generate request number
-    const count = await this.tripRepository.count();
-    const requestNumber = `TR-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+    const requestNumber = `TR-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-6)}`;
 
     const trip = this.tripRepository.create({
       ...createTripDto,
@@ -82,7 +84,24 @@ export class TripsService {
       state: TripState.DRAFT,
     });
 
-    return this.tripRepository.save(trip);
+    const savedTrip = await this.tripRepository.save(trip);
+
+    // Audit log
+    try {
+      await this.auditService.log(
+        user,
+        AuditAction.CREATE,
+        AuditEntity.Trip,
+        savedTrip.id,
+        null,
+        { requestNumber: savedTrip.requestNumber, state: savedTrip.state },
+        undefined,
+        undefined,
+        `Trip created: ${savedTrip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
+
+    return savedTrip;
   }
 
   async findAll(userId?: string, role?: UserRole): Promise<TripRequest[]> {
@@ -231,9 +250,9 @@ export class TripsService {
       initialState = TripState.PENDING_PRESIDENT;
       approvalLevel = ApprovalLevel.President;
     } else if (trip.tripType === TripType.VIP) {
-      // Legacy VIP type goes directly to Dean
-      initialState = TripState.PENDING_DEAN;
-      approvalLevel = ApprovalLevel.Dean;
+      // Legacy VIP type goes directly to College (Dean)
+      initialState = TripState.PENDING_COLLEGE;
+      approvalLevel = ApprovalLevel.College;
     } else if (
       requesterRole === UserRole.President ||
       requesterRole === UserRole.Dean
@@ -273,19 +292,37 @@ export class TripsService {
     trip.state = initialState;
     trip.currentApprovalLevel = approvalLevel;
 
-    // Save trip first to ensure it has an ID
-    const savedTrip = await this.tripRepository.save(trip);
+    // Wrap trip save + approval creation in a transaction
+    const savedTrip = await this.tripRepository.manager.transaction(async (manager) => {
+      const saved = await manager.save(TripRequest, trip);
 
-    // Only create an approval record if there is an approval level to wait on
-    if (approvalLevel) {
-      const approval = this.approvalRepository.create({
-        tripRequest: savedTrip,
-        approvalLevel,
-        status: ApprovalStatus.Pending,
-        dueDate: this.calculateDueDate(48), // 48 hours timeout
-      });
-      await this.approvalRepository.save(approval);
-    }
+      if (approvalLevel) {
+        const approval = manager.create(Approval, {
+          tripRequest: saved,
+          approvalLevel,
+          status: ApprovalStatus.Pending,
+          dueDate: this.calculateDueDate(48),
+        });
+        await manager.save(Approval, approval);
+      }
+
+      return saved;
+    });
+
+    // Audit log
+    try {
+      await this.auditService.log(
+        user,
+        AuditAction.SUBMIT,
+        AuditEntity.Trip,
+        savedTrip.id,
+        { state: TripState.DRAFT },
+        { state: savedTrip.state },
+        undefined,
+        undefined,
+        `Trip submitted: ${savedTrip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
 
     // Send notification about submission
     try {
@@ -384,6 +421,21 @@ export class TripsService {
       console.error('Failed to send approval notification:', error);
     }
 
+    // Audit log
+    try {
+      await this.auditService.log(
+        user,
+        AuditAction.APPROVE,
+        AuditEntity.Trip,
+        trip.id,
+        null,
+        { state: trip.state },
+        undefined,
+        undefined,
+        `Trip approved: ${trip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
+
     // Reload trip with fresh approvals data
     return this.findOne(trip.id);
   }
@@ -439,7 +491,24 @@ export class TripsService {
       console.error('Failed to send notification:', error);
     }
 
-    return this.tripRepository.save(trip);
+    const savedTrip = await this.tripRepository.save(trip);
+
+    // Audit log
+    try {
+      await this.auditService.log(
+        user,
+        AuditAction.REJECT,
+        AuditEntity.Trip,
+        savedTrip.id,
+        null,
+        { state: TripState.REJECTED, reason: rejectTripDto.reason },
+        undefined,
+        undefined,
+        `Trip rejected: ${savedTrip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
+
+    return savedTrip;
   }
 
   async allocate(
@@ -506,6 +575,21 @@ export class TripsService {
     } catch (error) {
       console.error('Failed to send notification:', error);
     }
+
+    // Audit log
+    try {
+      await this.auditService.log(
+        user,
+        AuditAction.ALLOCATE,
+        AuditEntity.Trip,
+        savedTrip.id,
+        null,
+        { state: TripState.CAR_ALLOCATED, vehicleId: allocateTripDto.vehicleId, driverId: allocateTripDto.driverId },
+        undefined,
+        undefined,
+        `Trip allocated: ${savedTrip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
 
     return savedTrip;
   }
@@ -853,6 +937,21 @@ export class TripsService {
       console.error('Failed to send notification:', error);
     }
 
+    // Audit log
+    try {
+      await this.auditService.log(
+        user,
+        AuditAction.COMPLETE,
+        AuditEntity.Trip,
+        savedTrip.id,
+        null,
+        { state: TripState.COMPLETED, actualDistance: completeTripDto.actualDistance },
+        undefined,
+        undefined,
+        `Trip completed: ${savedTrip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
+
     return savedTrip;
   }
 
@@ -872,7 +971,7 @@ export class TripsService {
         break;
       case UserRole.Dean:
         // Dean approves at college level (PENDING_COLLEGE)
-        states = [TripState.PENDING_COLLEGE, TripState.PENDING_DEAN];
+        states = [TripState.PENDING_COLLEGE];
         break;
       case UserRole.President:
         states = [TripState.PENDING_PRESIDENT];
@@ -918,7 +1017,6 @@ export class TripsService {
       where: [
         { state: TripState.PENDING_DEPARTMENT },
         { state: TripState.PENDING_COLLEGE },
-        { state: TripState.PENDING_DEAN },
       ],
     });
     const approved = await this.tripRepository.count({

@@ -71,6 +71,12 @@ export class UsersService {
     });
   }
 
+  async findByResetToken(token: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { resetToken: token },
+    });
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },

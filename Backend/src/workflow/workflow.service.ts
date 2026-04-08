@@ -123,7 +123,7 @@ export class WorkflowService {
     const pendingStates = [
       TripState.PENDING_DEPARTMENT,
       TripState.PENDING_COLLEGE,
-      TripState.PENDING_DEAN,
+      TripState.PENDING_PRESIDENT,
     ];
 
     if (!pendingStates.includes(trip.state)) {
@@ -190,7 +190,7 @@ export class WorkflowService {
     const pendingStates = [
       TripState.PENDING_DEPARTMENT,
       TripState.PENDING_COLLEGE,
-      TripState.PENDING_DEAN,
+      TripState.PENDING_PRESIDENT,
     ];
 
     if (!pendingStates.includes(trip.state)) {
@@ -243,7 +243,7 @@ export class WorkflowService {
     const pendingStates = [
       TripState.PENDING_DEPARTMENT,
       TripState.PENDING_COLLEGE,
-      TripState.PENDING_DEAN,
+      TripState.PENDING_PRESIDENT,
     ];
 
     if (pendingStates.includes(trip.state)) {
@@ -299,7 +299,7 @@ export class WorkflowService {
             role: 'CollegeHead',
             state: 'PENDING_COLLEGE',
             timeoutHours: 48,
-            nextStateOnApprove: 'PENDING_DEAN',
+            nextStateOnApprove: 'PENDING_PRESIDENT',
             nextStateOnReject: 'REJECTED',
             nextStateOnTimeout: 'AUTO_REJECTED_TIMEOUT',
             actions: [
@@ -311,10 +311,10 @@ export class WorkflowService {
             ],
           },
           {
-            name: 'Dean Approval',
+            name: 'President Approval',
             order: 3,
-            role: 'Dean',
-            state: 'PENDING_DEAN',
+            role: 'President',
+            state: 'PENDING_PRESIDENT',
             timeoutHours: 48,
             nextStateOnApprove: 'APPROVED_FOR_ALLOCATION',
             nextStateOnReject: 'REJECTED',
@@ -345,10 +345,10 @@ export class WorkflowService {
         isActive: true,
         steps: [
           {
-            name: 'Dean Approval',
+            name: 'President Approval',
             order: 1,
-            role: 'Dean',
-            state: 'PENDING_DEAN',
+            role: 'President',
+            state: 'PENDING_PRESIDENT',
             timeoutHours: 48,
             nextStateOnApprove: 'APPROVED_FOR_ALLOCATION',
             nextStateOnReject: 'REJECTED',

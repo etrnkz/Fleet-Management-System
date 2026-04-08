@@ -1,10 +1,13 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { User, UserRole } from '../users/entities/user.entity';
+import { TokenBlacklistService } from './token-blacklist.service';
+import { EmailService } from '../email/email.service';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +18,8 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
+    private readonly emailService: EmailService,
   ) {
     this.refreshSecret =
       this.configService.get<string>('JWT_REFRESH_SECRET') ||
@@ -142,10 +147,54 @@ export class AuthService {
   }
 
   async logout(token: string) {
-    // In a production app, you would add the token to a blacklist
-    // For now, we'll just log the logout
-    this.logger.log('User logged out');
+    this.tokenBlacklistService.add(token);
+    this.logger.log('User logged out, token blacklisted');
     return { message: 'Logged out successfully' };
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      // Return generic message to avoid user enumeration
+      return { message: 'If that email exists, a reset link has been sent.' };
+    }
+
+    const token = randomUUID();
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await this.usersService.update(user.id, {
+      resetToken: token,
+      resetTokenExpiry: expiry,
+    } as any);
+
+    const resetLink = `${this.configService.get('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token=${token}`;
+
+    await this.emailService.sendEmail({
+      to: email,
+      subject: 'Password Reset Request',
+      html: `<p>Click the link below to reset your password. This link expires in 1 hour.</p>
+             <p><a href="${resetLink}">${resetLink}</a></p>
+             <p>If you did not request this, please ignore this email.</p>`,
+    });
+
+    this.logger.log(`Password reset email sent to ${email}`);
+    return { message: 'If that email exists, a reset link has been sent.' };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const user = await this.usersService.findByResetToken(token);
+
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    await this.usersService.update(user.id, {
+      password: newPassword,
+      resetToken: null,
+      resetTokenExpiry: null,
+    } as any);
+
+    return { message: 'Password reset successfully' };
   }
 
   async validateUser(payload: any): Promise<User> {

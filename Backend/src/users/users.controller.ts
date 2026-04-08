@@ -165,6 +165,32 @@ export class UsersController {
     return this.usersService.update(req.user.id, allowedFields);
   }
 
+  @Patch('me/password')
+  @ApiOperation({
+    summary: 'Change current user password',
+    description: 'Update password after verifying the current password',
+  })
+  @ApiResponse({ status: 200, description: 'Password updated successfully' })
+  @ApiResponse({ status: 400, description: 'Current password is incorrect' })
+  async changePassword(
+    @Request() req,
+    @Body() body: { currentPassword: string; newPassword: string },
+  ) {
+    const user = await this.usersService.findById(req.user.id);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const isValid = await user.validatePassword(body.currentPassword);
+    if (!isValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const hashed = await bcrypt.hash(body.newPassword, 10);
+    await this.usersService.update(req.user.id, { password: hashed } as any);
+    return { message: 'Password updated successfully' };
+  }
+
   @Post('me/profile-image')
   @UseInterceptors(FileInterceptor('profileImage', {
     limits: {
