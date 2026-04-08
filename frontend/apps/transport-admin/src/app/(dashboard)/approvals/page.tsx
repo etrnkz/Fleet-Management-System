@@ -140,7 +140,7 @@ export default function ApprovalsPage() {
   }
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-3 sm:p-6 h-full flex flex-col">
       {toast && (
         <Toast
           message={toast.message}
@@ -150,17 +150,17 @@ export default function ApprovalsPage() {
       )}
 
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Pending Transport Approvals</h2>
-            <p className="text-gray-600 mt-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Pending Transport Approvals</h2>
+            <p className="text-gray-600 mt-1 text-sm">
               {trips.length} {trips.length === 1 ? 'trip' : 'trips'} awaiting your approval
             </p>
           </div>
           <button
             onClick={fetchPendingApprovals}
-            className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors"
+            className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-sm self-start sm:self-auto"
           >
             Refresh
           </button>
@@ -178,9 +178,9 @@ export default function ApprovalsPage() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex gap-6 min-h-0">
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-0">
           {/* Left Panel - Trip List */}
-          <div className="w-96 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
+          <div className="w-full lg:w-96 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden" style={{maxHeight: '50vh', minHeight: '200px'}}>
             <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-[#1B3D2F] to-white">
               <h3 className="text-lg font-bold text-gray-900">Awaiting Approval</h3>
               <p className="text-sm text-gray-500">{trips.length} trips</p>

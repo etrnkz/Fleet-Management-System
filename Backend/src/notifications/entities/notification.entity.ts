@@ -50,7 +50,7 @@ export class Notification {
   @Column({ default: false })
   isRead: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   readAt: Date;
 
   @CreateDateColumn()

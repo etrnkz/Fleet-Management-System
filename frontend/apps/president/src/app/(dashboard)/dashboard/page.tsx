@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
-import { tripApi, vehicleApi } from '../../../lib/api'
+import { tripApi, vehicleApi, collegeApi } from '../../../lib/api'
 
 interface DashboardStats {
   totalVehicles: number
@@ -64,10 +64,11 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     setLoading(true)
     try {
-      const [vehicles, trips, pendingTrips] = await Promise.all([
+      const [vehicles, trips, pendingTrips, colleges] = await Promise.all([
         vehicleApi.getAllVehicles(),
         tripApi.getAllTrips(),
         tripApi.getPendingApprovals(),
+        collegeApi.getAll().catch(() => []),
       ])
 
       const allTrips = trips || []
@@ -167,25 +168,31 @@ export default function Dashboard() {
         })))
       }
 
-      // Fleet utilization by department (from filtered trips)
-      const deptUsage: any = {}
+      // Fleet utilization by college (from real colleges in DB)
+      const allColleges: any[] = Array.isArray(colleges) ? colleges : []
+      const collegeUsage: Record<string, number> = {}
+      // Initialize all colleges with 0
+      allColleges.forEach((c: any) => { collegeUsage[c.name] = 0 })
+      // Count trips per college
       filteredTrips.forEach((trip: any) => {
-        const dept = trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown'
-        if (!deptUsage[dept]) deptUsage[dept] = { trips: 0, vehicles: new Set() }
-        deptUsage[dept].trips += 1
-        const vid = trip.allocatedVehicle?.id
-        if (vid) deptUsage[dept].vehicles.add(vid)
+        const collegeName = trip.requester?.college?.name || trip.requester?.department?.college?.name || null
+        if (collegeName && collegeUsage[collegeName] !== undefined) {
+          collegeUsage[collegeName] += 1
+        } else if (collegeName) {
+          collegeUsage[collegeName] = 1
+        }
       })
-      const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500']
+      const totalFilteredTrips = Math.max(filteredTrips.length, 1)
+      const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500', 'bg-orange-500']
       setFleetUtilization(
-        Object.entries(deptUsage)
-          .map(([dept, data]: [string, any], i) => ({
+        Object.entries(collegeUsage)
+          .map(([dept, tripCount], i) => ({
             department: dept,
-            percentage: Math.min(Math.round((data.trips / Math.max(filteredTrips.length, 1)) * 100), 100),
+            percentage: Math.min(Math.round((tripCount / totalFilteredTrips) * 100), 100),
             color: colors[i % colors.length]
           }))
           .sort((a, b) => b.percentage - a.percentage)
-          .slice(0, 5)
+          .slice(0, 8)
       )
 
     } catch (error) {
@@ -441,9 +448,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Department Utilization */}
+      {/* College Utilization */}
       <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-        <h3 className="text-base md:text-lg font-bold text-gray-800 mb-4 md:mb-6">Department Fleet Utilization</h3>
+        <h3 className="text-base md:text-lg font-bold text-gray-800 mb-4 md:mb-6">College Fleet Utilization</h3>
         <div className="space-y-3 md:space-y-4">
           {fleetUtilization.map((dept) => (
             <div key={dept.department}>
@@ -476,7 +483,7 @@ export default function Dashboard() {
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Request ID</th>
-                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Department</th>
+                    <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">College / Dept</th>
                     <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Purpose</th>
                     <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Date</th>
                     <th className="text-left py-2 md:py-3 px-3 md:px-4 text-xs md:text-sm font-semibold text-gray-700 whitespace-nowrap">Requester</th>

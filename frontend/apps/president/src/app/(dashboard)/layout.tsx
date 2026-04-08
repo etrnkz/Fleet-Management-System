@@ -19,7 +19,23 @@ export default function DashboardLayout({
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
-  const [activeSettingsTab, setActiveSettingsTab] = useState('account')
+  const [activeSettingsTab, setActiveSettingsTab] = useState('profile')
+  // Settings form state
+  const [settingsForm, setSettingsForm] = useState({ name: '', email: '', phoneNumber: '' })
+  const [settingsProfileImage, setSettingsProfileImage] = useState<string | null>(null)
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [inviteEmails, setInviteEmails] = useState('')
+  const [inviteRole, setInviteRole] = useState('User')
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [inviteResult, setInviteResult] = useState<{ invited: string[]; failed: { email: string; reason: string }[] } | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
   const [selectedNotification, setSelectedNotification] = useState<any>(null)
   const [showNotificationDetail, setShowNotificationDetail] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -200,6 +216,79 @@ export default function DashboardLayout({
     }
   }
 
+  const openSettings = () => {
+    setShowProfileDropdown(false)
+    setSettingsForm({ name: user?.name || '', email: user?.email || '', phoneNumber: user?.phoneNumber || '' })
+    setSettingsProfileImage(user?.profileImage || null)
+    setActiveSettingsTab('profile')
+    setShowSettingsModal(true)
+  }
+
+  const handleSettingsSave = async () => {
+    try {
+      setSettingsSaving(true)
+      const { userApi } = await import('@/lib/api')
+      await userApi.updateProfile({ name: settingsForm.name, phoneNumber: settingsForm.phoneNumber })
+      const updatedUser = { ...user, name: settingsForm.name, phoneNumber: settingsForm.phoneNumber }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+    } catch (error: any) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setSettingsSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) return
+    if (passwordData.newPassword.length < 6) return
+    try {
+      setSavingPassword(true)
+      const { userApi } = await import('@/lib/api')
+      await userApi.updateProfile({ password: passwordData.newPassword, currentPassword: passwordData.currentPassword })
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (error: any) {
+      console.error('Failed to change password:', error)
+    } finally {
+      setSavingPassword(false)
+    }
+  }
+
+  const handleSettingsImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setSettingsProfileImage(reader.result as string)
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleInvite = async () => {
+    setInviting(true)
+    setInviteResult(null)
+    try {
+      const { inviteApi } = await import('@/lib/api')
+      let result: any
+      if (inviteMode === 'csv' && csvFile) {
+        const fd = new FormData()
+        fd.append('csvFile', csvFile)
+        if (inviteMessage) fd.append('welcomeMessage', inviteMessage)
+        result = await inviteApi.bulkInviteCsv(fd)
+      } else {
+        const emails = inviteEmails.split(/[\n,]+/).map(e => e.trim()).filter(e => e.includes('@'))
+        if (emails.length === 0) { setInviting(false); return }
+        result = await inviteApi.bulkInvite({ emails, welcomeMessage: inviteMessage || undefined, role: inviteRole || undefined })
+      }
+      setInviteResult(result)
+      setInviteEmails('')
+      setCsvFile(null)
+    } catch (error: any) {
+      console.error('Failed to send invitations:', error)
+    } finally {
+      setInviting(false)
+    }
+  }
+
   const navigation = [
     { 
       name: 'Dashboard', 
@@ -273,15 +362,6 @@ export default function DashboardLayout({
         </svg>
       )
     },
-    { 
-      name: 'Policies', 
-      href: '/policies', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      )
-    },
   ]
 
   if (!user) return null
@@ -325,7 +405,7 @@ export default function DashboardLayout({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {notifications.filter((n: any) => !n.isRead).length > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
                     {notifications.filter((n: any) => !n.isRead).length > 9 ? '9+' : notifications.filter((n: any) => !n.isRead).length}
                   </span>
                 )}
@@ -341,45 +421,42 @@ export default function DashboardLayout({
                   </div>
 
                   <div className="divide-y divide-gray-100">
-                    {notifications.length > 0 ? notifications.map((notif: any) => (
+                    {notifications.filter((n: any) => !n.isRead).length > 0 ? notifications.filter((n: any) => !n.isRead).map((notif: any) => (
                       <div
                         key={notif.id}
-                        className={`p-3 md:p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.isRead ? 'bg-blue-50' : ''}`}
-                        onClick={() => {
-                          setSelectedNotification(notif)
-                          setShowNotificationDetail(true)
-                          setShowNotifications(false)
-                        }}
+                        className="p-3 md:p-4 hover:bg-gray-50 transition-colors bg-blue-50"
                       >
                         <div className="flex items-start gap-2 md:gap-3">
                           <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                             notif.type === 'urgent' ? 'bg-red-500' :
                             notif.type === 'warning' ? 'bg-yellow-500' :
-                            notif.type === 'approval' || notif.type === 'success' ? 'bg-green-500' : 'bg-gray-400'
+                            notif.type === 'approval' || notif.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
                           }`}></div>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 cursor-pointer" onClick={async () => {
+                            try { await notificationApi.markAsRead(notif.id) } catch {}
+                            setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== notif.id))
+                            setSelectedNotification(notif)
+                            setShowNotificationDetail(true)
+                            setShowNotifications(false)
+                          }}>
                             <p className="text-xs md:text-sm font-medium text-gray-800 truncate">{notif.title}</p>
                             <p className="text-xs text-gray-600 mt-1 line-clamp-2">{notif.message}</p>
                             <p className="text-xs text-gray-400 mt-1">{notif.sentAt ? new Date(notif.sentAt).toLocaleString() : notif.createdAt ? new Date(notif.createdAt).toLocaleString() : ''}</p>
                           </div>
-                          {!notif.isRead && (
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation()
-                                try {
-                                  await notificationApi.markAsRead(notif.id)
-                                  setNotifications((prev: any[]) => prev.map((n: any) => n.id === notif.id ? { ...n, isRead: true } : n))
-                                } catch {}
-                              }}
-                              className="text-[10px] text-[#1B3D2F] hover:text-[#1B3D2F] font-medium whitespace-nowrap flex-shrink-0 mt-1"
-                            >
-                              Mark read
-                            </button>
-                          )}
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation()
+                              try { await notificationApi.markAsRead(notif.id) } catch {}
+                              setNotifications((prev: any[]) => prev.filter((n: any) => n.id !== notif.id))
+                            }}
+                            className="text-[10px] text-[#1B3D2F] font-semibold border border-[#1B3D2F]/30 px-2 py-1 rounded hover:bg-[#1B3D2F]/10 transition-colors whitespace-nowrap flex-shrink-0"
+                          >
+                            Mark read
+                          </button>
                         </div>
                       </div>
                     )) : (
-                      <div className="p-8 text-center text-sm text-gray-500">No notifications</div>
+                      <div className="p-8 text-center text-sm text-gray-500">No new notifications</div>
                     )}
                   </div>
 
@@ -387,12 +464,11 @@ export default function DashboardLayout({
                     {notifications.filter((n: any) => !n.isRead).length > 0 && (
                       <button
                         onClick={async () => {
-                          try {
-                            await notificationApi.markAllAsRead()
-                            setNotifications((prev: any[]) => prev.map((n: any) => ({ ...n, isRead: true })))
-                          } catch {}
+                          try { await notificationApi.markAllAsRead() } catch {}
+                          setNotifications([])
+                          setShowNotifications(false)
                         }}
-                        className="text-xs text-[#1B3D2F] hover:text-[#1B3D2F] font-medium"
+                        className="text-sm font-bold text-[#1B3D2F] hover:text-[#1B3D2F]/80 transition-colors"
                       >
                         Mark all as read
                       </button>
@@ -433,7 +509,9 @@ export default function DashboardLayout({
 
               {/* Profile Dropdown */}
               {showProfileDropdown && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200">
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowProfileDropdown(false)} />
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
                   <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center space-x-3">
                       {user?.profilePhoto ? (
@@ -488,9 +566,12 @@ export default function DashboardLayout({
                       </svg>
                       <span className="text-sm font-medium text-gray-700">Edit Profile</span>
                     </button>
-                    <Link
-                      href="/settings"
-                      onClick={() => setShowProfileDropdown(false)}
+                    <button
+                      onClick={() => {
+                        setShowProfileDropdown(false)
+                        setShowSettingsModal(true)
+                        setActiveSettingsTab('profile')
+                      }}
                       className="w-full flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-100 text-left"
                     >
                       <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -498,7 +579,7 @@ export default function DashboardLayout({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       <span className="text-sm font-medium text-gray-700">Settings</span>
-                    </Link>
+                    </button>
                     <button
                       onClick={() => {
                         setShowProfileDropdown(false)
@@ -513,6 +594,7 @@ export default function DashboardLayout({
                     </button>
                   </div>
                 </div>
+                </>
               )}
             </div>
           </div>
@@ -996,6 +1078,187 @@ export default function DashboardLayout({
           <div className="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#1B3D2F]"></div>
             <p className="mt-4 text-gray-700 font-medium">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowSettingsModal(false)} />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
+                <button onClick={() => setShowSettingsModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="border-b border-gray-200 overflow-x-auto">
+                <div className="flex gap-1 px-6 min-w-max">
+                  {[['profile','Profile'],['password','Password'],['account','Account'],['invite','Invite Employees']].map(([id,label]) => (
+                    <button key={id} onClick={() => setActiveSettingsTab(id)}
+                      className={`py-3 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${activeSettingsTab === id ? 'border-[#1B3D2F] text-[#1B3D2F]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6">
+                {/* Profile Tab */}
+                {activeSettingsTab === 'profile' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-4 border-[#1B3D2F]">
+                          {settingsProfileImage ? <img src={settingsProfileImage} alt="Profile" className="w-full h-full object-cover" /> : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#152e22] text-white text-2xl font-bold">
+                              {(settingsForm.name || 'P').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <label htmlFor="settingsImgUpload" className="absolute bottom-0 right-0 bg-[#152e22] text-white p-1.5 rounded-full cursor-pointer hover:bg-[#1B3D2F]">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        </label>
+                        <input type="file" id="settingsImgUpload" accept="image/*" onChange={handleSettingsImageUpload} className="hidden" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{settingsForm.name}</p>
+                        <p className="text-sm text-gray-500">{user?.role}</p>
+                        <p className="text-xs text-gray-400">{settingsForm.email}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" value={settingsForm.name} onChange={e => setSettingsForm({...settingsForm, name: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" value={settingsForm.email} disabled className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-500" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="tel" value={settingsForm.phoneNumber} onChange={e => setSettingsForm({...settingsForm, phoneNumber: e.target.value})} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none" />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button onClick={handleSettingsSave} disabled={settingsSaving} className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium">
+                        {settingsSaving ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {/* Password Tab */}
+                {activeSettingsTab === 'password' && (
+                  <div className="space-y-5 max-w-md">
+                    <p className="text-sm text-gray-500">Update your password. You'll need your current password to confirm.</p>
+                    {[
+                      { label: 'Current Password', key: 'currentPassword', show: showCurrentPassword, toggle: () => setShowCurrentPassword(!showCurrentPassword) },
+                      { label: 'New Password', key: 'newPassword', show: showNewPassword, toggle: () => setShowNewPassword(!showNewPassword) },
+                      { label: 'Confirm New Password', key: 'confirmPassword', show: showConfirmPassword, toggle: () => setShowConfirmPassword(!showConfirmPassword) },
+                    ].map(({ label, key, show, toggle }) => (
+                      <div key={key}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+                        <div className="relative">
+                          <input type={show ? 'text' : 'password'} value={(passwordData as any)[key]} onChange={e => setPasswordData({...passwordData, [key]: e.target.value})}
+                            className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none" />
+                          <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            {show ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={handlePasswordChange} disabled={savingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                      className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium">
+                      {savingPassword ? 'Updating...' : 'Update Password'}
+                    </button>
+                  </div>
+                )}
+                {/* Account Tab */}
+                {activeSettingsTab === 'account' && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-3">Account Information</h3>
+                      <div className="space-y-3">
+                        {[['Email', settingsForm.email], ['Role', user?.role], ['Status', 'Active']].map(([label, value]) => (
+                          <div key={label} className="flex justify-between items-center py-3 border-b border-gray-100">
+                            <p className="text-sm font-medium text-gray-700">{label}</p>
+                            <p className="text-sm text-gray-500">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-3">Danger Zone</h3>
+                      <div className="border border-red-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center">
+                          <div><p className="text-sm font-medium text-gray-900">Sign out</p><p className="text-sm text-gray-500">Sign out of your account</p></div>
+                          <button onClick={() => { setShowSettingsModal(false); handleLogout() }} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">Logout</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Invite Tab */}
+                {activeSettingsTab === 'invite' && (
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">Invite Employees</h3>
+                      <p className="text-sm text-gray-500 mt-1">Invited users receive an email with a temporary password.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {(['email','csv'] as const).map(mode => (
+                        <button key={mode} onClick={() => setInviteMode(mode)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${inviteMode === mode ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                          {mode === 'email' ? 'Paste Emails' : 'Upload CSV'}
+                        </button>
+                      ))}
+                    </div>
+                    {inviteMode === 'email' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Addresses <span className="text-gray-400 font-normal">(comma or new line)</span></label>
+                        <textarea value={inviteEmails} onChange={e => setInviteEmails(e.target.value)} rows={4} placeholder="john@university.edu, jane@university.edu" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent font-mono text-sm" />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">CSV File <span className="text-gray-400 font-normal">(must have "email" column)</span></label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1B3D2F] transition-colors">
+                          <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUploadSettings" />
+                          <label htmlFor="csvUploadSettings" className="cursor-pointer text-sm text-gray-500">{csvFile ? csvFile.name : 'Click to upload CSV'}</label>
+                        </div>
+                        <a href="data:text/csv;charset=utf-8,email%0Ajohn.doe%40university.edu" download="invite_template.csv" className="text-xs text-[#1B3D2F] hover:underline mt-2 inline-block">Download CSV template</a>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Role to Assign</label>
+                      <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm">
+                        <option value="User">Employee (User)</option>
+                        <option value="DepartmentHead">Department Head</option>
+                        <option value="CollegeHead">College Head</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Welcome Message <span className="text-gray-400 font-normal">(optional)</span></label>
+                      <textarea value={inviteMessage} onChange={e => setInviteMessage(e.target.value)} rows={2} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm" />
+                    </div>
+                    <button onClick={handleInvite} disabled={inviting || (inviteMode === 'email' ? !inviteEmails.trim() : !csvFile)}
+                      className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium flex items-center gap-2">
+                      {inviting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Sending...</> : <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        Send Invitations
+                      </>}
+                    </button>
+                    {inviteResult && (
+                      <div className="space-y-2">
+                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3"><p className="text-sm font-medium text-[#1B3D2F]">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p><div className="flex flex-wrap gap-1 mt-1">{inviteResult.invited.map(e => <span key={e} className="text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div></div>}
+                        {inviteResult.failed.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-sm font-medium text-red-800">✗ {inviteResult.failed.length} failed</p><div className="space-y-1 mt-1">{inviteResult.failed.map(f => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div></div>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

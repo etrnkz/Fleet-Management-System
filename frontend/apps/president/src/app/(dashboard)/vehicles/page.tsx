@@ -33,8 +33,8 @@ export default function VehiclesPage() {
 
           // Map vehicle status and enhance with real data
           const status = vehicle.status?.toLowerCase() || 'available'
-          const fuelLevel = vehicle.fuelLevel || Math.floor(Math.random() * 100) // Use real fuel level if available
-          const department = vehicle.assignedDepartment || vehicle.department?.name || 'Available'
+          const fuelLevel = vehicle.fuelLevel ?? vehicle.fuelCapacity ?? null
+          const department = vehicle.assignedDepartment || vehicle.department?.name || 'N/A'
           
           return {
             ...vehicle,
@@ -63,7 +63,7 @@ export default function VehiclesPage() {
             assignedTo: vehicle.assignedTo || null,
             maintenanceType: status === 'maintenance' ? 'Scheduled maintenance' : null,
             estimatedCompletion: status === 'maintenance' ? new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0, 10) : null,
-            note: status === 'idle' ? `Idle for ${vehicle.idleDays || Math.floor(Math.random() * 10) + 1} days` : null
+            note: status === 'idle' ? `Idle since last trip` : null
           }
         })
       )
@@ -294,21 +294,24 @@ export default function VehiclesPage() {
                 </div>
               </div>
 
-              {/* Fuel Level */}
-              <div>
+                <div>
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs text-gray-600">Fuel Level</p>
-                  <p className="text-xs font-medium text-gray-800">{vehicle.fuelLevel}%</p>
+                  <p className="text-xs font-medium text-gray-800">{vehicle.fuelLevel != null ? `${vehicle.fuelLevel}%` : 'N/A'}</p>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full ${
-                      vehicle.fuelLevel > 70 ? 'bg-green-500' :
-                      vehicle.fuelLevel > 40 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${vehicle.fuelLevel}%` }}
-                  ></div>
-                </div>
+                {vehicle.fuelLevel != null ? (
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full ${
+                        vehicle.fuelLevel > 70 ? 'bg-green-500' :
+                        vehicle.fuelLevel > 40 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${vehicle.fuelLevel}%` }}
+                    ></div>
+                  </div>
+                ) : (
+                  <div className="w-full bg-gray-100 rounded-full h-2" />
+                )}
               </div>
 
               {/* Mileage */}

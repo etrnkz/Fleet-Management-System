@@ -107,15 +107,15 @@ export default function DepartmentsPage() {
           <div key={college.name} className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* College Header */}
             <div 
-              className="p-4 md:p-6 bg-gradient-to-r from-[#1B3D2F] to-green-50 border-l-4 border-[#1B3D2F] cursor-pointer hover:bg-[#1B3D2F]/15 transition-colors"
+              className="p-4 md:p-6 bg-[#1B3D2F]/10 border-l-4 border-[#1B3D2F] cursor-pointer hover:bg-[#1B3D2F]/15 transition-colors"
               onClick={() => toggleCollege(college.name)}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-base md:text-lg font-bold text-gray-800">{college.name}</h3>
+                    <h3 className="text-base md:text-lg font-bold text-[#1B3D2F]">{college.name}</h3>
                     <svg 
-                      className={`w-5 h-5 text-gray-600 transition-transform ${expandedCollege === college.name ? 'rotate-180' : ''}`}
+                      className={`w-5 h-5 text-[#1B3D2F]/60 transition-transform ${expandedCollege === college.name ? 'rotate-180' : ''}`}
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -125,19 +125,19 @@ export default function DepartmentsPage() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-3">
                     <div>
-                      <p className="text-xs text-gray-600">Vehicles</p>
+                      <p className="text-xs text-gray-500">Vehicles</p>
                       <p className="text-sm md:text-base font-bold text-gray-800">{college.totalVehicles}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-600">Total Trips</p>
+                      <p className="text-xs text-gray-500">Total Trips</p>
                       <p className="text-sm md:text-base font-bold text-gray-800">{college.totalTrips}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-600">Total Cost</p>
+                      <p className="text-xs text-gray-500">Total Cost</p>
                       <p className="text-sm md:text-base font-bold text-[#1B3D2F]">ETB {(college.totalCost / 1000).toFixed(0)}K</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-600">Utilization</p>
+                      <p className="text-xs text-gray-500">Utilization</p>
                       <p className="text-sm md:text-base font-bold text-gray-800">{college.utilization}%</p>
                     </div>
                   </div>

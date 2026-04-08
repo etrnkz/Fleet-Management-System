@@ -52,12 +52,6 @@ export default function NotificationsPage() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Notifications</h1>
           <p className="text-sm text-gray-500 mt-1">{unreadCount} unread</p>
         </div>
-        {unreadCount > 0 && (
-          <button onClick={markAllRead}
-            className="px-4 py-2 text-sm text-[#1B3D2F] border border-[#1B3D2F]/30 rounded-lg hover:bg-[#1B3D2F]/10 font-medium">
-            Mark all as read
-          </button>
-        )}
       </div>
 
       <div className="flex gap-2">
@@ -83,8 +77,8 @@ export default function NotificationsPage() {
           {filtered.map(n => {
             const { color, bg, icon } = typeIcon(n.type)
             return (
-              <div key={n.id} onClick={() => !n.isRead && markRead(n.id)}
-                className={`bg-white rounded-xl border p-4 transition-all hover:shadow-md ${!n.isRead ? 'border-[#1B3D2F]/20 bg-[#1B3D2F]/5 cursor-pointer' : 'border-gray-200'}`}>
+              <div key={n.id}
+                className={`bg-white rounded-xl border p-4 transition-all hover:shadow-md ${!n.isRead ? 'border-[#1B3D2F]/20 bg-[#1B3D2F]/5' : 'border-gray-200'}`}>
                 <div className="flex items-start gap-4">
                   <div className={`w-10 h-10 ${bg} rounded-full flex items-center justify-center flex-shrink-0`}>
                     <svg className={`w-5 h-5 ${color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,10 +93,28 @@ export default function NotificationsPage() {
                     <p className="text-sm text-gray-500 mt-0.5">{n.message}</p>
                     <p className="text-xs text-gray-400 mt-1">{new Date(n.sentAt || n.createdAt).toLocaleString()}</p>
                   </div>
+                  {!n.isRead && (
+                    <button
+                      onClick={() => markRead(n.id)}
+                      className="flex-shrink-0 text-xs text-[#1B3D2F] font-semibold border border-[#1B3D2F]/30 px-3 py-1.5 rounded-lg hover:bg-[#1B3D2F]/10 transition-colors"
+                    >
+                      Mark read
+                    </button>
+                  )}
                 </div>
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* General mark all as read at bottom */}
+      {unreadCount > 0 && (
+        <div className="flex justify-end pt-2 border-t border-gray-200">
+          <button onClick={markAllRead}
+            className="px-5 py-2 bg-[#1B3D2F] text-white text-sm font-medium rounded-lg hover:bg-[#152e22] transition-colors">
+            Mark all as read
+          </button>
         </div>
       )}
     </div>

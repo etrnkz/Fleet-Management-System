@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   
@@ -286,16 +287,13 @@ export default function DashboardPage() {
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
     
-    // Keep only essential userData (profile settings without images)
-    // Profile image will be restored from backend on next login
-    
-    router.push('/login')
+    router.push('/')
   }
 
   const handleMarkNotificationAsRead = async (id: string) => {
     try {
       await notificationApi.markAsRead(id)
-      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n))
+      setNotifications(prev => prev.filter((n: any) => n.id !== id))
     } catch (error) {
       console.error('Failed to mark notification as read:', error)
     }
@@ -364,7 +362,7 @@ export default function DashboardPage() {
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
         <div>
-          <h2 className="text-4xl font-bold tracking-tight text-[#1B3D2F] font-serif italic">Available Vehicles</h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Available Vehicles</h2>
           <p className="text-[#44474E] mt-2 font-medium">Fleet availability reference listing — assignment is coordinated by transport office.</p>
         </div>
       </div>
@@ -420,7 +418,7 @@ export default function DashboardPage() {
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
         <div>
-          <h2 className="text-4xl font-bold tracking-tight text-[#1B3D2F] font-serif italic">Document Center</h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Document Center</h2>
           <p className="text-[#44474E] mt-2 font-medium">Official policies and reference materials for university transport.</p>
         </div>
       </div>
@@ -512,7 +510,7 @@ export default function DashboardPage() {
       <div className="space-y-8 max-w-4xl mx-auto">
         <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
           <div>
-            <h2 className="text-4xl font-bold tracking-tight text-[#1B3D2F] font-serif italic">New Trip Request</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">New Trip Request</h2>
             <p className="text-[#44474E] mt-2 font-medium">Submit a new official university travel request.</p>
           </div>
         </div>
@@ -734,7 +732,7 @@ export default function DashboardPage() {
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
         <div>
-          <h2 className="text-4xl font-bold tracking-tight text-[#1B3D2F] font-serif italic">Notifications</h2>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Notifications</h2>
           <p className="text-[#44474E] mt-2 font-medium">All your notifications and system updates.</p>
         </div>
         {notifications.length > 0 && (
@@ -807,6 +805,251 @@ export default function DashboardPage() {
       </div>
     </div>
   )
+
+  // Feedback Component
+  const FeedbackSection = () => {
+    const [selectedTrip, setSelectedTrip] = useState<any>(null)
+    const [feedbackForm, setFeedbackForm] = useState({
+      overallRating: 0,
+      driverRating: 0,
+      vehicleRating: 0,
+      punctualityRating: 0,
+      comments: '',
+      suggestions: '',
+      wouldRecommend: false,
+      issues: [] as string[]
+    })
+    const [submitting, setSubmitting] = useState(false)
+    const [completedTripsForFeedback, setCompletedTripsForFeedback] = useState<any[]>([])
+
+    useEffect(() => {
+      loadCompletedTrips()
+    }, [])
+
+    const loadCompletedTrips = async () => {
+      try {
+        const allTrips = await tripApi.getAll()
+        const completed = allTrips.filter((t: any) => t.state === 'COMPLETED')
+        setCompletedTripsForFeedback(completed)
+      } catch (error) {
+        console.error('Failed to load completed trips:', error)
+      }
+    }
+
+    const StarRating = ({ rating, onRate, label }: { rating: number; onRate: (rating: number) => void; label: string }) => (
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">{label}</label>
+        <div className="flex gap-2">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => onRate(star)}
+              className="focus:outline-none transition-transform hover:scale-110"
+            >
+              <svg
+                className={`w-8 h-8 ${star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                />
+              </svg>
+            </button>
+          ))}
+          <span className="ml-2 text-sm text-gray-600 self-center">{rating > 0 ? `${rating}/5` : 'Not rated'}</span>
+        </div>
+      </div>
+    )
+
+    const handleSubmitFeedback = async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (!selectedTrip) return
+      if (feedbackForm.overallRating === 0) {
+        showToast('Please provide an overall rating', 'error')
+        return
+      }
+
+      setSubmitting(true)
+      try {
+        // Submit feedback via API
+        await tripApi.submitFeedback(selectedTrip.id, feedbackForm)
+        showToast('Feedback submitted successfully!', 'success')
+        setSelectedTrip(null)
+        setFeedbackForm({
+          overallRating: 0,
+          driverRating: 0,
+          vehicleRating: 0,
+          punctualityRating: 0,
+          comments: '',
+          suggestions: '',
+          wouldRecommend: false,
+          issues: []
+        })
+        loadCompletedTrips()
+      } catch (error: any) {
+        showToast(error.message || 'Failed to submit feedback', 'error')
+      } finally {
+        setSubmitting(false)
+      }
+    }
+
+    return (
+      <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto">
+        <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Trip Feedback</h2>
+            <p className="text-[#44474E] mt-2 font-medium">Share your experience and help us improve our service.</p>
+          </div>
+        </div>
+
+        {!selectedTrip ? (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Select a completed trip to provide feedback</h3>
+            {completedTripsForFeedback.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#C4C6D0]/40 shadow-sm p-8 sm:p-12 text-center text-gray-400 text-sm">
+                No completed trips available for feedback
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {completedTripsForFeedback.map((trip) => (
+                  <div
+                    key={trip.id}
+                    className="bg-white rounded-xl border border-[#C4C6D0]/40 shadow-sm p-4 sm:p-6 hover:border-[#1B3D2F]/30 transition-colors cursor-pointer"
+                    onClick={() => setSelectedTrip(trip)}
+                  >
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs font-mono text-gray-400">{trip.requestNumber || `REQ-${trip.id.slice(-5)}`}</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">COMPLETED</span>
+                        </div>
+                        <p className="font-semibold text-gray-900 truncate">{trip.destination}</p>
+                        <p className="text-sm text-gray-500 line-clamp-2">{trip.purpose}</p>
+                        <p className="text-xs text-gray-400 mt-1">{new Date(trip.startDateTime).toLocaleDateString()}</p>
+                      </div>
+                      <button className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] flex-shrink-0">
+                        Give Feedback
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-300 shadow-sm p-4 sm:p-8">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Feedback for Trip</h3>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Destination:</span> {selectedTrip.destination}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  <span className="font-medium">Date:</span> {new Date(selectedTrip.startDateTime).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitFeedback} className="space-y-6">
+              <StarRating
+                rating={feedbackForm.overallRating}
+                onRate={(rating) => setFeedbackForm({ ...feedbackForm, overallRating: rating })}
+                label="Overall Experience *"
+              />
+
+              <StarRating
+                rating={feedbackForm.driverRating}
+                onRate={(rating) => setFeedbackForm({ ...feedbackForm, driverRating: rating })}
+                label="Driver Performance"
+              />
+
+              <StarRating
+                rating={feedbackForm.vehicleRating}
+                onRate={(rating) => setFeedbackForm({ ...feedbackForm, vehicleRating: rating })}
+                label="Vehicle Condition"
+              />
+
+              <StarRating
+                rating={feedbackForm.punctualityRating}
+                onRate={(rating) => setFeedbackForm({ ...feedbackForm, punctualityRating: rating })}
+                label="Punctuality"
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Comments</label>
+                <textarea
+                  value={feedbackForm.comments}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, comments: e.target.value })}
+                  rows={4}
+                  placeholder="Share your experience..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Suggestions for Improvement</label>
+                <textarea
+                  value={feedbackForm.suggestions}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, suggestions: e.target.value })}
+                  rows={3}
+                  placeholder="How can we improve?"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm"
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="wouldRecommend"
+                  checked={feedbackForm.wouldRecommend}
+                  onChange={(e) => setFeedbackForm({ ...feedbackForm, wouldRecommend: e.target.checked })}
+                  className="w-4 h-4 text-[#1B3D2F] border-gray-300 rounded focus:ring-[#1B3D2F]"
+                />
+                <label htmlFor="wouldRecommend" className="text-sm font-medium text-gray-700">
+                  I would recommend this service to others
+                </label>
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTrip(null)
+                    setFeedbackForm({
+                      overallRating: 0,
+                      driverRating: 0,
+                      vehicleRating: 0,
+                      punctualityRating: 0,
+                      comments: '',
+                      suggestions: '',
+                      wouldRecommend: false,
+                      issues: []
+                    })
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || feedbackForm.overallRating === 0}
+                  className="w-full sm:w-auto px-6 py-3 bg-[#1B3D2F] text-white rounded-lg font-medium hover:bg-[#152e22] transition-all duration-300 hover:scale-105 hover:shadow-lg transform disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Submitting...' : 'Submit Feedback'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   // Settings/Profile Component
   const SettingsProfile = () => {
@@ -1150,7 +1393,7 @@ export default function DashboardPage() {
       <div className="space-y-8 max-w-4xl mx-auto">
         <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
           <div>
-            <h2 className="text-4xl font-bold tracking-tight text-[#1B3D2F] font-serif italic">Settings</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">Settings</h2>
             <p className="text-[#44474E] mt-2 font-medium">Manage your profile and account settings.</p>
           </div>
         </div>
@@ -1478,28 +1721,33 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Navigation Loading Spinner */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-[200] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
+        </div>
+      )}
+
       {/* Sidebar */}
-      <aside className={`fixed left-0 top-0 h-full flex flex-col py-8 px-4 bg-white border-r border-[#C4C6D0]/30 h-screen w-64 flex-shrink-0 z-40 transition-transform duration-300 ${
+      <aside className={`fixed left-0 top-0 h-full flex flex-col bg-white border-r border-gray-200 w-64 flex-shrink-0 z-50 transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <div className="mb-10 px-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-[#1B3D2F] flex items-center justify-center text-white shadow-sm">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM3 4h1l1.5 7h9L17 4h1" />
-            </svg>
+        <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200">
+          <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+            <span className="text-[#1B3D2F] font-bold text-sm">H</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-[#1B3D2F] font-serif">Fleet Authority</h1>
-            <p className="text-[10px] uppercase tracking-widest text-[#565F71] font-bold">University Portal</p>
+            <div className="font-bold text-[#1B3D2F] tracking-tight">Haramaya University</div>
+            <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
           </div>
         </div>
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 p-4 space-y-1">
           <button
-            onClick={() => setActiveSection('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded font-medium transition-colors duration-200 ${
+            onClick={() => { setIsLoading(true); setTimeout(() => { setActiveSection('dashboard'); setIsLoading(false) }, 700) }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors transition-colors duration-200 ${
               activeSection === 'dashboard'
-                ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
-                : 'text-[#565F71] hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
+                ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1508,11 +1756,11 @@ export default function DashboardPage() {
             <span className="antialiased tracking-tight">My Trips</span>
           </button>
           <button
-            onClick={() => setActiveSection('request')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded font-medium transition-colors duration-200 ${
+            onClick={() => { setIsLoading(true); setTimeout(() => { setActiveSection('request'); setIsLoading(false) }, 700) }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors transition-colors duration-200 ${
               activeSection === 'request'
-                ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
-                : 'text-[#565F71] hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
+                ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1521,11 +1769,11 @@ export default function DashboardPage() {
             <span className="antialiased tracking-tight">New Request</span>
           </button>
           <button
-            onClick={() => setActiveSection('vehicles')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded font-medium transition-colors duration-200 ${
+            onClick={() => { setIsLoading(true); setTimeout(() => { setActiveSection('vehicles'); setIsLoading(false) }, 700) }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors transition-colors duration-200 ${
               activeSection === 'vehicles'
-                ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
-                : 'text-[#565F71] hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
+                ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1534,11 +1782,11 @@ export default function DashboardPage() {
             <span className="antialiased tracking-tight">Available Vehicles</span>
           </button>
           <button
-            onClick={() => setActiveSection('documents')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded font-medium transition-colors duration-200 ${
+            onClick={() => { setIsLoading(true); setTimeout(() => { setActiveSection('documents'); setIsLoading(false) }, 700) }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors transition-colors duration-200 ${
               activeSection === 'documents'
-                ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
-                : 'text-[#565F71] hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
+                ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1546,44 +1794,46 @@ export default function DashboardPage() {
             </svg>
             <span className="antialiased tracking-tight">Documents</span>
           </button>
-        </nav>
-        <div className="mt-auto space-y-1 pt-8 border-t border-[#C4C6D0]/20">
           <button
-            onClick={() => setActiveSection('notifications')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded font-medium transition-colors duration-200 ${
+            onClick={() => { setIsLoading(true); setTimeout(() => { setActiveSection('notifications'); setIsLoading(false) }, 700) }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors transition-colors duration-200 ${
               activeSection === 'notifications'
-                ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
-                : 'text-[#565F71] hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
+                ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             <span className="antialiased tracking-tight">Notifications</span>
+            {unreadCount > 0 && (
+              <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{unreadCount > 9 ? '9+' : unreadCount}</span>
+            )}
           </button>
           <button
-            onClick={() => setActiveSection('settings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded font-medium transition-colors duration-200 ${
-              activeSection === 'settings'
-                ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
-                : 'text-[#565F71] hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
+            onClick={() => { setIsLoading(true); setTimeout(() => { setActiveSection('feedback'); setIsLoading(false) }, 700) }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors transition-colors duration-200 ${
+              activeSection === 'feedback'
+                ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
             }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
-            <span className="antialiased tracking-tight">Settings</span>
+            <span className="antialiased tracking-tight">Feedback</span>
           </button>
+        </nav>
+        <div className="p-4 space-y-1 border-t border-gray-200">
         </div>
       </aside>
       <main className="ml-0 lg:ml-64 min-h-screen">
         {/* Header */}
-        <header className="w-full h-16 sticky top-0 z-30 flex justify-between items-center px-8 bg-white/95 backdrop-blur-md border-b border-[#C4C6D0]/20 shadow-sm">
-          <div className="flex items-center gap-4 flex-1">
+        <header className="w-full h-16 sticky top-0 z-30 flex justify-between items-center px-4 sm:px-6 lg:px-8 bg-white/95 backdrop-blur-md border-b border-[#C4C6D0]/20 shadow-sm">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-[#ECEEF3] transition-colors text-[#424845]"
+              className="lg:hidden p-2 rounded-lg hover:bg-[#ECEEF3] transition-colors text-[#424845] flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -1618,12 +1868,12 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6 flex-shrink-0">
             <div className="flex items-center gap-4">
               {/* Notification Bell */}
               <div className="relative" ref={notifRef}>
                 <button
-                  onClick={() => setActiveSection('notifications')}
+                  onClick={() => setShowNotifications(prev => !prev)}
                   className="relative p-2.5 rounded-xl hover:bg-[#ECEEF3] transition-colors group text-[#565F71]"
                   title="Notifications"
                 >
@@ -1639,7 +1889,7 @@ export default function DashboardPage() {
 
                 {/* Notification Dropdown */}
                 {showNotifications && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-[#e0e3e5] z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 lg:w-96 bg-white rounded-xl shadow-2xl border border-[#e0e3e5] z-50 overflow-hidden" style={{ left: 'auto', right: '0', marginLeft: '1rem', marginRight: '0' }}>
                     <div className="px-4 py-3 border-b border-[#eceef0] flex items-center justify-between">
                       <h3 className="text-xs font-bold text-[#1B3D2F] uppercase tracking-wide">Notifications</h3>
                       <span className={unreadCount > 0 ? 'text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-600' : 'text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500'}>
@@ -1659,20 +1909,15 @@ export default function DashboardPage() {
                           {notifications.filter((n: any) => !n.isRead).map((notification: any) => (
                             <div
                               key={notification.id}
-                              onClick={() => { handleMarkNotificationAsRead(notification.id) }}
-                              className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-                                !notification.isRead
-                                  ? notification.type?.toLowerCase().includes('reject')
-                                    ? 'bg-red-50 border-l-4 border-red-400'
-                                    : 'bg-blue-50 border-l-4 border-blue-400'
-                                  : ''
+                              className={`px-4 py-3 transition-colors ${
+                                notification.type?.toLowerCase().includes('reject')
+                                  ? 'bg-red-50 border-l-4 border-red-400'
+                                  : 'bg-blue-50 border-l-4 border-blue-400'
                               }`}
                             >
                               <div className="flex items-start gap-3">
                                 <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                                  !notification.isRead
-                                    ? notification.type?.toLowerCase().includes('reject') ? 'bg-red-500' : 'bg-blue-500'
-                                    : 'bg-gray-300'
+                                  notification.type?.toLowerCase().includes('reject') ? 'bg-red-500' : 'bg-blue-500'
                                 }`} />
                                 <div className="flex-1 min-w-0">
                                   <p className={notification.type?.toLowerCase().includes('reject') ? 'text-sm font-medium truncate text-red-700' : 'text-sm font-medium truncate text-gray-900'}>
@@ -1681,28 +1926,54 @@ export default function DashboardPage() {
                                   <p className="text-xs text-gray-500 mt-0.5">{notification.message}</p>
                                   <p className="text-xs text-gray-400 mt-1">{new Date(notification.sentAt || notification.createdAt).toLocaleString()}</p>
                                 </div>
+                                <button
+                                  onClick={() => handleMarkNotificationAsRead(notification.id)}
+                                  className="flex-shrink-0 text-xs text-[#1B3D2F] font-semibold hover:underline px-2 py-1 rounded hover:bg-[#1B3D2F]/10 transition-colors"
+                                  title="Mark as read"
+                                >
+                                  Mark read
+                                </button>
                               </div>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
+                    {notifications.filter((n: any) => !n.isRead).length > 0 && (
+                      <div className="px-4 py-3 border-t border-[#eceef0] flex items-center justify-between">
+                        <button
+                          onClick={() => {
+                            notifications.filter((n: any) => !n.isRead).forEach(n => handleMarkNotificationAsRead(n.id))
+                            setShowNotifications(false)
+                          }}
+                          className="text-sm font-bold text-[#1B3D2F] hover:text-[#1B3D2F]/80 transition-colors"
+                        >
+                          Mark all as read
+                        </button>
+                        <button
+                          onClick={() => { setShowNotifications(false); setActiveSection('notifications') }}
+                          className="text-xs text-[#565F71] hover:text-[#1B3D2F] transition-colors"
+                        >
+                          View all
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-            <div className="h-8 w-px bg-[#C4C6D0]/30"></div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm font-bold text-[#1B3D2F] font-serif">{user?.name}</p>
-                <p className="text-[10px] text-[#565F71] uppercase tracking-wider font-semibold">
+            <div className="hidden sm:block h-8 w-px bg-[#C4C6D0]/30"></div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-bold text-[#1B3D2F] font-serif truncate max-w-[120px]">{user?.name}</p>
+                <p className="text-[10px] text-[#565F71] uppercase tracking-wider font-semibold truncate max-w-[120px]">
                   {user?.department?.name || user?.role || 'Employee'}
                 </p>
               </div>
               <div className="relative" ref={profileDropdownRef}>
                 <button
                   onClick={() => setShowProfileDropdown(prev => !prev)}
-                  className="w-10 h-10 rounded border border-[#C4C6D0]/30 object-cover overflow-hidden bg-[#1B3D2F] flex items-center justify-center"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#C4C6D0]/30 object-cover overflow-hidden bg-[#1B3D2F] flex items-center justify-center flex-shrink-0"
                 >
                   {profileImage ? (
                     <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
@@ -1713,10 +1984,10 @@ export default function DashboardPage() {
 
                 {/* Profile Dropdown */}
                 {showProfileDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-[#e0e3e5] z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-2xl border border-[#e0e3e5] z-50 overflow-hidden">
                     <div className="p-4 bg-[#f2f4f6] border-b border-[#e0e3e5]">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 bg-[#1B3D2F] rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="w-12 h-12 bg-[#1B3D2F] rounded-full flex items-center justify-center overflow-hidden">
                           {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : <span className="text-white font-bold text-lg">{user?.name?.charAt(0)?.toUpperCase()}</span>}
                         </div>
                         <div>
@@ -1738,6 +2009,11 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="p-2 border-t border-gray-100">
+                      <button onClick={() => { setShowProfileDropdown(false); setActiveSection('settings') }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <span className="text-sm font-medium">Settings</span>
+                      </button>
                       <button onClick={() => { setShowProfileDropdown(false); handleLogout() }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
@@ -1757,7 +2033,7 @@ export default function DashboardPage() {
               {/* Header Section */}
               <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
                 <div>
-                  <h2 className="text-4xl font-bold tracking-tight text-[#1B3D2F] font-serif italic">My Trips</h2>
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">My Trips</h2>
                   <p className="text-[#44474E] mt-2 font-medium">Official university travel request registry and tracking.</p>
                 </div>
                 <button
@@ -1772,11 +2048,11 @@ export default function DashboardPage() {
               </div>
 
               {/* Stats/Bento Quick View */}
-              <div className="grid grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B3D2F]/30 transition-colors">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="bg-white p-4 sm:p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B3D2F]/30 transition-colors">
                   <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Active Trips</p>
                   <div className="flex items-end justify-between">
-                    <span className="text-3xl font-bold text-[#1B3D2F] font-serif">
+                    <span className="text-2xl sm:text-3xl font-bold text-[#1B3D2F] font-serif">
                       {String(activeTrips.length).padStart(2, '0')}
                     </span>
                     <span className="bg-[#FAD8FD]/80 text-[#28132E] px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter italic">
@@ -1784,31 +2060,31 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
+                <div className="bg-white p-4 sm:p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
                   <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Pending Approval</p>
                   <div className="flex items-end justify-between">
-                    <span className="text-3xl font-bold text-[#1B3D2F] font-serif">{pendingTrips.length}</span>
-                    <svg className="w-8 h-8 text-[#565F71] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="text-2xl sm:text-3xl font-bold text-[#1B3D2F] font-serif">{pendingTrips.length}</span>
+                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-[#565F71] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
+                <div className="bg-white p-4 sm:p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
                   <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Approved</p>
                   <div className="flex items-end justify-between">
-                    <span className="text-3xl font-bold text-[#1B3D2F] font-serif">{approvedTrips.length}</span>
-                    <svg className="w-8 h-8 text-[#1B3D2F]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="text-2xl sm:text-3xl font-bold text-[#1B3D2F] font-serif">{approvedTrips.length}</span>
+                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-[#1B3D2F]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
+                <div className="bg-white p-4 sm:p-6 rounded border border-[#C4C6D0]/40 shadow-sm">
                   <p className="text-xs font-bold uppercase tracking-widest text-[#565F71] mb-3">Kilometers Saved</p>
                   <div className="flex items-end justify-between">
-                    <span className="text-3xl font-bold text-[#1B3D2F] font-serif">
+                    <span className="text-2xl sm:text-3xl font-bold text-[#1B3D2F] font-serif">
                       {kmTotal > 0 ? Math.round(kmTotal).toLocaleString() : '—'}
                     </span>
-                    <svg className="w-8 h-8 text-[#565F71] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-7 h-7 sm:w-8 sm:h-8 text-[#565F71] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -2050,6 +2326,7 @@ export default function DashboardPage() {
           
           {activeSection === 'request' && <NewRequestForm />}
           {activeSection === 'notifications' && <NotificationCenter />}
+          {activeSection === 'feedback' && <FeedbackSection />}
           {activeSection === 'settings' && <SettingsProfile />}
           {activeSection === 'vehicles' && <AvailableVehicles />}
           {activeSection === 'documents' && <DocumentCenter />}
@@ -2169,14 +2446,14 @@ export default function DashboardPage() {
                     {allocatedVehicle(selectedTrip) && (
                       <div className="mb-3">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white font-bold text-sm">
                             {allocatedVehicle(selectedTrip).make?.charAt(0)}{allocatedVehicle(selectedTrip).model?.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-emerald-900">
+                            <p className="text-sm font-semibold text-#152e22">
                               {allocatedVehicle(selectedTrip).make} {allocatedVehicle(selectedTrip).model}
                             </p>
-                            <p className="text-xs text-emerald-700">{allocatedVehicle(selectedTrip).plateNumber}</p>
+                            <p className="text-xs text-[#1B3D2F]">{allocatedVehicle(selectedTrip).plateNumber}</p>
                           </div>
                         </div>
                         {allocatedVehicle(selectedTrip).capacity != null && (
@@ -2187,14 +2464,14 @@ export default function DashboardPage() {
                     {allocatedDriver(selectedTrip) && (
                       <div>
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white font-bold text-sm">
                             {driverDisplayName(allocatedDriver(selectedTrip)).split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-emerald-900">
+                            <p className="text-sm font-semibold text-#152e22">
                               {driverDisplayName(allocatedDriver(selectedTrip))}
                             </p>
-                            <p className="text-xs text-emerald-700">Assigned Driver</p>
+                            <p className="text-xs text-[#1B3D2F]">Assigned Driver</p>
                           </div>
                         </div>
                         {allocatedDriver(selectedTrip).licenseNumber && (

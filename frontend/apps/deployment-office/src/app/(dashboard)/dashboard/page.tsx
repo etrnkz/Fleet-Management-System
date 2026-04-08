@@ -136,23 +136,23 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: 'Total Fleet', value: vehicleStats.total, icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z', bg: 'bg-[#1B3D2F]/15', color: 'text-[#152e22]' },
           { label: 'Available', value: vehicleStats.available, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', bg: 'bg-blue-100', color: 'text-blue-600' },
           { label: 'In Use', value: vehicleStats.inUse, icon: 'M13 10V3L4 14h7v7l9-11h-7z', bg: 'bg-purple-100', color: 'text-purple-600' },
           { label: 'Maintenance', value: vehicleStats.maintenance, icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', bg: 'bg-orange-100', color: 'text-orange-600' },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-600">{s.label}</span>
-              <div className={`w-10 h-10 ${s.bg} rounded-lg flex items-center justify-center`}>
-                <svg className={`w-5 h-5 ${s.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div key={s.label} className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <span className="text-xs sm:text-sm text-gray-600">{s.label}</span>
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 ${s.bg} rounded-lg flex items-center justify-center`}>
+                <svg className={`w-4 h-4 sm:w-5 sm:h-5 ${s.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={s.icon} />
                 </svg>
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{s.value}</p>
           </div>
         ))}
       </div>
@@ -181,10 +181,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Vehicle Status Donut */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h2 className="text-base font-bold text-gray-900 mb-4">Vehicle Status</h2>
-          <div className="flex items-center gap-6">
-            <div className="relative w-40 h-40 flex-shrink-0">
+        <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
+          <h2 className="text-sm sm:text-base font-bold text-gray-900 mb-4">Vehicle Status</h2>
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="20"/>
                 <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="20"
@@ -196,20 +196,20 @@ export default function DashboardPage() {
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{vehicleStats.total}</p>
-                  <p className="text-xs text-gray-500">Total</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">{vehicleStats.total}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Total</p>
                 </div>
               </div>
             </div>
-            <div className="space-y-3 flex-1">
+            <div className="space-y-2 sm:space-y-3 flex-1 w-full">
               {[
                 { label: 'Available', count: vehicleStats.available, color: 'bg-[#1B3D2F]' },
                 { label: 'In Use', count: vehicleStats.inUse, color: 'bg-blue-500' },
                 { label: 'Maintenance', count: vehicleStats.maintenance, color: 'bg-orange-500' },
               ].map(s => (
-                <div key={s.label} className="flex items-center justify-between text-sm">
+                <div key={s.label} className="flex items-center justify-between text-xs sm:text-sm">
                   <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${s.color}`}></div>
+                    <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${s.color}`}></div>
                     <span className="text-gray-600">{s.label}</span>
                   </div>
                   <span className="font-bold text-gray-900">{s.count} ({vehicleStats.total > 0 ? Math.round(s.count / vehicleStats.total * 100) : 0}%)</span>
@@ -221,10 +221,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Monthly Trip Trend */}
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
           <div>
-            <h2 className="text-base font-bold text-gray-900">Monthly Trip Requests</h2>
+            <h2 className="text-sm sm:text-base font-bold text-gray-900">Monthly Trip Requests</h2>
             <p className="text-xs text-gray-500">Last 6 months — real data</p>
           </div>
         </div>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
           const maxVal = Math.max(...monthly.map(m => m.count), 1)
           return (
             <div>
-              <div className="flex items-end gap-2 h-32 border-b border-gray-100 pb-2">
+              <div className="flex items-end gap-1 sm:gap-2 h-24 sm:h-32 border-b border-gray-100 pb-2">
                 {monthly.map((m, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
                     <div className="relative w-full">
@@ -267,10 +267,10 @@ export default function DashboardPage() {
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Trips */}
-        <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-bold text-gray-900">Trips Awaiting Allocation</h2>
-            <button onClick={() => router.push('/trips')} className="text-[#1B3D2F] text-sm font-medium hover:text-[#152e22]">View All →</button>
+        <div className="lg:col-span-2 bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+            <h2 className="text-sm sm:text-base font-bold text-gray-900">Trips Awaiting Allocation</h2>
+            <button onClick={() => router.push('/trips')} className="text-emerald-700 text-xs sm:text-sm font-medium hover:text-emerald-800 text-left sm:text-right">View All →</button>
           </div>
           <div className="space-y-3">
             {approvedRequests.length === 0 ? (
@@ -306,9 +306,9 @@ export default function DashboardPage() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Pending Maintenance Alerts */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-900">Maintenance Alerts</h2>
+              <h2 className="text-sm sm:text-base font-bold text-gray-900">Maintenance Alerts</h2>
               {pendingMaintenance.length > 0 && (
                 <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded">{pendingMaintenance.length} NEW</span>
               )}
@@ -330,12 +330,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Live Map Placeholder */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-bold text-gray-900">Live Operations</h2>
+              <h2 className="text-sm sm:text-base font-bold text-gray-900">Live Operations</h2>
               <span className="text-xs text-gray-500">{vehicleStats.inUse} Active Units</span>
             </div>
-            <div className="h-48 bg-gradient-to-br from-blue-50 to-[#1B3D2F]/10 rounded-lg flex items-center justify-center">
+            <div className="h-40 sm:h-48 bg-gradient-to-br from-blue-50 to-emerald-700/10 rounded-lg flex items-center justify-center">
               <div className="text-center">
                 <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -351,7 +351,7 @@ export default function DashboardPage() {
       {/* Assign Modal */}
       {showAssignModal && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <div className="flex justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">Assign Vehicle & Driver</h3>
               <button onClick={() => setShowAssignModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">

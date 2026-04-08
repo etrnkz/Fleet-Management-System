@@ -63,7 +63,7 @@ export default function ApprovalsPage() {
           `${Math.ceil((new Date(trip.endDateTime).getTime() - new Date(trip.startDateTime).getTime()) / (1000 * 60 * 60 * 24))} days` : 'N/A',
         vehicleType: trip.allocatedVehicle ? `${trip.allocatedVehicle.make} ${trip.allocatedVehicle.model}` : 'To be assigned',
         passengers: trip.passengerCount || 1,
-        estimatedCost: `ETB ${(Math.random() * 100000 + 20000).toFixed(0)}`, // Mock cost
+        estimatedCost: trip.estimatedFuelCost ? `ETB ${Number(trip.estimatedFuelCost).toLocaleString()}` : 'N/A',
         budgetStatus: 'Available',
         deanApproval: {
           status: trip.state?.includes('COLLEGE') ? 'Approved' : 'Pending',

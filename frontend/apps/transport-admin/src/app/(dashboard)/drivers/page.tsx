@@ -102,13 +102,13 @@ export default function DriversPage() {
 
   return (
     <>
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Driver Management</h1>
-        <p className="text-gray-600">Monitor and manage your fleet drivers' status and assignments.</p>
+    <div className="p-3 sm:p-6 bg-gray-50 min-h-screen">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Driver Management</h1>
+        <p className="text-gray-600 text-sm sm:text-base">Monitor and manage your fleet drivers' status and assignments.</p>
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
         <button
           onClick={() => setActiveFilter('All Drivers')}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
