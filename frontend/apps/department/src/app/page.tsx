@@ -1,11 +1,11 @@
 ﻿'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 import Link from 'next/link'
 
-export default function LandingPage() {
+function LandingPageContent() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
@@ -270,5 +270,13 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+export default function LandingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <LandingPageContent />
+    </Suspense>
   )
 }
