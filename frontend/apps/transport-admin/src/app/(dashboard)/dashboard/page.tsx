@@ -274,12 +274,14 @@ export default function DashboardPage() {
     
     try {
       // First create the user account
+      const firstName = formData.get('firstName') as string
+      const lastName = formData.get('lastName') as string
+      const fullName = `${firstName} ${lastName}`.trim()
+      
       const userData = {
+        name: fullName, // Backend expects 'name' not firstName/lastName
         email: formData.get('email') as string,
         password: formData.get('password') as string,
-        firstName: formData.get('firstName') as string,
-        lastName: formData.get('lastName') as string,
-        phoneNumber: formData.get('phoneNumber') as string,
         role: 'Driver',
       }
 
@@ -1318,19 +1320,6 @@ export default function DashboardPage() {
                             name="email"
                             required
                             placeholder="e.g., john.doe@example.com"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Phone Number <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="tel"
-                            name="phoneNumber"
-                            required
-                            placeholder="e.g., +251912345678"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                           />
                         </div>
