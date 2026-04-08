@@ -282,13 +282,12 @@ export default function DashboardPage() {
     return 'bg-gray-100 text-gray-700'
   }
   const handleLogout = () => {
-    // Clear authentication tokens and user session
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('user')
+    // Clear all authentication tokens and user session
+    localStorage.clear()
+    sessionStorage.clear()
     
-    router.push('/')
+    // Redirect to login with logout parameter to ensure clean state
+    router.push('/login?logout=true')
   }
 
   const handleMarkNotificationAsRead = async (id: string) => {
