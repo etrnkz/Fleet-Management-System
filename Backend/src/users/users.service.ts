@@ -430,6 +430,20 @@ export class UsersService {
   }
 
   /**
+   * Send a welcome email to a newly created user with their credentials.
+   */
+  async sendWelcomeEmail(user: User, password: string): Promise<void> {
+    await this.emailService.sendInvitationEmail({
+      to: user.email,
+      name: user.name,
+      password,
+      inviterName: 'System Administrator',
+      inviterRole: 'Admin',
+      welcomeMessage: `Your account has been created with role: ${user.role}. Please log in and change your password immediately.`,
+    });
+  }
+
+  /**
    * Create or update the Driver profile for a user with Driver role.
    * Called when a driver fills in their license details from the driver app.
    */

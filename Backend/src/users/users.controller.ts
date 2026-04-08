@@ -63,13 +63,29 @@ export class UsersController {
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   async create(@Body() createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    // Auto-generate password if not provided
+    const rawPassword = createUserDto.password || this.generateTempPassword()
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
     const { password, ...userData } = createUserDto;
 
-    return this.usersService.create({
+    const user = await this.usersService.create({
       ...userData,
       password: hashedPassword,
     });
+
+    // Send welcome email with credentials
+    try {
+      await this.usersService.sendWelcomeEmail(user, rawPassword);
+    } catch (err) {
+      console.error('Failed to send welcome email:', err);
+    }
+
+    return user;
+  }
+
+  private generateTempPassword(): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!'
+    return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
   }
 
   @Get()

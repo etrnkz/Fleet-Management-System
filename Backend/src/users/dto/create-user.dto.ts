@@ -21,11 +21,11 @@ export class CreateUserDto {
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: 'SecurePass@123' })
+  @ApiPropertyOptional({ example: 'SecurePass@123', description: 'If omitted, a secure password is auto-generated and emailed to the user' })
   @IsString()
   @MinLength(8)
-  @IsNotEmpty()
-  password: string;
+  @IsOptional()
+  password?: string;
 
   @ApiProperty({ enum: UserRole, example: UserRole.User })
   @IsEnum(UserRole)
