@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Notification, NotificationType } from './entities/notification.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { SmsService } from '../sms/sms.service';
 
 @Injectable()
 export class NotificationsService {
@@ -11,6 +12,7 @@ export class NotificationsService {
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
     private readonly usersService: UsersService,
+    private readonly smsService: SmsService,
   ) {}
 
   async create(
@@ -338,6 +340,11 @@ export class NotificationsService {
     }
 
     console.log(`Trip approval notifications sent for trip ${trip.id}`);
+
+    // SMS to requester
+    if (stakeholders.requester.phoneNumber) {
+      this.smsService.sendTripApprovedSms(stakeholders.requester.phoneNumber, trip.destination).catch(() => {});
+    }
   }
 
   async notifyTripRejected(
@@ -382,6 +389,11 @@ export class NotificationsService {
     }
 
     console.log(`Trip rejection notifications sent for trip ${trip.id}`);
+
+    // SMS to requester
+    if (stakeholders.requester.phoneNumber) {
+      this.smsService.sendTripRejectedSms(stakeholders.requester.phoneNumber, trip.destination, reason).catch(() => {});
+    }
   }
 
   async notifyTripAllocated(trip: any): Promise<void> {
@@ -454,6 +466,23 @@ export class NotificationsService {
     }
 
     console.log(`Trip allocation notifications sent for trip ${trip.id}`);
+
+    // SMS to requester when vehicle is allocated
+    if (stakeholders.requester.phoneNumber && trip.allocatedVehicle && trip.allocatedDriver) {
+      this.smsService.sendTripAllocatedSms(
+        stakeholders.requester.phoneNumber,
+        trip.allocatedVehicle.plateNumber,
+        trip.allocatedDriver.user?.name || 'Driver',
+        trip.destination,
+      ).catch(() => {});
+    }
+    // SMS to driver
+    if (stakeholders.driver?.phoneNumber) {
+      this.smsService.sendSms(
+        stakeholders.driver.phoneNumber,
+        `Fleet: You have been assigned trip ${trip.requestNumber} to ${trip.destination}. Please confirm in the app.`,
+      ).catch(() => {});
+    }
   }
 
   async notifyTripReady(trip: any): Promise<void> {
