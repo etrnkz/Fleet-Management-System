@@ -133,7 +133,48 @@ async function seed() {
     console.log(`  ~ Admin user already exists: ${adminEmail}`)
   }
 
-  console.log('\nSeeding complete.')
+  // ── 4. Test Users (one per role) ───────────────────────────────────────────
+  console.log('Seeding test users...')
+  const DEFAULT_PASSWORD = 'Password@123'
+
+  const testUsers = [
+    { name: 'Test Employee',        email: 'employee@test.com',        role: UserRole.User },
+    { name: 'Test Dept Head',       email: 'depthead@test.com',        role: UserRole.DepartmentHead },
+    { name: 'Test College Head',    email: 'collegehead@test.com',     role: UserRole.CollegeHead },
+    { name: 'Test Dean',            email: 'dean@test.com',            role: UserRole.Dean },
+    { name: 'Test President',       email: 'president@test.com',       role: UserRole.President },
+    { name: 'Test Transport Office',email: 'transport@test.com',       role: UserRole.TransportOffice },
+    { name: 'Test Deployment Team', email: 'deployment@test.com',      role: UserRole.DeploymentTeam },
+    { name: 'Test Driver',          email: 'driver@test.com',          role: UserRole.Driver },
+    { name: 'Test Maintenance',     email: 'maintenance@test.com',     role: UserRole.MaintenanceTeam },
+    { name: 'Test Gate',            email: 'gate@test.com',            role: UserRole.Gate },
+    { name: 'Test System Admin',    email: 'sysadmin@test.com',        role: UserRole.SystemAdmin },
+  ]
+
+  for (const u of testUsers) {
+    const exists = await userRepo.findOne({ where: { email: u.email } })
+    if (!exists) {
+      const hashed = await bcrypt.hash(DEFAULT_PASSWORD, 10)
+      await userRepo.save(userRepo.create({ ...u, password: hashed, isActive: true }))
+      console.log(`  + ${u.role.padEnd(20)} ${u.email}`)
+    } else {
+      console.log(`  ~ ${u.role.padEnd(20)} ${u.email} (already exists)`)
+    }
+  }
+
+  console.log('\n========================================')
+  console.log('TEST USER CREDENTIALS')
+  console.log('========================================')
+  console.log(`Password for all test users: ${DEFAULT_PASSWORD}`)
+  console.log('----------------------------------------')
+  for (const u of testUsers) {
+    console.log(`${u.role.padEnd(20)} ${u.email}`)
+  }
+  console.log('========================================')
+  console.log(`\nAdmin: ${adminEmail} / ${adminPassword}`)
+  console.log('========================================\n')
+
+  console.log('Seeding complete.')
   await app.close()
 }
 
