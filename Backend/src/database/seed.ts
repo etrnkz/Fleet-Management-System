@@ -44,7 +44,7 @@ function slug(name: string): string {
 }
 
 async function seed() {
-  const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] })
+  const app = await NestFactory.createApplicationContext(AppModule, { logger: false })
 
   const collegeRepo: Repository<College> = app.get(getRepositoryToken(College))
   const departmentRepo: Repository<Department> = app.get(getRepositoryToken(Department))
@@ -79,7 +79,9 @@ async function seed() {
     for (const deptName of cd.departments) {
       let dept = await departmentRepo.findOne({ where: { name: deptName } })
       if (!dept) {
-        const code = `${cd.code}_${slug(deptName).substring(0, 8).toUpperCase()}`
+        // Use college code + index to guarantee uniqueness
+        const idx = cd.departments.indexOf(deptName) + 1
+        const code = `${cd.code}${idx.toString().padStart(2, '0')}`
         dept = await departmentRepo.save(departmentRepo.create({ name: deptName, code, college }))
       }
       departments[deptName] = dept
@@ -102,7 +104,8 @@ async function seed() {
   for (const officeName of adminOffices) {
     let dept = await departmentRepo.findOne({ where: { name: officeName } })
     if (!dept) {
-      const code = `ADM_${slug(officeName).substring(0, 8).toUpperCase()}`
+      const idx = adminOffices.indexOf(officeName) + 1
+      const code = `ADM${idx.toString().padStart(2, '0')}`
       dept = await departmentRepo.save(departmentRepo.create({ name: officeName, code, college: undefined }))
     }
     departments[officeName] = dept
