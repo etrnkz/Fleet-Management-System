@@ -1,6 +1,6 @@
 /**
  * Database seeder — run with: npm run seed
- * Seeds: organizations (colleges + departments), default workflows, and an initial admin user.
+ * Seeds: Law + Veterinary colleges, full role chain, 2 employees per college.
  */
 import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
@@ -13,6 +13,33 @@ import { Department } from '../departments/entities/department.entity'
 import { User, UserRole } from '../users/entities/user.entity'
 import { WorkflowService } from '../workflow/workflow.service'
 
+const PASSWORD = 'Password@123'
+
+async function hash(p: string) { return bcrypt.hash(p, 10) }
+
+async function createUser(
+  repo: Repository<User>,
+  data: { name: string; email: string; role: UserRole; department?: Department | null; college?: College | null }
+): Promise<User> {
+  const existing = await repo.findOne({ where: { email: data.email } })
+  if (existing) {
+    console.log(`  ~ ${data.role.padEnd(20)} ${data.email} (already exists)`)
+    return existing
+  }
+  const user = repo.create({
+    name: data.name,
+    email: data.email,
+    password: await hash(PASSWORD),
+    role: data.role,
+    department: data.department ?? null,
+    college: data.college ?? null,
+    isActive: true,
+  })
+  await repo.save(user)
+  console.log(`  + ${data.role.padEnd(20)} ${data.email}`)
+  return user
+}
+
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule, { logger: ['error', 'warn'] })
 
@@ -21,160 +48,161 @@ async function seed() {
   const userRepo: Repository<User> = app.get(getRepositoryToken(User))
   const workflowService = app.get(WorkflowService)
 
-  // ── 1. Colleges & Departments ──────────────────────────────────────────────
-  console.log('Seeding colleges and departments...')
-
-  const collegesData = [
-    {
-      name: 'College of Agriculture and Environmental Sciences',
-      departments: ['Plant Sciences', 'Animal Sciences', 'Natural Resources Management', 'Agricultural Economics'],
-    },
-    {
-      name: 'College of Computing and Informatics',
-      departments: ['Computer Science', 'Information Technology', 'Software Engineering', 'Information Systems'],
-    },
-    {
-      name: 'College of Engineering and Technology',
-      departments: ['Civil Engineering', 'Electrical Engineering', 'Mechanical Engineering', 'Chemical Engineering'],
-    },
-    {
-      name: 'College of Business and Economics',
-      departments: ['Management', 'Accounting and Finance', 'Economics', 'Marketing Management'],
-    },
-    {
-      name: 'College of Natural and Computational Sciences',
-      departments: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Statistics'],
-    },
-    {
-      name: 'College of Social Sciences and Humanities',
-      departments: ['History and Heritage Management', 'Geography and Environmental Studies', 'Sociology', 'Psychology'],
-    },
-    {
-      name: 'College of Law',
-      departments: ['Law'],
-    },
-    {
-      name: 'College of Medicine and Health Sciences',
-      departments: ['Medicine', 'Nursing', 'Public Health', 'Medical Laboratory Sciences'],
-    },
-    {
-      name: 'College of Veterinary Medicine',
-      departments: ['Veterinary Medicine', 'Veterinary Pharmacy'],
-    },
-    {
-      name: 'College of Education and Behavioral Sciences',
-      departments: ['Curriculum and Instruction', 'Educational Planning and Management', 'Special Needs Education'],
-    },
-  ]
-
-  for (const collegeData of collegesData) {
-    let college = await collegeRepo.findOne({ where: { name: collegeData.name } })
-    if (!college) {
-      const code = collegeData.name.split(' ').filter(w => w.length > 3).map(w => w[0]).join('').toUpperCase().substring(0, 6) + Math.floor(Math.random() * 100)
-      college = await collegeRepo.save(collegeRepo.create({ name: collegeData.name, code }))
-      console.log(`  + College: ${college.name}`)
-    }
-
-    for (const deptName of collegeData.departments) {
-      const exists = await departmentRepo.findOne({ where: { name: deptName, college: { id: college.id } } })
-      if (!exists) {
-        const code = deptName.replace(/[^A-Z]/g, '').substring(0, 6) + Math.floor(Math.random() * 100)
-        await departmentRepo.save(departmentRepo.create({ name: deptName, code, college }))
-        console.log(`    + Department: ${deptName}`)
-      }
-    }
-  }
-
-  // Administrative offices (no college)
-  const adminOffices = [
-    'Office of the President',
-    'Office of the Vice President for Academic Affairs',
-    'Office of the Vice President for Administration and Finance',
-    'Human Resource Management Office',
-    'Finance Office',
-    'Transport and Logistics Office',
-    'ICT Directorate',
-    'Library Services',
-    'Main Registrar Office',
-    'Research and Community Service Office',
-  ]
-
-  for (const officeName of adminOffices) {
-    const exists = await departmentRepo.findOne({ where: { name: officeName } })
-    if (!exists) {
-      const code = 'ADM' + Math.floor(Math.random() * 1000)
-      await departmentRepo.save(departmentRepo.create({ name: officeName, code, college: undefined }))
-      console.log(`  + Admin Office: ${officeName}`)
-    }
-  }
-
-  // ── 2. Default Workflows ───────────────────────────────────────────────────
-  console.log('Seeding default workflows...')
+  // ── 1. Workflows ───────────────────────────────────────────────────────────
+  console.log('\nSeeding workflows...')
   await workflowService.seedDefaultWorkflows()
   console.log('  + Workflows seeded')
 
-  // ── 3. System Admin User ───────────────────────────────────────────────────
-  console.log('Seeding admin user...')
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@haramaya.edu.et'
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@1234'
+  // ── 2. Colleges & Departments ──────────────────────────────────────────────
+  console.log('\nSeeding colleges...')
 
-  const existing = await userRepo.findOne({ where: { email: adminEmail } })
-  if (!existing) {
-    const hashed = await bcrypt.hash(adminPassword, 10)
-    await userRepo.save(userRepo.create({
-      name: 'System Administrator',
-      email: adminEmail,
-      password: hashed,
-      role: UserRole.SystemAdmin,
-      isActive: true,
-    }))
-    console.log(`  + Admin user created: ${adminEmail}`)
-  } else {
-    console.log(`  ~ Admin user already exists: ${adminEmail}`)
-  }
-
-  // ── 4. Test Users (one per role) ───────────────────────────────────────────
-  console.log('Seeding test users...')
-  const DEFAULT_PASSWORD = 'Password@123'
-
-  const testUsers = [
-    { name: 'Test Employee',        email: 'employee@test.com',        role: UserRole.User },
-    { name: 'Test Dept Head',       email: 'depthead@test.com',        role: UserRole.DepartmentHead },
-    { name: 'Test College Head',    email: 'collegehead@test.com',     role: UserRole.CollegeHead },
-    { name: 'Test Dean',            email: 'dean@test.com',            role: UserRole.Dean },
-    { name: 'Test President',       email: 'president@test.com',       role: UserRole.President },
-    { name: 'Test Transport Office',email: 'transport@test.com',       role: UserRole.TransportOffice },
-    { name: 'Test Deployment Team', email: 'deployment@test.com',      role: UserRole.DeploymentTeam },
-    { name: 'Test Driver',          email: 'driver@test.com',          role: UserRole.Driver },
-    { name: 'Test Maintenance',     email: 'maintenance@test.com',     role: UserRole.MaintenanceTeam },
-    { name: 'Test Gate',            email: 'gate@test.com',            role: UserRole.Gate },
-    { name: 'Test System Admin',    email: 'sysadmin@test.com',        role: UserRole.SystemAdmin },
+  const collegesData = [
+    { name: 'College of Law',              code: 'COL',  departments: ['Law'] },
+    { name: 'College of Veterinary Medicine', code: 'CVM', departments: ['Veterinary Medicine', 'Veterinary Pharmacy'] },
   ]
 
-  for (const u of testUsers) {
-    const exists = await userRepo.findOne({ where: { email: u.email } })
-    if (!exists) {
-      const hashed = await bcrypt.hash(DEFAULT_PASSWORD, 10)
-      await userRepo.save(userRepo.create({ ...u, password: hashed, isActive: true }))
-      console.log(`  + ${u.role.padEnd(20)} ${u.email}`)
-    } else {
-      console.log(`  ~ ${u.role.padEnd(20)} ${u.email} (already exists)`)
+  const colleges: Record<string, College> = {}
+  const departments: Record<string, Department> = {}
+
+  for (const cd of collegesData) {
+    let college = await collegeRepo.findOne({ where: { name: cd.name } })
+    if (!college) {
+      college = await collegeRepo.save(collegeRepo.create({ name: cd.name, code: cd.code }))
+      console.log(`  + College: ${college.name}`)
+    }
+    colleges[cd.name] = college
+
+    for (const deptName of cd.departments) {
+      let dept = await departmentRepo.findOne({ where: { name: deptName } })
+      if (!dept) {
+        const code = deptName.replace(/\s+/g, '').substring(0, 8).toUpperCase()
+        dept = await departmentRepo.save(departmentRepo.create({ name: deptName, code, college }))
+        console.log(`    + Department: ${deptName}`)
+      }
+      departments[deptName] = dept
     }
   }
 
+  // ── 3. System Admin ────────────────────────────────────────────────────────
+  console.log('\nSeeding system admin...')
+  await createUser(userRepo, {
+    name: 'System Administrator',
+    email: 'admin@haramaya.edu.et',
+    role: UserRole.SystemAdmin,
+  })
+
+  // ── 4. President ───────────────────────────────────────────────────────────
+  console.log('\nSeeding president...')
+  await createUser(userRepo, {
+    name: 'University President',
+    email: 'president@haramaya.edu.et',
+    role: UserRole.President,
+  })
+
+  // ── 5. Transport & Deployment ──────────────────────────────────────────────
+  console.log('\nSeeding operational roles...')
+  await createUser(userRepo, { name: 'Transport Officer',  email: 'transport@haramaya.edu.et',  role: UserRole.TransportOffice })
+  await createUser(userRepo, { name: 'Deployment Officer', email: 'deployment@haramaya.edu.et', role: UserRole.DeploymentTeam })
+  await createUser(userRepo, { name: 'Test Driver',        email: 'driver@haramaya.edu.et',     role: UserRole.Driver })
+
+  // ── 6. Law College chain ───────────────────────────────────────────────────
+  console.log('\nSeeding Law College chain...')
+  const lawCollege = colleges['College of Law']
+  const lawDept    = departments['Law']
+
+  const lawDean = await createUser(userRepo, {
+    name: 'Law College Dean',
+    email: 'dean.law@haramaya.edu.et',
+    role: UserRole.Dean,
+    college: lawCollege,
+  })
+
+  const lawDeptHead = await createUser(userRepo, {
+    name: 'Law Department Head',
+    email: 'depthead.law@haramaya.edu.et',
+    role: UserRole.DepartmentHead,
+    department: lawDept,
+    college: lawCollege,
+  })
+
+  await createUser(userRepo, {
+    name: 'Law Employee One',
+    email: 'employee1.law@haramaya.edu.et',
+    role: UserRole.User,
+    department: lawDept,
+    college: lawCollege,
+  })
+
+  await createUser(userRepo, {
+    name: 'Law Employee Two',
+    email: 'employee2.law@haramaya.edu.et',
+    role: UserRole.User,
+    department: lawDept,
+    college: lawCollege,
+  })
+
+  // ── 7. Veterinary College chain ────────────────────────────────────────────
+  console.log('\nSeeding Veterinary College chain...')
+  const vetCollege  = colleges['College of Veterinary Medicine']
+  const vetDept     = departments['Veterinary Medicine']
+
+  const vetDean = await createUser(userRepo, {
+    name: 'Veterinary College Dean',
+    email: 'dean.vet@haramaya.edu.et',
+    role: UserRole.Dean,
+    college: vetCollege,
+  })
+
+  const vetDeptHead = await createUser(userRepo, {
+    name: 'Veterinary Department Head',
+    email: 'depthead.vet@haramaya.edu.et',
+    role: UserRole.DepartmentHead,
+    department: vetDept,
+    college: vetCollege,
+  })
+
+  await createUser(userRepo, {
+    name: 'Vet Employee One',
+    email: 'employee1.vet@haramaya.edu.et',
+    role: UserRole.User,
+    department: vetDept,
+    college: vetCollege,
+  })
+
+  await createUser(userRepo, {
+    name: 'Vet Employee Two',
+    email: 'employee2.vet@haramaya.edu.et',
+    role: UserRole.User,
+    department: vetDept,
+    college: vetCollege,
+  })
+
+  // ── 8. Summary ─────────────────────────────────────────────────────────────
   console.log('\n========================================')
-  console.log('TEST USER CREDENTIALS')
+  console.log('SEED COMPLETE — ALL CREDENTIALS')
   console.log('========================================')
-  console.log(`Password for all test users: ${DEFAULT_PASSWORD}`)
+  console.log(`Password for ALL users: ${PASSWORD}`)
   console.log('----------------------------------------')
-  for (const u of testUsers) {
-    console.log(`${u.role.padEnd(20)} ${u.email}`)
-  }
-  console.log('========================================')
-  console.log(`\nAdmin: ${adminEmail} / ${adminPassword}`)
+  console.log('SYSTEM')
+  console.log(`  SystemAdmin     admin@haramaya.edu.et`)
+  console.log(`  President       president@haramaya.edu.et`)
+  console.log(`  TransportOffice transport@haramaya.edu.et`)
+  console.log(`  DeploymentTeam  deployment@haramaya.edu.et`)
+  console.log(`  Driver          driver@haramaya.edu.et`)
+  console.log('----------------------------------------')
+  console.log('LAW COLLEGE')
+  console.log(`  Dean            dean.law@haramaya.edu.et`)
+  console.log(`  DepartmentHead  depthead.law@haramaya.edu.et`)
+  console.log(`  Employee 1      employee1.law@haramaya.edu.et`)
+  console.log(`  Employee 2      employee2.law@haramaya.edu.et`)
+  console.log('----------------------------------------')
+  console.log('VETERINARY COLLEGE')
+  console.log(`  Dean            dean.vet@haramaya.edu.et`)
+  console.log(`  DepartmentHead  depthead.vet@haramaya.edu.et`)
+  console.log(`  Employee 1      employee1.vet@haramaya.edu.et`)
+  console.log(`  Employee 2      employee2.vet@haramaya.edu.et`)
   console.log('========================================\n')
 
-  console.log('Seeding complete.')
   await app.close()
 }
 
