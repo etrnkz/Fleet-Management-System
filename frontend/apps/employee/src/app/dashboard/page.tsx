@@ -287,7 +287,7 @@ export default function DashboardPage() {
     sessionStorage.clear()
     
     // Redirect to login with logout parameter to ensure clean state
-    router.push('/login?logout=true')
+    router.push('/?logout=true')
   }
 
   const handleMarkNotificationAsRead = async (id: string) => {

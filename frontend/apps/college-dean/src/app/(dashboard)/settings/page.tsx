@@ -90,7 +90,7 @@ export default function SettingsPage() {
     sessionStorage.clear()
     
     // Redirect to login with logout flag to prevent auto-login
-    router.push('/login?logout=true')
+    router.push('/?logout=true')
   }
 
   const handleInvite = async () => {

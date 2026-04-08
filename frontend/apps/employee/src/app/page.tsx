@@ -1,10 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Handle logout - clear all storage when redirected from logout
+    const fromLogout = searchParams.get('logout') === 'true'
+    if (fromLogout) {
+      localStorage.clear()
+      sessionStorage.clear()
+    }
+  }, [searchParams])
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#191C20]">

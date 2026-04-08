@@ -176,7 +176,7 @@ export default function DashboardLayout({
     sessionStorage.clear()
     
     // Redirect to login with logout flag to prevent auto-login
-    router.push('/login?logout=true')
+    router.push('/?logout=true')
   }
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
