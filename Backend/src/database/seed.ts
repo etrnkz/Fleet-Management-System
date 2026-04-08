@@ -1,6 +1,6 @@
 /**
  * Database seeder — run with: npm run seed
- * Seeds: Law + Veterinary colleges, full role chain, 2 employees per college.
+ * Seeds: all colleges + departments, full role chain, 1 employee per department.
  */
 import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
@@ -14,7 +14,6 @@ import { User, UserRole } from '../users/entities/user.entity'
 import { WorkflowService } from '../workflow/workflow.service'
 
 const PASSWORD = 'Password@123'
-
 async function hash(p: string) { return bcrypt.hash(p, 10) }
 
 async function createUser(
@@ -23,7 +22,7 @@ async function createUser(
 ): Promise<User> {
   const existing = await repo.findOne({ where: { email: data.email } })
   if (existing) return existing
-  const user = repo.create({
+  return repo.save(repo.create({
     name: data.name,
     email: data.email,
     password: await hash(PASSWORD),
@@ -31,8 +30,17 @@ async function createUser(
     department: data.department ?? null,
     college: data.college ?? null,
     isActive: true,
-  })
-  return repo.save(user)
+  }))
+}
+
+// Slug: "College of Law" → "col-law", "Computer Science" → "cs"
+function slug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/college of /g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .substring(0, 20)
 }
 
 async function seed() {
@@ -48,8 +56,16 @@ async function seed() {
 
   // ── 2. Colleges & Departments ──────────────────────────────────────────────
   const collegesData = [
-    { name: 'College of Law',                 code: 'COL', departments: ['Law'] },
-    { name: 'College of Veterinary Medicine', code: 'CVM', departments: ['Veterinary Medicine', 'Veterinary Pharmacy'] },
+    { name: 'College of Agriculture and Environmental Sciences', code: 'CAES', departments: ['Plant Sciences', 'Animal Sciences', 'Natural Resources Management', 'Agricultural Economics'] },
+    { name: 'College of Computing and Informatics',              code: 'CCI',  departments: ['Computer Science', 'Information Technology', 'Software Engineering', 'Information Systems'] },
+    { name: 'College of Engineering and Technology',             code: 'CET',  departments: ['Civil Engineering', 'Electrical Engineering', 'Mechanical Engineering', 'Chemical Engineering'] },
+    { name: 'College of Business and Economics',                 code: 'CBE',  departments: ['Management', 'Accounting and Finance', 'Economics', 'Marketing Management'] },
+    { name: 'College of Natural and Computational Sciences',     code: 'CNCS', departments: ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Statistics'] },
+    { name: 'College of Social Sciences and Humanities',         code: 'CSSH', departments: ['History and Heritage Management', 'Geography and Environmental Studies', 'Sociology', 'Psychology'] },
+    { name: 'College of Law',                                    code: 'COL',  departments: ['Law'] },
+    { name: 'College of Medicine and Health Sciences',           code: 'CMHS', departments: ['Medicine', 'Nursing', 'Public Health', 'Medical Laboratory Sciences'] },
+    { name: 'College of Veterinary Medicine',                    code: 'CVM',  departments: ['Veterinary Medicine', 'Veterinary Pharmacy'] },
+    { name: 'College of Education and Behavioral Sciences',      code: 'CEBS', departments: ['Curriculum and Instruction', 'Educational Planning and Management', 'Special Needs Education'] },
   ]
 
   const colleges: Record<string, College> = {}
@@ -63,69 +79,95 @@ async function seed() {
     for (const deptName of cd.departments) {
       let dept = await departmentRepo.findOne({ where: { name: deptName } })
       if (!dept) {
-        // Generate a unique code using college code prefix + dept abbreviation
-        const deptAbbr = deptName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 4)
-        const code = `${cd.code}_${deptAbbr}`
+        const code = `${cd.code}_${slug(deptName).substring(0, 8).toUpperCase()}`
         dept = await departmentRepo.save(departmentRepo.create({ name: deptName, code, college }))
       }
       departments[deptName] = dept
     }
   }
 
-  // ── 3. System Admin ────────────────────────────────────────────────────────
-  await createUser(userRepo, { name: 'System Administrator', email: 'admin@haramaya.edu.et', role: UserRole.SystemAdmin })
+  // Administrative offices
+  const adminOffices = [
+    'Office of the President',
+    'Office of the Vice President for Academic Affairs',
+    'Office of the Vice President for Administration and Finance',
+    'Human Resource Management Office',
+    'Finance Office',
+    'Transport and Logistics Office',
+    'ICT Directorate',
+    'Library Services',
+    'Main Registrar Office',
+    'Research and Community Service Office',
+  ]
+  for (const officeName of adminOffices) {
+    let dept = await departmentRepo.findOne({ where: { name: officeName } })
+    if (!dept) {
+      const code = `ADM_${slug(officeName).substring(0, 8).toUpperCase()}`
+      dept = await departmentRepo.save(departmentRepo.create({ name: officeName, code, college: undefined }))
+    }
+    departments[officeName] = dept
+  }
 
-  // ── 4. President ───────────────────────────────────────────────────────────
-  await createUser(userRepo, { name: 'University President', email: 'president@haramaya.edu.et', role: UserRole.President })
+  // ── 3. System roles ────────────────────────────────────────────────────────
+  await createUser(userRepo, { name: 'System Administrator',  email: 'admin@haramaya.edu.et',      role: UserRole.SystemAdmin })
+  await createUser(userRepo, { name: 'University President',  email: 'president@haramaya.edu.et',  role: UserRole.President })
+  await createUser(userRepo, { name: 'Transport Officer',     email: 'transport@haramaya.edu.et',  role: UserRole.TransportOffice })
+  await createUser(userRepo, { name: 'Deployment Officer',    email: 'deployment@haramaya.edu.et', role: UserRole.DeploymentTeam })
+  await createUser(userRepo, { name: 'Test Driver',           email: 'driver@haramaya.edu.et',     role: UserRole.Driver })
 
-  // ── 5. Transport & Deployment ──────────────────────────────────────────────
-  await createUser(userRepo, { name: 'Transport Officer',  email: 'transport@haramaya.edu.et',  role: UserRole.TransportOffice })
-  await createUser(userRepo, { name: 'Deployment Officer', email: 'deployment@haramaya.edu.et', role: UserRole.DeploymentTeam })
-  await createUser(userRepo, { name: 'Test Driver',        email: 'driver@haramaya.edu.et',     role: UserRole.Driver })
+  // ── 4. One Dean + one DeptHead + one Employee per college/department ───────
+  const createdUsers: { role: string; email: string; college?: string; department?: string }[] = []
 
-  // ── 6. Law College chain ───────────────────────────────────────────────────
-  const lawCollege = colleges['College of Law']
-  const lawDept    = departments['Law']
+  for (const cd of collegesData) {
+    const college = colleges[cd.name]
+    const collegeSlug = slug(cd.name)
 
-  await createUser(userRepo, { name: 'Law College Dean',       email: 'dean.law@haramaya.edu.et',      role: UserRole.Dean,           college: lawCollege })
-  await createUser(userRepo, { name: 'Law Department Head',    email: 'depthead.law@haramaya.edu.et',  role: UserRole.DepartmentHead, department: lawDept, college: lawCollege })
-  await createUser(userRepo, { name: 'Law Employee One',       email: 'employee1.law@haramaya.edu.et', role: UserRole.User,           department: lawDept, college: lawCollege })
-  await createUser(userRepo, { name: 'Law Employee Two',       email: 'employee2.law@haramaya.edu.et', role: UserRole.User,           department: lawDept, college: lawCollege })
+    // Dean
+    const deanEmail = `dean.${collegeSlug}@haramaya.edu.et`
+    await createUser(userRepo, { name: `Dean of ${cd.name}`, email: deanEmail, role: UserRole.Dean, college })
+    createdUsers.push({ role: 'Dean', email: deanEmail, college: cd.name })
 
-  // ── 7. Veterinary College chain ────────────────────────────────────────────
-  const vetCollege = colleges['College of Veterinary Medicine']
-  const vetDept    = departments['Veterinary Medicine']
+    for (const deptName of cd.departments) {
+      const dept = departments[deptName]
+      const deptSlug = slug(deptName)
 
-  await createUser(userRepo, { name: 'Veterinary College Dean',    email: 'dean.vet@haramaya.edu.et',      role: UserRole.Dean,           college: vetCollege })
-  await createUser(userRepo, { name: 'Veterinary Department Head', email: 'depthead.vet@haramaya.edu.et',  role: UserRole.DepartmentHead, department: vetDept, college: vetCollege })
-  await createUser(userRepo, { name: 'Vet Employee One',           email: 'employee1.vet@haramaya.edu.et', role: UserRole.User,           department: vetDept, college: vetCollege })
-  await createUser(userRepo, { name: 'Vet Employee Two',           email: 'employee2.vet@haramaya.edu.et', role: UserRole.User,           department: vetDept, college: vetCollege })
+      // Department Head
+      const headEmail = `head.${deptSlug}@haramaya.edu.et`
+      await createUser(userRepo, { name: `Head of ${deptName}`, email: headEmail, role: UserRole.DepartmentHead, department: dept, college })
+      createdUsers.push({ role: 'DeptHead', email: headEmail, department: deptName })
 
-  // ── 8. Summary ─────────────────────────────────────────────────────────────
+      // Employee
+      const empEmail = `emp.${deptSlug}@haramaya.edu.et`
+      await createUser(userRepo, { name: `Employee - ${deptName}`, email: empEmail, role: UserRole.User, department: dept, college })
+      createdUsers.push({ role: 'Employee', email: empEmail, department: deptName })
+    }
+  }
+
+  // ── 5. Summary ─────────────────────────────────────────────────────────────
   console.log('\n========================================')
-  console.log('SEED COMPLETE — ALL CREDENTIALS')
-  console.log('========================================')
+  console.log('SEED COMPLETE')
   console.log(`Password for ALL users: ${PASSWORD}`)
-  console.log('----------------------------------------')
-  console.log('SYSTEM')
-  console.log(`  SystemAdmin     admin@haramaya.edu.et`)
-  console.log(`  President       president@haramaya.edu.et`)
-  console.log(`  TransportOffice transport@haramaya.edu.et`)
-  console.log(`  DeploymentTeam  deployment@haramaya.edu.et`)
-  console.log(`  Driver          driver@haramaya.edu.et`)
-  console.log('----------------------------------------')
-  console.log('LAW COLLEGE')
-  console.log(`  Dean            dean.law@haramaya.edu.et`)
-  console.log(`  DepartmentHead  depthead.law@haramaya.edu.et`)
-  console.log(`  Employee 1      employee1.law@haramaya.edu.et`)
-  console.log(`  Employee 2      employee2.law@haramaya.edu.et`)
-  console.log('----------------------------------------')
-  console.log('VETERINARY COLLEGE')
-  console.log(`  Dean            dean.vet@haramaya.edu.et`)
-  console.log(`  DepartmentHead  depthead.vet@haramaya.edu.et`)
-  console.log(`  Employee 1      employee1.vet@haramaya.edu.et`)
-  console.log(`  Employee 2      employee2.vet@haramaya.edu.et`)
-  console.log('========================================\n')
+  console.log('========================================')
+  console.log('\nSYSTEM ACCOUNTS')
+  console.log('  SystemAdmin     admin@haramaya.edu.et')
+  console.log('  President       president@haramaya.edu.et')
+  console.log('  TransportOffice transport@haramaya.edu.et')
+  console.log('  DeploymentTeam  deployment@haramaya.edu.et')
+  console.log('  Driver          driver@haramaya.edu.et')
+
+  console.log('\nCOLLEGE ACCOUNTS (Dean + DeptHead + Employee per dept)')
+  for (const cd of collegesData) {
+    const collegeSlug = slug(cd.name)
+    console.log(`\n  ${cd.name}`)
+    console.log(`    Dean:  dean.${collegeSlug}@haramaya.edu.et`)
+    for (const deptName of cd.departments) {
+      const deptSlug = slug(deptName)
+      console.log(`    ${deptName}`)
+      console.log(`      Head: head.${deptSlug}@haramaya.edu.et`)
+      console.log(`      Emp:  emp.${deptSlug}@haramaya.edu.et`)
+    }
+  }
+  console.log('\n========================================\n')
 
   await app.close()
 }
