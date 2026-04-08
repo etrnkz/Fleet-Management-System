@@ -12,8 +12,8 @@ interface ToastMessage {
 export default function DashboardPage() {
   const [selectedAlert, setSelectedAlert] = useState<typeof alerts[0] | null>(null)
   const [showAddVehicleForm, setShowAddVehicleForm] = useState(false)
-  const [showAssignDriverForm, setShowAssignDriverForm] = useState(false)
-  const [showLogTripForm, setShowLogTripForm] = useState(false)
+  const [showAllocateTripForm, setShowAllocateTripForm] = useState(false)
+  const [showCompleteTripForm, setShowCompleteTripForm] = useState(false)
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [loading, setLoading] = useState(true)
   
@@ -243,17 +243,25 @@ export default function DashboardPage() {
     const formData = new FormData(e.target as HTMLFormElement)
     
     try {
+      const tripId = formData.get('tripId') as string
       const vehicleId = formData.get('vehicleId') as string
       const driverId = formData.get('driverId') as string
+      const estimatedFuelCost = parseFloat(formData.get('estimatedFuelCost') as string)
+      const estimatedDistance = parseFloat(formData.get('estimatedDistance') as string)
       
-      // Update vehicle with assigned driver
-      await vehicleApi.update(vehicleId, { assignedDriverId: driverId })
+      // Allocate vehicle and driver to trip
+      await tripApi.updateAllocation(tripId, {
+        vehicleId,
+        driverId,
+        estimatedFuelCost,
+        estimatedDistance,
+      })
       
-      showToast('Driver assigned successfully!', 'success')
-      setShowAssignDriverForm(false)
+      showToast('Trip allocated successfully!', 'success')
+      setShowAllocateTripForm(false)
       loadDashboardData()
     } catch (error: any) {
-      showToast(error.message || 'Failed to assign driver', 'error')
+      showToast(error.message || 'Failed to allocate trip', 'error')
     }
   }
 
@@ -262,26 +270,25 @@ export default function DashboardPage() {
     const formData = new FormData(e.target as HTMLFormElement)
     
     try {
-      const tripData = {
-        vehicleId: formData.get('vehicleId'),
-        driverId: formData.get('driverId'),
-        startLocation: formData.get('startLocation'),
-        endLocation: formData.get('endLocation'),
-        startMileage: parseInt(formData.get('startMileage') as string),
-        endMileage: parseInt(formData.get('endMileage') as string),
-        fuelUsed: parseFloat(formData.get('fuelUsed') as string),
-        purpose: formData.get('purpose'),
-        notes: formData.get('notes'),
-      }
-
-      // You can add API call here when backend endpoint is ready
-      // await tripApi.logTrip(tripData)
+      const tripId = formData.get('tripId') as string
+      const actualDistance = parseFloat(formData.get('actualDistance') as string)
+      const actualFuelCost = parseFloat(formData.get('actualFuelCost') as string)
+      const finalMileage = parseInt(formData.get('finalMileage') as string)
+      const notes = formData.get('notes') as string
       
-      showToast('Trip logged successfully!', 'success')
-      setShowLogTripForm(false)
+      // Complete the trip
+      await tripApi.completeTrip(tripId, {
+        actualDistance,
+        actualFuelCost,
+        finalMileage,
+        notes,
+      })
+      
+      showToast('Trip completed successfully!', 'success')
+      setShowCompleteTripForm(false)
       loadDashboardData()
     } catch (error: any) {
-      showToast(error.message || 'Failed to log trip', 'error')
+      showToast(error.message || 'Failed to complete trip', 'error')
     }
   }
 
@@ -334,22 +341,22 @@ export default function DashboardPage() {
                 Add Vehicle
               </button>
               <button 
-                onClick={() => setShowAssignDriverForm(true)}
+                onClick={() => setShowAllocateTripForm(true)}
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                Assign Driver
+                Allocate Trip
               </button>
               <button 
-                onClick={() => setShowLogTripForm(true)}
+                onClick={() => setShowCompleteTripForm(true)}
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Log Trip
+                Complete Trip
               </button>
             </div>
           </div>
@@ -953,8 +960,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Assign Driver Form Modal */}
-      {showAssignDriverForm && (
+      {/* Allocate Trip Form Modal */}
+      {showAllocateTripForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
@@ -962,13 +969,13 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Assign Driver to Vehicle</h2>
+                <h2 className="text-xl font-bold text-gray-900">Allocate Vehicle & Driver to Trip</h2>
               </div>
               <button
-                onClick={() => setShowAssignDriverForm(false)}
+                onClick={() => setShowAllocateTripForm(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -982,6 +989,25 @@ export default function DashboardPage() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Trip <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="tripId"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                  >
+                    <option value="">Choose a trip to allocate</option>
+                    {allTrips.filter(t => t.state === 'APPROVED_FOR_ALLOCATION').map((trip: any) => (
+                      <option key={trip.id} value={trip.id}>
+                        {trip.requestNumber} - {trip.destination} ({new Date(trip.startDateTime).toLocaleDateString()})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">Only trips approved for allocation are shown</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Vehicle <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -990,9 +1016,9 @@ export default function DashboardPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   >
                     <option value="">Choose a vehicle</option>
-                    {allVehicles.map((vehicle: any) => (
+                    {allVehicles.filter(v => v.status === 'Active').map((vehicle: any) => (
                       <option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.status})
+                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.vehicleType})
                       </option>
                     ))}
                   </select>
@@ -1008,12 +1034,42 @@ export default function DashboardPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   >
                     <option value="">Choose a driver</option>
-                    {allDrivers.map((driver: any) => (
+                    {allDrivers.filter(d => d.status === 'Available').map((driver: any) => (
                       <option key={driver.id} value={driver.id}>
                         {driver.user?.name || driver.user?.firstName + ' ' + driver.user?.lastName} - License: {driver.licenseNumber}
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Estimated Distance (km) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="estimatedDistance"
+                      required
+                      placeholder="e.g., 150"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Estimated Fuel Cost (ETB) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="estimatedFuelCost"
+                      required
+                      placeholder="e.g., 1200.50"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -1022,9 +1078,9 @@ export default function DashboardPage() {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                     <div>
-                      <p className="text-sm font-medium text-blue-900">Assignment Note</p>
+                      <p className="text-sm font-medium text-blue-900">Allocation Note</p>
                       <p className="text-sm text-blue-700 mt-1">
-                        This will assign the selected driver to the vehicle. The driver will be responsible for this vehicle's operations.
+                        This will assign the vehicle and driver to the selected trip. The trip will move to CAR_ALLOCATED state.
                       </p>
                     </div>
                   </div>
@@ -1037,11 +1093,11 @@ export default function DashboardPage() {
                   type="submit"
                   className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
                 >
-                  Assign Driver
+                  Allocate Trip
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAssignDriverForm(false)}
+                  onClick={() => setShowAllocateTripForm(false)}
                   className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   Cancel
@@ -1052,22 +1108,22 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Log Trip Form Modal */}
-      {showLogTripForm && (
+      {/* Complete Trip Form Modal */}
+      {showCompleteTripForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Log Trip Details</h2>
+                <h2 className="text-xl font-bold text-gray-900">Complete Trip</h2>
               </div>
               <button
-                onClick={() => setShowLogTripForm(false)}
+                onClick={() => setShowCompleteTripForm(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1078,142 +1134,94 @@ export default function DashboardPage() {
 
             {/* Form Content */}
             <form onSubmit={handleLogTrip} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Trip Information */}
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Trip Information</h3>
-                </div>
-
+              <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle <span className="text-red-500">*</span>
+                    Select Trip <span className="text-red-500">*</span>
                   </label>
                   <select
-                    name="vehicleId"
+                    name="tripId"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   >
-                    <option value="">Select Vehicle</option>
-                    {allVehicles.map((vehicle: any) => (
-                      <option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.plateNumber} - {vehicle.make} {vehicle.model}
+                    <option value="">Choose a trip to complete</option>
+                    {allTrips.filter(t => t.state === 'IN_PROGRESS').map((trip: any) => (
+                      <option key={trip.id} value={trip.id}>
+                        {trip.requestNumber} - {trip.destination} - {trip.allocatedVehicle?.plateNumber || 'N/A'}
                       </option>
                     ))}
                   </select>
+                  <p className="mt-1 text-xs text-gray-500">Only trips in progress are shown</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Actual Distance (km) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="actualDistance"
+                      required
+                      placeholder="e.g., 148.5"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Actual Fuel Cost (ETB) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="actualFuelCost"
+                      required
+                      placeholder="e.g., 1180.75"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Driver <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="driverId"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  >
-                    <option value="">Select Driver</option>
-                    {allDrivers.map((driver: any) => (
-                      <option key={driver.id} value={driver.id}>
-                        {driver.user?.name || driver.user?.firstName + ' ' + driver.user?.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Location <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="startLocation"
-                    required
-                    placeholder="e.g., Main Campus"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Location <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="endLocation"
-                    required
-                    placeholder="e.g., City Center"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  />
-                </div>
-
-                {/* Mileage & Fuel */}
-                <div className="md:col-span-2 mt-4">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Mileage & Fuel</h3>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Mileage (km) <span className="text-red-500">*</span>
+                    Final Mileage (km) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
-                    name="startMileage"
+                    name="finalMileage"
                     required
-                    placeholder="e.g., 15000"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    placeholder="e.g., 125480"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
+                  <p className="mt-1 text-xs text-gray-500">Total odometer reading at trip completion</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Mileage (km) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="endMileage"
-                    required
-                    placeholder="e.g., 15150"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fuel Used (Liters) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    name="fuelUsed"
-                    required
-                    placeholder="e.g., 12.5"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Purpose <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="purpose"
-                    required
-                    placeholder="e.g., Official Meeting"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Notes
                   </label>
                   <textarea
                     name="notes"
                     rows={3}
-                    placeholder="Additional trip details..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none"
+                    placeholder="Any additional notes about the trip completion..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none"
                   ></textarea>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-green-900">Completion Note</p>
+                      <p className="text-sm text-green-700 mt-1">
+                        This will mark the trip as completed and update vehicle mileage and driver statistics.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1223,11 +1231,11 @@ export default function DashboardPage() {
                   type="submit"
                   className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
                 >
-                  Log Trip
+                  Complete Trip
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowLogTripForm(false)}
+                  onClick={() => setShowCompleteTripForm(false)}
                   className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   Cancel

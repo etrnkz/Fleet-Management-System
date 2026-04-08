@@ -169,6 +169,17 @@ export const tripApi = {
       body: JSON.stringify(data),
     }),
 
+  completeTrip: (id: string, data: {
+    actualDistance: number;
+    actualFuelCost: number;
+    finalMileage: number;
+    notes?: string;
+  }) =>
+    apiFetch(`/trips/${id}/complete`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   getFeedbackStatistics: () => apiFetch('/trips/feedback/statistics'),
 };
 
