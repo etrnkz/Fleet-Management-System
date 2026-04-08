@@ -30,6 +30,13 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+
+  // Lifted form state — prevents reset when parent re-renders
+  const [requestForm, setRequestForm] = useState({
+    destination: '', tripType: '', purposeCategory: '', purpose: '',
+    startDateTime: '', endDateTime: '', passengerCount: 1
+  })
+  const [requestSubmitting, setRequestSubmitting] = useState(false)
   
   const notifRef = useRef<HTMLDivElement>(null)
   const profileDropdownRef = useRef<HTMLDivElement>(null)
@@ -469,26 +476,16 @@ export default function DashboardPage() {
 
   // New Request Form Component
   const NewRequestForm = () => {
-    const [formData, setFormData] = useState({
-      destination: '',
-      tripType: '',
-      purposeCategory: '',
-      purpose: '',
-      startDateTime: '',
-      endDateTime: '',
-      passengerCount: 1
-    })
+    const formData = requestForm
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
+      setRequestForm(prev => ({ ...prev, [name]: value }))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
+      if (requestSubmitting) return
 
       if (new Date(formData.startDateTime).getTime() - Date.now() < 48 * 60 * 60 * 1000) {
         showToast('Trip must be requested at least 48 hours in advance', 'error')
@@ -499,6 +496,7 @@ export default function DashboardPage() {
         return
       }
 
+      setRequestSubmitting(true)
       try {
         // Map form tripType to backend tripType + tripCategory
         const tripTypeMap: Record<string, { tripType: 'Normal' | 'VIP'; tripCategory: 'STANDARD' | 'VIP' | 'SERVICE' }> = {
@@ -531,10 +529,13 @@ export default function DashboardPage() {
           STANDARD: 'Standard trip submitted — following the normal approval process.',
         }
         showToast(messages[formData.tripType] || 'Trip request submitted successfully!', 'success')
-        setActiveSection('dashboard')
+        setRequestForm({ destination: '', tripType: '', purposeCategory: '', purpose: '', startDateTime: '', endDateTime: '', passengerCount: 1 })
+        setActiveSection('trips')
         loadTrips()
       } catch (err: any) {
         showToast(err.message || 'Failed to submit trip request', 'error')
+      } finally {
+        setRequestSubmitting(false)
       }
     }
 
@@ -731,9 +732,9 @@ export default function DashboardPage() {
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-[#1B3D2F] text-white rounded-lg font-medium hover:bg-[#152e22] transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
+                className="px-6 py-3 bg-[#1B3D2F] text-white rounded-lg font-medium hover:bg-[#152e22] transition-all duration-300 hover:scale-105 hover:shadow-lg transform disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Submit Request
+                {requestSubmitting ? 'Submitting...' : 'Submit Request'}
               </button>
             </div>
           </form>
