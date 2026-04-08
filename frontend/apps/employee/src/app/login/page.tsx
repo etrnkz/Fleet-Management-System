@@ -14,14 +14,27 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<{ type: 'email' | 'password' | 'general'; message: string } | null>(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Clear any existing sessions on page load to ensure clean login
+      const urlParams = new URLSearchParams(window.location.search)
+      const fromLogout = urlParams.get('logout') === 'true'
+      
+      if (fromLogout) {
+        // User just logged out, clear everything
+        localStorage.clear()
+        sessionStorage.clear()
+        return
+      }
+      
       const savedEmail = localStorage.getItem('rememberedEmail')
       if (savedEmail) {
         setEmail(savedEmail)
         setRememberMe(true)
       }
+      
       // If already logged in (token in either storage), redirect
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
       if (token) router.replace('/dashboard')
@@ -31,6 +44,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null) // Clear previous errors
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -42,7 +56,18 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed')
+        // Determine which credential is wrong based on error message
+        const errorMessage = data.message?.toLowerCase() || ''
+        
+        if (errorMessage.includes('user not found') || errorMessage.includes('email')) {
+          setError({ type: 'email', message: 'Email address not found' })
+        } else if (errorMessage.includes('password') || errorMessage.includes('invalid credentials')) {
+          setError({ type: 'password', message: 'Incorrect password' })
+        } else {
+          setError({ type: 'general', message: data.message || 'Login failed. Please check your credentials.' })
+        }
+        setIsLoading(false)
+        return
       }
 
       // Remember me: persist tokens in localStorage; otherwise use sessionStorage (clears on tab close)
@@ -76,7 +101,7 @@ export default function LoginPage() {
       router.push('/dashboard')
     } catch (error: any) {
       setIsLoading(false)
-      alert(error.message || 'Login failed. Please check your credentials.')
+      setError({ type: 'general', message: 'Network error. Please check your connection and try again.' })
     }
   }
 
@@ -112,6 +137,19 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* General Error Message */}
+            {error && error.type === 'general' && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Login Failed</p>
+                  <p className="text-sm text-red-700 mt-1">{error.message}</p>
+                </div>
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">
                 Email address
@@ -120,11 +158,24 @@ export default function LoginPage() {
                 type="email"
                 id="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (error?.type === 'email') setError(null) // Clear error when user types
+                }}
                 placeholder="name@institution.edu"
-                className="w-full px-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${
+                  error?.type === 'email' ? 'border-red-500 bg-red-50' : 'border-[#c1c8c4]'
+                }`}
                 required
               />
+              {error && error.type === 'email' && (
+                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {error.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -141,9 +192,14 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (error?.type === 'password') setError(null) // Clear error when user types
+                  }}
                   placeholder="Enter password"
-                  className="w-full px-4 py-3 pr-12 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
+                  className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${
+                    error?.type === 'password' ? 'border-red-500 bg-red-50' : 'border-[#c1c8c4]'
+                  }`}
                   required
                 />
                 <button
@@ -163,6 +219,14 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {error && error.type === 'password' && (
+                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {error.message}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center">
