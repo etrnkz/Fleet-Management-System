@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { tripApi, getCurrentUser, notificationApi, vehicleApi, userApi, collegeApi, departmentApi } from '../../lib/api'
+import TripRequestForm from '../../components/TripRequestForm'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -466,281 +467,6 @@ export default function DashboardPage() {
       </div>
     </div>
   )
-
-  // New Request Form Component
-  const NewRequestForm = () => {
-    const [formData, setFormData] = useState({
-      destination: '',
-      tripType: '',
-      purposeCategory: '',
-      purpose: '',
-      startDateTime: '',
-      endDateTime: '',
-      passengerCount: 1
-    })
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
-
-      if (new Date(formData.startDateTime).getTime() - Date.now() < 48 * 60 * 60 * 1000) {
-        showToast('Trip must be requested at least 48 hours in advance', 'error')
-        return
-      }
-      if (new Date(formData.endDateTime) <= new Date(formData.startDateTime)) {
-        showToast('End date must be after start date', 'error')
-        return
-      }
-
-      try {
-        // Map form tripType to backend tripType + tripCategory
-        const tripTypeMap: Record<string, { tripType: 'Normal' | 'VIP'; tripCategory: 'STANDARD' | 'VIP' | 'SERVICE' }> = {
-          STANDARD: { tripType: 'Normal', tripCategory: 'STANDARD' },
-          VIP:      { tripType: 'VIP',    tripCategory: 'VIP' },
-          SERVICE:  { tripType: 'Normal', tripCategory: 'SERVICE' },
-        }
-        const mapped = tripTypeMap[formData.tripType] || { tripType: 'Normal', tripCategory: 'STANDARD' }
-
-        const purposeText = [
-          formData.purposeCategory,
-          formData.purpose ? `Details: ${formData.purpose}` : '',
-        ].filter(Boolean).join(' | ')
-
-        const created: any = await tripApi.create({
-          destination: formData.destination,
-          purpose: purposeText,
-          startDateTime: formData.startDateTime,
-          endDateTime: formData.endDateTime,
-          passengerCount: Number(formData.passengerCount),
-          tripType: mapped.tripType,
-          tripCategory: mapped.tripCategory,
-        })
-
-        await tripApi.submit(created.id)
-
-        const messages: Record<string, string> = {
-          VIP: 'VIP trip submitted — sent directly to the President for approval.',
-          SERVICE: 'Service trip submitted — sent directly to the President for approval.',
-          STANDARD: 'Standard trip submitted — following the normal approval process.',
-        }
-        showToast(messages[formData.tripType] || 'Trip request submitted successfully!', 'success')
-        setActiveSection('dashboard')
-        loadTrips()
-      } catch (err: any) {
-        showToast(err.message || 'Failed to submit trip request', 'error')
-      }
-    }
-
-    return (
-      <div className="space-y-8 max-w-4xl mx-auto">
-        <div className="flex justify-between items-end border-b border-[#C4C6D0]/30 pb-6">
-          <div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#1B3D2F]">New Trip Request</h2>
-            <p className="text-[#44474E] mt-2 font-medium">Submit a new official university travel request.</p>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg border border-gray-300 shadow-sm p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Destination and Trip Type */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-                  Destination
-                </label>
-                <input
-                  type="text"
-                  id="destination"
-                  name="destination"
-                  value={formData.destination}
-                  onChange={handleChange}
-                  placeholder="Enter destination"
-                  style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="tripType" className="block text-sm font-medium text-gray-700 mb-2">
-                  Trip Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="tripType"
-                  name="tripType"
-                  value={formData.tripType}
-                  onChange={handleChange}
-                  style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all text-gray-900"
-                  required
-                >
-                  <option value="" disabled className="text-gray-400">Select trip type</option>
-                  <option value="STANDARD">Standard Trip</option>
-                  <option value="VIP">VIP Trip</option>
-                  <option value="SERVICE">Service Trip</option>
-                </select>
-                {formData.tripType && (
-                  <div className={`mt-2 p-3 rounded-lg text-sm ${
-                    formData.tripType === 'STANDARD' 
-                      ? 'bg-blue-50 border border-blue-200 text-blue-800'
-                      : 'bg-amber-50 border border-amber-200 text-amber-800'
-                  }`}>
-                    <div className="flex items-start gap-2">
-                      <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <div>
-                        {formData.tripType === 'STANDARD' && (
-                          <>
-                            <p className="font-medium">Standard Trip Process</p>
-                            <p className="text-xs mt-1">Follows normal approval flow: Department → College → Transport Office</p>
-                          </>
-                        )}
-                        {formData.tripType === 'VIP' && (
-                          <>
-                            <p className="font-medium">VIP Trip Process</p>
-                            <p className="text-xs mt-1">Requires direct presidential approval - bypasses department/college approval</p>
-                          </>
-                        )}
-                        {formData.tripType === 'SERVICE' && (
-                          <>
-                            <p className="font-medium">Service Trip Process</p>
-                            <p className="text-xs mt-1">Requires direct presidential approval - bypasses department/college approval</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Purpose Category */}
-            <div>
-              <label htmlFor="purposeCategory" className="block text-sm font-medium text-gray-700 mb-2">
-                Purpose Category
-              </label>
-              <select
-                id="purposeCategory"
-                name="purposeCategory"
-                value={formData.purposeCategory || ''}
-                onChange={handleChange}
-                style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all text-gray-900"
-                required
-              >
-                <option value="" disabled className="text-gray-400">Select purpose category</option>
-                <option value="OFFICIAL">Official Business</option>
-                <option value="CONFERENCE">Conference</option>
-                <option value="TRAINING">Training</option>
-                <option value="MEETING">Meeting</option>
-                <option value="RESEARCH">Research</option>
-                <option value="INSPECTION">Inspection</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-            
-            {/* Purpose */}
-            <div>
-              <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-2">
-                Purpose
-              </label>
-              <textarea
-                id="purpose"
-                name="purpose"
-                value={formData.purpose}
-                onChange={handleChange}
-                rows={3}
-                placeholder="Describe the purpose of your trip"
-                style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all resize-none"
-                required
-              />
-            </div>
-            
-            {/* Start and End Date/Time */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label htmlFor="startDateTime" className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  id="startDateTime"
-                  name="startDateTime"
-                  value={formData.startDateTime}
-                  onChange={handleChange}
-                  style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="endDateTime" className="block text-sm font-medium text-gray-700 mb-2">
-                  End Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  id="endDateTime"
-                  name="endDateTime"
-                  value={formData.endDateTime}
-                  onChange={handleChange}
-                  style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
-                  required
-                />
-              </div>
-            </div>
-            
-            {/* Passengers and Distance */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label htmlFor="passengerCount" className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Passengers
-                </label>
-                <input
-                  type="number"
-                  id="passengerCount"
-                  name="passengerCount"
-                  value={formData.passengerCount}
-                  onChange={handleChange}
-                  min="1"
-                  max="50"
-                  placeholder="1"
-                  style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
-                  required
-                />
-              </div>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => setActiveSection('dashboard')}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-300"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-3 bg-[#1B3D2F] text-white rounded-lg font-medium hover:bg-[#152e22] transition-all duration-300 hover:scale-105 hover:shadow-lg transform"
-              >
-                Submit Request
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    )
-  }
 
   // Notification Center Component
   const NotificationCenter = () => (
@@ -2339,7 +2065,14 @@ export default function DashboardPage() {
             </div>
           )}
           
-          {activeSection === 'request' && <NewRequestForm />}
+          {activeSection === 'request' && <TripRequestForm 
+            onSuccess={() => {
+              setActiveSection('dashboard')
+              loadTrips()
+            }}
+            onCancel={() => setActiveSection('dashboard')}
+            showToast={showToast}
+          />}
           {activeSection === 'notifications' && <NotificationCenter />}
           {activeSection === 'feedback' && <FeedbackSection />}
           {activeSection === 'settings' && <SettingsProfile />}
