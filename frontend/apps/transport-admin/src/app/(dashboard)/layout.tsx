@@ -1121,7 +1121,7 @@ export default function DashboardLayout({
               {/* Tabs */}
               <div className="border-b border-gray-200 overflow-x-auto">
                 <div className="flex gap-1 p-2 min-w-max">
-                  {[['general','General'],['users','Users'],['invite','Invite Employees']].map(([id,label]) => (
+                  {[['general','General'],['invite','Invite Employees']].map(([id,label]) => (
                     <button key={id} onClick={() => setSettingsTab(id)}
                       className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${settingsTab === id ? 'bg-[#1B3D2F] text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}>
                       {label}
@@ -1160,32 +1160,6 @@ export default function DashboardLayout({
                       <button type="submit" className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] text-sm font-medium">Save Changes</button>
                     </div>
                   </form>
-                )}
-                {/* Users */}
-                {settingsTab === 'users' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-bold text-gray-900">User Management</h3>
-                      <button onClick={() => showSettingsToast('Add user feature coming soon', 'info')} className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]">+ Add User</button>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-                        <thead className="bg-gray-50"><tr>{['Name','Email','Role','Status','Actions'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{h}</th>)}</tr></thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {settingsUsers.map(u => (
-                            <tr key={u.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{u.name}</td>
-                              <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
-                              <td className="px-4 py-3"><span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">{u.role}</span></td>
-                              <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
-                              <td className="px-4 py-3"><button onClick={() => showSettingsToast(`Editing ${u.name}`, 'info')} className="text-[#1B3D2F] text-xs font-medium mr-3">Edit</button><button onClick={() => showSettingsToast(`Deleting ${u.name}`, 'error')} className="text-red-600 text-xs font-medium">Delete</button></td>
-                            </tr>
-                          ))}
-                          {settingsUsers.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-sm text-gray-400">No users found</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
                 )}
                 {/* Invite */}
                 {settingsTab === 'invite' && (

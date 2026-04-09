@@ -48,6 +48,9 @@ export default function LiveTrackingPage() {
   const [showSearch, setShowSearch] = useState(false)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [vehicleDetails, setVehicleDetails] = useState<any>(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
   const socketRef = useRef<Socket | null>(null)
 
   const showToast = (message: string, type: ToastType) => {
@@ -198,9 +201,27 @@ export default function LiveTrackingPage() {
     v.driver?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleViewDetails = () => {
-    if (selectedVehicleData) {
-      showToast(`Viewing details for ${selectedVehicleData.vehicleId} - ${selectedVehicleData.plateNumber}`, 'info')
+  const handleViewDetails = async () => {
+    if (!selectedVehicleData) return
+    
+    try {
+      setLoadingDetails(true)
+      setShowDetailsModal(true)
+      
+      // Fetch full vehicle details
+      const details = await vehicleApi.getById(selectedVehicleData.id)
+      
+      // Fetch tracking history for this vehicle
+      const history = await trackingApi.getHistory(selectedVehicleData.id).catch(() => [])
+      
+      setVehicleDetails({
+        ...details,
+        trackingHistory: Array.isArray(history) ? history.slice(0, 10) : []
+      })
+    } catch (error: any) {
+      showToast(error.message || 'Failed to load vehicle details', 'error')
+    } finally {
+      setLoadingDetails(false)
     }
   }
 
@@ -446,6 +467,230 @@ export default function LiveTrackingPage() {
           type={toast.type}
           onClose={() => setToast(null)}
         />
+      )}
+
+      {/* Vehicle Details Modal */}
+      {showDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+              <h2 className="text-xl font-bold text-gray-900">Vehicle Details</h2>
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false)
+                  setVehicleDetails(null)
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {loadingDetails ? (
+              <div className="p-12 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading details...</p>
+              </div>
+            ) : vehicleDetails ? (
+              <div className="p-6 space-y-6">
+                {/* Basic Information */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Basic Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Vehicle ID</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.vehicleId || vehicleDetails.plateNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Plate Number</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.plateNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Make & Model</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.make} {vehicleDetails.model}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Year</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.year}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Type</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.vehicleType || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Status</p>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                        vehicleDetails.status === 'Active' ? 'bg-green-100 text-green-700' :
+                        vehicleDetails.status === 'Maintenance' ? 'bg-red-100 text-red-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {vehicleDetails.status}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Fuel Type</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.fuelType}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Capacity</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.capacity} passengers</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Current Mileage</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.currentMileage?.toLocaleString() || 0} km</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Color</p>
+                      <p className="font-semibold text-gray-900">{vehicleDetails.color || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Assigned Driver */}
+                {vehicleDetails.assignedDriver && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Assigned Driver</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Name</p>
+                          <p className="font-semibold text-gray-900">{vehicleDetails.assignedDriver.user?.name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">License Number</p>
+                          <p className="font-semibold text-gray-900">{vehicleDetails.assignedDriver.licenseNumber || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Current Location */}
+                {selectedVehicleData && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Current Location</h3>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Coordinates</p>
+                          <p className="font-semibold text-gray-900">{selectedVehicleData.lat.toFixed(6)}, {selectedVehicleData.lng.toFixed(6)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Speed</p>
+                          <p className="font-semibold text-gray-900">{selectedVehicleData.speed}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Status</p>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                            selectedVehicleData.status === 'moving' ? 'bg-green-100 text-green-700' :
+                            selectedVehicleData.status === 'idle' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {selectedVehicleData.status.charAt(0).toUpperCase() + selectedVehicleData.status.slice(1)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Last Update</p>
+                          <p className="font-semibold text-gray-900">{selectedVehicleData.lastUpdate}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tracking History */}
+                {vehicleDetails.trackingHistory && vehicleDetails.trackingHistory.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Tracking History</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {vehicleDetails.trackingHistory.map((record: any, index: number) => (
+                        <div key={index} className="bg-gray-50 rounded-lg p-3 text-sm">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-gray-900">
+                              {new Date(record.timestamp).toLocaleString()}
+                            </span>
+                            <span className="text-gray-600">{Math.round(record.speed || 0)} km/h</span>
+                          </div>
+                          <p className="text-xs text-gray-600">
+                            {record.latitude?.toFixed(6)}, {record.longitude?.toFixed(6)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Maintenance Info */}
+                {(vehicleDetails.lastMaintenanceDate || vehicleDetails.nextMaintenanceDate) && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Maintenance</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {vehicleDetails.lastMaintenanceDate && (
+                        <div>
+                          <p className="text-sm text-gray-600">Last Maintenance</p>
+                          <p className="font-semibold text-gray-900">
+                            {new Date(vehicleDetails.lastMaintenanceDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                      {vehicleDetails.nextMaintenanceDate && (
+                        <div>
+                          <p className="text-sm text-gray-600">Next Maintenance</p>
+                          <p className="font-semibold text-gray-900">
+                            {new Date(vehicleDetails.nextMaintenanceDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* VIP Geofence */}
+                {vehicleDetails.vipGeoRestrictionEnabled && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">VIP Geofence</h3>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span className="font-semibold text-amber-800">Geofence Restriction Enabled</span>
+                      </div>
+                      {vehicleDetails.restrictedZones && vehicleDetails.restrictedZones.length > 0 && (
+                        <div className="space-y-2 mt-3">
+                          <p className="text-sm text-amber-700 font-medium">Restricted Zones:</p>
+                          {vehicleDetails.restrictedZones.map((zone: any, index: number) => (
+                            <div key={index} className="text-sm text-amber-700">
+                              • {zone.name || `Zone ${index + 1}`}: {zone.radiusMeters}m radius at ({zone.latitude.toFixed(4)}, {zone.longitude.toFixed(4)})
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-12 text-center text-gray-500">
+                <p>No details available</p>
+              </div>
+            )}
+
+            <div className="p-6 border-t border-gray-200 flex justify-end sticky bottom-0 bg-white">
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false)
+                  setVehicleDetails(null)
+                }}
+                className="px-6 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
