@@ -333,10 +333,10 @@ export default function VehiclesPage() {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>{vehicle.status}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {vehicle.assignedDriver ? (
+                    {vehicle.assignedDriver?.user?.name ? (
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-900 font-medium">{vehicle.assignedDriver.user.name}</span>
-                        <span className="text-xs text-gray-500">{vehicle.assignedDriver.licenseNumber}</span>
+                        <span className="text-xs text-gray-500">{vehicle.assignedDriver.licenseNumber || 'N/A'}</span>
                       </div>
                     ) : (
                       <span className="text-sm text-gray-400 italic">No driver</span>
