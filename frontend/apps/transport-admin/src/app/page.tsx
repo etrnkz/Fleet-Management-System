@@ -35,12 +35,6 @@ function LandingPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <img src="/hulogo.png" alt="Haramaya University" className="w-10 h-10 object-contain rounded-full" />
-            <div className="hidden sm:block">
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">Haramaya University</p>
-              <p className="text-sm font-bold text-[#1B3D2F] leading-tight">Transport Office</p>
-            </div>
-          </Link>
-            </div>
             <div>
               <p className="font-serif text-lg font-bold tracking-tight text-[#1B3D2F] leading-none">Fleet Authority</p>
               <p className="text-[10px] uppercase tracking-widest text-[#565F71] font-bold mt-0.5">Transport Office Portal</p>
@@ -156,14 +150,19 @@ function LandingPageContent() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { t: 'Trip approvals', d: 'Review, confirm, and coordinate approved trip requests from all departments.' },
-              { t: 'Vehicle management', d: 'Track fleet availability, assign vehicles, and manage maintenance schedules.' },
-              { t: 'Driver coordination', d: 'Assign drivers to trips, monitor availability, and manage driver records.' },
-              { t: 'Fuel tracking', d: 'Monitor fuel consumption, costs, and efficiency across the entire fleet.' },
-              { t: 'Maintenance oversight', d: 'Schedule and track vehicle maintenance to ensure fleet reliability.' },
-              { t: 'Reports & analytics', d: 'Generate operational reports on trips, costs, and fleet utilization.' },
+              { t: 'Trip approvals', d: 'Review, confirm, and coordinate approved trip requests from all departments.', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+              { t: 'Vehicle management', d: 'Track fleet availability, assign vehicles, and manage maintenance schedules.', icon: 'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z' },
+              { t: 'Driver coordination', d: 'Assign drivers to trips, monitor availability, and manage driver records.', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+              { t: 'Fuel tracking', d: 'Monitor fuel consumption, costs, and efficiency across the entire fleet.', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+              { t: 'Maintenance oversight', d: 'Schedule and track vehicle maintenance to ensure fleet reliability.', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
+              { t: 'Reports & analytics', d: 'Generate operational reports on trips, costs, and fleet utilization.', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
             ].map((item) => (
               <div key={item.t} className="bg-white p-6 rounded border border-[#C4C6D0]/40 shadow-sm hover:border-[#1B3D2F]/25 transition-colors">
+                <div className="w-12 h-12 bg-[#1B3D2F]/10 rounded-lg flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                  </svg>
+                </div>
                 <h3 className="font-serif font-bold text-lg text-[#1B3D2F] mb-2">{item.t}</h3>
                 <p className="text-sm text-[#44474E] leading-relaxed">{item.d}</p>
               </div>
