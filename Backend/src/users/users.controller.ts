@@ -195,6 +195,14 @@ export class UsersController {
     return this.usersService.upsertDriverProfile(req.user.id, body);
   }
 
+  @Get('me/driver-profile')
+  @ApiOperation({ summary: 'Get driver profile for current user' })
+  @ApiResponse({ status: 200, description: 'Driver profile' })
+  @ApiResponse({ status: 404, description: 'No driver profile found' })
+  getDriverProfile(@Request() req) {
+    return this.usersService.getDriverProfile(req.user.id);
+  }
+
   @Patch('me/password')
   @ApiOperation({
     summary: 'Change current user password',

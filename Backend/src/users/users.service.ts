@@ -443,6 +443,15 @@ export class UsersService {
     });
   }
 
+  async getDriverProfile(userId: string): Promise<Driver> {
+    const driver = await this.driverRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
+    if (!driver) throw new NotFoundException('No driver profile found for this user');
+    return driver;
+  }
+
   /**
    * Create or update the Driver profile for a user with Driver role.
    * Called when a driver fills in their license details from the driver app.

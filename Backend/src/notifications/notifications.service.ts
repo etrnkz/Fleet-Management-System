@@ -223,9 +223,15 @@ export class NotificationsService {
       { tripId: trip.id, requestNumber: trip.requestNumber },
     );
 
-    // Notify the next approver (department head for normal trips, dean for VIP)
-    const nextApprover =
-      trip.tripType === 'VIP' ? stakeholders.dean : stakeholders.departmentHead;
+    // Notify the correct next approver based on trip state
+    let nextApprover = null;
+    if (trip.state === 'PENDING_DEPARTMENT') {
+      nextApprover = stakeholders.departmentHead;
+    } else if (trip.state === 'PENDING_COLLEGE') {
+      nextApprover = stakeholders.dean;
+    } else if (trip.state === 'PENDING_PRESIDENT') {
+      nextApprover = stakeholders.president;
+    }
     if (nextApprover) {
       await this.create(
         nextApprover,
