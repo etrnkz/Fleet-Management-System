@@ -219,6 +219,8 @@ export class DriversService {
     }
 
     driver.assignedVehicle = vehicle;
+    // Mark driver as Available (on-duty, ready for assignment)
+    driver.status = DriverStatus.Available;
     return this.driverRepository.save(driver);
   }
 

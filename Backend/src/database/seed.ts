@@ -117,6 +117,7 @@ async function seed() {
   await createUser(userRepo, { name: 'Transport Officer',     email: 'transport@haramaya.edu.et',  role: UserRole.TransportOffice })
   await createUser(userRepo, { name: 'Deployment Officer',    email: 'deployment@haramaya.edu.et', role: UserRole.DeploymentTeam })
   await createUser(userRepo, { name: 'Test Driver',           email: 'driver@haramaya.edu.et',     role: UserRole.Driver })
+  await createUser(userRepo, { name: 'Gate Security',         email: 'gate@haramaya.edu.et',       role: UserRole.Gate })
 
   // ── 4. One Dean + one DeptHead + one Employee per college/department ───────
   const createdUsers: { role: string; email: string; college?: string; department?: string }[] = []
@@ -157,6 +158,7 @@ async function seed() {
   console.log('  TransportOffice transport@haramaya.edu.et')
   console.log('  DeploymentTeam  deployment@haramaya.edu.et')
   console.log('  Driver          driver@haramaya.edu.et')
+  console.log('  Gate            gate@haramaya.edu.et')
 
   console.log('\nCOLLEGE ACCOUNTS (Dean + DeptHead + Employee per dept)')
   for (const cd of collegesData) {

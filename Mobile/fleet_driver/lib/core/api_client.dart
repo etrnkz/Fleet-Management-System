@@ -52,17 +52,18 @@ class ApiClient {
   }
 
   dynamic _handle(http.Response res) {
-    if (res.statusCode == 401) {
-      throw ApiException(401, 'Session expired');
-    }
     if (!res.statusCode.toString().startsWith('2')) {
       String msg = 'Request failed';
       try {
         final j = jsonDecode(res.body);
         msg = j['message'] is List
             ? (j['message'] as List).join(', ')
-            : j['message'] ?? msg;
+            : j['message']?.toString() ?? msg;
       } catch (_) {}
+      // Only throw session-expired for 401s on authenticated calls (not login)
+      if (res.statusCode == 401 && msg.toLowerCase().contains('expired')) {
+        throw ApiException(401, 'Session expired');
+      }
       throw ApiException(res.statusCode, msg);
     }
     if (res.body.isEmpty) return null;
