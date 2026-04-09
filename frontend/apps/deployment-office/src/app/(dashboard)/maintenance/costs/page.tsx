@@ -59,8 +59,8 @@ export default function MaintenanceCostsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total estimated', value: `ETB ${totalEstimated.toLocaleString()}`, color: 'text-gray-900' },
-          { label: 'Total actual', value: `ETB ${totalActual.toLocaleString()}`, color: 'text-blue-700' },
-          { label: 'Avg / job', value: `ETB ${avgCost.toFixed(0)}`, color: 'text-indigo-700' },
+          { label: 'Total actual', value: `ETB ${totalActual.toLocaleString()}`, color: 'text-[#1B3D2F]' },
+          { label: 'Avg / job', value: `ETB ${avgCost.toFixed(0)}`, color: 'text-emerald-700' },
           {
             label: savings >= 0 ? 'Savings' : 'Overrun',
             value: `ETB ${Math.abs(savings).toLocaleString()}`,
@@ -108,8 +108,8 @@ export default function MaintenanceCostsPage() {
           <h3 className="font-semibold text-gray-800 dark:text-white mb-4">Estimated vs actual</h3>
           <div className="flex items-end gap-6 h-40 border-b border-gray-100 dark:border-gray-700 pb-2">
             {[
-              { label: 'Estimated', value: totalEstimated, color: 'bg-blue-400' },
-              { label: 'Actual', value: totalActual, color: 'bg-blue-600' },
+              { label: 'Estimated', value: totalEstimated, color: 'bg-emerald-400' },
+              { label: 'Actual', value: totalActual, color: 'bg-[#1B3D2F]' },
             ].map((b) => {
               const max = Math.max(totalEstimated, totalActual, 1)
               return (
@@ -145,7 +145,7 @@ export default function MaintenanceCostsPage() {
                 </div>
                 <div className="h-4 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-blue-600 rounded-full"
+                    className="h-full bg-[#1B3D2F] rounded-full"
                     style={{ width: `${(v.total / maxVehicleCost) * 100}%` }}
                   />
                 </div>

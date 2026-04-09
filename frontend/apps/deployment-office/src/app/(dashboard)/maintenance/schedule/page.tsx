@@ -103,7 +103,7 @@ export default function MaintenanceSchedulePage() {
         <button
           type="button"
           onClick={() => setShowChecklist(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+          className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]"
         >
           + Inspection checklist
         </button>
@@ -134,7 +134,7 @@ export default function MaintenanceSchedulePage() {
             onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${
               filter === f
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#1B3D2F] text-white'
                 : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'
             }`}
           >
@@ -186,7 +186,7 @@ export default function MaintenanceSchedulePage() {
                           setSelectedVehicle(`${s.vehicle} — ${s.plate}`)
                           setShowChecklist(true)
                         }}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-xs text-[#1B3D2F] hover:text-[#152e22] font-medium"
                       >
                         Checklist
                       </button>
@@ -202,7 +202,7 @@ export default function MaintenanceSchedulePage() {
       {showChecklist && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/30">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-[#1B3D2F]/10 dark:bg-[#1B3D2F]/20">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Inspection checklist</h3>
                 {selectedVehicle && (
@@ -229,7 +229,7 @@ export default function MaintenanceSchedulePage() {
               </div>
               <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-600 rounded-full transition-all"
+                  className="h-full bg-[#1B3D2F] rounded-full transition-all"
                   style={{ width: `${(checkedItems / totalItems) * 100}%` }}
                 />
               </div>
@@ -246,7 +246,7 @@ export default function MaintenanceSchedulePage() {
                           key={item}
                           className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer ${
                             checklistState[key]
-                              ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20'
+                              ? 'bg-[#1B3D2F]/10 border-[#1B3D2F]/20 dark:bg-[#1B3D2F]/20'
                               : 'bg-gray-50 border-gray-200 dark:bg-gray-700'
                           }`}
                         >
@@ -254,7 +254,7 @@ export default function MaintenanceSchedulePage() {
                             type="checkbox"
                             checked={!!checklistState[key]}
                             onChange={() => toggleCheck(key)}
-                            className="w-4 h-4 text-blue-600 rounded"
+                            className="w-4 h-4 text-[#1B3D2F] rounded"
                           />
                           <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
                         </label>
@@ -296,7 +296,7 @@ export default function MaintenanceSchedulePage() {
                     setSaved(false)
                   }, 1200)
                 }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium"
+                className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium"
               >
                 {saved ? 'Saved' : 'Save locally'}
               </button>
