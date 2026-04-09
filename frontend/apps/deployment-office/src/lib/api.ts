@@ -118,6 +118,21 @@ export const authApi = {
   getCurrentUser: async () => apiFetch(`${API_BASE_URL}/users/me`)
 }
 
+// Helper to get current user from storage
+export const getCurrentUser = () => {
+  if (typeof window !== 'undefined') {
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
+    if (userStr) {
+      try {
+        return JSON.parse(userStr)
+      } catch {
+        return null
+      }
+    }
+  }
+  return null
+}
+
 // Trip API - Deployment Office manages approved trips
 export const tripApi = {
   getApprovedTrips: async () => {
@@ -146,6 +161,7 @@ export const tripApi = {
 
 // Vehicle API
 export const vehicleApi = {
+  getAll: async () => apiFetch(`${API_BASE_URL}/vehicles`),
   getAllVehicles: async () => apiFetch(`${API_BASE_URL}/vehicles`),
   getAvailableVehicles: async () => apiFetch(`${API_BASE_URL}/vehicles/available`),
   createVehicle: async (vehicleData: any) =>
@@ -171,9 +187,22 @@ export const driverApi = {
 
 // Maintenance API
 export const maintenanceApi = {
+  getAll: async () => apiFetch(`${API_BASE_URL}/maintenance`),
   getAllMaintenanceRequests: async () => apiFetch(`${API_BASE_URL}/maintenance`),
+  create: async (maintenanceData: any) =>
+    apiFetch(`${API_BASE_URL}/maintenance`, { method: 'POST', body: JSON.stringify(maintenanceData) }),
   createMaintenanceRequest: async (maintenanceData: any) =>
     apiFetch(`${API_BASE_URL}/maintenance`, { method: 'POST', body: JSON.stringify(maintenanceData) }),
+  inspect: async (requestId: string, data: any) =>
+    apiFetch(`${API_BASE_URL}/maintenance/${requestId}/inspect`, { method: 'POST', body: JSON.stringify(data) }),
+  approveBudget: async (requestId: string) =>
+    apiFetch(`${API_BASE_URL}/maintenance/${requestId}/approve-budget`, { method: 'POST' }),
+  start: async (requestId: string) =>
+    apiFetch(`${API_BASE_URL}/maintenance/${requestId}/start`, { method: 'POST' }),
+  complete: async (requestId: string, data: any) =>
+    apiFetch(`${API_BASE_URL}/maintenance/${requestId}/complete`, { method: 'POST', body: JSON.stringify(data) }),
+  reject: async (requestId: string, data: any) =>
+    apiFetch(`${API_BASE_URL}/maintenance/${requestId}/reject`, { method: 'POST', body: JSON.stringify(data) }),
   updateMaintenanceRequest: async (requestId: string, data: any) =>
     apiFetch(`${API_BASE_URL}/maintenance/${requestId}/inspect`, { method: 'POST', body: JSON.stringify(data) })
 }
@@ -203,6 +232,7 @@ export const statsApi = {
 
 // Notifications API
 export const notificationApi = {
+  getAll: async () => apiFetch(`${API_BASE_URL}/notifications`),
   getNotifications: async () => apiFetch(`${API_BASE_URL}/notifications`),
   markAsRead: async (notificationId: string) =>
     apiFetch(`${API_BASE_URL}/notifications/${notificationId}/read`, { method: 'PATCH' })
