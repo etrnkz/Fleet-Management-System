@@ -261,12 +261,9 @@ export default function LiveTrackingPage() {
       // Fetch full vehicle details
       const details = await vehicleApi.getById(selectedVehicleData.id)
       
-      // Fetch tracking history for this vehicle
-      const history = await trackingApi.getHistory(selectedVehicleData.id).catch(() => [])
-      
       setVehicleDetails({
         ...details,
-        trackingHistory: Array.isArray(history) ? history.slice(0, 10) : []
+        trackingHistory: [] // Tracking history not available via REST API
       })
     } catch (error: any) {
       showToast(error.message || 'Failed to load vehicle details', 'error')
