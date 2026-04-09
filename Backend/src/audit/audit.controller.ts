@@ -8,11 +8,14 @@ import {
 } from '@nestjs/swagger';
 import { AuditService } from './audit.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Roles } from '../auth/guards/roles.guard';
+import { UserRole } from '../users/entities/user.entity';
 import { AuditAction, AuditEntity } from './entities/audit-log.entity';
 
 @ApiTags('Audit')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
+@Roles(UserRole.SystemAdmin, UserRole.Developer, UserRole.President, UserRole.Dean, UserRole.TransportOffice)
 @Controller('audit')
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}

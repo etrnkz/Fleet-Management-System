@@ -111,4 +111,39 @@ export class DriversController {
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.driversService.remove(id);
   }
+
+  @Post(':id/assign-vehicle')
+  @Roles(UserRole.Developer, UserRole.TransportOffice, UserRole.DeploymentTeam)
+  @ApiOperation({
+    summary: 'Assign a vehicle to a driver',
+    description: 'Pre-assign a vehicle to a driver before a trip starts. Only one driver can be assigned to a vehicle at a time.',
+  })
+  @ApiResponse({ status: 200, description: 'Vehicle assigned to driver' })
+  @ApiResponse({ status: 400, description: 'Driver on trip or vehicle already assigned' })
+  @ApiResponse({ status: 404, description: 'Driver or vehicle not found' })
+  assignVehicle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('vehicleId') vehicleId: string,
+  ) {
+    return this.driversService.assignVehicle(id, vehicleId);
+  }
+
+  @Delete(':id/assign-vehicle')
+  @Roles(UserRole.Developer, UserRole.TransportOffice, UserRole.DeploymentTeam)
+  @ApiOperation({
+    summary: 'Unassign vehicle from a driver',
+    description: 'Remove the pre-assigned vehicle from a driver.',
+  })
+  @ApiResponse({ status: 200, description: 'Vehicle unassigned' })
+  @ApiResponse({ status: 400, description: 'Driver is on a trip' })
+  unassignVehicle(@Param('id', ParseUUIDPipe) id: string) {
+    return this.driversService.unassignVehicle(id);
+  }
+
+  @Get(':id/assigned-vehicle')
+  @ApiOperation({ summary: 'Get the vehicle currently assigned to a driver' })
+  @ApiResponse({ status: 200, description: 'Assigned vehicle or null' })
+  getAssignedVehicle(@Param('id', ParseUUIDPipe) id: string) {
+    return this.driversService.getAssignedVehicle(id);
+  }
 }

@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  ManyToOne,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Vehicle } from '../../vehicles/entities/vehicle.entity';
 
 export enum DriverStatus {
   Available = 'Available',
@@ -24,6 +26,11 @@ export class Driver {
   @OneToOne(() => User)
   @JoinColumn()
   user: User;
+
+  /** Pre-assigned vehicle — set by TransportOffice before a trip starts */
+  @ManyToOne(() => Vehicle, { nullable: true, eager: false, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'assignedVehicleId' })
+  assignedVehicle: Vehicle | null;
 
   @Column({ unique: true })
   licenseNumber: string;

@@ -65,7 +65,7 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   resetToken: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   resetTokenExpiry: Date | null;
 
   @CreateDateColumn()

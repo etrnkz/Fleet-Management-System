@@ -1,260 +1,1097 @@
-{
-	"info": {
-		"_postman_id": "fleet-management-api",
-		"name": "Fleet Management API",
-		"description": "API tests for the Haramaya University Fleet Management System.\n\nPrerequisites:\n1. Run `npm run seed` to seed the database\n2. Set `admin_password` in the environment\n3. Run with: npx newman run postman/collections/Fleet_Management_API.postman_collection.json -e postman/environments/Fleet_Management_Environment.postman_environment.json",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Health",
-			"item": [
-				{
-					"name": "GET /health",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Status OK\", () => pm.expect(pm.response.json().status).to.eql(\"OK\"));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [], "url": "{{base_url}}/api/v1/health" }
-				},
-				{
-					"name": "GET / (root info)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [], "url": "{{base_url}}/api/v1" }
-				}
-			]
-		},
-		{
-			"name": "Auth",
-			"item": [
-				{
-					"name": "GET /auth/signup-metadata",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Has colleges and departments\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"colleges\"); pm.expect(j).to.have.property(\"departments\"); });"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [], "url": "{{base_url}}/api/v1/auth/signup-metadata" }
-				},
-				{
-					"name": "POST /auth/login (admin)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Login succeeds\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));", "pm.test(\"Has access_token\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"access_token\"); pm.environment.set(\"access_token\", j.access_token); pm.environment.set(\"refresh_token\", j.refresh_token || \"\"); pm.environment.set(\"user_id\", j.user.id); });"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}" }, "url": "{{base_url}}/api/v1/auth/login" }
-				},
-				{
-					"name": "POST /auth/login (invalid → 401)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Invalid credentials returns 401\", () => pm.response.to.have.status(401));"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"wrong@example.com\",\n  \"password\": \"wrongpassword\"\n}" }, "url": "{{base_url}}/api/v1/auth/login" }
-				},
-				{
-					"name": "POST /auth/refresh",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Refresh returns new tokens\", () => { pm.expect(pm.response.code).to.eql(200); const j = pm.response.json(); pm.expect(j).to.have.property(\"access_token\"); pm.environment.set(\"access_token\", j.access_token); });"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}" }, "url": "{{base_url}}/api/v1/auth/refresh" }
-				},
-				{
-					"name": "POST /auth/forgot-password",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Returns 200 or 201\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{admin_email}}\"\n}" }, "url": "{{base_url}}/api/v1/auth/forgot-password" }
-				},
-				{
-					"name": "POST /auth/reset-password (invalid token → 400)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Invalid token returns 400 or 401\", () => pm.expect(pm.response.code).to.be.oneOf([400, 401]));"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"token\": \"invalid-token-here\",\n  \"newPassword\": \"NewPassword@123\"\n}" }, "url": "{{base_url}}/api/v1/auth/reset-password" }
-				},
-				{
-					"name": "POST /auth/logout",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Logout succeeds\", () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/auth/logout" }
-				}
-			]
-		},
-		{
-			"name": "Users",
-			"item": [
-				{
-					"name": "GET /users/me",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns user profile\", () => { const j = pm.response.json(); pm.expect(j).to.have.property(\"email\"); pm.expect(j).to.have.property(\"role\"); });"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/users/me" }
-				},
-				{
-					"name": "PATCH /users/me (update profile)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"System Administrator\",\n  \"phoneNumber\": \"+251911000000\"\n}" }, "url": "{{base_url}}/api/v1/users/me" }
-				},
-				{
-					"name": "PATCH /users/me/password",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200 or 400\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400]));"], "type": "text/javascript" } }],
-					"request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"{{admin_password}}\",\n  \"newPassword\": \"NewPassword@123\"\n}" }, "url": "{{base_url}}/api/v1/users/me/password" }
-				},
-				{
-					"name": "GET /users/me (no auth → 401)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Requires auth\", () => pm.response.to.have.status(401));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [], "url": "{{base_url}}/api/v1/users/me" }
-				},
-				{
-					"name": "POST /users/bulk-invite (no auth → 401)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Requires auth\", () => pm.response.to.have.status(401));"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"emails\": [\"test@example.com\"] }" }, "url": "{{base_url}}/api/v1/users/bulk-invite" }
-				}
-			]
-		},
-		{
-			"name": "Colleges & Departments",
-			"item": [
-				{
-					"name": "GET /colleges",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\"); if (j.length > 0) pm.environment.set(\"college_id\", j[0].id); });"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/colleges" }
-				},
-				{
-					"name": "GET /departments",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\"); if (j.length > 0) pm.environment.set(\"department_id\", j[0].id); });"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/departments" }
-				}
-			]
-		},
-		{
-			"name": "Vehicles",
-			"item": [
-				{
-					"name": "GET /vehicles",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\"); if (j.length > 0) pm.environment.set(\"vehicle_id\", j[0].id); });"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/vehicles" }
-				},
-				{
-					"name": "GET /vehicles/available",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array of available vehicles\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/vehicles/available" }
-				},
-				{
-					"name": "GET /vehicles/statistics",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/vehicles/statistics" }
-				}
-			]
-		},
-		{
-			"name": "Drivers",
-			"item": [
-				{
-					"name": "GET /drivers",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array\", () => { const j = pm.response.json(); pm.expect(j).to.be.an(\"array\"); if (j.length > 0) pm.environment.set(\"driver_id\", j[0].id); });"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/drivers" }
-				},
-				{
-					"name": "GET /drivers/available",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/drivers/available" }
-				}
-			]
-		},
-		{
-			"name": "Trips",
-			"item": [
-				{
-					"name": "GET /trips",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/trips" }
-				},
-				{
-					"name": "GET /trips/my (own trips)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/trips/my" }
-				},
-				{
-					"name": "GET /trips/pending/approvals",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/trips/pending/approvals" }
-				},
-				{
-					"name": "GET /trips/statistics/overview",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/trips/statistics/overview" }
-				},
-				{
-					"name": "POST /trips (no auth → 401)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Requires auth\", () => pm.response.to.have.status(401));"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{}" }, "url": "{{base_url}}/api/v1/trips" }
-				}
-			]
-		},
-		{
-			"name": "Notifications",
-			"item": [
-				{
-					"name": "GET /notifications",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));", "pm.test(\"Returns array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/notifications" }
-				},
-				{
-					"name": "GET /notifications/unread/count",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/notifications/unread/count" }
-				},
-				{
-					"name": "PATCH /notifications/read-all",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/notifications/read-all" }
-				}
-			]
-		},
-		{
-			"name": "Maintenance",
-			"item": [
-				{
-					"name": "GET /maintenance",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/maintenance" }
-				},
-				{
-					"name": "GET /maintenance/statistics",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/maintenance/statistics" }
-				}
-			]
-		},
-		{
-			"name": "Fuel",
-			"item": [
-				{
-					"name": "GET /fuel",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/fuel" }
-				},
-				{
-					"name": "GET /fuel/statistics",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/fuel/statistics" }
-				}
-			]
-		},
-		{
-			"name": "Audit",
-			"item": [
-				{
-					"name": "GET /audit",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/audit" }
-				},
-				{
-					"name": "GET /audit/statistics",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/audit/statistics" }
-				}
-			]
-		},
-		{
-			"name": "Tracking",
-			"item": [
-				{
-					"name": "GET /tracking/live",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Status 200\", () => pm.response.to.have.status(200));"], "type": "text/javascript" } }],
-					"request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }], "url": "{{base_url}}/api/v1/tracking/live" }
-				}
-			]
-		},
-		{
-			"name": "Gate",
-			"item": [
-				{
-					"name": "POST /trips/gate/start-from-scan (no auth → 401)",
-					"event": [{ "listen": "test", "script": { "exec": ["pm.test(\"Requires auth\", () => pm.response.to.have.status(401));"], "type": "text/javascript" } }],
-					"request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"qrPayload\": \"00000000-0000-4000-8000-000000000000\" }" }, "url": "{{base_url}}/api/v1/trips/gate/start-from-scan" }
-				}
-			]
-		}
-	]
+﻿{
+    "item":  [
+                 {
+                     "name":  "Health",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/health",
+                                                      "header":  [
+
+                                                                 ]
+                                                  },
+                                      "name":  "GET /health",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Status OK\u0027, () =\u003e pm.expect(pm.response.json().status).to.eql(\u0027OK\u0027));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1",
+                                                      "header":  [
+
+                                                                 ]
+                                                  },
+                                      "name":  "GET / (root info)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Auth",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/auth/signup-metadata",
+                                                      "header":  [
+
+                                                                 ]
+                                                  },
+                                      "name":  "GET /auth/signup-metadata",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Has colleges and departments\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027colleges\u0027); pm.expect(j).to.have.property(\u0027departments\u0027); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"{{admin_email}}\",\"password\":\"{{admin_password}}\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (SystemAdmin)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Login succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                                                                                    "pm.test(\u0027Has access_token\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027access_token\u0027, j.access_token); pm.environment.set(\u0027refresh_token\u0027, j.refresh_token || \u0027\u0027); pm.environment.set(\u0027user_id\u0027, j.user.id); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"president@haramaya.edu.et\",\"password\":\"Password@123\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (President)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027President login succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                                                                                    "pm.test(\u0027Has access_token\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027president_token\u0027, j.access_token); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"transport@haramaya.edu.et\",\"password\":\"Password@123\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (TransportOffice)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027TransportOffice login succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                                                                                    "pm.test(\u0027Has access_token\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027transport_token\u0027, j.access_token); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"driver@haramaya.edu.et\",\"password\":\"Password@123\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (Driver)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Driver login succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                                                                                    "pm.test(\u0027Has access_token\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027driver_token\u0027, j.access_token); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"dean.computing-and-inform@haramaya.edu.et\",\"password\":\"Password@123\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (Dean - Computing)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Dean login succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                                                                                    "pm.test(\u0027Has access_token\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027dean_token\u0027, j.access_token); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"head.computer-science@haramaya.edu.et\",\"password\":\"Password@123\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (DeptHead - CS)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027DeptHead login succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                                                                                    "pm.test(\u0027Has access_token\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027dept_head_token\u0027, j.access_token); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"emp.computer-science@haramaya.edu.et\",\"password\":\"Password@123\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (Employee - CS)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Employee login succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                                                                                    "pm.test(\u0027Has access_token\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027employee_token\u0027, j.access_token); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/login",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"wrong@example.com\",\"password\":\"wrongpassword\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/login (invalid -\u003e 401)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Invalid credentials returns 401\u0027, () =\u003e pm.response.to.have.status(401));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/refresh",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"refresh_token\":\"{{refresh_token}}\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/refresh",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Refresh returns new tokens\u0027, () =\u003e { pm.expect(pm.response.code).to.eql(200); const j = pm.response.json(); pm.expect(j).to.have.property(\u0027access_token\u0027); pm.environment.set(\u0027access_token\u0027, j.access_token); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/forgot-password",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"{{admin_email}}\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/forgot-password",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Returns 200 or 201\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/auth/reset-password",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{\"token\":\"invalid-token-here\",\"newPassword\":\"NewPassword@123\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/reset-password (invalid token -\u003e 400)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Invalid token returns 400 or 401\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([400,401]));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Users",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/users/me",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /users/me (admin)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns user profile\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.have.property(\u0027email\u0027); pm.expect(j).to.have.property(\u0027role\u0027); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/users/me",
+                                                      "method":  "PATCH",
+                                                      "body":  {
+                                                                   "raw":  "{\"name\":\"System Administrator\",\"phoneNumber\":\"+251911000000\"}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "PATCH /users/me (update profile)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/users/me",
+                                                      "header":  [
+
+                                                                 ]
+                                                  },
+                                      "name":  "GET /users/me (no auth -\u003e 401)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Requires auth\u0027, () =\u003e pm.response.to.have.status(401));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Colleges \u0026 Departments",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/colleges",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /colleges",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.be.an(\u0027array\u0027); if (j.length \u003e 0) pm.environment.set(\u0027college_id\u0027, j[0].id); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/departments",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /departments",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.be.an(\u0027array\u0027); if (j.length \u003e 0) pm.environment.set(\u0027department_id\u0027, j[0].id); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Vehicles",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/vehicles",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /vehicles",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.be.an(\u0027array\u0027); if (j.length \u003e 0) pm.environment.set(\u0027vehicle_id\u0027, j[0].id); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/vehicles/available",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /vehicles/available",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e pm.expect(pm.response.json()).to.be.an(\u0027array\u0027));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/vehicles/statistics",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /vehicles/statistics",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Drivers",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/drivers",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /drivers",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e { const j = pm.response.json(); pm.expect(j).to.be.an(\u0027array\u0027); if (j.length \u003e 0) pm.environment.set(\u0027driver_id\u0027, j[0].id); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/drivers/available",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /drivers/available",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Trips",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/trips",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /trips",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/trips/my",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /trips/my",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e pm.expect(pm.response.json()).to.be.an(\u0027array\u0027));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/trips/pending/approvals",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /trips/pending/approvals",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e pm.expect(pm.response.json()).to.be.an(\u0027array\u0027));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/trips/statistics/overview",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /trips/statistics/overview",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{base_url}}/api/v1/trips",
+                                                      "method":  "POST",
+                                                      "body":  {
+                                                                   "raw":  "{}",
+                                                                   "mode":  "raw"
+                                                               },
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /trips (no auth -\u003e 401)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Requires auth\u0027, () =\u003e pm.response.to.have.status(401));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Notifications",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/notifications",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /notifications",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));",
+                                                                                    "pm.test(\u0027Returns array\u0027, () =\u003e pm.expect(pm.response.json()).to.be.an(\u0027array\u0027));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/notifications/unread/count",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /notifications/unread/count",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "PATCH",
+                                                      "url":  "{{base_url}}/api/v1/notifications/read-all",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "PATCH /notifications/read-all",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Maintenance",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/maintenance",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /maintenance",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/maintenance/statistics",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /maintenance/statistics",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Fuel",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/fuel",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /fuel",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/fuel/statistics",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /fuel/statistics",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Audit",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/audit",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /audit",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/audit/statistics",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /audit/statistics",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Tracking",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{base_url}}/api/v1/tracking/live",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET /tracking/live",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, () =\u003e pm.response.to.have.status(200));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Cleanup",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{base_url}}/api/v1/auth/logout",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST /auth/logout",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Logout succeeds\u0027, () =\u003e pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 }
+             ],
+    "info":  {
+                 "description":  "Haramaya University Fleet Management System API tests. All seeded accounts use Password@123",
+                 "name":  "Fleet Management API",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+                 "_postman_id":  "fa9e8190-5cba-4b31-9ae8-423ecfc22f9d"
+             }
 }

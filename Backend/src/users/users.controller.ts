@@ -89,27 +89,14 @@ export class UsersController {
   }
 
   @Get()
+  @Roles(UserRole.SystemAdmin, UserRole.Developer, UserRole.Dean, UserRole.President, UserRole.TransportOffice, UserRole.DeploymentTeam)
   @ApiOperation({
     summary: 'Get all users',
-    description: 'Retrieve a list of all users in the system',
+    description: 'Retrieve a list of all users. Restricted to admin roles.',
   })
   @ApiResponse({
     status: 200,
     description: 'List of users',
-    schema: {
-      example: [
-        {
-          id: 'uuid',
-          name: 'John Doe',
-          email: 'john.doe@school.edu',
-          role: 'Driver',
-          isActive: true,
-          departmentId: 'uuid',
-          collegeId: 'uuid',
-          createdAt: '2024-01-15T10:00:00Z',
-        },
-      ],
-    },
   })
   findAll() {
     return this.usersService.findAll();
@@ -153,21 +140,7 @@ export class UsersController {
     summary: 'Update current user profile',
     description: 'Update the profile of the currently authenticated user',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Profile updated successfully',
-    schema: {
-      example: {
-        id: 'uuid',
-        name: 'John Doe Updated',
-        email: 'john.doe@school.edu',
-        phoneNumber: '+251912345678',
-        role: 'Driver',
-        isActive: true,
-        updatedAt: '2024-01-16T10:00:00Z',
-      },
-    },
-  })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     // Users can update their own profile fields including department/college assignment
@@ -292,24 +265,12 @@ export class UsersController {
   }
 
   @Get(':id')
+  @Roles(UserRole.SystemAdmin, UserRole.Developer, UserRole.Dean, UserRole.President, UserRole.TransportOffice, UserRole.DeploymentTeam)
   @ApiOperation({
     summary: 'Get user by ID',
-    description: 'Retrieve a specific user by their ID',
+    description: 'Retrieve a specific user by their ID. Restricted to admin roles.',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'User details',
-    schema: {
-      example: {
-        id: 'uuid',
-        name: 'John Doe',
-        email: 'john.doe@school.edu',
-        role: 'Driver',
-        isActive: true,
-        createdAt: '2024-01-15T10:00:00Z',
-      },
-    },
-  })
+  @ApiResponse({ status: 200, description: 'User details' })
   @ApiResponse({ status: 404, description: 'User not found' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findById(id);

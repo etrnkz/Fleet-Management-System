@@ -89,6 +89,14 @@ class MainActivity : AppCompatActivity() {
 
         refreshAuthUi()
         appendLog("Sign in, then Start monitoring. GPS runs when your trip is IN_PROGRESS.")
+
+        // If already signed in, go straight to dashboard
+        if (!prefs.getString(KEY_TOKEN, null).isNullOrBlank() &&
+            !prefs.getString(KEY_USER_ID, null).isNullOrBlank()
+        ) {
+            DashboardActivity.start(this)
+            finish()
+        }
     }
 
     override fun onResume() {
@@ -212,6 +220,9 @@ class MainActivity : AppCompatActivity() {
                             refreshAuthUi()
                             Toast.makeText(this, "Signed in", Toast.LENGTH_SHORT).show()
                             appendLog("Signed in — tap Start monitoring when ready")
+                            // Go to dashboard
+                            DashboardActivity.start(this)
+                            finish()
                         } else {
                             val err = runCatching { JSONObject(text).optString("message") }.getOrNull()
                             appendLog("Login failed ${resp.code}: ${err ?: text.take(200)}")
@@ -317,7 +328,7 @@ class MainActivity : AppCompatActivity() {
         const val KEY_DEMO_LNG = "demo_lng"
         const val KEY_DEMO_RADIUS_M = "demo_radius_m"
         const val DEFAULT_API_BASE =
-            "https://exact-journals-interfaces-sure.trycloudflare.com/api/v1"
+            "https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1"
         private const val MAX_LOG_LINES = 80
         private val JSON = "application/json; charset=utf-8".toMediaType()
     }

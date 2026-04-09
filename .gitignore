@@ -183,3 +183,19 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .kiro/
+
+# Flutter build artifacts
+Mobile/fleet_driver/build/
+Mobile/fleet_driver/.dart_tool/
+Mobile/fleet_driver/.flutter-plugins
+Mobile/fleet_driver/.flutter-plugins-dependencies
+Mobile/fleet_gate/build/
+Mobile/fleet_gate/.dart_tool/
+Mobile/fleet_gate/.flutter-plugins
+Mobile/fleet_gate/.flutter-plugins-dependencies
+
+# Android local config
+Mobile/fleet_driver/android/local.properties
+Mobile/fleet_gate/android/local.properties
+Mobile/fleet_driver/android/.gradle/
+Mobile/fleet_gate/android/.gradle/

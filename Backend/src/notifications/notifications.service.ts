@@ -195,17 +195,20 @@ export class NotificationsService {
       stakeholders.driver = trip.allocatedDriver.user;
     }
 
-    // Get all admin roles for comprehensive notifications
-    const adminRoles = [
-      UserRole.Dean,
-      UserRole.President,
-      UserRole.DeploymentTeam,
-      UserRole.TransportOffice,
-    ];
-    for (const role of adminRoles) {
-      const users = await this.usersService.findByRole(role);
-      stakeholders.allAdmins.push(...users);
-    }
+    // Build allAdmins: only the relevant dean (requester's college), president,
+    // deployment team, and transport office — NOT all deans system-wide.
+    const relevantAdmins: User[] = [];
+    if (stakeholders.dean) relevantAdmins.push(stakeholders.dean);
+    if (stakeholders.president) relevantAdmins.push(stakeholders.president);
+    relevantAdmins.push(...stakeholders.deploymentTeam);
+    relevantAdmins.push(...stakeholders.transportOffice);
+    // Deduplicate by id
+    const seen = new Set<string>();
+    stakeholders.allAdmins = relevantAdmins.filter((u) => {
+      if (seen.has(u.id)) return false;
+      seen.add(u.id);
+      return true;
+    });
 
     return stakeholders;
   }
@@ -252,7 +255,11 @@ export class NotificationsService {
       ...stakeholders.transportOffice,
     ].filter((user) => user.id !== nextApprover?.id); // Avoid duplicate for next approver
 
-    if (adminNotificationRecipients.length > 0) {
+    // Only notify deployment/transport when the trip is already approved for allocation.
+    // For trips still in the approval chain, they don't need to act yet.
+    const notifyOpsTeam = trip.state === 'APPROVED_FOR_ALLOCATION';
+
+    if (notifyOpsTeam && adminNotificationRecipients.length > 0) {
       await this.createBulkNotifications(
         adminNotificationRecipients,
         NotificationType.NewTripRequest,
