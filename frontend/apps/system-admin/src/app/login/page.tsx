@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { authApi } from '../../lib/api'
 
 export default function LoginPage() {
@@ -99,9 +100,14 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="block text-xs font-semibold text-[#424845] uppercase tracking-wide">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-xs font-semibold text-[#1B3D2F] hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
