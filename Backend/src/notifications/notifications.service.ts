@@ -445,13 +445,13 @@ export class NotificationsService {
       );
     }
 
-    // Notify transport office for next steps
+    // Notify transport office for next steps - use ApprovalPending so they know action is required
     if (stakeholders.transportOffice.length > 0) {
       await this.createBulkNotifications(
         stakeholders.transportOffice,
-        NotificationType.TripAllocated,
-        'Trip Resources Allocated - Confirmation Needed',
-        `Trip ${trip.requestNumber} has been allocated resources and needs transport confirmation`,
+        NotificationType.ApprovalPending,
+        'Transport Confirmation Required',
+        `Trip ${trip.requestNumber} has been allocated vehicle ${trip.allocatedVehicle.plateNumber} and requires your transport confirmation`,
         {
           tripId: trip.id,
           requestNumber: trip.requestNumber,
