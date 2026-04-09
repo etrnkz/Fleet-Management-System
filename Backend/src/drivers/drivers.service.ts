@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import { Driver, DriverStatus } from './entities/driver.entity';
+import { Vehicle } from '../vehicles/entities/vehicle.entity';
 import {
   TripRequest,
   TRIP_STATES_HOLDING_ALLOCATION,
@@ -23,6 +24,8 @@ export class DriversService {
     private readonly driverRepository: Repository<Driver>,
     @InjectRepository(TripRequest)
     private readonly tripRepository: Repository<TripRequest>,
+    @InjectRepository(Vehicle)
+    private readonly vehicleRepository: Repository<Vehicle>,
     private readonly usersService: UsersService,
   ) {}
 
@@ -187,22 +190,32 @@ export class DriversService {
     }
 
     // Check vehicle exists
-    const { Vehicle } = await import('../vehicles/entities/vehicle.entity');
-    const vehicleRepo = this.driverRepository.manager.getRepository(Vehicle);
-    const vehicle = await vehicleRepo.findOne({ where: { id: vehicleId } });
+    const vehicle = await this.vehicleRepository.findOne({ where: { id: vehicleId } });
     if (!vehicle) {
       throw new NotFoundException('Vehicle not found');
     }
 
-    // Check vehicle isn't already assigned to another available driver
-    const alreadyAssigned = await this.driverRepository.findOne({
-      where: { assignedVehicle: { id: vehicleId }, status: DriverStatus.Available },
-      relations: ['assignedVehicle', 'user'],
-    });
-    if (alreadyAssigned && alreadyAssigned.id !== driverId) {
-      throw new BadRequestException(
-        `Vehicle is already assigned to driver ${alreadyAssigned.user?.name ?? alreadyAssigned.id}`,
+    // Enforce strict 1-to-1: vehicle must not be assigned to ANY other driver
+    const alreadyAssigned = await this.driverRepository
+      .createQueryBuilder('driver')
+      .leftJoin('driver.assignedVehicle', 'vehicle')
+      .leftJoin('driver.user', 'user')
+      .addSelect(['user.name', 'user.id'])
+      .where('vehicle.id = :vehicleId', { vehicleId })
+      .andWhere('driver.id != :driverId', { driverId })
+      .getOne();
+
+    if (alreadyAssigned) {
+      const name = alreadyAssigned.user?.name ?? alreadyAssigned.id;
+      throw new ConflictException(
+        `Vehicle is already assigned to driver "${name}". Unassign it first.`,
       );
+    }
+
+    // If this driver already has a different vehicle, unassign it first (1 driver = 1 vehicle)
+    if (driver.assignedVehicle && driver.assignedVehicle.id !== vehicleId) {
+      driver.assignedVehicle = null;
+      await this.driverRepository.save(driver);
     }
 
     driver.assignedVehicle = vehicle;

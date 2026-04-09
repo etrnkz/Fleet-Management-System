@@ -7,6 +7,7 @@ import {
   OneToOne,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Vehicle } from '../../vehicles/entities/vehicle.entity';
@@ -27,7 +28,11 @@ export class Driver {
   @JoinColumn()
   user: User;
 
-  /** Pre-assigned vehicle — set by TransportOffice before a trip starts */
+  /**
+   * Pre-assigned vehicle — strict 1-to-1.
+   * A vehicle can only be assigned to one driver at a time (enforced by unique index + service layer).
+   */
+  @Index({ unique: true, where: '"assignedVehicleId" IS NOT NULL' })
   @ManyToOne(() => Vehicle, { nullable: true, eager: false, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'assignedVehicleId' })
   assignedVehicle: Vehicle | null;
