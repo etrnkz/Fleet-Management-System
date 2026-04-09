@@ -421,6 +421,13 @@ export class TripsService {
       console.error('Failed to send approval notification:', error);
     }
 
+    // Reschedule timeout for next approval level
+    try {
+      await this.workflowService.rescheduleOnApproval(trip);
+    } catch (error) {
+      console.error('Failed to reschedule workflow:', error);
+    }
+
     // Audit log
     try {
       await this.auditService.log(
@@ -700,6 +707,24 @@ export class TripsService {
         `Only ${requiredRole} can approve at this level`,
       );
     }
+
+    // For college-level approval, ensure the dean belongs to the same college as the requester
+    if (trip.state === TripState.PENDING_COLLEGE) {
+      const requesterCollegeId = (trip.requester as any)?.college?.id;
+      const approverCollegeId = (user as any)?.college?.id;
+      if (requesterCollegeId && approverCollegeId && requesterCollegeId !== approverCollegeId) {
+        throw new ForbiddenException('You can only approve trips from your own college');
+      }
+    }
+
+    // For department-level approval, ensure the dept head belongs to the same department
+    if (trip.state === TripState.PENDING_DEPARTMENT) {
+      const requesterDeptId = (trip.requester as any)?.department?.id;
+      const approverDeptId = (user as any)?.department?.id;
+      if (requesterDeptId && approverDeptId && requesterDeptId !== approverDeptId) {
+        throw new ForbiddenException('You can only approve trips from your own department');
+      }
+    }
   }
 
   private getNextStateOnApprove(currentState: TripState): TripState {
@@ -835,16 +860,9 @@ export class TripsService {
       throw new BadRequestException('Trip must be in READY state to start');
     }
 
-    // Validate plate number matches allocated vehicle
     if (!trip.allocatedVehicle || trip.allocatedVehicle.plateNumber !== startTripDto.plateNumber) {
       throw new BadRequestException(
         'Plate number does not match allocated vehicle',
-      );
-    }
-
-    if (!startTripDto.scannerValidation) {
-      throw new BadRequestException(
-        'Scanner validation required to start trip',
       );
     }
 
@@ -930,7 +948,7 @@ export class TripsService {
     trip.completedAt = new Date();
 
     // Update vehicle mileage
-    if (trip.allocatedVehicle) {
+    if (trip.allocatedVehicle && completeTripDto.finalMileage != null) {
       await this.vehiclesService.updateMileage(
         trip.allocatedVehicle.id,
         completeTripDto.finalMileage,
