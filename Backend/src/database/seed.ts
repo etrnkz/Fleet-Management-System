@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt'
 import { College } from '../colleges/entities/college.entity'
 import { Department } from '../departments/entities/department.entity'
 import { User, UserRole } from '../users/entities/user.entity'
+import { Driver, DriverStatus } from '../drivers/entities/driver.entity'
 import { WorkflowService } from '../workflow/workflow.service'
 
 const PASSWORD = 'Password@123'
@@ -49,6 +50,7 @@ async function seed() {
   const collegeRepo: Repository<College> = app.get(getRepositoryToken(College))
   const departmentRepo: Repository<Department> = app.get(getRepositoryToken(Department))
   const userRepo: Repository<User> = app.get(getRepositoryToken(User))
+  const driverRepo: Repository<Driver> = app.get(getRepositoryToken(Driver))
   const workflowService = app.get(WorkflowService)
 
   // ── 1. Workflows ───────────────────────────────────────────────────────────
@@ -116,8 +118,22 @@ async function seed() {
   await createUser(userRepo, { name: 'University President',  email: 'president@haramaya.edu.et',  role: UserRole.President })
   await createUser(userRepo, { name: 'Transport Officer',     email: 'transport@haramaya.edu.et',  role: UserRole.TransportOffice })
   await createUser(userRepo, { name: 'Deployment Officer',    email: 'deployment@haramaya.edu.et', role: UserRole.DeploymentTeam })
-  await createUser(userRepo, { name: 'Test Driver',           email: 'driver@haramaya.edu.et',     role: UserRole.Driver })
+  const driverUser = await createUser(userRepo, { name: 'Test Driver', email: 'driver@haramaya.edu.et', role: UserRole.Driver })
   await createUser(userRepo, { name: 'Gate Security',         email: 'gate@haramaya.edu.et',       role: UserRole.Gate })
+
+  // Create driver profile for the test driver (required to appear in GET /drivers)
+  const existingDriverProfile = await driverRepo.findOne({ where: { user: { id: driverUser.id } } })
+  if (!existingDriverProfile) {
+    await driverRepo.save(driverRepo.create({
+      user: driverUser,
+      licenseNumber: 'DL-TEST-001',
+      licenseExpiry: new Date('2027-12-31'),
+      experienceYears: 5,
+      status: DriverStatus.Available,
+      rating: 4.5,
+      notes: 'Seeded test driver',
+    }))
+  }
 
   // ── 4. One Dean + one DeptHead + one Employee per college/department ───────
   const createdUsers: { role: string; email: string; college?: string; department?: string }[] = []
