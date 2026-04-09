@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Driver } from '../../drivers/entities/driver.entity';
 
 export enum VehicleStatus {
   Active = 'Active',
@@ -94,6 +97,10 @@ export class Vehicle {
 
   @Column({ type: 'simple-json', nullable: true })
   restrictedZones: VehicleRestrictedZone[] | null;
+
+  @ManyToOne(() => Driver, { nullable: true, eager: true })
+  @JoinColumn({ name: 'assignedDriverId' })
+  assignedDriver: Driver | null;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -130,6 +130,27 @@ export class VehiclesController {
     return this.vehiclesService.remove(id);
   }
 
+  @Patch(':id/assign-driver')
+  @Roles(UserRole.Developer, UserRole.TransportOffice)
+  @ApiOperation({ summary: 'Assign driver to vehicle' })
+  @ApiResponse({ status: 200, description: 'Driver assigned successfully' })
+  @ApiResponse({ status: 404, description: 'Vehicle or driver not found' })
+  assignDriver(
+    @Param('id', ParseUUIDPipe) vehicleId: string,
+    @Body('driverId') driverId: string,
+  ) {
+    return this.vehiclesService.assignDriver(vehicleId, driverId);
+  }
+
+  @Patch(':id/unassign-driver')
+  @Roles(UserRole.Developer, UserRole.TransportOffice)
+  @ApiOperation({ summary: 'Unassign driver from vehicle' })
+  @ApiResponse({ status: 200, description: 'Driver unassigned successfully' })
+  @ApiResponse({ status: 404, description: 'Vehicle not found' })
+  unassignDriver(@Param('id', ParseUUIDPipe) vehicleId: string) {
+    return this.vehiclesService.unassignDriver(vehicleId);
+  }
+
   // ── Geofence / Perimeter Management ──────────────────────────────────────
 
   @Get(':id/geofence')
