@@ -19,6 +19,8 @@ import { TrackingService } from './tracking.service';
 import { TrackingGateway } from './tracking.gateway';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Roles } from '../auth/guards/roles.guard';
+import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Tracking')
 @ApiBearerAuth('JWT-auth')

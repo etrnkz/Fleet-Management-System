@@ -279,6 +279,6 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_USER_ROLE = "user_role"
         private val JSON = "application/json; charset=utf-8".toMediaType()
         private const val DEFAULT_API_BASE =
-            "https://exact-journals-interfaces-sure.trycloudflare.com/api/v1"
+            "https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1"
     }
 }

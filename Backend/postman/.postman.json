@@ -1,6 +1,12 @@
 {
-  "collectionName": "Fleet Management API",
+  "workspaceId": "82ae4517-5367-4ffe-acd5-4fed5cd84ed3",
   "workspaceName": "Fleet Management System",
+  "collectionId": "fa9e8190-5cba-4b31-9ae8-423ecfc22f9d",
+  "collectionUid": "52181994-fa9e8190-5cba-4b31-9ae8-423ecfc22f9d",
+  "collectionName": "Fleet Management API",
+  "environmentId": "3ac7b601-7557-4143-ad15-a7a1b9c0a60c",
+  "environmentUid": "52181994-3ac7b601-7557-4143-ad15-a7a1b9c0a60c",
+  "environmentName": "Local Development",
   "description": "Haramaya University Fleet Management System API collection",
   "collection": "postman/collections/Fleet_Management_API.postman_collection.json",
   "environments": {

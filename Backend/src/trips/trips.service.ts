@@ -116,23 +116,31 @@ export class TripsService {
       .leftJoinAndSelect('trip.approvals', 'approvals')
       .orderBy('trip.createdAt', 'DESC');
 
-    // Filter based on role
     if (role === UserRole.User) {
+      // Regular users only see their own trips
       query.where('requester.id = :userId', { userId });
     } else if (role === UserRole.DepartmentHead) {
-      // Department heads see trips from their department
-      query
-        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
-        .leftJoin('approver.department', 'approverDepartment')
-        .where('requesterDepartment.id = approverDepartment.id');
-    } else if (role === UserRole.CollegeHead) {
-      // College heads see trips from their college
-      query
-        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
-        .leftJoin('approver.college', 'approverCollege')
-        .where('requesterCollege.id = approverCollege.id');
+      // Department heads see only trips from their own department
+      const approver = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['department'],
+      });
+      if (!approver?.department?.id) return [];
+      query.where('requesterDepartment.id = :deptId', {
+        deptId: approver.department.id,
+      });
+    } else if (role === UserRole.Dean || role === UserRole.CollegeHead) {
+      // Deans see only trips from their own college
+      const approver = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['college'],
+      });
+      if (!approver?.college?.id) return [];
+      query.where('requesterCollege.id = :collegeId', {
+        collegeId: approver.college.id,
+      });
     }
-    // Dean and other roles see all trips
+    // President, DeploymentTeam, TransportOffice, SystemAdmin see all trips
 
     return query.getMany();
   }
@@ -708,20 +716,31 @@ export class TripsService {
       );
     }
 
-    // For college-level approval, ensure the dean belongs to the same college as the requester
+    // For college-level approval, strictly enforce same-college check.
+    // If either ID is missing, deny rather than silently allow.
     if (trip.state === TripState.PENDING_COLLEGE) {
       const requesterCollegeId = (trip.requester as any)?.college?.id;
       const approverCollegeId = (user as any)?.college?.id;
-      if (requesterCollegeId && approverCollegeId && requesterCollegeId !== approverCollegeId) {
+      if (!requesterCollegeId || !approverCollegeId) {
+        throw new ForbiddenException(
+          'College information is missing — cannot verify approval authority',
+        );
+      }
+      if (requesterCollegeId !== approverCollegeId) {
         throw new ForbiddenException('You can only approve trips from your own college');
       }
     }
 
-    // For department-level approval, ensure the dept head belongs to the same department
+    // For department-level approval, strictly enforce same-department check.
     if (trip.state === TripState.PENDING_DEPARTMENT) {
       const requesterDeptId = (trip.requester as any)?.department?.id;
       const approverDeptId = (user as any)?.department?.id;
-      if (requesterDeptId && approverDeptId && requesterDeptId !== approverDeptId) {
+      if (!requesterDeptId || !approverDeptId) {
+        throw new ForbiddenException(
+          'Department information is missing — cannot verify approval authority',
+        );
+      }
+      if (requesterDeptId !== approverDeptId) {
         throw new ForbiddenException('You can only approve trips from your own department');
       }
     }

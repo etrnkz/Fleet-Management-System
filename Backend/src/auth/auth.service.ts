@@ -8,6 +8,7 @@ import { User, UserRole } from '../users/entities/user.entity';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { EmailService } from '../email/email.service';
 import { randomUUID } from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -30,11 +31,24 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     this.logger.log(`Registering new user: ${registerDto.email}`);
 
+    // Self-registration is only allowed for the User role.
+    // Privileged roles must be assigned by an admin via /system-admin/users or /users (admin endpoints).
+    const selfRegistrableRoles: UserRole[] = [UserRole.User];
+    const requestedRole = registerDto.role || UserRole.User;
+    if (!selfRegistrableRoles.includes(requestedRole)) {
+      this.logger.warn(
+        `Registration blocked: attempted self-registration with role ${requestedRole} for ${registerDto.email}`,
+      );
+      throw new UnauthorizedException(
+        'Self-registration is only allowed for the User role. Contact an administrator to be assigned other roles.',
+      );
+    }
+
     const user = await this.usersService.create({
       email: registerDto.email,
       password: registerDto.password,
       name: registerDto.name,
-      role: registerDto.role || UserRole.User, // Default to User role if not provided
+      role: UserRole.User,
       phoneNumber: registerDto.phoneNumber,
       departmentId: registerDto.departmentId,
       collegeId: registerDto.collegeId,
@@ -188,8 +202,10 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired reset token');
     }
 
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
     await this.usersService.update(user.id, {
-      password: newPassword,
+      password: hashedPassword,
       resetToken: null,
       resetTokenExpiry: null,
     } as any);
