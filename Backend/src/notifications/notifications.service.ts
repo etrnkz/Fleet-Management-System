@@ -224,7 +224,7 @@ export class NotificationsService {
     );
 
     // Notify the correct next approver based on trip state
-    let nextApprover = null;
+    let nextApprover: any = null;
     if (trip.state === 'PENDING_DEPARTMENT') {
       nextApprover = stakeholders.departmentHead;
     } else if (trip.state === 'PENDING_COLLEGE') {
