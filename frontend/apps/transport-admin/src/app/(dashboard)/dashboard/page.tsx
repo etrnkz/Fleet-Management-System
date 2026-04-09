@@ -241,31 +241,10 @@ export default function DashboardPage() {
 
   const handleAssignDriver = async (e: React.FormEvent) => {
     e.preventDefault()
-    const formData = new FormData(e.target as HTMLFormElement)
-    
-    try {
-      const vehicleId = formData.get('vehicleId') as string
-      const driverId = formData.get('driverId') as string
-      
-      if (!vehicleId || !driverId) {
-        showToast('Please select both vehicle and driver', 'error')
-        return
-      }
-
-      // Assign driver to vehicle and mark as Active (ready for use)
-      await vehicleApi.update(vehicleId, {
-        assignedDriverId: driverId,
-        status: 'Active', // Mark vehicle as active once driver is assigned
-      })
-      
-      showToast('Driver assigned to vehicle successfully! Vehicle is now active.', 'success')
-      setShowAssignDriverForm(false)
-      setShowAddDriverSection(false)
-      ;(e.target as HTMLFormElement).reset()
-      loadDashboardData()
-    } catch (error: any) {
-      showToast(error.message || 'Failed to assign driver to vehicle', 'error')
-    }
+    // This function is no longer used - drivers are not permanently assigned to vehicles
+    // Vehicle and driver allocation happens at the trip level by Deployment Office
+    showToast('Driver management updated. Drivers are assigned to trips by Deployment Office.', 'info')
+    setShowAssignDriverForm(false)
   }
 
   const handleAddNewDriver = async (e: React.FormEvent) => {
@@ -391,7 +370,7 @@ export default function DashboardPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Assign Driver
+                Add Driver
               </button>
               <button 
                 onClick={() => setShowLogTripForm(true)}
@@ -1152,7 +1131,7 @@ export default function DashboardPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Assign Driver to Vehicle</h2>
+                <h2 className="text-xl font-bold text-gray-900">Add Driver</h2>
               </div>
               <button
                 onClick={() => {
@@ -1169,116 +1148,23 @@ export default function DashboardPage() {
 
             {/* Form Content */}
             <div className="p-6">
-              {/* Toggle between Assign and Add Driver */}
-              <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setShowAddDriverSection(false)}
-                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-                    !showAddDriverSection
-                      ? 'bg-white text-[#1B3D2F] shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Assign Existing Driver
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddDriverSection(true)}
-                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-                    showAddDriverSection
-                      ? 'bg-white text-[#1B3D2F] shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Add New Driver
-                </button>
+              {/* Info Banner */}
+              <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex gap-3">
+                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">Driver Management</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Add new drivers to the system. Driver and vehicle allocation to trips is handled by the Deployment Office.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* Assign Existing Driver Form */}
-              {!showAddDriverSection && (
-                <form onSubmit={handleAssignDriver}>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Vehicle <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="vehicleId"
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                      >
-                        <option value="">Choose a vehicle</option>
-                        {allVehicles.map((vehicle: any) => (
-                          <option key={vehicle.id} value={vehicle.id}>
-                            {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.vehicleType}) - {vehicle.status}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-xs text-gray-500">Select the vehicle to assign a driver to</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Driver <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="driverId"
-                        required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                      >
-                        <option value="">Choose a driver</option>
-                        {allDrivers.map((driver: any) => (
-                          <option key={driver.id} value={driver.id}>
-                            {driver.user?.firstName} {driver.user?.lastName} - License: {driver.licenseNumber} - {driver.status}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {allDrivers.length === 0 ? 'No drivers available. Please add a new driver.' : 'Select from existing drivers'}
-                      </p>
-                    </div>
-
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex gap-3">
-                        <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        <div>
-                          <p className="text-sm font-medium text-blue-900">Assignment Note</p>
-                          <p className="text-sm text-blue-700 mt-1">
-                            Assigning a driver will automatically activate the vehicle and make it available for trip allocation.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Form Actions */}
-                  <div className="mt-6 flex gap-3">
-                    <button
-                      type="submit"
-                      className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
-                    >
-                      Assign Driver to Vehicle
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAssignDriverForm(false)
-                        setShowAddDriverSection(false)
-                      }}
-                      className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
-
               {/* Add New Driver Form */}
-              {showAddDriverSection && (
-                <form onSubmit={handleAddNewDriver}>
+              <form onSubmit={handleAddNewDriver}>
                   <div className="space-y-6">
                     {/* Personal Information */}
                     <div>
@@ -1443,7 +1329,6 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </form>
-              )}
             </div>
           </div>
         </div>

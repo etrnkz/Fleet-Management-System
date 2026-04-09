@@ -1,6 +1,6 @@
 // API Client for Employee App
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 // Storage helpers — uses localStorage when "remember me" was checked, sessionStorage otherwise
 function getStorage(): Storage | null {
