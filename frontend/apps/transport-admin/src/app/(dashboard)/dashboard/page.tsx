@@ -1218,7 +1218,7 @@ export default function DashboardPage() {
                         <option value="">Choose a driver</option>
                         {allDrivers.map((driver: any) => (
                           <option key={driver.id} value={driver.id}>
-                            {driver.user?.firstName} {driver.user?.lastName} - License: {driver.licenseNumber} - {driver.isAvailable ? 'Available' : 'Unavailable'}
+                            {driver.user?.name} - License: {driver.licenseNumber} - {driver.isAvailable ? 'Available' : 'Unavailable'}
                           </option>
                         ))}
                       </select>

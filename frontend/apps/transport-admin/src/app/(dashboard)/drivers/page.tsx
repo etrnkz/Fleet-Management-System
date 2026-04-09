@@ -13,8 +13,7 @@ interface Driver {
   id: string
   user: {
     id: string
-    firstName: string
-    lastName: string
+    name: string
     email: string
     phoneNumber?: string
   }
@@ -169,7 +168,7 @@ export default function DriversPage() {
               {filteredDrivers.map((driver) => {
                 const status = getStatusInfo(driver)
                 const isSelected = selectedDriver === driver.id
-                const fullName = `${driver.user.firstName} ${driver.user.lastName}`
+                const fullName = driver.user.name
                 
                 return (
                   <div
@@ -250,7 +249,7 @@ export default function DriversPage() {
               <h3 className="font-bold text-gray-900 mb-2">Driver Details</h3>
               <p className="text-sm text-gray-600 mb-4">
                 Selected: <span className="text-[#1B3D2F] font-medium">
-                  {selectedDriverData.user.firstName} {selectedDriverData.user.lastName}
+                  {selectedDriverData.user.name}
                 </span>
               </p>
 
