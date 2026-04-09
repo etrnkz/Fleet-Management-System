@@ -135,7 +135,8 @@ export default function Map({ vehicles, selectedVehicle, onVehicleSelect, follow
           <MapController center={[selectedVehicleData.lat, selectedVehicleData.lng]} zoom={15} />
         )}
         
-        {vehicles.map((vehicle) => (
+        {/* Show only selected vehicle when one is selected, otherwise show all */}
+        {(selectedVehicle ? vehicles.filter(v => v.id === selectedVehicle) : vehicles).map((vehicle) => (
           <Marker
             key={vehicle.id}
             position={[vehicle.lat, vehicle.lng]}
@@ -146,11 +147,15 @@ export default function Map({ vehicles, selectedVehicle, onVehicleSelect, follow
           >
             <Popup>
               <div className="p-2">
-                <p className="font-bold text-sm">{vehicle.id}</p>
+                <p className="font-bold text-sm">{vehicle.vehicleId || vehicle.id}</p>
                 <p className="text-xs text-gray-600">{vehicle.plateNumber}</p>
+                {vehicle.make && vehicle.model && (
+                  <p className="text-xs text-gray-600">{vehicle.make} {vehicle.model}</p>
+                )}
                 <p className="text-xs text-gray-600">Driver: {vehicle.driver ?? '—'}</p>
                 <p className="text-xs font-semibold mt-1">Speed: {vehicle.speed}</p>
                 <p className="text-xs text-gray-500">{vehicle.location}</p>
+                <p className="text-xs text-gray-400 mt-1">{vehicle.lastUpdate}</p>
               </div>
             </Popup>
           </Marker>
