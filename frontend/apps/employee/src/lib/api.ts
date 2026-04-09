@@ -159,6 +159,15 @@ export const tripApi = {
       method: 'DELETE',
     }),
 
+  completeTrip: (id: string, data: {
+    actualDistance: number;
+    actualFuelCost: number;
+    finalMileage: number;
+  }) => apiFetch(`/trips/${id}/complete`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
   submitFeedback: (id: string, feedback: {
     overallRating: number;
     driverRating?: number;

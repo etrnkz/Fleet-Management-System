@@ -135,31 +135,81 @@ export default function LiveTrackingPage() {
       : null
     
     if (token) {
-      socketRef.current = io(WS_URL, {
+      socketRef.current = io(`${WS_URL}/tracking`, {
         auth: { token },
-        transports: ['websocket', 'polling']
+        transports: ['websocket']
       })
 
       socketRef.current.on('connect', () => {
-        console.log('WebSocket connected')
+        console.log('WebSocket connected to tracking namespace')
+        // Join live tracking room for all vehicles
+        socketRef.current?.emit('join-live')
       })
 
-      socketRef.current.on('locationUpdate', (data: any) => {
-        console.log('Location update received:', data)
-        
-        setVehicles(prev => prev.map(vehicle => {
-          if (vehicle.id === data.vehicleId) {
-            return {
-              ...vehicle,
-              lat: data.latitude,
-              lng: data.longitude,
-              speed: data.speed ? `${Math.round(data.speed)} km/h` : vehicle.speed,
-              status: determineStatus(data),
-              lastUpdate: 'Just now'
-            }
+      // Initial snapshot of all vehicles
+      socketRef.current.on('live-snapshot', (vehiclesData: any[]) => {
+        console.log('Received live snapshot:', vehiclesData)
+        if (Array.isArray(vehiclesData) && vehiclesData.length > 0) {
+          const mappedVehicles = vehiclesData.map((data: any) => ({
+            id: data.vehicleId,
+            vehicleId: data.vehicleId,
+            plateNumber: data.plateNumber,
+            make: data.make,
+            model: data.model,
+            status: determineStatus({ speed: data.speed, timestamp: data.timestamp }),
+            speed: data.speed ? `${Math.round(data.speed)} km/h` : '0 km/h',
+            location: 'Live',
+            lastUpdate: data.timestamp ? getTimeAgo(new Date(data.timestamp)) : 'Just now',
+            lat: data.latitude,
+            lng: data.longitude,
+            driver: data.driverName || 'Unassigned',
+          }))
+          setVehicles(mappedVehicles)
+          if (mappedVehicles.length > 0 && !selectedVehicle) {
+            setSelectedVehicle(mappedVehicles[0].id)
           }
-          return vehicle
-        }))
+        }
+      })
+
+      // Live location updates for individual vehicles
+      socketRef.current.on('vehicle-location', (update: any) => {
+        console.log('Vehicle location update:', update)
+        
+        setVehicles(prev => {
+          const existing = prev.find(v => v.id === update.vehicleId)
+          if (existing) {
+            // Update existing vehicle
+            return prev.map(vehicle => {
+              if (vehicle.id === update.vehicleId) {
+                return {
+                  ...vehicle,
+                  lat: update.latitude,
+                  lng: update.longitude,
+                  speed: update.speed ? `${Math.round(update.speed)} km/h` : vehicle.speed,
+                  status: determineStatus({ speed: update.speed, timestamp: update.timestamp }),
+                  lastUpdate: 'Just now'
+                }
+              }
+              return vehicle
+            })
+          } else {
+            // Add new vehicle
+            return [...prev, {
+              id: update.vehicleId,
+              vehicleId: update.vehicleId,
+              plateNumber: update.plateNumber,
+              make: update.make,
+              model: update.model,
+              status: determineStatus({ speed: update.speed, timestamp: update.timestamp }),
+              speed: update.speed ? `${Math.round(update.speed)} km/h` : '0 km/h',
+              location: 'Live',
+              lastUpdate: 'Just now',
+              lat: update.latitude,
+              lng: update.longitude,
+              driver: update.driverName || 'Unassigned',
+            }]
+          }
+        })
         
         setLastRefresh(new Date())
       })
