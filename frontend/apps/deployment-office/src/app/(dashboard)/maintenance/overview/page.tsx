@@ -107,7 +107,7 @@ export default function MaintenanceOverviewPage() {
         <button
           type="button"
           onClick={() => router.push('/maintenance/requests')}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] transition-colors"
         >
           + New request
         </button>
@@ -257,7 +257,7 @@ export default function MaintenanceOverviewPage() {
                     {monthly.map((m, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-1">
                         <div
-                          className="w-full bg-blue-600 rounded-t-sm min-h-0"
+                          className="w-full bg-[#1B3D2F] rounded-t-sm min-h-0"
                           style={{
                             height: `${(m.count / maxVal) * 100}%`,
                             minHeight: m.count > 0 ? '4px' : '0',
@@ -286,7 +286,7 @@ export default function MaintenanceOverviewPage() {
           <button
             type="button"
             onClick={() => router.push('/maintenance/requests')}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-sm text-[#1B3D2F] hover:text-[#152e22] font-medium"
           >
             View all →
           </button>
