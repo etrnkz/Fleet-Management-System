@@ -261,12 +261,13 @@ export default function LiveTrackingPage() {
       // Fetch full vehicle details
       const details = await vehicleApi.getById(selectedVehicleData.id)
       
-      setVehicleDetails({
+      setVehicleDetails(details ? {
         ...details,
         trackingHistory: [] // Tracking history not available via REST API
-      })
+      } : null)
     } catch (error: any) {
       showToast(error.message || 'Failed to load vehicle details', 'error')
+      setVehicleDetails(null)
     } finally {
       setLoadingDetails(false)
     }
