@@ -30,6 +30,14 @@ interface Vehicle {
   color?: string
   vipGeoRestrictionEnabled?: boolean
   restrictedZones?: RestrictedZone[] | null
+  assignedDriver?: {
+    id: string
+    user: {
+      name: string
+      email: string
+    }
+    licenseNumber: string
+  } | null
 }
 
 export default function VehiclesPage() {
@@ -283,6 +291,7 @@ export default function VehiclesPage() {
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Make & Model</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Driver</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fuel Type</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Mileage</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">VIP zone</th>
@@ -292,7 +301,7 @@ export default function VehiclesPage() {
             <tbody className="divide-y divide-gray-200">
               {filteredVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center">
+                  <td colSpan={10} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -322,6 +331,16 @@ export default function VehiclesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>{vehicle.status}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {vehicle.assignedDriver ? (
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-900 font-medium">{vehicle.assignedDriver.user.name}</span>
+                        <span className="text-xs text-gray-500">{vehicle.assignedDriver.licenseNumber}</span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">No driver</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-600">{vehicle.fuelType}</span>
