@@ -1,6 +1,6 @@
 ﻿// API Client for Department App
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://exact-journals-interfaces-sure.trycloudflare.com/api/v1';
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 // Helper to get auth token (checks both storages)
 const getAuthToken = (): string | null => {
