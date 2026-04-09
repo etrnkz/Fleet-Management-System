@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
@@ -12,6 +14,7 @@ import {
 } from '../trips/entities/trip-request.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { DriversService } from '../drivers/drivers.service';
 
 @Injectable()
 export class VehiclesService {
@@ -20,6 +23,8 @@ export class VehiclesService {
     private readonly vehicleRepository: Repository<Vehicle>,
     @InjectRepository(TripRequest)
     private readonly tripRepository: Repository<TripRequest>,
+    @Inject(forwardRef(() => DriversService))
+    private readonly driversService: DriversService,
   ) {}
 
   async create(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
@@ -203,5 +208,27 @@ export class VehiclesService {
         ? `Geofence enabled with ${restrictedZones.length} zone(s)`
         : 'Geofence disabled',
     };
+  }
+
+  async assignDriver(vehicleId: string, driverId: string): Promise<Vehicle> {
+    const vehicle = await this.findOne(vehicleId);
+    
+    // Validate driver exists
+    const driver = await this.driversService.findOne(driverId);
+    
+    vehicle.assignedDriver = driver;
+    
+    // Activate vehicle when driver is assigned
+    if (vehicle.status === VehicleStatus.Inactive) {
+      vehicle.status = VehicleStatus.Active;
+    }
+    
+    return this.vehicleRepository.save(vehicle);
+  }
+
+  async unassignDriver(vehicleId: string): Promise<Vehicle> {
+    const vehicle = await this.findOne(vehicleId);
+    vehicle.assignedDriver = null;
+    return this.vehicleRepository.save(vehicle);
   }
 }

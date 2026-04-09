@@ -207,6 +207,15 @@ export const vehicleApi = {
     body: JSON.stringify(data),
   }),
   
+  assignDriver: (vehicleId: string, driverId: string) => apiFetch(`/vehicles/${vehicleId}/assign-driver`, {
+    method: 'PATCH',
+    body: JSON.stringify({ driverId }),
+  }),
+  
+  unassignDriver: (vehicleId: string) => apiFetch(`/vehicles/${vehicleId}/unassign-driver`, {
+    method: 'PATCH',
+  }),
+  
   delete: (id: string) => apiFetch(`/vehicles/${id}`, { method: 'DELETE' }),
 };
 
