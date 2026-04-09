@@ -63,7 +63,7 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     this.logger.log(`Login attempt for: ${loginDto.email}`);
 
-    const user = await this.usersService.findByEmail(loginDto.email);
+    const user = await this.usersService.findByEmail(loginDto.email.toLowerCase().trim());
 
     if (!user) {
       this.logger.warn(`Login failed: User not found - ${loginDto.email}`);

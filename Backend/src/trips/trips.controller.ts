@@ -310,6 +310,15 @@ export class TripsController {
     return this.tripsService.getPendingApprovals(req.user.id, req.user.role);
   }
 
+  @Get('suggested-allocation')
+  @ApiOperation({
+    summary: 'Get suggested driver+vehicle for next trip allocation',
+    description: 'Returns the first available pre-assigned driver and their vehicle. Use these IDs in POST /trips/:id/allocate.',
+  })
+  getSuggestedAllocation() {
+    return this.tripsService.getSuggestedAllocation();
+  }
+
   @Post(':id/complete-early')
   @ApiOperation({ summary: 'Complete trip early (Admin only)' })
   @ApiResponse({

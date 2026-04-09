@@ -34,15 +34,16 @@ export class UsersService {
   async create(
     userData: Partial<User> & { departmentId?: string; collegeId?: string },
   ): Promise<User> {
+    const normalizedEmail = userData.email?.toLowerCase().trim();
     const existingUser = await this.userRepository.findOne({
-      where: { email: userData.email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
 
-    const user = this.userRepository.create(userData);
+    const user = this.userRepository.create({ ...userData, email: normalizedEmail });
 
     // Set department if departmentId is provided
     if (userData.departmentId) {
@@ -69,7 +70,7 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { email },
+      where: { email: email.toLowerCase().trim() },
       relations: ['department', 'college'],
     });
   }

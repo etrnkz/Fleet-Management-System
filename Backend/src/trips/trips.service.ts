@@ -30,6 +30,7 @@ import { ConfirmTransportDto } from './dto/confirm-transport.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { DriversService } from '../drivers/drivers.service';
+import { DriverStatus } from '../drivers/entities/driver.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { AuditService } from '../audit/audit.service';
@@ -357,7 +358,7 @@ export class TripsService {
     const trip = await this.findOne(id);
 
     // Validate user can approve at current level
-    this.validateApprover(trip, user);
+    await this.validateApprover(trip, user);
 
     // Get current pending approval
     const approval = trip.approvals.find(
@@ -463,7 +464,7 @@ export class TripsService {
     const trip = await this.findOne(id);
 
     // Validate user can reject at current level
-    this.validateApprover(trip, user);
+    await this.validateApprover(trip, user);
 
     // Get current pending approval
     const approval = trip.approvals.find(
@@ -545,34 +546,41 @@ export class TripsService {
       );
     }
 
-    // Verify vehicle and driver exist and are available
-    const vehicle = await this.vehiclesService.findOne(
-      allocateTripDto.vehicleId,
-    );
-    const driver = await this.driversService.findOne(allocateTripDto.driverId);
+    let vehicleId = allocateTripDto.vehicleId;
+    let driverId = allocateTripDto.driverId;
+
+    // Auto-suggest pre-assigned driver+vehicle if not explicitly provided
+    if (!vehicleId || !driverId) {
+      const suggested = await this.getSuggestedAllocation();
+      if (!vehicleId && suggested.vehicle) vehicleId = suggested.vehicle.id;
+      if (!driverId && suggested.driver) driverId = suggested.driver.id;
+    }
+
+    if (!vehicleId) throw new BadRequestException('No vehicle specified and no pre-assigned vehicle available');
+    if (!driverId) throw new BadRequestException('No driver specified and no pre-assigned driver available');
+
+    // Verify vehicle and driver exist
+    const vehicle = await this.vehiclesService.findOne(vehicleId);
+    const driver = await this.driversService.findOne(driverId);
 
     const vehicleInUse = await this.tripRepository.count({
       where: {
-        allocatedVehicle: { id: allocateTripDto.vehicleId },
+        allocatedVehicle: { id: vehicleId },
         state: In(TRIP_STATES_HOLDING_ALLOCATION),
       },
     });
     if (vehicleInUse > 0) {
-      throw new BadRequestException(
-        'This vehicle is already assigned to an active trip',
-      );
+      throw new BadRequestException('This vehicle is already assigned to an active trip');
     }
 
     const driverInUse = await this.tripRepository.count({
       where: {
-        allocatedDriver: { id: allocateTripDto.driverId },
+        allocatedDriver: { id: driverId },
         state: In(TRIP_STATES_HOLDING_ALLOCATION),
       },
     });
     if (driverInUse > 0) {
-      throw new BadRequestException(
-        'This driver is already assigned to an active trip',
-      );
+      throw new BadRequestException('This driver is already assigned to an active trip');
     }
 
     trip.allocatedVehicle = vehicle;
@@ -584,9 +592,9 @@ export class TripsService {
 
     const savedTrip = await this.tripRepository.save(trip);
 
-    // Update driver status to OnTrip
+    // Set driver status to OnTrip
     try {
-      await this.driversService.updateStatus(driver.id, 'OnTrip' as any);
+      await this.driversService.updateStatus(driver.id, DriverStatus.OnTrip);
     } catch (error) {
       console.error('Failed to update driver status:', error);
     }
@@ -606,7 +614,7 @@ export class TripsService {
         AuditEntity.Trip,
         savedTrip.id,
         null,
-        { state: TripState.CAR_ALLOCATED, vehicleId: allocateTripDto.vehicleId, driverId: allocateTripDto.driverId },
+        { state: TripState.CAR_ALLOCATED, vehicleId, driverId },
         undefined,
         undefined,
         `Trip allocated: ${savedTrip.requestNumber}`,
@@ -614,6 +622,39 @@ export class TripsService {
     } catch (e) { /* non-blocking */ }
 
     return savedTrip;
+  }
+
+  /**
+   * Returns the first available pre-assigned driver+vehicle pair.
+   * Used to auto-populate allocation when no explicit IDs are provided.
+   */
+  async getSuggestedAllocation(): Promise<{ driver: any | null; vehicle: any | null }> {
+    // Find a driver who has a pre-assigned vehicle, is Available, and not on an active trip
+    const busyDriverIds = await this.tripRepository
+      .createQueryBuilder('trip')
+      .select('driver.id', 'driverId')
+      .innerJoin('trip.allocatedDriver', 'driver')
+      .where('trip.state IN (:...states)', { states: TRIP_STATES_HOLDING_ALLOCATION })
+      .getRawMany()
+      .then((rows) => rows.map((r) => r.driverId).filter(Boolean));
+
+    const query = this.driversService['driverRepository']
+      .createQueryBuilder('driver')
+      .leftJoinAndSelect('driver.assignedVehicle', 'vehicle')
+      .leftJoinAndSelect('driver.user', 'user')
+      .where('vehicle.id IS NOT NULL')
+      .andWhere('driver.status = :status', { status: DriverStatus.Available });
+
+    if (busyDriverIds.length > 0) {
+      query.andWhere('driver.id NOT IN (:...busyIds)', { busyIds: busyDriverIds });
+    }
+
+    const driver = await query.getOne();
+
+    return {
+      driver: driver ?? null,
+      vehicle: driver?.assignedVehicle ?? null,
+    };
   }
 
   async cancel(id: string, user: User): Promise<TripRequest> {
@@ -707,7 +748,7 @@ export class TripsService {
     return mapping[state];
   }
 
-  private validateApprover(trip: TripRequest, user: User): void {
+  private async validateApprover(trip: TripRequest, user: User): Promise<void> {
     const requiredRole = this.getRequiredRoleForState(trip.state);
 
     if (user.role !== requiredRole) {
@@ -716,11 +757,20 @@ export class TripsService {
       );
     }
 
-    // For college-level approval, strictly enforce same-college check.
-    // If either ID is missing, deny rather than silently allow.
+    // Load the approver's full profile with relations (JWT payload only has id/email/role)
+    const approver = await this.userRepository.findOne({
+      where: { id: user.id },
+      relations: ['department', 'college'],
+    });
+
+    if (!approver) {
+      throw new ForbiddenException('Approver account not found');
+    }
+
+    // For college-level approval, enforce same-college check
     if (trip.state === TripState.PENDING_COLLEGE) {
-      const requesterCollegeId = (trip.requester as any)?.college?.id;
-      const approverCollegeId = (user as any)?.college?.id;
+      const requesterCollegeId = trip.requester?.college?.id;
+      const approverCollegeId = approver.college?.id;
       if (!requesterCollegeId || !approverCollegeId) {
         throw new ForbiddenException(
           'College information is missing — cannot verify approval authority',
@@ -731,10 +781,10 @@ export class TripsService {
       }
     }
 
-    // For department-level approval, strictly enforce same-department check.
+    // For department-level approval, enforce same-department check
     if (trip.state === TripState.PENDING_DEPARTMENT) {
-      const requesterDeptId = (trip.requester as any)?.department?.id;
-      const approverDeptId = (user as any)?.department?.id;
+      const requesterDeptId = trip.requester?.department?.id;
+      const approverDeptId = approver.department?.id;
       if (!requesterDeptId || !approverDeptId) {
         throw new ForbiddenException(
           'Department information is missing — cannot verify approval authority',
