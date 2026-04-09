@@ -113,15 +113,19 @@ function LandingPageContent() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { title: 'Real-Time Tracking', desc: 'Monitor vehicle locations and routes in real-time with GPS integration.', icon: '📍' },
-              { title: 'Fuel Monitoring', desc: 'Track fuel consumption, costs, and efficiency metrics.', icon: '⛽' },
-              { title: 'Maintenance Management', desc: 'Schedule and track vehicle maintenance for fleet reliability.', icon: '🔧' },
-              { title: 'Trip & Dispatch Control', desc: 'Manage trip requests, vehicle assignments, and dispatch operations.', icon: '🚗' },
-              { title: 'Compliance & Docs', desc: 'Maintain digital records of licenses, insurance, and compliance documents.', icon: '📋' },
-              { title: 'Inspection Reporting', desc: 'Generate detailed reports on fleet performance, costs, and utilization.', icon: '📊' },
-            ].map(m => (
+              {title:'Real-Time Tracking',desc:'Monitor vehicle locations and routes in real-time with GPS integration.',icon:'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z'},
+              {title:'Fuel Monitoring',desc:'Track fuel consumption, costs, and efficiency metrics.',icon:'M13 10V3L4 14h7v7l9-11h-7z'},
+              {title:'Maintenance Management',desc:'Schedule and track vehicle maintenance for fleet reliability.',icon:'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'},
+              {title:'Trip & Dispatch Control',desc:'Manage trip requests, vehicle assignments, and dispatch operations.',icon:'M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z'},
+              {title:'Compliance & Docs',desc:'Maintain digital records of licenses, insurance, and compliance documents.',icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'},
+              {title:'Inspection Reporting',desc:'Generate detailed reports on fleet performance, costs, and utilization.',icon:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'}
+            ].map(m=>(
               <div key={m.title} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-4">{m.icon}</div>
+                <div className="w-12 h-12 bg-[#1B3D2F]/10 rounded-lg flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={m.icon} />
+                  </svg>
+                </div>
                 <h3 className="text-base font-semibold text-[#1B3D2F] mb-2">{m.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{m.desc}</p>
               </div>
@@ -136,12 +140,16 @@ function LandingPageContent() {
           <h2 className="text-3xl font-bold text-[#1B3D2F] font-serif text-center mb-12">Institutional Benefits</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { title: 'Cost-Efficient', desc: 'Reduce operational costs through optimized fuel usage and preventive maintenance.', icon: '💰' },
-              { title: 'Enhanced Visibility', desc: 'Real-time insights and analytics for data-driven decision making.', icon: '📈' },
-              { title: 'Strong Governance', desc: 'Full audit trails and compliance tracking for transparent fleet management.', icon: '🔒' },
-            ].map(b => (
+              {title:'Cost-Efficient',desc:'Reduce operational costs through optimized fuel usage and preventive maintenance.',icon:'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'},
+              {title:'Enhanced Visibility',desc:'Real-time insights and analytics for data-driven decision making.',icon:'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z'},
+              {title:'Strong Governance',desc:'Full audit trails and compliance tracking for transparent fleet management.',icon:'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'}
+            ].map(b=>(
               <div key={b.title} className="text-center">
-                <div className="text-4xl mb-4">{b.icon}</div>
+                <div className="w-16 h-16 bg-[#1B3D2F]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={b.icon} />
+                  </svg>
+                </div>
                 <h3 className="text-lg font-semibold text-[#1B3D2F] mb-2">{b.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{b.desc}</p>
               </div>
@@ -155,20 +163,24 @@ function LandingPageContent() {
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10">
           <div className="flex gap-4">
             <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">🌍</span>
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">Operational Coverage</h3>
-              <p className="text-[#1B3D2F] text-sm leading-relaxed">Designed to serve all parts and campuses of Haramaya University for streamlined operations.</p>
+              <p className="text-emerald-100 text-sm leading-relaxed">Designed to serve all parts and campuses of Haramaya University for streamlined operations.</p>
             </div>
           </div>
           <div className="flex gap-4">
             <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">🛡️</span>
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">Restricted Access</h3>
-              <p className="text-[#1B3D2F] text-sm leading-relaxed">Only authorized personnel with valid credentials can access the system, ensuring data security.</p>
+              <p className="text-emerald-100 text-sm leading-relaxed">Only authorized personnel with valid credentials can access the system, ensuring data security.</p>
             </div>
           </div>
         </div>
@@ -183,7 +195,9 @@ function LandingPageContent() {
             <div className="space-y-5">
               <div className="flex gap-4">
                 <div className="w-10 h-10 bg-[#1B3D2F]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg">✉️</span>
+                  <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">Transport Office</p>
@@ -193,7 +207,9 @@ function LandingPageContent() {
               </div>
               <div className="flex gap-4">
                 <div className="w-10 h-10 bg-[#1B3D2F]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg">💻</span>
+                  <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">IT Helpdesk</p>

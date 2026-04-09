@@ -118,45 +118,52 @@ export default function MaintenanceOverviewPage() {
           {
             label: 'Total',
             value: stats.total,
-            color: 'text-gray-900',
-            bg: 'bg-white dark:bg-gray-800',
-            border: 'border-gray-200 dark:border-gray-700',
+            icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+            iconBg: 'bg-[#1B3D2F]/15',
+            iconColor: 'text-[#152e22]',
           },
           {
             label: 'Submitted',
             value: stats.submitted,
-            color: 'text-yellow-700',
-            bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-            border: 'border-yellow-200 dark:border-yellow-800',
+            icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            iconBg: 'bg-yellow-100',
+            iconColor: 'text-yellow-600',
           },
           {
             label: 'In Progress',
             value: stats.inProgress,
-            color: 'text-orange-700',
-            bg: 'bg-orange-50 dark:bg-orange-900/20',
-            border: 'border-orange-200 dark:border-orange-800',
+            icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
+            iconBg: 'bg-orange-100',
+            iconColor: 'text-orange-600',
           },
           {
             label: 'Completed',
             value: stats.completed,
-            color: 'text-green-700',
-            bg: 'bg-green-50 dark:bg-green-900/20',
-            border: 'border-green-200 dark:border-green-800',
+            icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+            iconBg: 'bg-blue-100',
+            iconColor: 'text-blue-600',
           },
           {
             label: 'Rejected',
             value: stats.rejected,
-            color: 'text-red-700',
-            bg: 'bg-red-50 dark:bg-red-900/20',
-            border: 'border-red-200 dark:border-red-800',
+            icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
+            iconBg: 'bg-purple-100',
+            iconColor: 'text-purple-600',
           },
         ].map((s) => (
           <div
             key={s.label}
-            className={`${s.bg} rounded-xl p-5 border ${s.border} hover:shadow-md transition-shadow`}
+            className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 hover:shadow-lg transition-shadow"
           >
-            <p className="text-sm text-gray-600 dark:text-gray-400">{s.label}</p>
-            <p className={`text-3xl font-bold ${s.color} mt-1`}>{loading ? '—' : s.value}</p>
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <span className="text-xs sm:text-sm text-gray-600">{s.label}</span>
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 ${s.iconBg} rounded-lg flex items-center justify-center`}>
+                <svg className={`w-4 h-4 sm:w-5 sm:h-5 ${s.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={s.icon} />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{loading ? '—' : s.value}</p>
           </div>
         ))}
       </div>
