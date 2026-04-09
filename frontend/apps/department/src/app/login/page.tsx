@@ -116,7 +116,14 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back!</h1>
+            <div className="flex items-center gap-3 mb-6">
+              <img src="/hulogo.png" alt="Haramaya University" className="w-8 h-8 object-contain rounded-full" />
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Haramaya University</p>
+                <h1 className="text-lg font-bold text-[#1B3D2F] tracking-tight">Department Portal</h1>
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Welcome back!</h2>
             <p className="text-gray-600">Enter your Credentials to access your account</p>
           </div>
 

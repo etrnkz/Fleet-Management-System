@@ -50,9 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 flex flex-col transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200 flex-shrink-0">
-          <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-            <span className="text-[#1B3D2F] font-bold text-sm">H</span>
-          </div>
+          <img src="/hulogo.png" alt="Haramaya University" className="w-8 h-8 object-contain rounded-full" />
           <div>
             <div className="font-bold text-[#1B3D2F] tracking-tight text-sm">Haramaya University</div>
             <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">SYSTEM ADMIN</div>

@@ -20,9 +20,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fleet Authority — University Portal",
+  title: "HUFMS — Employee",
   description:
     "Official transport registry, trip requests, and fleet services for employees",
+  icons: {
+    icon: '/hulogo.png',
+    shortcut: '/hulogo.png',
+    apple: '/hulogo.png',
+  },
 };
 
 export default function RootLayout({

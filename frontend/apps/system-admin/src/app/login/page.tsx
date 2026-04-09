@@ -56,11 +56,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-11 h-11 bg-[#1B3D2F] rounded-lg flex items-center justify-center shadow-sm">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
-                </svg>
-              </div>
+              <img src="/hulogo.png" alt="Haramaya University" className="w-11 h-11 object-contain rounded-full" />
               <div>
                 <p className="text-[10px] font-semibold text-[#565F71] uppercase tracking-[0.15em]">Haramaya University</p>
                 <h1 className="text-xl font-bold text-[#1B3D2F] font-serif tracking-tight">System Administration</h1>
