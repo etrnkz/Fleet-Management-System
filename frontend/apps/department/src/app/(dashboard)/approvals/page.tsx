@@ -86,6 +86,8 @@ export default function ApprovalsPage() {
       showToast('Trip request approved successfully!', 'success')
       setShowApproveModal(false)
       setSelectedRequest(null)
+      // Small delay to ensure backend has processed the approval
+      await new Promise(resolve => setTimeout(resolve, 500))
       loadRequests()
     } catch (error: any) {
       showToast(error.message || 'Failed to approve request', 'error')

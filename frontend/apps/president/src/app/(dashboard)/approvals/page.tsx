@@ -156,6 +156,8 @@ export default function ApprovalsPage() {
       setShowSuccessToast(true)
       setShowDetailModal(false)
       setTimeout(() => setShowSuccessToast(false), 3000)
+      // Small delay to ensure backend has processed the approval
+      await new Promise(resolve => setTimeout(resolve, 500))
       loadApprovalsData() // Reload data
     } catch (error: any) {
       setToastMessage(error.message || 'Failed to approve request')
