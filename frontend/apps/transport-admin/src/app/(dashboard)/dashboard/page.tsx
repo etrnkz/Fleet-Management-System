@@ -293,9 +293,8 @@ export default function DashboardPage() {
         licenseNumber: formData.get('licenseNumber') as string,
         licenseExpiry: formData.get('licenseExpiry') as string,
         experienceYears: parseInt(formData.get('experienceYears') as string),
-        status: formData.get('status') as string || 'Available',
-        specializations: formData.get('specializations') as string || '',
-        notes: formData.get('notes') as string || '',
+        specializations: formData.get('specializations') as string || undefined,
+        notes: formData.get('notes') as string || undefined,
       }
 
       await driverApi.create(driverData)
@@ -1381,23 +1380,6 @@ export default function DashboardPage() {
                             placeholder="e.g., 5"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                           />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Status <span className="text-red-500">*</span>
-                          </label>
-                          <select
-                            name="status"
-                            required
-                            defaultValue="Available"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                          >
-                            <option value="Available">Available</option>
-                            <option value="OnTrip">On Trip</option>
-                            <option value="OnLeave">On Leave</option>
-                            <option value="Inactive">Inactive</option>
-                          </select>
                         </div>
 
                         <div className="md:col-span-2">
