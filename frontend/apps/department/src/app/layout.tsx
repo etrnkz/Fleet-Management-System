@@ -15,8 +15,13 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "HUFMS — Department Head Portal",
+  title: "HUFMS — Department Head",
   description: "Fleet Management System - Department Head Portal",
+  icons: {
+    icon: '/hulogo.png',
+    shortcut: '/hulogo.png',
+    apple: '/hulogo.png',
+  },
 };
 
 export default function RootLayout({

@@ -15,8 +15,13 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'Fleet Authority — Driver Portal',
+  title: 'HUFMS — Driver',
   description: 'Haramaya University Fleet Management System — Driver Portal',
+  icons: {
+    icon: '/hulogo.png',
+    shortcut: '/hulogo.png',
+    apple: '/hulogo.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

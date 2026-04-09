@@ -120,11 +120,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-in-up">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-11 h-11 bg-[#1B3D2F] rounded-lg flex items-center justify-center shadow-sm">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
+              <img src="/hulogo.png" alt="Haramaya University" className="w-11 h-11 object-contain rounded-full" />
               <div>
                 <p className="text-[10px] font-semibold text-[#565F71] uppercase tracking-[0.15em]">Fleet Authority</p>
                 <h1 className="text-xl font-bold text-[#1B3D2F] font-serif tracking-tight">University Portal</h1>

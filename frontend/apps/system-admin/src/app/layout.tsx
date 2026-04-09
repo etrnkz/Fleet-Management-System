@@ -6,8 +6,13 @@ const inter = Inter({ variable: '--font-inter', subsets: ['latin'], display: 'sw
 const playfair = Playfair_Display({ variable: '--font-newsreader', subsets: ['latin'], display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'Fleet Authority — System Admin',
+  title: 'HUFMS — System Admin',
   description: 'Haramaya University Fleet Management — System Administration',
+  icons: {
+    icon: '/hulogo.png',
+    shortcut: '/hulogo.png',
+    apple: '/hulogo.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

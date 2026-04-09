@@ -71,9 +71,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-                <span className="text-[#1B3D2F] font-bold text-sm">H</span>
-              </div>
+              <img src="/hulogo.png" alt="Haramaya University" className="w-8 h-8 object-contain rounded-full" />
               <div>
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Haramaya University</p>
                 <h1 className="text-lg font-bold text-[#1B3D2F] tracking-tight">Driver Portal</h1>

@@ -1509,11 +1509,9 @@ export default function DashboardPage() {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200">
-          <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-            <span className="text-[#1B3D2F] font-bold text-sm">H</span>
-          </div>
+          <img src="/hulogo.png" alt="Haramaya University" className="w-10 h-10 object-contain rounded-full" />
           <div>
-            <div className="font-bold text-[#1B3D2F] tracking-tight">Haramaya University</div>
+            <div className="font-bold text-[#1B3D2F] tracking-tight text-sm">Haramaya University</div>
             <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
           </div>
         </div>

@@ -73,12 +73,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-11 h-11 bg-[#1B3D2F] rounded-lg flex items-center justify-center shadow-sm">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-                </svg>
-              </div>
+              <img src="/hulogo.png" alt="Haramaya University" className="w-12 h-12 object-contain rounded-full" />
               <div>
                 <p className="text-[10px] font-semibold text-[#565F71] uppercase tracking-[0.15em]">Fleet Authority</p>
                 <h1 className="text-xl font-bold text-[#1B3D2F] font-serif tracking-tight">Deployment Office</h1>
