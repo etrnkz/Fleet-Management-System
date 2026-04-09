@@ -51,9 +51,10 @@ export default function SettingsPage() {
     try {
       setSaving(true)
       await userApi.updateProfile({ name: formData.name, phoneNumber: formData.phoneNumber })
-      const updatedUser = { ...user, name: formData.name, phoneNumber: formData.phoneNumber }
-      setUser(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      // Fetch fresh user data from backend
+      const freshUserData = await userApi.getProfile()
+      setUser(freshUserData)
+      localStorage.setItem('user', JSON.stringify(freshUserData))
       localStorage.setItem('userData', JSON.stringify({ ...formData, profileImage }))
       showToast('Profile updated successfully!', 'success')
     } catch (error: any) {

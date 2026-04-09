@@ -228,9 +228,10 @@ export default function DashboardLayout({
       setSettingsSaving(true)
       const { userApi } = await import('@/lib/api')
       await userApi.updateProfile({ name: settingsForm.name, phoneNumber: settingsForm.phoneNumber })
-      const updatedUser = { ...user, name: settingsForm.name, phoneNumber: settingsForm.phoneNumber }
-      setUser(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      // Fetch fresh user data from backend
+      const freshUserData = await userApi.getProfile()
+      setUser(freshUserData)
+      localStorage.setItem('user', JSON.stringify(freshUserData))
     } catch (error: any) {
       console.error('Failed to save settings:', error)
     } finally {

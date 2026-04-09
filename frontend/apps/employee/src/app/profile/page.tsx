@@ -72,15 +72,10 @@ export default function ProfilePage() {
         phoneNumber: formData.phoneNumber,
       })
       
-      // Update user state
-      const updatedUser = {
-        ...user,
-        name: formData.name,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-      }
-      setUser(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      // Fetch fresh user data from backend
+      const freshUserData = await userApi.getProfile()
+      setUser(freshUserData)
+      localStorage.setItem('user', JSON.stringify(freshUserData))
       
       // Save extended profile data to localStorage
       const userData = {
