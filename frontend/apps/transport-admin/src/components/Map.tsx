@@ -102,12 +102,22 @@ function VehiclePopupContent({ vehicle }: { vehicle: Vehicle }) {
   const [loadingLocation, setLoadingLocation] = useState(true)
 
   useEffect(() => {
+    // Validate coordinates
+    const lat = Number(vehicle.lat)
+    const lng = Number(vehicle.lng)
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      setLocationName('Invalid coordinates')
+      setLoadingLocation(false)
+      return
+    }
+
     // Reverse geocode to get location name
     const fetchLocationName = async () => {
       try {
         setLoadingLocation(true)
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${vehicle.lat}&lon=${vehicle.lng}&zoom=18&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
           {
             headers: {
               'User-Agent': 'FleetManagementSystem/1.0'
@@ -130,11 +140,11 @@ function VehiclePopupContent({ vehicle }: { vehicle: Vehicle }) {
           const locationStr = parts.length > 0 ? parts.join(', ') : data.display_name
           setLocationName(locationStr)
         } else {
-          setLocationName(`${vehicle.lat.toFixed(6)}, ${vehicle.lng.toFixed(6)}`)
+          setLocationName(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
         }
       } catch (error) {
         console.error('Reverse geocoding failed:', error)
-        setLocationName(`${vehicle.lat.toFixed(6)}, ${vehicle.lng.toFixed(6)}`)
+        setLocationName(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
       } finally {
         setLoadingLocation(false)
       }
@@ -180,7 +190,7 @@ function VehiclePopupContent({ vehicle }: { vehicle: Vehicle }) {
               <p className="text-xs text-gray-900 mt-1 leading-relaxed">{locationName}</p>
             )}
             <p className="text-xs text-gray-400 mt-1">
-              {vehicle.lat.toFixed(6)}, {vehicle.lng.toFixed(6)}
+              {Number(vehicle.lat).toFixed(6)}, {Number(vehicle.lng).toFixed(6)}
             </p>
           </div>
         </div>
@@ -279,9 +289,16 @@ export default function Map({
   restrictedZones = [],
   tempZone = null
 }: MapProps) {
-  const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle)
+  // Filter out vehicles with invalid coordinates
+  const validVehicles = vehicles.filter(v => {
+    const lat = Number(v.lat)
+    const lng = Number(v.lng)
+    return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0
+  })
+
+  const selectedVehicleData = validVehicles.find(v => v.id === selectedVehicle)
   const center: [number, number] = selectedVehicleData 
-    ? [selectedVehicleData.lat, selectedVehicleData.lng]
+    ? [Number(selectedVehicleData.lat), Number(selectedVehicleData.lng)]
     : [9.0192, 38.7525] // Addis Ababa center
 
   return (
@@ -331,7 +348,7 @@ export default function Map({
         </LayersControl>
         
         {followMode && selectedVehicleData && (
-          <MapController center={[selectedVehicleData.lat, selectedVehicleData.lng]} zoom={15} />
+          <MapController center={[Number(selectedVehicleData.lat), Number(selectedVehicleData.lng)]} zoom={15} />
         )}
 
         {/* Geofence drawing handler */}
@@ -341,7 +358,7 @@ export default function Map({
         {restrictedZones.map((zone, index) => (
           <Circle
             key={`zone-${index}`}
-            center={[zone.latitude, zone.longitude]}
+            center={[Number(zone.latitude), Number(zone.longitude)]}
             radius={zone.radiusMeters}
             pathOptions={{
               color: '#ef4444',
@@ -357,7 +374,7 @@ export default function Map({
                 <p className="text-xs text-gray-600">{zone.name || 'Unnamed Zone'}</p>
                 <p className="text-xs text-gray-600">Radius: {zone.radiusMeters}m</p>
                 <p className="text-xs text-gray-500">
-                  {zone.latitude.toFixed(6)}, {zone.longitude.toFixed(6)}
+                  {Number(zone.latitude).toFixed(6)}, {Number(zone.longitude).toFixed(6)}
                 </p>
               </div>
             </Popup>
@@ -367,7 +384,7 @@ export default function Map({
         {/* Display temporary zone being created */}
         {tempZone && (
           <Circle
-            center={[tempZone.latitude, tempZone.longitude]}
+            center={[Number(tempZone.latitude), Number(tempZone.longitude)]}
             radius={tempZone.radiusMeters}
             pathOptions={{
               color: '#f59e0b',
@@ -382,7 +399,7 @@ export default function Map({
                 <p className="font-bold text-sm text-amber-600">New Zone (Preview)</p>
                 <p className="text-xs text-gray-600">Radius: {tempZone.radiusMeters}m</p>
                 <p className="text-xs text-gray-500">
-                  {tempZone.latitude.toFixed(6)}, {tempZone.longitude.toFixed(6)}
+                  {Number(tempZone.latitude).toFixed(6)}, {Number(tempZone.longitude).toFixed(6)}
                 </p>
               </div>
             </Popup>
@@ -390,10 +407,10 @@ export default function Map({
         )}
         
         {/* Show only selected vehicle when one is selected, otherwise show all */}
-        {(selectedVehicle ? vehicles.filter(v => v.id === selectedVehicle) : vehicles).map((vehicle) => (
+        {(selectedVehicle ? validVehicles.filter(v => v.id === selectedVehicle) : validVehicles).map((vehicle) => (
           <Marker
             key={vehicle.id}
-            position={[vehicle.lat, vehicle.lng]}
+            position={[Number(vehicle.lat), Number(vehicle.lng)]}
             icon={createVehicleIcon(vehicle.status)}
             eventHandlers={{
               click: () => onVehicleSelect(vehicle.id)
