@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl } from 'react-leaflet'
+import { useEffect, useRef, useState } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Circle, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -28,6 +28,17 @@ interface Vehicle {
   lastUpdate: string
   lat: number
   lng: number
+  tripId?: string | null
+  tripDestination?: string | null
+  tripPurpose?: string | null
+  requesterName?: string | null
+}
+
+export interface RestrictedZone {
+  name?: string
+  latitude: number
+  longitude: number
+  radiusMeters: number
 }
 
 interface MapProps {
@@ -35,6 +46,10 @@ interface MapProps {
   selectedVehicle: string | null
   onVehicleSelect: (id: string) => void
   followMode: boolean
+  drawingMode?: boolean
+  onZoneDrawn?: (zone: RestrictedZone) => void
+  restrictedZones?: RestrictedZone[]
+  tempZone?: RestrictedZone | null
 }
 
 // Component to handle map centering
@@ -46,6 +61,181 @@ function MapController({ center, zoom }: { center: [number, number], zoom: numbe
   }, [center, zoom, map])
   
   return null
+}
+
+// Component to handle geofence drawing
+function GeofenceDrawer({ 
+  drawingMode, 
+  onZoneDrawn 
+}: { 
+  drawingMode: boolean
+  onZoneDrawn?: (zone: RestrictedZone) => void 
+}) {
+  const map = useMapEvents({
+    click: (e) => {
+      if (drawingMode && onZoneDrawn) {
+        // Default radius of 500 meters
+        const zone: RestrictedZone = {
+          latitude: e.latlng.lat,
+          longitude: e.latlng.lng,
+          radiusMeters: 500
+        }
+        onZoneDrawn(zone)
+      }
+    }
+  })
+
+  useEffect(() => {
+    if (drawingMode) {
+      map.getContainer().style.cursor = 'crosshair'
+    } else {
+      map.getContainer().style.cursor = ''
+    }
+  }, [drawingMode, map])
+
+  return null
+}
+
+// Enhanced Vehicle Popup with Reverse Geocoding
+function VehiclePopupContent({ vehicle }: { vehicle: Vehicle }) {
+  const [locationName, setLocationName] = useState<string>('Loading location...')
+  const [loadingLocation, setLoadingLocation] = useState(true)
+
+  useEffect(() => {
+    // Reverse geocode to get location name
+    const fetchLocationName = async () => {
+      try {
+        setLoadingLocation(true)
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${vehicle.lat}&lon=${vehicle.lng}&zoom=18&addressdetails=1`,
+          {
+            headers: {
+              'User-Agent': 'FleetManagementSystem/1.0'
+            }
+          }
+        )
+        
+        if (response.ok) {
+          const data = await response.json()
+          
+          // Build a readable address
+          const address = data.address
+          const parts = []
+          
+          if (address.road) parts.push(address.road)
+          if (address.suburb || address.neighbourhood) parts.push(address.suburb || address.neighbourhood)
+          if (address.city || address.town || address.village) parts.push(address.city || address.town || address.village)
+          if (address.state) parts.push(address.state)
+          
+          const locationStr = parts.length > 0 ? parts.join(', ') : data.display_name
+          setLocationName(locationStr)
+        } else {
+          setLocationName(`${vehicle.lat.toFixed(6)}, ${vehicle.lng.toFixed(6)}`)
+        }
+      } catch (error) {
+        console.error('Reverse geocoding failed:', error)
+        setLocationName(`${vehicle.lat.toFixed(6)}, ${vehicle.lng.toFixed(6)}`)
+      } finally {
+        setLoadingLocation(false)
+      }
+    }
+
+    fetchLocationName()
+  }, [vehicle.lat, vehicle.lng])
+
+  return (
+    <div className="p-3 min-w-[280px]">
+      {/* Vehicle Info */}
+      <div className="border-b border-gray-200 pb-2 mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <p className="font-bold text-base text-gray-900">{vehicle.vehicleId || vehicle.plateNumber}</p>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+            vehicle.status === 'moving' ? 'bg-green-100 text-green-700' :
+            vehicle.status === 'idle' ? 'bg-yellow-100 text-yellow-700' :
+            'bg-red-100 text-red-700'
+          }`}>
+            {vehicle.status.toUpperCase()}
+          </span>
+        </div>
+        <p className="text-xs text-gray-600">{vehicle.plateNumber}</p>
+        {vehicle.make && vehicle.model && (
+          <p className="text-xs text-gray-600">{vehicle.make} {vehicle.model}</p>
+        )}
+      </div>
+
+      {/* Current Location with GPS */}
+      <div className="mb-2">
+        <div className="flex items-start gap-2">
+          <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-gray-700">Current Location:</p>
+            {loadingLocation ? (
+              <div className="flex items-center gap-1 mt-1">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                <p className="text-xs text-gray-500">Getting location...</p>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-900 mt-1 leading-relaxed">{locationName}</p>
+            )}
+            <p className="text-xs text-gray-400 mt-1">
+              {vehicle.lat.toFixed(6)}, {vehicle.lng.toFixed(6)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Trip Information (if on trip) */}
+      {vehicle.tripId && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-2">
+          <div className="flex items-center gap-1 mb-1">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p className="text-xs font-semibold text-blue-900">Active Trip</p>
+          </div>
+          {vehicle.tripDestination && (
+            <p className="text-xs text-blue-800 mb-1">
+              <span className="font-medium">To:</span> {vehicle.tripDestination}
+            </p>
+          )}
+          {vehicle.tripPurpose && (
+            <p className="text-xs text-blue-700 mb-1">
+              <span className="font-medium">Purpose:</span> {vehicle.tripPurpose}
+            </p>
+          )}
+          {vehicle.requesterName && (
+            <p className="text-xs text-blue-700">
+              <span className="font-medium">Requester:</span> {vehicle.requesterName}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Driver & Speed Info */}
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div>
+          <p className="text-xs text-gray-600">Driver:</p>
+          <p className="text-xs font-semibold text-gray-900">{vehicle.driver || 'Unassigned'}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-600">Speed:</p>
+          <p className="text-xs font-semibold text-gray-900">{vehicle.speed}</p>
+        </div>
+      </div>
+
+      {/* Last Update */}
+      <div className="pt-2 border-t border-gray-200">
+        <div className="flex items-center gap-1">
+          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-xs text-gray-500">Updated {vehicle.lastUpdate}</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // Custom vehicle marker icons
@@ -79,7 +269,16 @@ const createVehicleIcon = (status: string) => {
   })
 }
 
-export default function Map({ vehicles, selectedVehicle, onVehicleSelect, followMode }: MapProps) {
+export default function Map({ 
+  vehicles, 
+  selectedVehicle, 
+  onVehicleSelect, 
+  followMode,
+  drawingMode = false,
+  onZoneDrawn,
+  restrictedZones = [],
+  tempZone = null
+}: MapProps) {
   const selectedVehicleData = vehicles.find(v => v.id === selectedVehicle)
   const center: [number, number] = selectedVehicleData 
     ? [selectedVehicleData.lat, selectedVehicleData.lng]
@@ -134,6 +333,61 @@ export default function Map({ vehicles, selectedVehicle, onVehicleSelect, follow
         {followMode && selectedVehicleData && (
           <MapController center={[selectedVehicleData.lat, selectedVehicleData.lng]} zoom={15} />
         )}
+
+        {/* Geofence drawing handler */}
+        <GeofenceDrawer drawingMode={drawingMode} onZoneDrawn={onZoneDrawn} />
+
+        {/* Display existing restricted zones */}
+        {restrictedZones.map((zone, index) => (
+          <Circle
+            key={`zone-${index}`}
+            center={[zone.latitude, zone.longitude]}
+            radius={zone.radiusMeters}
+            pathOptions={{
+              color: '#ef4444',
+              fillColor: '#ef4444',
+              fillOpacity: 0.2,
+              weight: 2,
+              dashArray: '5, 5'
+            }}
+          >
+            <Popup>
+              <div className="p-2">
+                <p className="font-bold text-sm text-red-600">Restricted Zone</p>
+                <p className="text-xs text-gray-600">{zone.name || 'Unnamed Zone'}</p>
+                <p className="text-xs text-gray-600">Radius: {zone.radiusMeters}m</p>
+                <p className="text-xs text-gray-500">
+                  {zone.latitude.toFixed(6)}, {zone.longitude.toFixed(6)}
+                </p>
+              </div>
+            </Popup>
+          </Circle>
+        ))}
+
+        {/* Display temporary zone being created */}
+        {tempZone && (
+          <Circle
+            center={[tempZone.latitude, tempZone.longitude]}
+            radius={tempZone.radiusMeters}
+            pathOptions={{
+              color: '#f59e0b',
+              fillColor: '#f59e0b',
+              fillOpacity: 0.3,
+              weight: 3,
+              dashArray: '10, 5'
+            }}
+          >
+            <Popup>
+              <div className="p-2">
+                <p className="font-bold text-sm text-amber-600">New Zone (Preview)</p>
+                <p className="text-xs text-gray-600">Radius: {tempZone.radiusMeters}m</p>
+                <p className="text-xs text-gray-500">
+                  {tempZone.latitude.toFixed(6)}, {tempZone.longitude.toFixed(6)}
+                </p>
+              </div>
+            </Popup>
+          </Circle>
+        )}
         
         {/* Show only selected vehicle when one is selected, otherwise show all */}
         {(selectedVehicle ? vehicles.filter(v => v.id === selectedVehicle) : vehicles).map((vehicle) => (
@@ -145,18 +399,8 @@ export default function Map({ vehicles, selectedVehicle, onVehicleSelect, follow
               click: () => onVehicleSelect(vehicle.id)
             }}
           >
-            <Popup>
-              <div className="p-2">
-                <p className="font-bold text-sm">{vehicle.vehicleId || vehicle.id}</p>
-                <p className="text-xs text-gray-600">{vehicle.plateNumber}</p>
-                {vehicle.make && vehicle.model && (
-                  <p className="text-xs text-gray-600">{vehicle.make} {vehicle.model}</p>
-                )}
-                <p className="text-xs text-gray-600">Driver: {vehicle.driver ?? '—'}</p>
-                <p className="text-xs font-semibold mt-1">Speed: {vehicle.speed}</p>
-                <p className="text-xs text-gray-500">{vehicle.location}</p>
-                <p className="text-xs text-gray-400 mt-1">{vehicle.lastUpdate}</p>
-              </div>
+            <Popup maxWidth={320} minWidth={280}>
+              <VehiclePopupContent vehicle={vehicle} />
             </Popup>
           </Marker>
         ))}
