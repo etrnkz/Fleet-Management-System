@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme.dart';
 import '../../services/fleet_service.dart';
 import '../../widgets/toast.dart';
+import '../../widgets/qr_dialog.dart';
 
 class TripsTab extends StatefulWidget {
   final FleetService svc;
@@ -39,27 +39,12 @@ class _TripsTabState extends State<TripsTab> with AutomaticKeepAliveClientMixin 
   }
 
   void _showQr(Map<String, dynamic> trip) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Trip QR Code', style: TextStyle(fontWeight: FontWeight.w800)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: kBackground, borderRadius: BorderRadius.circular(12)),
-              child: QrImageView(data: trip['id'] as String, size: 200, backgroundColor: Colors.white),
-            ),
-            const SizedBox(height: 12),
-            Text(trip['destination'] as String? ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-            Text(trip['requestNumber'] as String? ?? (trip['id'] as String).substring(0, 8),
-                style: const TextStyle(color: kTextMuted, fontSize: 12, fontFamily: 'monospace')),
-          ],
-        ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
-      ),
+    showQrDialog(
+      context,
+      data: trip['id'] as String,
+      title: 'Trip QR Code',
+      subtitle: trip['destination'] as String? ?? '',
+      caption: trip['requestNumber'] as String? ?? (trip['id'] as String).substring(0, 8),
     );
   }
 

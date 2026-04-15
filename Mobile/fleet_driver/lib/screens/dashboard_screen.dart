@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Future<void> _init() async {
     _svc = await FleetService.create();
-    _gps = GpsService(_svc);
+    _gps = GpsService();
     _gps.statusStream.listen((s) {
       if (mounted) setState(() => _gpsStatus = s);
     });
@@ -134,9 +134,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                             ? 'Restricted'
                             : isWarning
                                 ? 'Warning'
-                                : _gpsStatus.currentSpeed != null
-                                    ? '${_gpsStatus.currentSpeed!.toStringAsFixed(0)} km/h'
-                                    : 'GPS Live',
+                                : _gpsStatus.connected
+                                    ? _gpsStatus.currentSpeed != null
+                                        ? '${_gpsStatus.currentSpeed!.toStringAsFixed(0)} km/h'
+                                        : 'GPS Live'
+                                    : 'Connecting…',
                         style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                       ),
                     ],

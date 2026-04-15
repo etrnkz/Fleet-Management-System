@@ -8,10 +8,12 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { TrackingService } from './tracking.service';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { getCorsOrigin } from '../config/cors-origins';
+
+const LIVE_ROOM = 'live-tracking'; // global room for all active vehicle locations
 
 @WebSocketGateway({
   cors: {
@@ -19,6 +21,7 @@ import { getCorsOrigin } from '../config/cors-origins';
     credentials: true,
   },
   namespace: '/tracking',
+  transports: ['websocket', 'polling'],
 })
 export class TrackingGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -27,10 +30,6 @@ export class TrackingGateway
   server: Server;
 
   private readonly logger = new Logger(TrackingGateway.name);
-  private activeConnections = new Map<
-    string,
-    { tripId: string; userId: string }
-  >();
 
   constructor(private readonly trackingService: TrackingService) {}
 
@@ -40,30 +39,26 @@ export class TrackingGateway
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
-    this.activeConnections.delete(client.id);
   }
+
+  // ── Join a specific trip room (driver app / trip detail view) ─────────────
 
   @SubscribeMessage('join-trip')
   async handleJoinTrip(
-    @MessageBody() data: { tripId: string; userId: string },
+    @MessageBody() data: { tripId: string; userId?: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const { tripId, userId } = data;
-
-    // Join the trip room
+    const { tripId } = data;
     client.join(`trip-${tripId}`);
-    this.activeConnections.set(client.id, { tripId, userId });
+    this.logger.log(`Client ${client.id} joined trip-${tripId}`);
 
-    this.logger.log(`User ${userId} joined trip ${tripId}`);
+    // Send last 50 locations as history
+    try {
+      const history = await this.trackingService.getRecentLocations(tripId, 50);
+      client.emit('location-history', history);
+    } catch (_) {}
 
-    // Send recent locations to the newly joined client
-    const recentLocations = await this.trackingService.getRecentLocations(
-      tripId,
-      50,
-    );
-    client.emit('location-history', recentLocations);
-
-    return { success: true, message: 'Joined trip tracking' };
+    return { success: true };
   }
 
   @SubscribeMessage('leave-trip')
@@ -71,14 +66,33 @@ export class TrackingGateway
     @MessageBody() data: { tripId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const { tripId } = data;
-    client.leave(`trip-${tripId}`);
-    this.activeConnections.delete(client.id);
-
-    this.logger.log(`Client ${client.id} left trip ${tripId}`);
-
-    return { success: true, message: 'Left trip tracking' };
+    client.leave(`trip-${data.tripId}`);
+    return { success: true };
   }
+
+  // ── Join global live-tracking room (transport admin map view) ─────────────
+
+  @SubscribeMessage('join-live')
+  async handleJoinLive(@ConnectedSocket() client: Socket) {
+    client.join(LIVE_ROOM);
+    this.logger.log(`Client ${client.id} joined live-tracking`);
+
+    // Send current snapshot of all active vehicles
+    try {
+      const live = await this.trackingService.getLiveVehicleLocations();
+      client.emit('live-snapshot', live);
+    } catch (_) {}
+
+    return { success: true };
+  }
+
+  @SubscribeMessage('leave-live')
+  handleLeaveLive(@ConnectedSocket() client: Socket) {
+    client.leave(LIVE_ROOM);
+    return { success: true };
+  }
+
+  // ── Driver sends location via WebSocket (alternative to REST) ────────────
 
   @SubscribeMessage('update-location')
   async handleLocationUpdate(
@@ -86,25 +100,12 @@ export class TrackingGateway
     @ConnectedSocket() client: Socket,
   ) {
     const { tripId, location } = data;
-
     try {
-      // Save location to database
-      const savedLocation = await this.trackingService.saveLocation(
-        tripId,
-        location,
-      );
-
-      // Broadcast to all clients watching this trip
-      this.server.to(`trip-${tripId}`).emit('location-update', {
-        tripId,
-        location: savedLocation,
-      });
-
-      this.logger.debug(`Location updated for trip ${tripId}`);
-
-      return { success: true, location: savedLocation };
+      const saved = await this.trackingService.saveLocation(tripId, location);
+      this.broadcastLocationUpdate(tripId, saved);
+      return { success: true, location: saved };
     } catch (error) {
-      this.logger.error(`Failed to update location: ${error.message}`);
+      this.logger.error(`WS location update failed: ${error.message}`);
       return { success: false, error: error.message };
     }
   }
@@ -115,40 +116,54 @@ export class TrackingGateway
     @ConnectedSocket() client: Socket,
   ) {
     const { tripId, locations } = data;
-
     try {
-      // Save all offline locations
-      const savedLocations = await this.trackingService.saveBulkLocations(
-        tripId,
-        locations,
-      );
-
-      // Broadcast to all clients
-      this.server.to(`trip-${tripId}`).emit('location-bulk-update', {
-        tripId,
-        locations: savedLocations,
-      });
-
-      this.logger.log(
-        `Bulk update: ${locations.length} locations for trip ${tripId}`,
-      );
-
-      return { success: true, count: savedLocations.length };
+      const saved = await this.trackingService.saveBulkLocations(tripId, locations);
+      // Broadcast last location
+      if (saved.length > 0) {
+        this.server.to(`trip-${tripId}`).emit('location-bulk-update', { tripId, locations: saved });
+      }
+      return { success: true, count: saved.length };
     } catch (error) {
-      this.logger.error(`Failed to bulk update locations: ${error.message}`);
+      this.logger.error(`WS bulk update failed: ${error.message}`);
       return { success: false, error: error.message };
     }
   }
 
-  // Broadcast location update from REST API
+  // ── Called by REST controller after saving a location ────────────────────
+
+  /**
+   * Broadcast a location update to:
+   * 1. All clients watching this specific trip (`trip-{tripId}` room)
+   * 2. All clients on the global live map (`live-tracking` room)
+   */
   broadcastLocationUpdate(tripId: string, location: any) {
-    this.server.to(`trip-${tripId}`).emit('location-update', {
+    // Per-trip room (driver app, trip detail)
+    this.server.to(`trip-${tripId}`).emit('location-update', { tripId, location });
+
+    // Global live map room (transport admin)
+    this.server.to(LIVE_ROOM).emit('vehicle-location', {
       tripId,
-      location,
+      vehicleId: location.vehicleId ?? null,
+      plateNumber: location.plateNumber ?? null,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      speed: location.speed ?? null,
+      heading: location.heading ?? null,
+      timestamp: location.timestamp ?? new Date().toISOString(),
+      engineSimulatedOff: location.engineSimulatedOff ?? false,
+      geofenceStatus: location.geofenceStatus ?? 'clear',
+      violationZoneName: location.violationZoneName ?? null,
     });
   }
 
-  // Get active connections count for a trip
+  /**
+   * Send a notification to a specific user's socket room.
+   * Users join their own room `user-{userId}` on connect.
+   */
+  sendNotificationToUser(userId: string, notification: any) {
+    this.server.to(`user-${userId}`).emit('notification', notification);
+  }
+
   getActiveViewers(tripId: string): number {
     const room = this.server.sockets.adapter.rooms.get(`trip-${tripId}`);
     return room ? room.size : 0;
