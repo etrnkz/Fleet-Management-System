@@ -5,6 +5,7 @@ import { Notification, NotificationType } from './entities/notification.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { SmsService } from '../sms/sms.service';
+import { EmailService } from '../email/email.service';
 import { NotificationsGateway } from './notifications.gateway';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class NotificationsService {
     private readonly notificationRepository: Repository<Notification>,
     private readonly usersService: UsersService,
     private readonly smsService: SmsService,
+    private readonly emailService: EmailService,
     @Inject(forwardRef(() => NotificationsGateway))
     private readonly notificationsGateway: NotificationsGateway,
   ) {}
@@ -473,14 +475,17 @@ export class NotificationsService {
         stakeholders.driver,
         NotificationType.TripAllocated,
         'New Trip Assignment',
-        `You have been assigned to trip ${trip.requestNumber} to ${trip.destination} for ${stakeholders.requester.name}`,
+        `You have been assigned to trip ${trip.requestNumber} to ${trip.destination} for ${stakeholders.requester.name}${stakeholders.requester.phoneNumber ? ` · ${stakeholders.requester.phoneNumber}` : ''}`,
         {
           tripId: trip.id,
           requestNumber: trip.requestNumber,
           destination: trip.destination,
           requesterName: stakeholders.requester.name,
+          requesterPhone: stakeholders.requester.phoneNumber ?? null,
+          requesterEmail: stakeholders.requester.email ?? null,
           startDateTime: trip.startDateTime,
           endDateTime: trip.endDateTime,
+          passengerCount: trip.passengerCount,
         },
       );
     }
@@ -513,6 +518,25 @@ export class NotificationsService {
     }
 
     console.log(`Trip allocation notifications sent for trip ${trip.id}`);
+
+    // Email to requester with full vehicle + driver details
+    if (stakeholders.requester.email) {
+      this.emailService.sendTripAllocatedEmail(
+        stakeholders.requester.email,
+        { requestNumber: trip.requestNumber, purpose: trip.purpose, destination: trip.destination, startDateTime: trip.startDateTime, endDateTime: trip.endDateTime },
+        { make: vehicleMake, model: vehicleModel, year: vehicleYear, plateNumber: vehiclePlate, color: vehicleColor, fuelType: vehicleFuelType, capacity: vehicleCapacity },
+        { name: driverName, phoneNumber: driverPhone, licenseNumber: driverLicense },
+      ).catch(() => {});
+    }
+
+    // Email to driver with requester details
+    if (stakeholders.driver?.email) {
+      this.emailService.sendDriverTripAssignmentEmail(
+        stakeholders.driver.email,
+        { requestNumber: trip.requestNumber, destination: trip.destination, purpose: trip.purpose, startDateTime: trip.startDateTime, endDateTime: trip.endDateTime, passengerCount: trip.passengerCount },
+        { name: stakeholders.requester.name, phoneNumber: stakeholders.requester.phoneNumber, email: stakeholders.requester.email },
+      ).catch(() => {});
+    }
 
     // SMS to requester
     if (stakeholders.requester.phoneNumber && trip.allocatedVehicle && trip.allocatedDriver) {
@@ -579,13 +603,16 @@ export class NotificationsService {
         stakeholders.driver,
         NotificationType.TripReady,
         'Trip Ready to Start',
-        `Trip ${trip.requestNumber} to ${trip.destination} is ready to start. Please coordinate with ${stakeholders.requester.name}.`,
+        `Trip ${trip.requestNumber} to ${trip.destination} is ready. Requester: ${stakeholders.requester.name}${stakeholders.requester.phoneNumber ? ` · ${stakeholders.requester.phoneNumber}` : ''}`,
         {
           tripId: trip.id,
           requestNumber: trip.requestNumber,
           destination: trip.destination,
           requesterName: stakeholders.requester.name,
+          requesterPhone: stakeholders.requester.phoneNumber ?? null,
+          requesterEmail: stakeholders.requester.email ?? null,
           startDateTime: trip.startDateTime,
+          passengerCount: trip.passengerCount,
         },
       );
     }
@@ -602,6 +629,25 @@ export class NotificationsService {
     }
 
     console.log(`Trip ready notifications sent for trip ${trip.id}`);
+
+    // Email to requester with full ready details
+    if (stakeholders.requester.email) {
+      this.emailService.sendTripReadyEmail(
+        stakeholders.requester.email,
+        { requestNumber: trip.requestNumber, destination: trip.destination, startDateTime: trip.startDateTime, endDateTime: trip.endDateTime },
+        { make: vehicleMake, model: vehicleModel, year: vehicleYear, plateNumber: vehiclePlate, color: vehicleColor, fuelType: vehicleFuelType, capacity: vehicleCapacity },
+        { name: driverName, phoneNumber: driverPhone, licenseNumber: driverLicense },
+      ).catch(() => {});
+    }
+
+    // Email to driver with requester details
+    if (stakeholders.driver?.email) {
+      this.emailService.sendDriverTripAssignmentEmail(
+        stakeholders.driver.email,
+        { requestNumber: trip.requestNumber, destination: trip.destination, purpose: trip.purpose, startDateTime: trip.startDateTime, endDateTime: trip.endDateTime, passengerCount: trip.passengerCount },
+        { name: stakeholders.requester.name, phoneNumber: stakeholders.requester.phoneNumber, email: stakeholders.requester.email },
+      ).catch(() => {});
+    }
   }
 
   async notifyTripCompleted(trip: any): Promise<void> {
