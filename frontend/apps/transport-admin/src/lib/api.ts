@@ -239,6 +239,15 @@ export const driverApi = {
   }),
   
   delete: (id: string) => apiFetch(`/drivers/${id}`, { method: 'DELETE' }),
+
+  assignVehicle: (driverId: string, vehicleId: string) =>
+    apiFetch(`/drivers/${driverId}/assign-vehicle`, {
+      method: 'POST',
+      body: JSON.stringify({ vehicleId }),
+    }),
+
+  unassignVehicle: (driverId: string) =>
+    apiFetch(`/drivers/${driverId}/assign-vehicle`, { method: 'DELETE' }),
 };
 
 // Maintenance APIs
