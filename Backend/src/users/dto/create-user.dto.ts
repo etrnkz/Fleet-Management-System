@@ -40,4 +40,9 @@ export class CreateUserDto {
   @IsUUID()
   @IsOptional()
   collegeId?: string;
+
+  @ApiPropertyOptional({ example: '+251912345678' })
+  @IsString()
+  @IsOptional()
+  phoneNumber?: string;
 }
