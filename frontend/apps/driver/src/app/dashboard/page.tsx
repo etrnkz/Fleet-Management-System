@@ -375,6 +375,30 @@ export default function DriverDashboard() {
                       <p className="font-semibold text-gray-900 truncate">{trip.destination}</p>
                       <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{trip.purpose}</p>
                       <p className="text-xs text-gray-400 mt-1">{new Date(trip.startDateTime).toLocaleString()}</p>
+
+                      {/* Requester info */}
+                      {(trip.requester?.name || trip.requester?.phoneNumber) && (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-xs text-gray-500 mb-1">Passenger / Requester</p>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {trip.requester?.name && (
+                              <span className="text-sm font-semibold text-gray-800">{trip.requester.name}</span>
+                            )}
+                            {trip.requester?.phoneNumber && (
+                              <a
+                                href={`tel:${trip.requester.phoneNumber}`}
+                                className="flex items-center gap-1 text-sm font-semibold text-green-700 hover:underline"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                {trip.requester.phoneNumber}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
                       <button onClick={() => setQrTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 bg-[#1B3D2F] text-white text-xs rounded-lg hover:bg-[#152e22]">QR Code</button>
@@ -410,6 +434,26 @@ export default function DriverDashboard() {
                     <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400 mb-0.5">Passengers</p><p className="font-semibold text-gray-900">{trip.passengerCount}</p></div>
                     <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400 mb-0.5">Start</p><p className="font-semibold text-gray-900 text-xs sm:text-sm">{new Date(trip.startDateTime).toLocaleTimeString()}</p></div>
                   </div>
+                  {/* Requester contact */}
+                  {(trip.requester?.name || trip.requester?.phoneNumber) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-blue-600 mb-1.5">Passenger / Requester</p>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-semibold text-gray-900">{trip.requester?.name}</span>
+                        {trip.requester?.phoneNumber && (
+                          <a
+                            href={`tel:${trip.requester.phoneNumber}`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            {trip.requester.phoneNumber}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   {liveTripId === trip.id && (
                     <div className={`rounded-lg p-3 text-xs sm:text-sm ${gpsStatus.engineSimulatedOff ? 'bg-red-50 text-red-700' : 'bg-#f0f9f4 text-[#1B3D2F]'}`}>
                       {gpsStatus.engineSimulatedOff ? ` Restricted zone${gpsStatus.violationZoneName ? `: ${gpsStatus.violationZoneName}` : ''}` : ` GPS live${gpsStatus.lastPostedAt ? `  ${new Date(gpsStatus.lastPostedAt).toLocaleTimeString()}` : ''}`}

@@ -150,33 +150,126 @@ export class EmailService {
     driverInfo: any,
   ): Promise<boolean> {
     const html = `
-      <h2>Vehicle and Driver Allocated</h2>
-      <p>A vehicle and driver have been assigned to your trip.</p>
-      <h3>Trip Details:</h3>
-      <ul>
-        <li><strong>Purpose:</strong> ${tripDetails.purpose}</li>
-        <li><strong>Destination:</strong> ${tripDetails.destination}</li>
-        <li><strong>Start Date:</strong> ${new Date(tripDetails.startDateTime).toLocaleString()}</li>
-      </ul>
-      <h3>Vehicle Information:</h3>
-      <ul>
-        <li><strong>Vehicle:</strong> ${vehicleInfo.make} ${vehicleInfo.model}</li>
-        <li><strong>Plate Number:</strong> ${vehicleInfo.plateNumber}</li>
-        <li><strong>Capacity:</strong> ${vehicleInfo.capacity} passengers</li>
-      </ul>
-      <h3>Driver Information:</h3>
-      <ul>
-        <li><strong>Driver:</strong> ${driverInfo.name}</li>
-        <li><strong>Phone:</strong> ${driverInfo.phoneNumber}</li>
-        <li><strong>Rating:</strong> ${driverInfo.rating}/5</li>
-      </ul>
-    `;
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <h2 style="color:#1B3D2F;">✅ Vehicle & Driver Allocated — Your Trip is Ready</h2>
+        <p>Your trip request <strong>${tripDetails.requestNumber}</strong> has been allocated a vehicle and driver.</p>
 
-    return this.sendEmail({
-      to,
-      subject: 'Vehicle and Driver Allocated',
-      html,
-    });
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;">Trip Details</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Destination</td><td style="padding:6px 0;font-weight:600;">${tripDetails.destination}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Purpose</td><td style="padding:6px 0;">${tripDetails.purpose || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Start</td><td style="padding:6px 0;">${new Date(tripDetails.startDateTime).toLocaleString()}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">End</td><td style="padding:6px 0;">${new Date(tripDetails.endDateTime).toLocaleString()}</td></tr>
+        </table>
+
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-top:20px;">🚗 Vehicle</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Make & Model</td><td style="padding:6px 0;font-weight:600;">${vehicleInfo.make} ${vehicleInfo.model}${vehicleInfo.year ? ` (${vehicleInfo.year})` : ''}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Plate Number</td><td style="padding:6px 0;font-weight:600;font-family:monospace;">${vehicleInfo.plateNumber}</td></tr>
+          ${vehicleInfo.color ? `<tr><td style="padding:6px 0;color:#6b7280;">Color</td><td style="padding:6px 0;">${vehicleInfo.color}</td></tr>` : ''}
+          ${vehicleInfo.fuelType ? `<tr><td style="padding:6px 0;color:#6b7280;">Fuel Type</td><td style="padding:6px 0;">${vehicleInfo.fuelType}</td></tr>` : ''}
+          ${vehicleInfo.capacity ? `<tr><td style="padding:6px 0;color:#6b7280;">Capacity</td><td style="padding:6px 0;">${vehicleInfo.capacity} passengers</td></tr>` : ''}
+        </table>
+
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-top:20px;">👤 Driver</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Name</td><td style="padding:6px 0;font-weight:600;">${driverInfo.name}</td></tr>
+          ${driverInfo.phoneNumber ? `<tr><td style="padding:6px 0;color:#6b7280;">Phone</td><td style="padding:6px 0;"><a href="tel:${driverInfo.phoneNumber}" style="color:#1B3D2F;font-weight:600;">${driverInfo.phoneNumber}</a></td></tr>` : ''}
+          ${driverInfo.licenseNumber ? `<tr><td style="padding:6px 0;color:#6b7280;">License</td><td style="padding:6px 0;">${driverInfo.licenseNumber}</td></tr>` : ''}
+        </table>
+
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;margin-top:20px;">
+          <p style="margin:0;font-size:14px;color:#166534;">Please coordinate with your driver before the trip start time. Save the driver's phone number for easy contact.</p>
+        </div>
+
+        <hr style="margin:30px 0;border:none;border-top:1px solid #e5e7eb;">
+        <p style="text-align:center;color:#9ca3af;font-size:12px;">Fleet Management System — Haramaya University</p>
+      </div>
+    `;
+    return this.sendEmail({ to, subject: `Trip Ready: ${vehicleInfo.plateNumber} — ${driverInfo.name}`, html });
+  }
+
+  async sendTripReadyEmail(
+    to: string,
+    tripDetails: any,
+    vehicleInfo: any,
+    driverInfo: any,
+  ): Promise<boolean> {
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <h2 style="color:#1B3D2F;">🟢 Your Trip is Confirmed & Ready to Start</h2>
+        <p>Trip <strong>${tripDetails.requestNumber}</strong> has been confirmed by the transport office. Everything is set — here are your full details.</p>
+
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;">Trip Details</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Destination</td><td style="padding:6px 0;font-weight:600;">${tripDetails.destination}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Start</td><td style="padding:6px 0;font-weight:600;">${new Date(tripDetails.startDateTime).toLocaleString()}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">End</td><td style="padding:6px 0;">${new Date(tripDetails.endDateTime).toLocaleString()}</td></tr>
+        </table>
+
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-top:20px;">🚗 Your Vehicle</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Make & Model</td><td style="padding:6px 0;font-weight:600;">${vehicleInfo.make} ${vehicleInfo.model}${vehicleInfo.year ? ` (${vehicleInfo.year})` : ''}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Plate Number</td><td style="padding:6px 0;font-weight:700;font-family:monospace;font-size:16px;">${vehicleInfo.plateNumber}</td></tr>
+          ${vehicleInfo.color ? `<tr><td style="padding:6px 0;color:#6b7280;">Color</td><td style="padding:6px 0;">${vehicleInfo.color}</td></tr>` : ''}
+          ${vehicleInfo.fuelType ? `<tr><td style="padding:6px 0;color:#6b7280;">Fuel Type</td><td style="padding:6px 0;">${vehicleInfo.fuelType}</td></tr>` : ''}
+          ${vehicleInfo.capacity ? `<tr><td style="padding:6px 0;color:#6b7280;">Capacity</td><td style="padding:6px 0;">${vehicleInfo.capacity} passengers</td></tr>` : ''}
+        </table>
+
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-top:20px;">👤 Your Driver</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Name</td><td style="padding:6px 0;font-weight:600;">${driverInfo.name}</td></tr>
+          ${driverInfo.phoneNumber ? `<tr><td style="padding:6px 0;color:#6b7280;">Phone</td><td style="padding:6px 0;"><a href="tel:${driverInfo.phoneNumber}" style="color:#1B3D2F;font-weight:700;font-size:16px;">${driverInfo.phoneNumber}</a></td></tr>` : ''}
+          ${driverInfo.licenseNumber ? `<tr><td style="padding:6px 0;color:#6b7280;">License</td><td style="padding:6px 0;">${driverInfo.licenseNumber}</td></tr>` : ''}
+        </table>
+
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px;margin-top:20px;">
+          <p style="margin:0;font-size:14px;color:#166534;font-weight:600;">📞 Contact your driver at <a href="tel:${driverInfo.phoneNumber}" style="color:#166534;">${driverInfo.phoneNumber || 'N/A'}</a> to coordinate pickup.</p>
+        </div>
+
+        <hr style="margin:30px 0;border:none;border-top:1px solid #e5e7eb;">
+        <p style="text-align:center;color:#9ca3af;font-size:12px;">Fleet Management System — Haramaya University</p>
+      </div>
+    `;
+    return this.sendEmail({ to, subject: `🟢 Trip Ready: ${vehicleInfo.plateNumber} — Driver: ${driverInfo.name}${driverInfo.phoneNumber ? ` (${driverInfo.phoneNumber})` : ''}`, html });
+  }
+
+  async sendDriverTripAssignmentEmail(
+    to: string,
+    tripDetails: any,
+    requesterInfo: { name: string; phoneNumber?: string; email?: string },
+  ): Promise<boolean> {
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <h2 style="color:#1B3D2F;">🚗 New Trip Assignment</h2>
+        <p>You have been assigned a new trip. Please review the details and coordinate with the requester.</p>
+
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;">Trip Details</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Trip #</td><td style="padding:6px 0;font-weight:600;font-family:monospace;">${tripDetails.requestNumber}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Destination</td><td style="padding:6px 0;font-weight:600;">${tripDetails.destination}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Purpose</td><td style="padding:6px 0;">${tripDetails.purpose || '—'}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Start</td><td style="padding:6px 0;font-weight:600;">${new Date(tripDetails.startDateTime).toLocaleString()}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">End</td><td style="padding:6px 0;">${new Date(tripDetails.endDateTime).toLocaleString()}</td></tr>
+          <tr><td style="padding:6px 0;color:#6b7280;">Passengers</td><td style="padding:6px 0;">${tripDetails.passengerCount || '—'}</td></tr>
+        </table>
+
+        <h3 style="color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:6px;margin-top:20px;">👤 Requester (Passenger)</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:6px 0;color:#6b7280;">Name</td><td style="padding:6px 0;font-weight:600;">${requesterInfo.name}</td></tr>
+          ${requesterInfo.phoneNumber ? `<tr><td style="padding:6px 0;color:#6b7280;">Phone</td><td style="padding:6px 0;"><a href="tel:${requesterInfo.phoneNumber}" style="color:#1B3D2F;font-weight:700;font-size:16px;">${requesterInfo.phoneNumber}</a></td></tr>` : ''}
+          ${requesterInfo.email ? `<tr><td style="padding:6px 0;color:#6b7280;">Email</td><td style="padding:6px 0;">${requesterInfo.email}</td></tr>` : ''}
+        </table>
+
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;margin-top:20px;">
+          <p style="margin:0;font-size:14px;color:#1e40af;">Please confirm this assignment in the driver app and contact the requester to coordinate pickup time and location.</p>
+        </div>
+
+        <hr style="margin:30px 0;border:none;border-top:1px solid #e5e7eb;">
+        <p style="text-align:center;color:#9ca3af;font-size:12px;">Fleet Management System — Haramaya University</p>
+      </div>
+    `;
+    return this.sendEmail({ to, subject: `New Trip Assignment: ${tripDetails.destination} — ${requesterInfo.name}`, html });
   }
 
   async sendPendingApprovalEmail(
