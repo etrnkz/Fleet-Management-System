@@ -2,6 +2,30 @@
 
 import { useState } from 'react'
 import { tripApi } from '../lib/api'
+import Combobox from './Combobox'
+
+const DESTINATIONS = [
+  'Haramaya University Main Campus',
+  'Haramaya University Hospital',
+  'Dire Dawa City',
+  'Addis Ababa',
+  'Harar City',
+  'Jigjiga',
+  'Djibouti',
+  'Adama (Nazret)',
+  'Hawassa',
+  'Bahir Dar',
+  'Mekelle',
+  'Gondar',
+  'Jimma',
+  'Dessie',
+  'Debre Birhan',
+  'Shashamane',
+  'Arba Minch',
+  'Nekemte',
+  'Assosa',
+  'Gambela',
+]
 
 interface TripRequestFormProps {
   onSuccess: () => void
@@ -110,17 +134,14 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
           {/* Destination and Trip Type */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-                Destination
-              </label>
-              <input
-                type="text"
+              <Combobox
                 id="destination"
                 name="destination"
+                label="Destination"
                 value={formData.destination}
-                onChange={handleChange}
-                placeholder="Enter destination"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
+                onChange={val => setFormData(prev => ({ ...prev, destination: val }))}
+                options={DESTINATIONS}
+                placeholder="Enter or select destination"
                 required
               />
             </div>
