@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,10 +18,14 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await authApi.login(email, password)
+      const response = await authApi.login(email, password, rememberMe)
 
       if (response.access_token) {
-        localStorage.setItem('access_token', response.access_token)
+        const storage = rememberMe ? localStorage : sessionStorage
+        storage.setItem('access_token', response.access_token)
+        if (!rememberMe) {
+          storage.setItem('sessionExpiry', String(Date.now() + 7 * 60 * 60 * 1000))
+        }
 
         const userData = await authApi.getCurrentUser()
         if (userData.role !== 'SystemAdmin' && userData.role !== 'Developer') {
@@ -136,6 +141,17 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="remember"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-[#c1c8c4] text-[#1B3D2F] focus:ring-[#1B3D2F]"
+              />
+              <label htmlFor="remember" className="ml-2 text-sm text-[#424845]">Keep me signed in</label>
             </div>
 
             <button

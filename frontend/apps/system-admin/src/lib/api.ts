@@ -83,11 +83,11 @@ async function apiFetch(url: string, options: RequestInit = {}, retry = true): P
 
 // Auth API
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, keepMeSignedIn = false) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, appType: 'system-admin' }),
+      body: JSON.stringify({ email, password, appType: 'system-admin', keepMeSignedIn }),
     });
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Login failed' }));

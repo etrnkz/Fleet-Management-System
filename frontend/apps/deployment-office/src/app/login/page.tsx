@@ -28,7 +28,7 @@ export default function LoginPage() {
     setError('')
     setIsLoading(true)
     try {
-      const response = await authApi.login(email, password)
+      const response = await authApi.login(email, password, rememberMe)
       const storage = rememberMe ? localStorage : sessionStorage
       if (!rememberMe) {
         localStorage.removeItem('access_token')
@@ -38,8 +38,12 @@ export default function LoginPage() {
       storage.setItem('access_token', response.access_token)
       storage.setItem('accessToken', response.access_token)
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
-      if (rememberMe) localStorage.setItem('do_rememberedEmail', email)
-      else localStorage.removeItem('do_rememberedEmail')
+      if (rememberMe) {
+        localStorage.setItem('do_rememberedEmail', email)
+      } else {
+        localStorage.removeItem('do_rememberedEmail')
+        storage.setItem('sessionExpiry', String(Date.now() + 7 * 60 * 60 * 1000))
+      }
 
       // Role check — only DeploymentTeam allowed
       const role = response.user?.role

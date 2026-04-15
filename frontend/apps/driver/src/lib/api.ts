@@ -78,11 +78,11 @@ function getCurrentUserId(): string | null {
 
 // Auth API
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, keepMeSignedIn = false) => {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, appType: 'driver' }),
+      body: JSON.stringify({ email, password, appType: 'driver', keepMeSignedIn }),
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: 'Login failed' }))

@@ -107,10 +107,13 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessToken = this.jwtService.sign(payload);
+    const accessTokenExpiry = loginDto.keepMeSignedIn ? '45d' : '7h';
+    const refreshTokenExpiry = loginDto.keepMeSignedIn ? '45d' : '7h';
+
+    const accessToken = this.jwtService.sign(payload, { expiresIn: accessTokenExpiry as any });
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.refreshSecret,
-      expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as any,
+      expiresIn: refreshTokenExpiry as any,
     });
 
     this.logger.log(`Login successful for: ${loginDto.email}`);

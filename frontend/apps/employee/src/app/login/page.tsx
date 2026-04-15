@@ -50,7 +50,7 @@ export default function LoginPage() {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, keepMeSignedIn: rememberMe }),
       })
 
       const data = await response.json()
@@ -96,6 +96,9 @@ export default function LoginPage() {
         localStorage.setItem('rememberedEmail', email)
       } else {
         localStorage.removeItem('rememberedEmail')
+        // Store 7h expiry for non-persistent sessions
+        const expiry = Date.now() + 7 * 60 * 60 * 1000
+        storage.setItem('sessionExpiry', String(expiry))
       }
 
       router.push('/dashboard')
