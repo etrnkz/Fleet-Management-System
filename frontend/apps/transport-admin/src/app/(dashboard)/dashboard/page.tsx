@@ -1197,13 +1197,17 @@ export default function DashboardPage() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                       >
                         <option value="">Choose a vehicle</option>
-                        {allVehicles.map((vehicle: any) => (
+                        {allVehicles.filter((vehicle: any) => !vehicle.assignedDriver).map((vehicle: any) => (
                           <option key={vehicle.id} value={vehicle.id}>
                             {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.vehicleType}) - {vehicle.status}
                           </option>
                         ))}
                       </select>
-                      <p className="mt-1 text-xs text-gray-500">Select the vehicle to view assignment options</p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {allVehicles.filter((v: any) => !v.assignedDriver).length === 0 
+                          ? 'All vehicles are already assigned to drivers' 
+                          : 'Only vehicles without assigned drivers are shown'}
+                      </p>
                     </div>
 
                     <div>
@@ -1216,14 +1220,16 @@ export default function DashboardPage() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                       >
                         <option value="">Choose a driver</option>
-                        {allDrivers.map((driver: any) => (
+                        {allDrivers.filter((driver: any) => !driver.assignedVehicle).map((driver: any) => (
                           <option key={driver.id} value={driver.id}>
-                            {driver.user?.name} - License: {driver.licenseNumber} - {driver.isAvailable ? 'Available' : 'Unavailable'}
+                            {driver.user?.name} - License: {driver.licenseNumber} - {driver.status}
                           </option>
                         ))}
                       </select>
                       <p className="mt-1 text-xs text-gray-500">
-                        {allDrivers.length === 0 ? 'No drivers available. Please add a new driver.' : 'Select from existing drivers'}
+                        {allDrivers.filter((d: any) => !d.assignedVehicle).length === 0 
+                          ? 'All drivers are already assigned to vehicles. Please add a new driver.' 
+                          : 'Only drivers without assigned vehicles are shown'}
                       </p>
                     </div>
 
