@@ -20,6 +20,13 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
     passengerCount: 1
   })
 
+  // Calculate minimum date (48 hours from now)
+  const getMinDateTime = () => {
+    const now = new Date()
+    now.setHours(now.getHours() + 48)
+    return now.toISOString().slice(0, 16) // Format: YYYY-MM-DDTHH:mm
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -189,6 +196,7 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
                 name="startDateTime"
                 value={formData.startDateTime}
                 onChange={handleChange}
+                min={getMinDateTime()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
                 required
               />
@@ -209,6 +217,7 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
                 name="endDateTime"
                 value={formData.endDateTime}
                 onChange={handleChange}
+                min={formData.startDateTime || getMinDateTime()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
                 required
               />

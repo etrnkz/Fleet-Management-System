@@ -276,16 +276,14 @@ export default function DashboardLayout({
     if (pathname !== path) {
       e.preventDefault()
       setIsLoading(true)
-      
-      setTimeout(() => {
-        router.push(path)
-      }, 300)
-      
-      setTimeout(() => {
-        setIsLoading(false)
-      }, 2000)
+      router.push(path)
     }
   }
+
+  // Clear spinner once navigation completes
+  useEffect(() => {
+    setIsLoading(false)
+  }, [pathname])
 
   return (
     <div className="flex h-screen bg-gray-50 transition-colors duration-300">
