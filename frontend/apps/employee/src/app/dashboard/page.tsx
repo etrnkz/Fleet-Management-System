@@ -1997,10 +1997,22 @@ export default function DashboardPage() {
                         </p>
                       </td>
                       <td className="px-8 py-6 text-sm font-medium text-[#44474E]">
-                        {allocatedVehicle(trip) ? 
-                          `${allocatedVehicle(trip).make} ${allocatedVehicle(trip).model}` : 
+                        {allocatedVehicle(trip) ? (
+                          <div>
+                            <p className="font-medium text-gray-900">{allocatedVehicle(trip).make} {allocatedVehicle(trip).model}</p>
+                            <p className="text-xs font-mono text-[#1B3D2F]">{allocatedVehicle(trip).plateNumber}</p>
+                            {['READY', 'IN_PROGRESS'].includes(trip.state) && allocatedDriver(trip) && (
+                              <div className="mt-1 flex items-center gap-1 text-xs text-green-700">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                <span className="font-semibold">{allocatedDriver(trip).user?.phoneNumber || allocatedDriver(trip).phoneNumber || driverDisplayName(allocatedDriver(trip))}</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
                           'Pending Assignment'
-                        }
+                        )}
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2">
@@ -2222,42 +2234,87 @@ export default function DashboardPage() {
               {/* Sidebar Details */}
               <div className="space-y-6">
                 {(allocatedVehicle(selectedTrip) || allocatedDriver(selectedTrip)) && (
-                  <div className="bg-[#D1E1FF]/20 p-4 rounded-lg">
-                    <p className="text-xs font-semibold text-[#1B3D2F] uppercase tracking-wide mb-3">Assignment</p>
+                  <div className={`p-4 rounded-lg border ${
+                    ['READY', 'IN_PROGRESS'].includes(selectedTrip.state)
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-[#D1E1FF]/20 border-[#D1E1FF]'
+                  }`}>
+                    {['READY', 'IN_PROGRESS'].includes(selectedTrip.state) && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <p className="text-sm font-bold text-green-700 uppercase tracking-wide">
+                          {selectedTrip.state === 'IN_PROGRESS' ? 'Trip In Progress' : 'Trip Ready — Your Assignment'}
+                        </p>
+                      </div>
+                    )}
+                    {!['READY', 'IN_PROGRESS'].includes(selectedTrip.state) && (
+                      <p className="text-xs font-semibold text-[#1B3D2F] uppercase tracking-wide mb-3">Assignment</p>
+                    )}
+
                     {allocatedVehicle(selectedTrip) && (
-                      <div className="mb-3">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      <div className="mb-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Vehicle</p>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                             {allocatedVehicle(selectedTrip).make?.charAt(0)}{allocatedVehicle(selectedTrip).model?.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-#152e22">
+                            <p className="text-sm font-semibold text-gray-900">
                               {allocatedVehicle(selectedTrip).make} {allocatedVehicle(selectedTrip).model}
+                              {allocatedVehicle(selectedTrip).year ? ` (${allocatedVehicle(selectedTrip).year})` : ''}
                             </p>
-                            <p className="text-xs text-[#1B3D2F]">{allocatedVehicle(selectedTrip).plateNumber}</p>
+                            <p className="text-xs font-mono font-bold text-[#1B3D2F]">{allocatedVehicle(selectedTrip).plateNumber}</p>
                           </div>
                         </div>
-                        {allocatedVehicle(selectedTrip).capacity != null && (
-                          <p className="text-xs text-gray-600">Capacity: {allocatedVehicle(selectedTrip).capacity} passengers</p>
-                        )}
+                        <div className="grid grid-cols-2 gap-1 text-xs text-gray-600 mt-1">
+                          {allocatedVehicle(selectedTrip).color && (
+                            <span>Color: <span className="font-medium text-gray-800">{allocatedVehicle(selectedTrip).color}</span></span>
+                          )}
+                          {allocatedVehicle(selectedTrip).fuelType && (
+                            <span>Fuel: <span className="font-medium text-gray-800">{allocatedVehicle(selectedTrip).fuelType}</span></span>
+                          )}
+                          {allocatedVehicle(selectedTrip).capacity != null && (
+                            <span>Capacity: <span className="font-medium text-gray-800">{allocatedVehicle(selectedTrip).capacity} seats</span></span>
+                          )}
+                          {allocatedVehicle(selectedTrip).vehicleType && (
+                            <span>Type: <span className="font-medium text-gray-800">{allocatedVehicle(selectedTrip).vehicleType}</span></span>
+                          )}
+                        </div>
                       </div>
                     )}
+
                     {allocatedDriver(selectedTrip) && (
                       <div>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Driver</p>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                             {driverDisplayName(allocatedDriver(selectedTrip)).split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-#152e22">
+                            <p className="text-sm font-semibold text-gray-900">
                               {driverDisplayName(allocatedDriver(selectedTrip))}
                             </p>
-                            <p className="text-xs text-[#1B3D2F]">Assigned Driver</p>
+                            <p className="text-xs text-gray-500">Assigned Driver</p>
                           </div>
                         </div>
-                        {allocatedDriver(selectedTrip).licenseNumber && (
-                          <p className="text-xs text-gray-600">License: {allocatedDriver(selectedTrip).licenseNumber}</p>
-                        )}
+                        <div className="space-y-1 text-xs text-gray-600">
+                          {(allocatedDriver(selectedTrip).user?.phoneNumber || allocatedDriver(selectedTrip).phoneNumber) && (
+                            <div className="flex items-center gap-2">
+                              <svg className="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                              <a
+                                href={`tel:${allocatedDriver(selectedTrip).user?.phoneNumber || allocatedDriver(selectedTrip).phoneNumber}`}
+                                className="font-semibold text-green-700 hover:underline"
+                              >
+                                {allocatedDriver(selectedTrip).user?.phoneNumber || allocatedDriver(selectedTrip).phoneNumber}
+                              </a>
+                            </div>
+                          )}
+                          {allocatedDriver(selectedTrip).licenseNumber && (
+                            <span>License: <span className="font-medium text-gray-800">{allocatedDriver(selectedTrip).licenseNumber}</span></span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

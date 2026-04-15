@@ -427,18 +427,44 @@ export class NotificationsService {
   async notifyTripAllocated(trip: any): Promise<void> {
     const stakeholders = await this.getTripStakeholders(trip);
 
-    // Notify requester
+    const vehiclePlate = trip.allocatedVehicle?.plateNumber ?? '—';
+    const vehicleMake = trip.allocatedVehicle?.make ?? '';
+    const vehicleModel = trip.allocatedVehicle?.model ?? '';
+    const vehicleYear = trip.allocatedVehicle?.year ?? '';
+    const vehicleColor = trip.allocatedVehicle?.color ?? '';
+    const vehicleFuelType = trip.allocatedVehicle?.fuelType ?? '';
+    const vehicleCapacity = trip.allocatedVehicle?.capacity ?? '';
+    const driverName = trip.allocatedDriver?.user?.name ?? '—';
+    const driverPhone = trip.allocatedDriver?.user?.phoneNumber ?? null;
+    const driverLicense = trip.allocatedDriver?.licenseNumber ?? null;
+
+    const allocationData = {
+      tripId: trip.id,
+      requestNumber: trip.requestNumber,
+      destination: trip.destination,
+      startDateTime: trip.startDateTime,
+      endDateTime: trip.endDateTime,
+      // Vehicle details
+      vehiclePlate,
+      vehicleMake,
+      vehicleModel,
+      vehicleYear,
+      vehicleColor,
+      vehicleFuelType,
+      vehicleCapacity,
+      // Driver details
+      driverName,
+      driverPhone,
+      driverLicense,
+    };
+
+    // Notify requester with full vehicle + driver details
     await this.create(
       stakeholders.requester,
       NotificationType.TripAllocated,
       'Vehicle and Driver Allocated',
-      `Vehicle ${trip.allocatedVehicle.plateNumber} and driver ${trip.allocatedDriver.user.name} have been allocated to your trip ${trip.requestNumber}`,
-      {
-        tripId: trip.id,
-        requestNumber: trip.requestNumber,
-        vehiclePlate: trip.allocatedVehicle.plateNumber,
-        driverName: trip.allocatedDriver.user.name,
-      },
+      `Your trip ${trip.requestNumber} has been allocated: ${vehicleMake} ${vehicleModel} (${vehiclePlate}) — Driver: ${driverName}${driverPhone ? ` · ${driverPhone}` : ''}`,
+      allocationData,
     );
 
     // Notify driver
@@ -453,22 +479,20 @@ export class NotificationsService {
           requestNumber: trip.requestNumber,
           destination: trip.destination,
           requesterName: stakeholders.requester.name,
+          startDateTime: trip.startDateTime,
+          endDateTime: trip.endDateTime,
         },
       );
     }
 
-    // Notify transport office for next steps - use ApprovalPending so they know action is required
+    // Notify transport office for next steps
     if (stakeholders.transportOffice.length > 0) {
       await this.createBulkNotifications(
         stakeholders.transportOffice,
         NotificationType.ApprovalPending,
         'Transport Confirmation Required',
-        `Trip ${trip.requestNumber} has been allocated vehicle ${trip.allocatedVehicle.plateNumber} and requires your transport confirmation`,
-        {
-          tripId: trip.id,
-          requestNumber: trip.requestNumber,
-          vehiclePlate: trip.allocatedVehicle.plateNumber,
-        },
+        `Trip ${trip.requestNumber} has been allocated vehicle ${vehiclePlate} and requires your transport confirmation`,
+        { tripId: trip.id, requestNumber: trip.requestNumber, vehiclePlate },
       );
     }
 
@@ -483,24 +507,19 @@ export class NotificationsService {
         otherAdmins,
         NotificationType.TripAllocated,
         'Trip Resources Allocated',
-        `Trip ${trip.requestNumber} from ${stakeholders.requester.name} has been allocated vehicle ${trip.allocatedVehicle.plateNumber}`,
-        {
-          tripId: trip.id,
-          requestNumber: trip.requestNumber,
-          requesterName: stakeholders.requester.name,
-          vehiclePlate: trip.allocatedVehicle.plateNumber,
-        },
+        `Trip ${trip.requestNumber} from ${stakeholders.requester.name} has been allocated vehicle ${vehiclePlate}`,
+        { tripId: trip.id, requestNumber: trip.requestNumber, requesterName: stakeholders.requester.name, vehiclePlate },
       );
     }
 
     console.log(`Trip allocation notifications sent for trip ${trip.id}`);
 
-    // SMS to requester when vehicle is allocated
+    // SMS to requester
     if (stakeholders.requester.phoneNumber && trip.allocatedVehicle && trip.allocatedDriver) {
       this.smsService.sendTripAllocatedSms(
         stakeholders.requester.phoneNumber,
-        trip.allocatedVehicle.plateNumber,
-        trip.allocatedDriver.user?.name || 'Driver',
+        vehiclePlate,
+        driverName,
         trip.destination,
       ).catch(() => {});
     }
@@ -516,13 +535,42 @@ export class NotificationsService {
   async notifyTripReady(trip: any): Promise<void> {
     const stakeholders = await this.getTripStakeholders(trip);
 
-    // Notify requester
+    const vehiclePlate = trip.allocatedVehicle?.plateNumber ?? '—';
+    const vehicleMake = trip.allocatedVehicle?.make ?? '';
+    const vehicleModel = trip.allocatedVehicle?.model ?? '';
+    const vehicleYear = trip.allocatedVehicle?.year ?? '';
+    const vehicleColor = trip.allocatedVehicle?.color ?? '';
+    const vehicleFuelType = trip.allocatedVehicle?.fuelType ?? '';
+    const vehicleCapacity = trip.allocatedVehicle?.capacity ?? '';
+    const driverName = trip.allocatedDriver?.user?.name ?? '—';
+    const driverPhone = trip.allocatedDriver?.user?.phoneNumber ?? null;
+    const driverLicense = trip.allocatedDriver?.licenseNumber ?? null;
+
+    const readyData = {
+      tripId: trip.id,
+      requestNumber: trip.requestNumber,
+      destination: trip.destination,
+      startDateTime: trip.startDateTime,
+      endDateTime: trip.endDateTime,
+      vehiclePlate,
+      vehicleMake,
+      vehicleModel,
+      vehicleYear,
+      vehicleColor,
+      vehicleFuelType,
+      vehicleCapacity,
+      driverName,
+      driverPhone,
+      driverLicense,
+    };
+
+    // Notify requester with full details
     await this.create(
       stakeholders.requester,
       NotificationType.TripReady,
-      'Trip Ready to Start',
-      `Your trip ${trip.requestNumber} is confirmed and ready to start. Please coordinate with your driver.`,
-      { tripId: trip.id, requestNumber: trip.requestNumber },
+      'Trip Ready — Your Vehicle & Driver Details',
+      `Your trip ${trip.requestNumber} is confirmed and ready. Vehicle: ${vehicleMake} ${vehicleModel} (${vehiclePlate})${vehicleColor ? `, ${vehicleColor}` : ''}. Driver: ${driverName}${driverPhone ? ` · ${driverPhone}` : ''}. Please coordinate with your driver.`,
+      readyData,
     );
 
     // Notify driver
@@ -537,6 +585,7 @@ export class NotificationsService {
           requestNumber: trip.requestNumber,
           destination: trip.destination,
           requesterName: stakeholders.requester.name,
+          startDateTime: trip.startDateTime,
         },
       );
     }
@@ -548,11 +597,7 @@ export class NotificationsService {
         NotificationType.TripReady,
         'Trip Ready to Start',
         `Trip ${trip.requestNumber} from ${stakeholders.requester.name} is confirmed and ready to start`,
-        {
-          tripId: trip.id,
-          requestNumber: trip.requestNumber,
-          requesterName: stakeholders.requester.name,
-        },
+        { tripId: trip.id, requestNumber: trip.requestNumber, requesterName: stakeholders.requester.name },
       );
     }
 
