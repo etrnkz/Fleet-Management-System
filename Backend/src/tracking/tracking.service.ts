@@ -364,6 +364,29 @@ export class TrackingService {
     return liveLocations.filter(Boolean);
   }
 
+  /**
+   * Enriches a saved location payload with vehicle/driver info
+   * so the live-tracking broadcast has full context for the map.
+   */
+  async enrichLocationForBroadcast(tripId: string, location: LocationSavePayload): Promise<any> {
+    try {
+      const trip = await this.tripRepository.findOne({
+        where: { id: tripId },
+        relations: ['allocatedVehicle', 'allocatedDriver', 'allocatedDriver.user'],
+      });
+      return {
+        ...location,
+        vehicleId: trip?.allocatedVehicle?.id ?? null,
+        plateNumber: trip?.allocatedVehicle?.plateNumber ?? null,
+        make: trip?.allocatedVehicle?.make ?? null,
+        model: trip?.allocatedVehicle?.model ?? null,
+        driverName: trip?.allocatedDriver?.user?.name ?? null,
+      };
+    } catch {
+      return location;
+    }
+  }
+
   async deleteOldLocations(daysOld: number = 90): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);

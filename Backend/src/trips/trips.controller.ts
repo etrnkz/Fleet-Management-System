@@ -337,6 +337,22 @@ export class TripsController {
     return this.tripsService.completeEarly(id, earlyCompleteTripDto, req.user);
   }
 
+  @Post(':id/requester-complete')
+  @ApiOperation({
+    summary: 'Requester marks their own trip as completed early',
+    description: 'Allows the trip requester (employee) to complete their IN_PROGRESS trip before the scheduled end time. Only works before the scheduled end datetime.',
+  })
+  @ApiResponse({ status: 200, description: 'Trip marked as completed' })
+  @ApiResponse({ status: 400, description: 'Trip not in progress or scheduled end time passed' })
+  @ApiResponse({ status: 403, description: 'Only the trip requester can call this' })
+  requesterCompleteTrip(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @Request() req,
+  ) {
+    return this.tripsService.requesterCompleteTrip(id, body?.reason, req.user);
+  }
+
   @Post(':id/feedback')
   @ApiOperation({ summary: 'Submit trip feedback' })
   @ApiResponse({ status: 201, description: 'Feedback submitted successfully' })

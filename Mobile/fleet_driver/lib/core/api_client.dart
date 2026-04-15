@@ -56,17 +56,25 @@ class ApiClient {
       String msg = 'Request failed';
       try {
         final j = jsonDecode(res.body);
-        msg = j['message'] is List
-            ? (j['message'] as List).join(', ')
-            : j['message']?.toString() ?? msg;
+        // Unwrap nested data if wrapped
+        final body = (j is Map && j.containsKey('data')) ? j['data'] : j;
+        msg = body is Map
+            ? (body['message'] is List
+                ? (body['message'] as List).join(', ')
+                : body['message']?.toString() ?? msg)
+            : msg;
       } catch (_) {}
-      // Only throw session-expired for 401s on authenticated calls (not login)
       if (res.statusCode == 401 && msg.toLowerCase().contains('expired')) {
         throw ApiException(401, 'Session expired');
       }
       throw ApiException(res.statusCode, msg);
     }
     if (res.body.isEmpty) return null;
-    return jsonDecode(res.body);
+    final decoded = jsonDecode(res.body);
+    // Unwrap { success, data, timestamp } envelope from TransformInterceptor
+    if (decoded is Map && decoded.containsKey('data')) {
+      return decoded['data'];
+    }
+    return decoded;
   }
 }

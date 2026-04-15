@@ -47,39 +47,18 @@ export class TrackingController {
   @Post(':tripId/location')
   @ApiOperation({
     summary: 'Update GPS location (REST fallback)',
-    description:
-      'Update GPS location via REST API. Prefer WebSocket for real-time updates. Response includes engineSimulatedOff when the allocated vehicle is VIP-restricted and inside a forbidden zone.',
+    description: 'Update GPS location via REST. Broadcasts to both the trip room and the global live-tracking room via WebSocket.',
   })
-  @ApiResponse({
-    status: 201,
-    description: 'Location saved successfully',
-    schema: {
-      example: {
-        id: 'uuid',
-        tripId: 'uuid',
-        latitude: 9.032,
-        longitude: 38.7469,
-        speed: 45.5,
-        heading: 180,
-        timestamp: '2026-03-01T10:30:00Z',
-        engineSimulatedOff: false,
-        violationZoneName: null,
-      },
-    },
-  })
-  @ApiResponse({ status: 400, description: 'Trip not in progress' })
-  @ApiResponse({ status: 404, description: 'Trip not found' })
+  @ApiResponse({ status: 201, description: 'Location saved and broadcast' })
   async updateLocation(
     @Param('tripId', ParseUUIDPipe) tripId: string,
     @Body() updateLocationDto: UpdateLocationDto,
   ) {
-    const location = await this.trackingService.saveLocation(
-      tripId,
-      updateLocationDto,
-    );
+    const location = await this.trackingService.saveLocation(tripId, updateLocationDto);
 
-    // Broadcast via WebSocket
-    this.trackingGateway.broadcastLocationUpdate(tripId, location);
+    // Enrich with vehicle/driver info for the live map broadcast
+    const enriched = await this.trackingService.enrichLocationForBroadcast(tripId, location);
+    this.trackingGateway.broadcastLocationUpdate(tripId, enriched);
 
     return location;
   }

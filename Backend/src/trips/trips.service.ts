@@ -1248,7 +1248,68 @@ export class TripsService {
     return savedTrip;
   }
 
-  async submitFeedback(
+  /**
+   * Allows the trip requester (employee) to mark their own IN_PROGRESS trip as completed
+   * when it finishes before the scheduled end time. No distance/fuel required — transport
+   * office can update those later. Only the requester of the trip can call this.
+   */
+  async requesterCompleteTrip(
+    id: string,
+    reason: string | undefined,
+    user: User,
+  ): Promise<TripRequest> {
+    const trip = await this.findOne(id);
+
+    if (trip.state !== TripState.IN_PROGRESS) {
+      throw new BadRequestException('Trip must be IN_PROGRESS to complete');
+    }
+
+    if (trip.requester.id !== user.id) {
+      throw new ForbiddenException('Only the trip requester can complete their own trip');
+    }
+
+    const now = new Date();
+    const scheduledEnd = new Date(trip.endDateTime);
+
+    if (now >= scheduledEnd) {
+      throw new BadRequestException(
+        'Trip scheduled end time has already passed — contact Transport Office to complete it',
+      );
+    }
+
+    trip.state = TripState.COMPLETED;
+    trip.completedAt = now;
+
+    // Update driver statistics (distance unknown at this point — set to 0 as placeholder)
+    if (trip.allocatedDriver) {
+      await this.driversService.incrementTripStats(trip.allocatedDriver.id, 0).catch(() => {});
+      await this.driversService.updateStatus(trip.allocatedDriver.id, DriverStatus.Available).catch(() => {});
+    }
+
+    const savedTrip = await this.tripRepository.save(trip);
+
+    try {
+      await this.notificationsService.notifyTripCompletedEarly(savedTrip, reason);
+    } catch (error) {
+      console.error('Failed to send notification:', error);
+    }
+
+    try {
+      await this.auditService.log(
+        user,
+        AuditAction.COMPLETE,
+        AuditEntity.Trip,
+        savedTrip.id,
+        null,
+        { state: TripState.COMPLETED, completedBy: 'requester', reason },
+        undefined,
+        undefined,
+        `Trip completed early by requester: ${savedTrip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
+
+    return savedTrip;
+  }
     id: string,
     createFeedbackDto: CreateFeedbackDto,
     user: User,
