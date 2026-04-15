@@ -60,6 +60,14 @@ export class MaintenanceService {
     });
   }
 
+  async findBySubmitter(userId: string): Promise<MaintenanceRequest[]> {
+    return this.maintenanceRepository.find({
+      where: { submittedBy: { id: userId } },
+      relations: ['vehicle', 'submittedBy', 'inspectedBy', 'approvedBy'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async findByStatus(status: MaintenanceStatus): Promise<MaintenanceRequest[]> {
     return this.maintenanceRepository.find({
       where: { status },

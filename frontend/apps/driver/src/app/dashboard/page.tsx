@@ -91,7 +91,7 @@ export default function DriverDashboard() {
   const loadAssignedTrips = async () => { try { setAssignedTrips(await tripApi.getAssignedTrips()) } catch {} }
   const loadActiveTrips = async () => { try { setActiveTrips(await tripApi.getActiveTrips()) } catch {} }
   const loadCompletedTrips = async () => { try { setCompletedTrips(await tripApi.getCompletedTrips()) } catch {} }
-  const loadMaintenanceRequests = async () => { try { setMaintenanceRequests(await maintenanceApi.getAll()) } catch {} }
+  const loadMaintenanceRequests = async () => { try { setMaintenanceRequests(await maintenanceApi.getMyRequests()) } catch {} }
   const loadNotifications = async () => { try { setNotifications(await notificationApi.getAll()) } catch {} }
 
   const handleMarkAsRead = async (id: string) => {
