@@ -75,6 +75,17 @@ interface Vehicle {
   tripDestination?: string | null
   tripPurpose?: string | null
   requesterName?: string | null
+  routePath?: [number, number][]
+  destLat?: number | null
+  destLng?: number | null
+  traveledKm?: number | null
+  estimatedDistance?: number | null
+  fuelRemainingPercent?: number | null
+  fuelRemainingLiters?: number | null
+  fuelRemainingKm?: number | null
+  actualFuelCost?: number | null
+  expectedTotalFuelCost?: number | null
+  fuelType?: string
 }
 
 export default function LiveTrackingPage() {
