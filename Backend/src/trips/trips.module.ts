@@ -13,6 +13,7 @@ import { DriversModule } from '../drivers/drivers.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { WorkflowModule } from '../workflow/workflow.module';
 import { AuditModule } from '../audit/audit.module';
+import { FuelModule } from '../fuel/fuel.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuditModule } from '../audit/audit.module';
     NotificationsModule,
     WorkflowModule,
     AuditModule,
+    FuelModule,
   ],
   controllers: [TripsController, GateScanController],
   providers: [TripsService],

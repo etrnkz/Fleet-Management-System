@@ -35,6 +35,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction, AuditEntity } from '../audit/entities/audit-log.entity';
+import { FuelService } from '../fuel/fuel.service';
 import { parseTripQrPayload } from './utils/trip-qr.util';
 
 @Injectable()
@@ -53,6 +54,7 @@ export class TripsService {
     private readonly notificationsService: NotificationsService,
     private readonly workflowService: WorkflowService,
     private readonly auditService: AuditService,
+    private readonly fuelService: FuelService,
   ) {}
 
   async create(createTripDto: CreateTripDto, user: User): Promise<TripRequest> {
@@ -1024,6 +1026,33 @@ export class TripsService {
         trip.allocatedVehicle.id,
         completeTripDto.finalMileage,
       );
+    }
+
+    // Create fuel consumption record
+    if (trip.allocatedVehicle && completeTripDto.actualFuelCost && completeTripDto.actualDistance) {
+      try {
+        // Calculate fuel quantity from cost
+        const PETROL_PRICE = 132.18; // Birr per liter
+        const DIESEL_PRICE = 139.84; // Birr per liter
+        const fuelPricePerLiter = trip.allocatedVehicle.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE;
+        const fuelQuantity = completeTripDto.actualFuelCost / fuelPricePerLiter;
+
+        await this.fuelService.create(
+          {
+            vehicleId: trip.allocatedVehicle.id,
+            tripId: trip.id,
+            type: 'TripConsumption' as any,
+            quantity: fuelQuantity,
+            pricePerLiter: fuelPricePerLiter,
+            mileageAtRefuel: completeTripDto.finalMileage,
+            notes: `Trip ${trip.requestNumber} - ${trip.destination}`,
+          },
+          user.id,
+        );
+      } catch (error) {
+        console.error('Failed to create fuel record:', error);
+        // Non-blocking - trip completion should still succeed
+      }
     }
 
     // Update driver statistics
