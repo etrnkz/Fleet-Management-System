@@ -61,9 +61,12 @@ export class DriversService {
     }
 
     const driver = this.driverRepository.create({
-      ...createDriverDto,
       user: { id: createDriverDto.userId } as any,
+      licenseNumber: createDriverDto.licenseNumber,
       licenseExpiry: new Date(createDriverDto.licenseExpiry),
+      experienceYears: createDriverDto.experienceYears,
+      specializations: createDriverDto.specializations,
+      notes: createDriverDto.notes,
     });
 
     return this.driverRepository.save(driver);
