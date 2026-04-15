@@ -140,6 +140,7 @@ export const tripApi = {
     startDateTime: string;
     endDateTime: string;
     passengerCount: number;
+    phoneNumber?: string;
     estimatedDistance?: number;
   }) => apiFetch('/trips', {
     method: 'POST',
