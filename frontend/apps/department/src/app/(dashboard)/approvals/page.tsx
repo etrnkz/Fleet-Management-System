@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
 import { tripApi, getCurrentUser } from '@/lib/api'
+import { formatDate, formatDateTime } from '@/lib/dateUtils'
 
 export default function ApprovalsPage() {
   const router = useRouter()
@@ -237,8 +238,8 @@ export default function ApprovalsPage() {
                 </svg>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs md:text-sm font-medium text-gray-900">Travel Dates</p>
-                  <p className="text-xs md:text-sm text-gray-600">{new Date(request.startDateTime).toLocaleDateString()}</p>
-                  <p className="text-[10px] md:text-xs text-gray-500">Return: {new Date(request.endDateTime).toLocaleDateString()}</p>
+                  <p className="text-xs md:text-sm text-gray-600">{formatDate(request.startDateTime)}</p>
+                  <p className="text-[10px] md:text-xs text-gray-500">Return: {formatDate(request.endDateTime)}</p>
                 </div>
               </div>
 
@@ -360,11 +361,11 @@ export default function ApprovalsPage() {
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">Start Date & Time</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.startDateTime ? new Date(selectedRequest.startDateTime).toLocaleString() : 'N/A'}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{formatDateTime(selectedRequest.startDateTime)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] md:text-xs text-gray-500">End Date & Time</p>
-                      <p className="text-xs md:text-sm font-medium text-gray-900">{selectedRequest.endDateTime ? new Date(selectedRequest.endDateTime).toLocaleString() : 'N/A'}</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-900">{formatDateTime(selectedRequest.endDateTime)}</p>
                     </div>
                   </div>
                 </div>

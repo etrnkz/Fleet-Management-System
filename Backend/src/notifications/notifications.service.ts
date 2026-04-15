@@ -223,7 +223,13 @@ export class NotificationsService {
       NotificationType.TripSubmitted,
       'Trip Request Submitted',
       `Your trip request ${trip.requestNumber} has been submitted for approval`,
-      { tripId: trip.id, requestNumber: trip.requestNumber },
+      { 
+        tripId: trip.id, 
+        requestNumber: trip.requestNumber,
+        startDateTime: trip.startDateTime,
+        endDateTime: trip.endDateTime,
+        destination: trip.destination
+      },
     );
 
     // Notify the correct next approver based on trip state
@@ -245,6 +251,9 @@ export class NotificationsService {
           tripId: trip.id,
           requestNumber: trip.requestNumber,
           requesterName: stakeholders.requester.name,
+          startDateTime: trip.startDateTime,
+          endDateTime: trip.endDateTime,
+          destination: trip.destination
         },
       );
     }
@@ -269,6 +278,9 @@ export class NotificationsService {
           tripId: trip.id,
           requestNumber: trip.requestNumber,
           requesterName: stakeholders.requester.name,
+          startDateTime: trip.startDateTime,
+          endDateTime: trip.endDateTime,
+          destination: trip.destination
         },
       );
     }
