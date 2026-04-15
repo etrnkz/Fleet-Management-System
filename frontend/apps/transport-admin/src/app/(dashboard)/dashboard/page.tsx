@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Toast, { ToastType } from '@/components/Toast'
-import { tripApi, vehicleApi, driverApi, maintenanceApi, fuelApi, userApi } from '@/lib/api'
+import { tripApi, vehicleApi, driverApi, maintenanceApi, fuelApi, userApi, trackingApi } from '@/lib/api'
 
 interface ToastMessage {
   message: string
@@ -309,16 +309,54 @@ export default function DashboardPage() {
     
     try {
       const tripId = formData.get('tripId') as string
-      const actualDistance = parseFloat(formData.get('actualDistance') as string)
-      const actualFuelCost = parseFloat(formData.get('actualFuelCost') as string)
-      const finalMileage = parseInt(formData.get('finalMileage') as string)
       const notes = formData.get('notes') as string
       
-      // Complete the trip
+      // Fetch trip route and calculate stats from GPS data
+      const route: any = await trackingApi.getTripRoute(tripId)
+      const trip = allTrips.find(t => t.id === tripId)
+      
+      if (!route || route.length < 2) {
+        showToast('No GPS route data available for this trip', 'error')
+        return
+      }
+      
+      // Calculate distance from GPS points using Haversine formula
+      let totalDistance = 0
+      for (let i = 1; i < route.length; i++) {
+        const R = 6371 // Earth's radius in km
+        const lat1 = route[i - 1].latitude * Math.PI / 180
+        const lat2 = route[i].latitude * Math.PI / 180
+        const deltaLat = (route[i].latitude - route[i - 1].latitude) * Math.PI / 180
+        const deltaLon = (route[i].longitude - route[i - 1].longitude) * Math.PI / 180
+        
+        const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(deltaLon/2) * Math.sin(deltaLon/2)
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+        totalDistance += R * c
+      }
+      
+      // Get vehicle's fuel efficiency or use defaults
+      const vehicle = trip?.allocatedVehicle
+      const fuelEfficiency = vehicle?.fuelEfficiency || 
+        (vehicle?.fuelType === 'Diesel' ? 8 : 10) // Default: Diesel 8km/L, Gasoline 10km/L
+      
+      // Calculate fuel used and cost
+      const fuelUsed = totalDistance / fuelEfficiency
+      const PETROL_PRICE = 132.18 // Birr per liter
+      const DIESEL_PRICE = 139.84 // Birr per liter
+      const fuelPricePerLiter = vehicle?.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE
+      const actualFuelCost = fuelUsed * fuelPricePerLiter
+      
+      // Get current vehicle mileage and add distance
+      const currentMileage = vehicle?.currentMileage || 0
+      const finalMileage = currentMileage + totalDistance
+      
+      // Complete the trip with calculated values
       await tripApi.completeTrip(tripId, {
-        actualDistance,
-        actualFuelCost,
-        finalMileage,
+        actualDistance: Math.round(totalDistance * 100) / 100,
+        actualFuelCost: Math.round(actualFuelCost * 100) / 100,
+        finalMileage: Math.round(finalMileage),
         notes,
       })
       
@@ -1335,53 +1373,23 @@ export default function DashboardPage() {
                   <p className="mt-1 text-xs text-gray-500">Only trips in progress are shown</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Actual Distance (km) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      name="actualDistance"
-                      required
-                      placeholder="e.g., 148.5"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Actual Fuel Cost (ETB) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="actualFuelCost"
-                      required
-                      placeholder="e.g., 1180.75"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                    />
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Auto-Calculated from GPS Data</p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Distance, fuel consumption, and cost will be automatically calculated from the trip's GPS tracking data. No manual input required.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Final Mileage (km) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="finalMileage"
-                    required
-                    placeholder="e.g., 125480"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Total odometer reading at trip completion</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Notes
+                    Notes (Optional)
                   </label>
                   <textarea
                     name="notes"
@@ -1397,9 +1405,9 @@ export default function DashboardPage() {
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     <div>
-                      <p className="text-sm font-medium text-green-900">Completion Note</p>
+                      <p className="text-sm font-medium text-green-900">What Happens Next</p>
                       <p className="text-sm text-green-700 mt-1">
-                        This will mark the trip as completed and update vehicle mileage and driver statistics.
+                        The system will calculate actual distance from GPS route, fuel consumption based on vehicle efficiency, and total cost using Ethiopian Birr fuel prices. Vehicle mileage and driver statistics will be updated automatically.
                       </p>
                     </div>
                   </div>
