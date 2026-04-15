@@ -59,6 +59,12 @@ npm run build
 npm run migration:run
 ```
 
+> This runs `InitialSchema` which creates all tables. Verify with:
+> ```bash
+> sudo -u postgres psql -d fleet_management -c "\dt"
+> ```
+> You should see ~15 tables (users, vehicles, drivers, trip_requests, etc.).
+
 ---
 
 ## 7. Seed initial data
