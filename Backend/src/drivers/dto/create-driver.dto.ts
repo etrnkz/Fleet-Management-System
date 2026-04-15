@@ -59,4 +59,9 @@ export class CreateDriverDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  // Accepted but ignored — phone number belongs to the User entity, not Driver
+  @IsString()
+  @IsOptional()
+  phoneNumber?: string;
 }
