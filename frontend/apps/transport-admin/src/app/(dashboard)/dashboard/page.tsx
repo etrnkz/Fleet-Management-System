@@ -283,6 +283,7 @@ export default function DashboardPage() {
         name: fullName, // Backend expects 'name' not firstName/lastName
         email: formData.get('email') as string,
         password: formData.get('password') as string,
+        phoneNumber: formData.get('phoneNumber') as string || undefined,
         role: 'Driver',
       }
 
@@ -523,6 +524,11 @@ export default function DashboardPage() {
               case 'password':
                 driverInfo.password = value
                 break
+              case 'phonenumber':
+              case 'phone_number':
+              case 'phone':
+                driverInfo.phoneNumber = value
+                break
               case 'licensenumber':
               case 'license_number':
               case 'license':
@@ -554,6 +560,7 @@ export default function DashboardPage() {
             name: driverInfo.name,
             email: driverInfo.email,
             password: driverInfo.password || 'Password@123', // Default password if not provided
+            phoneNumber: driverInfo.phoneNumber,
             role: 'Driver',
           }
           const newUser: any = await userApi.create(userData)
@@ -1542,10 +1549,10 @@ export default function DashboardPage() {
                     <p className="text-sm font-medium text-blue-900 mb-2">CSV Format Requirements:</p>
                     <p className="text-xs text-blue-700 mb-2">Your CSV file should have the following columns (header row required):</p>
                     <code className="text-xs bg-white px-2 py-1 rounded block overflow-x-auto">
-                      name,email,password,licenseNumber,licenseExpiry,experienceYears,specializations,notes
+                      name,email,password,phoneNumber,licenseNumber,licenseExpiry,experienceYears,specializations,notes
                     </code>
                     <p className="text-xs text-blue-600 mt-2">Required: name, email, licenseNumber, licenseExpiry, experienceYears</p>
-                    <p className="text-xs text-blue-600 mt-1">Optional: password (defaults to Password@123), specializations, notes</p>
+                    <p className="text-xs text-blue-600 mt-1">Optional: password (defaults to Password@123), phoneNumber, specializations, notes</p>
                   </div>
 
                   <div>
@@ -1731,6 +1738,18 @@ export default function DashboardPage() {
                             name="email"
                             required
                             placeholder="e.g., john.doe@example.com"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            name="phoneNumber"
+                            placeholder="+251912345678"
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                           />
                         </div>
