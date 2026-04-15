@@ -25,6 +25,7 @@ interface Driver {
     name: string
     email: string
     phoneNumber?: string
+    profilePhoto?: string
   }
   licenseNumber: string
   licenseExpiry: string
@@ -47,7 +48,7 @@ interface Vehicle {
 
 export default function DriversPage() {
   const [activeFilter, setActiveFilter] = useState('All Drivers')
-  const [selectedDriver, setSelectedDriver] = useState<string | null>(null)
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null)
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,6 +56,7 @@ export default function DriversPage() {
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [toast, setToast] = useState<ToastMessage | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
 
   useEffect(() => {
     loadDrivers()
@@ -67,9 +69,6 @@ export default function DriversPage() {
       const data = await driverApi.getAll()
       const list = Array.isArray(data) ? data : []
       setDrivers(list)
-      if (list.length > 0 && !selectedDriver) {
-        setSelectedDriver(list[0].id)
-      }
     } catch (error: any) {
       showToast(error.message || 'Failed to load drivers', 'error')
       setDrivers([])
@@ -96,7 +95,7 @@ export default function DriversPage() {
     if (!selectedDriver || !selectedVehicleId) return
     try {
       setAssigning(true)
-      await driverApi.assignVehicle(selectedDriver, selectedVehicleId)
+      await driverApi.assignVehicle(selectedDriver.id, selectedVehicleId)
       showToast('Vehicle assigned successfully', 'success')
       setShowAssignModal(false)
       setSelectedVehicleId('')
@@ -146,12 +145,11 @@ export default function DriversPage() {
   }
 
   const filteredDrivers = getFilteredDrivers()
-  const selectedDriverData = drivers.find(d => d.id === selectedDriver)
 
   // Vehicles not already assigned to another driver
   const unassignedVehicles = vehicles.filter(v => {
     const assignedToOther = drivers.some(
-      d => d.id !== selectedDriver && d.assignedVehicle?.id === v.id
+      d => d.id !== selectedDriver?.id && d.assignedVehicle?.id === v.id
     )
     return !assignedToOther && v.status !== 'UnderMaintenance'
   })
@@ -159,6 +157,11 @@ export default function DriversPage() {
   const availableCount = drivers.filter(d => getStatusInfo(d).label === 'AVAILABLE').length
   const onTripCount = drivers.filter(d => getStatusInfo(d).label === 'ON TRIP').length
   const offDutyCount = drivers.filter(d => ['ON LEAVE', 'INACTIVE'].includes(getStatusInfo(d).label)).length
+
+  const handleViewDetails = (driver: Driver) => {
+    setSelectedDriver(driver)
+    setShowDetailsModal(true)
+  }
 
   if (loading) {
     return (
@@ -204,8 +207,7 @@ export default function DriversPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Driver Cards */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           {filteredDrivers.length === 0 ? (
             <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
               <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,29 +217,33 @@ export default function DriversPage() {
               <p className="text-sm text-gray-400 mt-1">Try adjusting your filters</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredDrivers.map((driver) => {
                 const status = getStatusInfo(driver)
-                const isSelected = selectedDriver === driver.id
+                const fullName = driver.user.name
+                
                 return (
                   <div
                     key={driver.id}
-                    onClick={() => setSelectedDriver(driver.id)}
-                    className={`bg-white rounded-xl p-6 border-2 transition-all hover:shadow-lg cursor-pointer ${
-                      isSelected ? 'border-[#1B3D2F]' : 'border-gray-200'
-                    }`}
+                    className="bg-white rounded-xl p-6 border border-gray-200 transition-all hover:shadow-lg"
                   >
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                      <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {driver.user.profilePhoto ? (
+                          <img 
+                            src={driver.user.profilePhoto} 
+                            alt={fullName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        )}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-gray-900 text-lg">{driver.user.name}</h3>
-                        <p className="text-sm text-gray-500">LIC: {driver.licenseNumber}</p>
-                        <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}>
-                          <span className={`inline-block w-1.5 h-1.5 rounded-full ${status.dotColor} mr-1`}></span>
+                        <h3 className="font-bold text-gray-900 text-lg mb-1">{fullName}</h3>
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}>
                           {status.label}
                         </span>
                       </div>
@@ -266,7 +272,7 @@ export default function DriversPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
                       <span>{driver.totalTrips} trips</span>
                       <span>·</span>
                       <span>{Number(driver.totalDistance).toFixed(0)} km</span>
@@ -277,154 +283,196 @@ export default function DriversPage() {
                         </>
                       )}
                     </div>
+
+                    <button 
+                      onClick={() => handleViewDetails(driver)}
+                      className="w-full px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
+                    >
+                      View Details
+                    </button>
                   </div>
                 )
               })}
             </div>
           )}
         </div>
+      </div>
+    </div>
 
-        {/* Driver Details Panel */}
-        <div className="space-y-6">
-          {selectedDriverData && (
-            <div className="bg-white rounded-xl p-6 border border-gray-200">
-              <h3 className="font-bold text-gray-900 mb-4">Driver Details</h3>
+    {showDetailsModal && selectedDriver && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">Driver Details</h2>
+            <button
+              onClick={() => setShowDetailsModal(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
-              <div className="space-y-3 mb-5">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Name</p>
-                  <p className="text-sm font-medium text-gray-900">{selectedDriverData.user.name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">License Number</p>
-                  <p className="text-sm font-medium text-gray-900">{selectedDriverData.licenseNumber}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">License Expiry</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {new Date(selectedDriverData.licenseExpiry).toLocaleDateString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Email</p>
-                  <p className="text-sm font-medium text-gray-900">{selectedDriverData.user.email}</p>
-                </div>
-                {selectedDriverData.user.phoneNumber && (
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Phone</p>
-                    <p className="text-sm font-medium text-gray-900">{selectedDriverData.user.phoneNumber}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Status</p>
-                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${getStatusInfo(selectedDriverData).color}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${getStatusInfo(selectedDriverData).dotColor}`}></span>
-                    {getStatusInfo(selectedDriverData).label}
-                  </span>
-                </div>
-              </div>
-
-              {/* Assigned Vehicle Section */}
-              <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Assigned Vehicle</p>
-                {selectedDriverData.assignedVehicle ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-green-800 text-sm">
-                          {selectedDriverData.assignedVehicle.plateNumber}
-                        </p>
-                        <p className="text-green-700 text-xs mt-0.5">
-                          {selectedDriverData.assignedVehicle.year} {selectedDriverData.assignedVehicle.make} {selectedDriverData.assignedVehicle.model}
-                        </p>
-                        <span className="inline-block mt-1 text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
-                          {selectedDriverData.assignedVehicle.status}
-                        </span>
-                      </div>
-                      <svg className="w-8 h-8 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h10l2-2z" />
-                      </svg>
-                    </div>
-                  </div>
+          <div className="p-6">
+            <div className="flex items-start gap-6 mb-6">
+              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {selectedDriver.user.profilePhoto ? (
+                  <img 
+                    src={selectedDriver.user.profilePhoto} 
+                    alt={selectedDriver.user.name}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-3 mb-3 text-center">
-                    <p className="text-sm text-gray-400">No vehicle assigned</p>
-                  </div>
+                  <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 )}
-
-                <div className="flex gap-2">
-                  {selectedDriverData.assignedVehicle ? (
-                    <>
-                      <button
-                        onClick={() => setShowAssignModal(true)}
-                        disabled={selectedDriverData.status === 'OnTrip' || assigning}
-                        className="flex-1 px-3 py-2 text-sm bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Reassign
-                      </button>
-                      <button
-                        onClick={() => handleRevokeVehicle(selectedDriverData.id)}
-                        disabled={selectedDriverData.status === 'OnTrip' || assigning}
-                        className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {assigning ? 'Revoking...' : 'Revoke'}
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => setShowAssignModal(true)}
-                      disabled={selectedDriverData.status === 'OnTrip' || assigning}
-                      className="w-full px-3 py-2 text-sm bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Assign Vehicle
-                    </button>
-                  )}
-                </div>
-                {selectedDriverData.status === 'OnTrip' && (
-                  <p className="text-xs text-gray-400 mt-2 text-center">Cannot change assignment while driver is on a trip</p>
-                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedDriver.user.name}</h3>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusInfo(selectedDriver).color}`}>
+                  {getStatusInfo(selectedDriver).label}
+                </span>
               </div>
             </div>
-          )}
 
-          {/* Quick Stats */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <h3 className="font-bold text-gray-900 mb-4">Quick Stats</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Drivers</span>
-                <span className="font-bold text-gray-900">{drivers.length}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">Personal Information</h4>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Driver ID</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedDriver.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Email</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedDriver.user.email}</p>
+                  </div>
+                  {selectedDriver.user.phoneNumber && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Phone Number</p>
+                      <p className="text-sm font-medium text-gray-900">{selectedDriver.user.phoneNumber}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Available</span>
-                <span className="font-bold text-green-600">{availableCount}</span>
+
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">License Information</h4>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">License Number</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedDriver.licenseNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">License Expiry</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {new Date(selectedDriver.licenseExpiry).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Availability</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedDriver.isAvailable ? 'Available for assignments' : 'Not available'}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">On Trip</span>
-                <span className="font-bold text-blue-600">{onTripCount}</span>
+            </div>
+
+            {/* Assigned Vehicle Section */}
+            <div className="border-t border-gray-200 pt-6">
+              <h4 className="font-semibold text-gray-900 mb-3">Assigned Vehicle</h4>
+              {selectedDriver.assignedVehicle ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-green-800">
+                        {selectedDriver.assignedVehicle.plateNumber}
+                      </p>
+                      <p className="text-green-700 text-sm mt-1">
+                        {selectedDriver.assignedVehicle.year} {selectedDriver.assignedVehicle.make} {selectedDriver.assignedVehicle.model}
+                      </p>
+                      <span className="inline-block mt-2 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                        {selectedDriver.assignedVehicle.status}
+                      </span>
+                    </div>
+                    <svg className="w-10 h-10 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h10l2-2z" />
+                    </svg>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-4 mb-4 text-center">
+                  <p className="text-sm text-gray-400">No vehicle assigned</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                {selectedDriver.assignedVehicle ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false)
+                        setShowAssignModal(true)
+                      }}
+                      disabled={selectedDriver.status === 'OnTrip' || assigning}
+                      className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Reassign Vehicle
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleRevokeVehicle(selectedDriver.id)
+                        setShowDetailsModal(false)
+                      }}
+                      disabled={selectedDriver.status === 'OnTrip' || assigning}
+                      className="flex-1 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {assigning ? 'Revoking...' : 'Revoke Vehicle'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false)
+                      setShowAssignModal(true)
+                    }}
+                    disabled={selectedDriver.status === 'OnTrip' || assigning}
+                    className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Assign Vehicle
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Close
+                </button>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Off Duty</span>
-                <span className="font-bold text-gray-600">{offDutyCount}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">With Vehicle</span>
-                <span className="font-bold text-[#1B3D2F]">{drivers.filter(d => d.assignedVehicle).length}</span>
-              </div>
+              {selectedDriver.status === 'OnTrip' && (
+                <p className="text-xs text-gray-400 mt-3 text-center">Cannot change assignment while driver is on a trip</p>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    )}
 
     {/* Assign Vehicle Modal */}
-    {showAssignModal && selectedDriverData && (
+    {showAssignModal && selectedDriver && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
           <h3 className="font-bold text-gray-900 text-lg mb-1">Assign Vehicle</h3>
           <p className="text-sm text-gray-500 mb-4">
-            Assigning to <span className="font-medium text-gray-700">{selectedDriverData.user.name}</span>
+            Assigning to <span className="font-medium text-gray-700">{selectedDriver.user.name}</span>
           </p>
 
           <div className="mb-4">
