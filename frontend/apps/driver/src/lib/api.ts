@@ -148,6 +148,7 @@ export const maintenanceApi = {
   create: (data: any) =>
     apiFetch(`${API_BASE_URL}/maintenance`, { method: 'POST', body: JSON.stringify(data) }),
   getAll: () => apiFetch(`${API_BASE_URL}/maintenance`),
+  getMyRequests: () => apiFetch(`${API_BASE_URL}/maintenance?myRequests=true`),
   getById: (id: string) => apiFetch(`${API_BASE_URL}/maintenance/${id}`),
   getStatistics: () => apiFetch(`${API_BASE_URL}/maintenance/statistics`),
 }

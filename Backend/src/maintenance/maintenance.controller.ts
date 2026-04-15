@@ -59,8 +59,14 @@ export class MaintenanceController {
   @Get()
   @ApiOperation({ summary: 'Get all maintenance requests' })
   @ApiQuery({ name: 'status', required: false, enum: MaintenanceStatus })
+  @ApiQuery({ name: 'myRequests', required: false, type: Boolean, description: 'Get only requests submitted by current user' })
   @ApiResponse({ status: 200, description: 'List of maintenance requests' })
-  findAll(@Query('status') status?: MaintenanceStatus) {
+  findAll(@Query('status') status?: MaintenanceStatus, @Query('myRequests') myRequests?: string, @Request() req?) {
+    // If myRequests=true, return only the current user's requests
+    if (myRequests === 'true' && req?.user) {
+      return this.maintenanceService.findBySubmitter(req.user.id);
+    }
+    
     if (status) {
       return this.maintenanceService.findByStatus(status);
     }
