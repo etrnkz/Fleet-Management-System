@@ -1,34 +1,69 @@
-  uuid_etev4     NOT NULLdesiption" charactr vrying,
-        "isAciv"    boolean NOT NULL DEFAULT true,
-        "heaId"      uuid,
-        "created    UQ_colleges_code" UNIQUE ("code"),
-        CONSTRAINT "  uuid_etev4     NOT NULLdesriptin" character varying,
-        "isActive"    booean NOT NULL DEFAULT true,
-        "col  headId"      uuid,
-        "    UQ_codeUNQUcoePPMARYuuid_etev4mailpsswordnme    profleImage"     text,
-        "iUQ_emailUNIQUE("email"),
-   CONSTRAINT "K_users" P)
-  `);
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
-    // Add FKs for colleges.headId and departments.headId/collegeId now that users exists
-    await queryRunner.query(`ALTER TABLE "colleges"    ADD FKcolleges_head"       FOREIGN KEY ("headId")    REFERENCES ""("id")       ON DELETE SET NULL`);
-    await queryRunner.query(`ALTER TABLE "departments" ADD CONSTRAINT "FKdpartents_college"  FOREIGN KEY ("collegeId") REFERENCES "colleges"("id")    ON DELETE SET NULL`);
-    awt queryRunner.query(`ALTER TABLE "departments ADDCONSTRAIT "FK_departments_head"     FOREGN KYhdId")    REFERENCES "users"("d)       ON DELETE SET NULL`;    await queryRunner.query(`ALTER TABLE "users"ADD    `);    await queryRunner.query(`ALTER TABLE "users"ADD          vehicles (no FKtodriers yt — cruar dep rolved afterdrivers)uuid_etev4(),
-        CONSTRAINT "UQ_vehicles_plateNumber" UNIQUE "plateNumber"uuid_etev4(),
-        CONSTRAINT "UQ_drivers_userId"        UNIQUE ("userId"),
-        CONSTRAINT "UQ_drivers_licenseNumber" UNIQUE "licenseNumber"     Id Nowa  uuid_etev4                                                (),
-        CONSTRAINT "UQ_trip_requests_requestNumber" UNIQUE "requestNumber"                           uuid_etev4uuid_etev4 UNIQUE NOT NULLjsonuuid_etev4locaions_tuuid_etev4(),
-        "reqestNmber"    character varyng NOT NULLubmitSubmittd',
-        "ispectionNotes"  text,
-        "inspecteById"    uud,
-        "ispectedAt"      TIMESTAMPapprvdByIduuppovtionNostextcompl(),
-        CONSTRAINT "UQ_maintenance_requestNumber" UNIQUE "requestNumber" submittedBy"  FOREIGN KEY ("submittedById") REFERENCES "uses"("id")   ON DELETE SET NULL,
-        CONSTRAINT "FK_maintnanc_inpec inspectdById") REFERENCES "sr"("id")   ON DELETE SET NULL,
-        CONSTRAINT "FK_mainenance_approvedBy"   FOREIGN KEY ("approv uuid_etev4      character varying NOT NULL,
- "trpI"         character varying charactervaryingNOT NULL,
-        "type"           character varyng NOT NULL1010mileageAtRe" integr,
-        "stationrcipNmbr charactr vaynguuid_etev4 uuid_etev4 oType  NOT NULL    characr varyingdcription 
-      )
-    `);
-    await queryRunner.query(`CREATE INDEX "IDX_audit_logs_entityType_entityId" ON "audit_logs"("entityType","entityId")`);    awaitqueryRunner.query(`CREATEINDEX"IDX_audit_logs_userId_createdAt"  ON"audit_logs"("userId","createdAt"`);await queryRunner.query(CREATE INDEX "IDX_audit_logs_action_createdAt"    ON "audit_logs"("action","createdAt"`)urationurationuuid_etev4ripTypcharacr varyinge,
-        "steps"     txt NOT NULLurationuration
+export class InitialSchema1700000000000 implements MigrationInterface {
+  name = 'InitialSchema1700000000000';
+
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`CREATE TABLE "colleges" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "code" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "headId" uuid, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_colleges_code" UNIQUE ("code"), CONSTRAINT "PK_colleges" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`CREATE TABLE "departments" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "code" character varying NOT NULL, "description" character varying, "isActive" boolean NOT NULL DEFAULT true, "collegeId" uuid, "headId" uuid, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_departments_code" UNIQUE ("code"), CONSTRAINT "PK_departments" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying NOT NULL, "password" character varying NOT NULL, "name" character varying NOT NULL, "role" character varying NOT NULL, "phoneNumber" character varying, "profileImage" text, "isActive" boolean NOT NULL DEFAULT true, "resetToken" character varying, "resetTokenExpiry" TIMESTAMP, "departmentId" uuid, "collegeId" uuid, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_users_email" UNIQUE ("email"), CONSTRAINT "PK_users" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`ALTER TABLE "colleges" ADD CONSTRAINT "FK_colleges_head" FOREIGN KEY ("headId") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "departments" ADD CONSTRAINT "FK_departments_college" FOREIGN KEY ("collegeId") REFERENCES "colleges"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "departments" ADD CONSTRAINT "FK_departments_head" FOREIGN KEY ("headId") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "FK_users_department" FOREIGN KEY ("departmentId") REFERENCES "departments"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "FK_users_college" FOREIGN KEY ("collegeId") REFERENCES "colleges"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`CREATE TABLE "vehicles" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "vehicleId" character varying, "plateNumber" character varying NOT NULL, "vehicleType" character varying, "make" character varying NOT NULL, "model" character varying NOT NULL, "year" integer NOT NULL, "capacity" integer NOT NULL, "fuelType" character varying NOT NULL, "fuelCapacity" numeric(10,2), "fuelEfficiency" numeric(5,2), "status" character varying NOT NULL DEFAULT 'Active', "currentMileage" numeric(10,2) NOT NULL DEFAULT 0, "lastMaintenanceDate" TIMESTAMP, "nextMaintenanceDate" TIMESTAMP, "purchaseDate" date, "insuranceExpiryDate" date, "nextServiceDate" date, "color" character varying, "vinNumber" character varying, "notes" text, "vipGeoRestrictionEnabled" boolean NOT NULL DEFAULT false, "restrictedZones" text, "assignedDriverId" uuid, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_vehicles_vehicleId" UNIQUE ("vehicleId"), CONSTRAINT "UQ_vehicles_plateNumber" UNIQUE ("plateNumber"), CONSTRAINT "PK_vehicles" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`CREATE TABLE "drivers" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "userId" uuid NOT NULL, "licenseNumber" character varying NOT NULL, "licenseExpiry" date NOT NULL, "experienceYears" integer NOT NULL, "status" character varying NOT NULL DEFAULT 'Available', "rating" numeric(3,2) NOT NULL DEFAULT 0, "specializations" text, "notes" text, "totalTrips" integer NOT NULL DEFAULT 0, "totalDistance" numeric(10,2) NOT NULL DEFAULT 0, "assignedVehicleId" uuid, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_drivers_userId" UNIQUE ("userId"), CONSTRAINT "UQ_drivers_licenseNumber" UNIQUE ("licenseNumber"), CONSTRAINT "PK_drivers" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`CREATE UNIQUE INDEX "IDX_drivers_assignedVehicleId" ON "drivers"("assignedVehicleId") WHERE "assignedVehicleId" IS NOT NULL`);
+    await queryRunner.query(`ALTER TABLE "drivers" ADD CONSTRAINT "FK_drivers_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE "drivers" ADD CONSTRAINT "FK_drivers_vehicle" FOREIGN KEY ("assignedVehicleId") REFERENCES "vehicles"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "vehicles" ADD CONSTRAINT "FK_vehicles_assignedDriver" FOREIGN KEY ("assignedDriverId") REFERENCES "drivers"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`CREATE TABLE "trip_requests" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "requestNumber" character varying NOT NULL, "requesterId" uuid, "tripType" character varying NOT NULL, "tripCategory" character varying NOT NULL DEFAULT 'STANDARD', "purpose" text NOT NULL, "destination" character varying NOT NULL, "startDateTime" TIMESTAMP NOT NULL, "endDateTime" TIMESTAMP NOT NULL, "passengerCount" integer NOT NULL, "state" character varying NOT NULL DEFAULT 'DRAFT', "currentApprovalLevel" character varying, "allocatedVehicleId" uuid, "allocatedDriverId" uuid, "deploymentTeamMemberId" uuid, "transportOfficerId" uuid, "estimatedFuelCost" numeric(10,2), "actualFuelCost" numeric(10,2), "estimatedDistance" numeric(10,2), "actualDistance" numeric(10,2), "rejectionReason" text, "rejectedById" uuid, "rejectedAt" TIMESTAMP, "completedAt" TIMESTAMP, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_trip_requests_requestNumber" UNIQUE ("requestNumber"), CONSTRAINT "PK_trip_requests" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`ALTER TABLE "trip_requests" ADD CONSTRAINT "FK_trip_requests_requester" FOREIGN KEY ("requesterId") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "trip_requests" ADD CONSTRAINT "FK_trip_requests_vehicle" FOREIGN KEY ("allocatedVehicleId") REFERENCES "vehicles"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "trip_requests" ADD CONSTRAINT "FK_trip_requests_driver" FOREIGN KEY ("allocatedDriverId") REFERENCES "drivers"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "trip_requests" ADD CONSTRAINT "FK_trip_requests_deployment" FOREIGN KEY ("deploymentTeamMemberId") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "trip_requests" ADD CONSTRAINT "FK_trip_requests_transport" FOREIGN KEY ("transportOfficerId") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "trip_requests" ADD CONSTRAINT "FK_trip_requests_rejectedBy" FOREIGN KEY ("rejectedById") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`CREATE TABLE "approvals" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tripRequestId" uuid, "approvalLevel" character varying NOT NULL, "status" character varying NOT NULL DEFAULT 'Pending', "approverId" uuid, "comments" text, "dueDate" TIMESTAMP NOT NULL, "approvedAt" TIMESTAMP, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_approvals" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`ALTER TABLE "approvals" ADD CONSTRAINT "FK_approvals_trip" FOREIGN KEY ("tripRequestId") REFERENCES "trip_requests"("id") ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE "approvals" ADD CONSTRAINT "FK_approvals_approver" FOREIGN KEY ("approverId") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`CREATE TABLE "trip_feedback" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tripRequestId" uuid, "submittedById" uuid, "overallRating" integer NOT NULL, "driverRating" integer, "vehicleRating" integer, "punctualityRating" integer, "comments" text, "suggestions" text, "wouldRecommend" boolean NOT NULL DEFAULT false, "issues" json, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_trip_feedback_tripRequestId" UNIQUE ("tripRequestId"), CONSTRAINT "PK_trip_feedback" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`ALTER TABLE "trip_feedback" ADD CONSTRAINT "FK_trip_feedback_trip" FOREIGN KEY ("tripRequestId") REFERENCES "trip_requests"("id") ON DELETE CASCADE`);
+    await queryRunner.query(`ALTER TABLE "trip_feedback" ADD CONSTRAINT "FK_trip_feedback_submittedBy" FOREIGN KEY ("submittedById") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`CREATE TABLE "gps_locations" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tripId" uuid NOT NULL, "latitude" numeric(10,7) NOT NULL, "longitude" numeric(10,7) NOT NULL, "speed" numeric(5,2), "heading" numeric(5,2), "altitude" numeric(6,2), "accuracy" numeric(4,2), "isOffline" boolean NOT NULL DEFAULT false, "metadata" text, "timestamp" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_gps_locations" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`CREATE INDEX "IDX_gps_locations_tripId_timestamp" ON "gps_locations"("tripId", "timestamp")`);
+    await queryRunner.query(`ALTER TABLE "gps_locations" ADD CONSTRAINT "FK_gps_locations_trip" FOREIGN KEY ("tripId") REFERENCES "trip_requests"("id") ON DELETE CASCADE`);
+    await queryRunner.query(`CREATE TABLE "maintenance_requests" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "requestNumber" character varying NOT NULL, "vehicleId" uuid, "submittedById" uuid, "issueDescription" text NOT NULL, "priority" character varying NOT NULL DEFAULT 'Medium', "status" character varying NOT NULL DEFAULT 'Submitted', "inspectionNotes" text, "inspectedById" uuid, "inspectedAt" TIMESTAMP, "estimatedCost" numeric(10,2), "actualCost" numeric(10,2), "approvedById" uuid, "approvedAt" TIMESTAMP, "completionNotes" text, "completedAt" TIMESTAMP, "rejectionReason" text, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_maintenance_requestNumber" UNIQUE ("requestNumber"), CONSTRAINT "PK_maintenance_requests" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`ALTER TABLE "maintenance_requests" ADD CONSTRAINT "FK_maintenance_vehicle" FOREIGN KEY ("vehicleId") REFERENCES "vehicles"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "maintenance_requests" ADD CONSTRAINT "FK_maintenance_submittedBy" FOREIGN KEY ("submittedById") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "maintenance_requests" ADD CONSTRAINT "FK_maintenance_inspectedBy" FOREIGN KEY ("inspectedById") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`ALTER TABLE "maintenance_requests" ADD CONSTRAINT "FK_maintenance_approvedBy" FOREIGN KEY ("approvedById") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`CREATE TABLE "fuel_records" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "vehicleId" character varying NOT NULL, "tripId" character varying, "recordedById" character varying NOT NULL, "type" character varying NOT NULL, "quantity" numeric(10,2) NOT NULL, "pricePerLiter" numeric(10,2) NOT NULL, "totalCost" numeric(10,2) NOT NULL, "mileageAtRefuel" integer, "station" character varying, "receiptNumber" character varying, "notes" text, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_fuel_records" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`CREATE TABLE "notifications" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "recipientId" uuid, "type" character varying NOT NULL, "title" character varying NOT NULL, "message" text NOT NULL, "data" text, "isRead" boolean NOT NULL DEFAULT false, "readAt" TIMESTAMP, "sentAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_notifications" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`ALTER TABLE "notifications" ADD CONSTRAINT "FK_notifications_recipient" FOREIGN KEY ("recipientId") REFERENCES "users"("id") ON DELETE CASCADE`);
+    await queryRunner.query(`CREATE TABLE "audit_logs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "userId" uuid, "action" character varying NOT NULL, "entityType" character varying NOT NULL, "entityId" character varying NOT NULL, "oldValues" text, "newValues" text, "ipAddress" character varying, "userAgent" character varying, "description" text, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_audit_logs" PRIMARY KEY ("id"))`);
+    await queryRunner.query(`CREATE INDEX "IDX_audit_logs_entity" ON "audit_logs"("entityType", "entityId")`);
+    await queryRunner.query(`CREATE INDEX "IDX_audit_logs_user" ON "audit_logs"("userId", "createdAt")`);
+    await queryRunner.query(`ALTER TABLE "audit_logs" ADD CONSTRAINT "FK_audit_logs_user" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL`);
+    await queryRunner.query(`CREATE TABLE "workflow_configurations" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "tripType" character varying NOT NULL, "isActive" boolean NOT NULL DEFAULT true, "steps" text NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_workflow_configurations" PRIMARY KEY ("id"))`);
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE IF EXISTS "workflow_configurations" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "audit_logs" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "notifications" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "fuel_records" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "maintenance_requests" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "gps_locations" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "trip_feedback" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "approvals" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "trip_requests" CASCADE`);
+    await queryRunner.query(`ALTER TABLE "vehicles" DROP CONSTRAINT IF EXISTS "FK_vehicles_assignedDriver"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "drivers" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "vehicles" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "users" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "departments" CASCADE`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "colleges" CASCADE`);
+  }
+}
