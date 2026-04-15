@@ -96,25 +96,13 @@ export class TrackingController {
   @Get(':tripId/route')
   @ApiOperation({
     summary: 'Get complete trip route',
-    description: 'Get all GPS locations for a trip in chronological order',
+    description: 'Get all GPS locations for a trip in chronological order with travel stats',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Trip route',
-    schema: {
-      example: [
-        {
-          id: 'uuid',
-          latitude: 9.032,
-          longitude: 38.7469,
-          speed: 45.5,
-          timestamp: '2026-03-01T10:30:00Z',
-        },
-      ],
-    },
-  })
-  getTripRoute(@Param('tripId', ParseUUIDPipe) tripId: string) {
-    return this.trackingService.getTripRoute(tripId);
+  @ApiResponse({ status: 200, description: 'Trip route with stats' })
+  async getTripRoute(@Param('tripId', ParseUUIDPipe) tripId: string) {
+    const route = await this.trackingService.getTripRoute(tripId);
+    const stats = await this.trackingService.getLocationStatistics(tripId);
+    return { route, stats };
   }
 
   @Get(':tripId/current')

@@ -213,7 +213,50 @@ export default function LiveTrackingPage() {
     setSelectedTrip(trip)
     setView('map')
     
-    // Convert trip to vehicle format for map
+    // Fetch trip route
+    let routePath: [number, number][] = []
+    let stats: any = null
+    try {
+      const routeData: any = await trackingApi.getTripRoute(trip.id)
+      const rawRoute = Array.isArray(routeData) ? routeData : (routeData?.route ?? [])
+      stats = routeData?.stats ?? null
+      routePath = rawRoute
+        .filter((p: any) => !isNaN(Number(p.latitude)) && !isNaN(Number(p.longitude)))
+        .map((p: any) => [Number(p.latitude), Number(p.longitude)] as [number, number])
+      setRoutePoints(rawRoute)
+    } catch {}
+
+    // Geocode destination to get coordinates
+    let destLat: number | null = null
+    let destLng: number | null = null
+    try {
+      const geo = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trip.destination)}&limit=1`,
+        { headers: { 'User-Agent': 'FleetManagementSystem/1.0' } }
+      )
+      const geoData = await geo.json()
+      if (geoData?.[0]) {
+        destLat = parseFloat(geoData[0].lat)
+        destLng = parseFloat(geoData[0].lon)
+      }
+    } catch {}
+
+    // Fuel stats from backend stats or calculate locally
+    const fuelEfficiency = trip.allocatedVehicle?.fuelEfficiency || (trip.allocatedVehicle?.fuelType === 'Diesel' ? 8 : 10)
+    const PETROL_PRICE = 132.18
+    const DIESEL_PRICE = 139.84
+    const fuelPricePerLiter = trip.allocatedVehicle?.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE
+    const traveledKm = stats?.distance ?? 0
+    const fuelUsed = traveledKm / fuelEfficiency
+    const fuelCapacity = 60
+    const fuelRemainingLiters = Math.max(0, fuelCapacity - fuelUsed)
+    const fuelRemainingPercent = Math.round((fuelRemainingLiters / fuelCapacity) * 100)
+    const actualFuelCost = Math.round(fuelUsed * fuelPricePerLiter * 100) / 100
+    const estimatedDistance = trip.allocatedVehicle ? (trip as any).estimatedDistance || 0 : 0
+    const expectedTotalFuelCost = estimatedDistance > 0
+      ? Math.round((estimatedDistance / fuelEfficiency) * fuelPricePerLiter * 100) / 100
+      : null
+
     const vehicle: Vehicle = {
       id: trip.allocatedVehicle?.id || '',
       vehicleId: trip.allocatedVehicle?.plateNumber || '',
@@ -230,66 +273,31 @@ export default function LiveTrackingPage() {
       tripId: trip.id,
       tripDestination: trip.destination,
       tripPurpose: trip.purpose,
-      requesterName: trip.requester.name
+      requesterName: trip.requester.name,
+      routePath,
+      destLat,
+      destLng,
+      traveledKm,
+      estimatedDistance: estimatedDistance || null,
+      fuelRemainingPercent,
+      fuelRemainingLiters: Math.round(fuelRemainingLiters * 100) / 100,
+      fuelRemainingKm: Math.round(fuelRemainingLiters * fuelEfficiency),
+      actualFuelCost,
+      expectedTotalFuelCost,
+      fuelType: trip.allocatedVehicle?.fuelType,
     }
     
     setVehicles([vehicle])
     setSelectedVehicle(vehicle.id)
-    
-    // Fetch trip route and calculate stats
-    try {
-      const route = await trackingApi.getTripRoute(trip.id) as RoutePoint[]
-      setRoutePoints(route)
-      
-      // Calculate distance and fuel consumption
-      if (route.length > 1) {
-        let totalDistance = 0
-        for (let i = 1; i < route.length; i++) {
-          const dist = calculateDistance(
-            route[i - 1].latitude,
-            route[i - 1].longitude,
-            route[i].latitude,
-            route[i].longitude
-          )
-          totalDistance += dist
-        }
-        
-        // Get vehicle's actual fuel efficiency (km/L) or use default based on fuel type
-        const fuelEfficiency = trip.allocatedVehicle?.fuelEfficiency || 
-          (trip.allocatedVehicle?.fuelType === 'Diesel' ? 8 : 10) // Default: Diesel 8km/L, Gasoline 10km/L
-        
-        // Calculate actual fuel used based on distance and efficiency
-        const fuelUsed = totalDistance / fuelEfficiency
-        
-        // Fuel prices in Ethiopian Birr
-        const PETROL_PRICE = 132.18 // Birr per liter
-        const DIESEL_PRICE = 139.84 // Birr per liter
-        
-        // Get fuel price based on vehicle's fuel type
-        const fuelPricePerLiter = trip.allocatedVehicle?.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE
-        const fuelCost = fuelUsed * fuelPricePerLiter
-        
-        // Calculate duration
-        const startTime = new Date(route[0].timestamp).getTime()
-        const endTime = new Date(route[route.length - 1].timestamp).getTime()
-        const duration = (endTime - startTime) / 1000 / 60 // minutes
-        
-        // Calculate average speed
-        const speeds = route.filter((p: RoutePoint) => p.speed).map((p: RoutePoint) => p.speed!)
-        const averageSpeed = speeds.length > 0 
-          ? speeds.reduce((a: number, b: number) => a + b, 0) / speeds.length 
-          : 0
-        
-        setTripStats({
-          distance: Math.round(totalDistance * 100) / 100,
-          fuelUsed: Math.round(fuelUsed * 100) / 100,
-          fuelCost: Math.round(fuelCost * 100) / 100,
-          averageSpeed: Math.round(averageSpeed * 100) / 100,
-          duration: Math.round(duration * 100) / 100
-        })
-      }
-    } catch (error) {
-      console.error('Failed to load trip route:', error)
+
+    if (stats) {
+      setTripStats({
+        distance: stats.distance ?? traveledKm,
+        fuelUsed: Math.round(fuelUsed * 100) / 100,
+        fuelCost: actualFuelCost,
+        averageSpeed: stats.averageSpeed ?? 0,
+        duration: stats.duration ?? 0,
+      })
     }
   }
 
@@ -343,6 +351,30 @@ export default function LiveTrackingPage() {
             }
           }
           return trip
+        }))
+
+        // Update vehicle on map with new stats
+        setVehicles(prev => prev.map(v => {
+          if (v.id === update.vehicleId || v.tripId === update.tripId) {
+            return {
+              ...v,
+              lat: update.latitude,
+              lng: update.longitude,
+              speed: `${Math.round(update.speed || 0)} km/h`,
+              status: (update.speed || 0) > 5 ? 'moving' : (update.speed || 0) > 0 ? 'idle' : 'stopped',
+              traveledKm: update.traveledKm ?? v.traveledKm,
+              fuelRemainingPercent: update.fuelRemainingPercent ?? v.fuelRemainingPercent,
+              fuelRemainingLiters: update.fuelRemainingLiters ?? v.fuelRemainingLiters,
+              fuelRemainingKm: update.fuelRemainingKm ?? v.fuelRemainingKm,
+              actualFuelCost: update.actualFuelCost ?? v.actualFuelCost,
+              expectedTotalFuelCost: update.expectedTotalFuelCost ?? v.expectedTotalFuelCost,
+              // Append new point to route path
+              routePath: v.routePath
+                ? [...v.routePath, [update.latitude, update.longitude] as [number, number]]
+                : [[update.latitude, update.longitude] as [number, number]],
+            }
+          }
+          return v
         }))
       })
 
