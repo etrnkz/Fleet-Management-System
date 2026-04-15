@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Circle, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Circle, useMapEvents, Polyline } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -41,6 +41,13 @@ export interface RestrictedZone {
   radiusMeters: number
 }
 
+export interface RoutePoint {
+  latitude: number
+  longitude: number
+  timestamp: string
+  speed?: number
+}
+
 interface MapProps {
   vehicles: Vehicle[]
   selectedVehicle: string | null
@@ -50,6 +57,7 @@ interface MapProps {
   onZoneDrawn?: (zone: RestrictedZone) => void
   restrictedZones?: RestrictedZone[]
   tempZone?: RestrictedZone | null
+  routePoints?: RoutePoint[]
 }
 
 // Component to handle map centering
@@ -287,7 +295,8 @@ export default function Map({
   drawingMode = false,
   onZoneDrawn,
   restrictedZones = [],
-  tempZone = null
+  tempZone = null,
+  routePoints = []
 }: MapProps) {
   // Filter out vehicles with invalid coordinates
   const validVehicles = vehicles.filter(v => {
@@ -300,6 +309,11 @@ export default function Map({
   const center: [number, number] = selectedVehicleData 
     ? [Number(selectedVehicleData.lat), Number(selectedVehicleData.lng)]
     : [9.0192, 38.7525] // Addis Ababa center
+
+  // Convert route points to Leaflet format
+  const routeCoordinates: [number, number][] = routePoints
+    .filter(p => !isNaN(Number(p.latitude)) && !isNaN(Number(p.longitude)))
+    .map(p => [Number(p.latitude), Number(p.longitude)])
 
   return (
     <>
@@ -353,6 +367,27 @@ export default function Map({
 
         {/* Geofence drawing handler */}
         <GeofenceDrawer drawingMode={drawingMode} onZoneDrawn={onZoneDrawn} />
+
+        {/* Display trip route polyline */}
+        {routeCoordinates.length > 1 && (
+          <Polyline
+            positions={routeCoordinates}
+            pathOptions={{
+              color: '#3b82f6',
+              weight: 4,
+              opacity: 0.7,
+              lineJoin: 'round',
+              lineCap: 'round'
+            }}
+          >
+            <Popup>
+              <div className="p-2">
+                <p className="font-bold text-sm text-blue-600">Trip Route</p>
+                <p className="text-xs text-gray-600">{routeCoordinates.length} GPS points</p>
+              </div>
+            </Popup>
+          </Polyline>
+        )}
 
         {/* Display existing restricted zones */}
         {restrictedZones.map((zone, index) => (
