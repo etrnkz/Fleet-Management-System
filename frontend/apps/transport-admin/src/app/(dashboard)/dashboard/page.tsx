@@ -46,9 +46,8 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      const [vehicles, trips, maintenance, fuel, drivers, allTripsData] = await Promise.all([
+      const [vehicles, maintenance, fuel, drivers, allTripsData] = await Promise.all([
         vehicleApi.getAll().catch(() => []),
-        tripApi.getAll({ state: 'IN_PROGRESS' }).catch(() => []),
         maintenanceApi.getAll().catch(() => []),
         fuelApi.getAll().catch(() => []),
         driverApi.getAll().catch(() => []),
@@ -56,7 +55,9 @@ export default function DashboardPage() {
       ])
 
       const vehiclesArray = Array.isArray(vehicles) ? vehicles : []
-      const tripsArray = Array.isArray(trips) ? trips : []
+      const allTripsArray = Array.isArray(allTripsData) ? allTripsData : []
+      // Only count trips that are actually in progress
+      const tripsArray = allTripsArray.filter((t: any) => t.state === 'IN_PROGRESS')
       const maintenanceArray = Array.isArray(maintenance) ? maintenance : []
       const pendingMaintenanceStatuses = [
         'Submitted',
@@ -70,7 +71,6 @@ export default function DashboardPage() {
       )
       const fuelArray = Array.isArray(fuel) ? fuel : []
       const driversArray = Array.isArray(drivers) ? drivers : []
-      const allTripsArray = Array.isArray(allTripsData) ? allTripsData : []
 
       setAllVehicles(vehiclesArray)
       setAllDrivers(driversArray)
