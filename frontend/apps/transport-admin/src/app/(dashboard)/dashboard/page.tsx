@@ -18,6 +18,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [showAddDriverSection, setShowAddDriverSection] = useState(false)
   
+  // Import states
+  const [vehicleImportMode, setVehicleImportMode] = useState<'form' | 'csv'>('form')
+  const [driverImportMode, setDriverImportMode] = useState<'form' | 'csv'>('form')
+  const [vehicleCsvFile, setVehicleCsvFile] = useState<File | null>(null)
+  const [driverCsvFile, setDriverCsvFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
+  
   // Data states
   const [stats, setStats] = useState({
     totalVehicles: 0,
@@ -321,6 +328,213 @@ export default function DashboardPage() {
       loadDashboardData()
     } catch (error: any) {
       showToast(error.message || 'Failed to complete trip', 'error')
+    }
+  }
+
+  // CSV Import Handlers
+  const handleVehicleCsvImport = async () => {
+    if (!vehicleCsvFile) {
+      showToast('Please select a CSV file', 'error')
+      return
+    }
+
+    try {
+      setImporting(true)
+      const text = await vehicleCsvFile.text()
+      const lines = text.split('\n').filter(line => line.trim())
+      
+      if (lines.length < 2) {
+        showToast('CSV file is empty or invalid', 'error')
+        return
+      }
+
+      // Parse CSV (assuming header row)
+      const headers = lines[0].split(',').map(h => h.trim())
+      let successCount = 0
+      let errorCount = 0
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim())
+        const vehicleData: any = {}
+
+        headers.forEach((header, index) => {
+          const value = values[index]
+          if (value) {
+            // Map CSV headers to vehicle fields
+            switch (header.toLowerCase()) {
+              case 'vehicleid':
+              case 'vehicle_id':
+                vehicleData.vehicleId = value
+                break
+              case 'platenumber':
+              case 'plate_number':
+                vehicleData.plateNumber = value
+                break
+              case 'vehicletype':
+              case 'vehicle_type':
+              case 'type':
+                vehicleData.vehicleType = value
+                break
+              case 'make':
+                vehicleData.make = value
+                break
+              case 'model':
+                vehicleData.model = value
+                break
+              case 'year':
+                vehicleData.year = parseInt(value)
+                break
+              case 'fueltype':
+              case 'fuel_type':
+                vehicleData.fuelType = value
+                break
+              case 'color':
+                vehicleData.color = value
+                break
+              case 'vinnumber':
+              case 'vin_number':
+              case 'vin':
+                vehicleData.vinNumber = value
+                break
+              case 'fuelcapacity':
+              case 'fuel_capacity':
+                vehicleData.fuelCapacity = parseInt(value)
+                break
+              case 'capacity':
+              case 'seating_capacity':
+                vehicleData.capacity = parseInt(value)
+                break
+              case 'currentmileage':
+              case 'current_mileage':
+              case 'mileage':
+                vehicleData.currentMileage = parseInt(value)
+                break
+            }
+          }
+        })
+
+        vehicleData.status = 'Inactive' // New vehicles start as Inactive
+
+        try {
+          await vehicleApi.create(vehicleData)
+          successCount++
+        } catch (error) {
+          errorCount++
+          console.error(`Failed to import vehicle on line ${i + 1}:`, error)
+        }
+      }
+
+      showToast(`Import complete: ${successCount} vehicles added, ${errorCount} failed`, successCount > 0 ? 'success' : 'error')
+      setVehicleCsvFile(null)
+      setShowAddVehicleForm(false)
+      loadDashboardData()
+    } catch (error: any) {
+      showToast(error.message || 'Failed to import CSV', 'error')
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const handleDriverCsvImport = async () => {
+    if (!driverCsvFile) {
+      showToast('Please select a CSV file', 'error')
+      return
+    }
+
+    try {
+      setImporting(true)
+      const text = await driverCsvFile.text()
+      const lines = text.split('\n').filter(line => line.trim())
+      
+      if (lines.length < 2) {
+        showToast('CSV file is empty or invalid', 'error')
+        return
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim())
+      let successCount = 0
+      let errorCount = 0
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim())
+        const driverInfo: any = {}
+
+        headers.forEach((header, index) => {
+          const value = values[index]
+          if (value) {
+            switch (header.toLowerCase()) {
+              case 'name':
+              case 'fullname':
+              case 'full_name':
+                driverInfo.name = value
+                break
+              case 'email':
+                driverInfo.email = value
+                break
+              case 'password':
+                driverInfo.password = value
+                break
+              case 'licensenumber':
+              case 'license_number':
+              case 'license':
+                driverInfo.licenseNumber = value
+                break
+              case 'licenseexpiry':
+              case 'license_expiry':
+              case 'expiry':
+                driverInfo.licenseExpiry = value
+                break
+              case 'experienceyears':
+              case 'experience_years':
+              case 'experience':
+                driverInfo.experienceYears = parseInt(value)
+                break
+              case 'specializations':
+                driverInfo.specializations = value
+                break
+              case 'notes':
+                driverInfo.notes = value
+                break
+            }
+          }
+        })
+
+        try {
+          // Create user account
+          const userData = {
+            name: driverInfo.name,
+            email: driverInfo.email,
+            password: driverInfo.password || 'Password@123', // Default password if not provided
+            role: 'Driver',
+          }
+          const newUser: any = await userApi.create(userData)
+
+          // Create driver profile
+          const driverData = {
+            userId: newUser.id,
+            licenseNumber: driverInfo.licenseNumber,
+            licenseExpiry: driverInfo.licenseExpiry,
+            experienceYears: driverInfo.experienceYears || 0,
+            specializations: driverInfo.specializations,
+            notes: driverInfo.notes,
+          }
+          await driverApi.create(driverData)
+          successCount++
+        } catch (error) {
+          errorCount++
+          console.error(`Failed to import driver on line ${i + 1}:`, error)
+        }
+      }
+
+      showToast(`Import complete: ${successCount} drivers added, ${errorCount} failed`, successCount > 0 ? 'success' : 'error')
+      setDriverCsvFile(null)
+      setShowAddDriverSection(false)
+      setShowAssignDriverForm(false)
+      loadDashboardData()
+    } catch (error: any) {
+      showToast(error.message || 'Failed to import CSV', 'error')
+    } finally {
+      setImporting(false)
     }
   }
 
@@ -720,7 +934,11 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-bold text-gray-900">Add New Vehicle</h2>
               </div>
               <button
-                onClick={() => setShowAddVehicleForm(false)}
+                onClick={() => {
+                  setShowAddVehicleForm(false)
+                  setVehicleImportMode('form')
+                  setVehicleCsvFile(null)
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -729,8 +947,88 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Form Content */}
-            <form onSubmit={handleAddVehicle} className="p-6">
+            {/* Tabs */}
+            <div className="px-6 pt-4">
+              <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setVehicleImportMode('form')}
+                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                    vehicleImportMode === 'form'
+                      ? 'bg-white text-[#1B3D2F] shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Manual Entry
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVehicleImportMode('csv')}
+                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                    vehicleImportMode === 'csv'
+                      ? 'bg-white text-[#1B3D2F] shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Import CSV
+                </button>
+              </div>
+            </div>
+
+            {/* CSV Import View */}
+            {vehicleImportMode === 'csv' ? (
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-blue-900 mb-2">CSV Format Requirements:</p>
+                    <p className="text-xs text-blue-700 mb-2">Your CSV file should have the following columns (header row required):</p>
+                    <code className="text-xs bg-white px-2 py-1 rounded block overflow-x-auto">
+                      vehicleId,plateNumber,vehicleType,make,model,year,fuelType,color,vinNumber,fuelCapacity,capacity,currentMileage
+                    </code>
+                    <p className="text-xs text-blue-600 mt-2">Required: vehicleId, plateNumber, vehicleType, make, model, year, fuelType</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select CSV File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => setVehicleCsvFile(e.target.files?.[0] || null)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                    {vehicleCsvFile && (
+                      <p className="text-sm text-green-600 mt-2">Selected: {vehicleCsvFile.name}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleVehicleCsvImport}
+                      disabled={!vehicleCsvFile || importing}
+                      className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {importing ? 'Importing...' : 'Import Vehicles'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddVehicleForm(false)
+                        setVehicleImportMode('form')
+                        setVehicleCsvFile(null)
+                      }}
+                      className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Form Content */
+              <form onSubmit={handleAddVehicle} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Vehicle Information */}
                 <div className="md:col-span-2">
@@ -986,6 +1284,7 @@ export default function DashboardPage() {
                 </button>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}
@@ -1146,6 +1445,8 @@ export default function DashboardPage() {
                 onClick={() => {
                   setShowAssignDriverForm(false)
                   setShowAddDriverSection(false)
+                  setDriverImportMode('form')
+                  setDriverCsvFile(null)
                 }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -1157,13 +1458,16 @@ export default function DashboardPage() {
 
             {/* Form Content */}
             <div className="p-6">
-              {/* Toggle between Assign and Add Driver */}
+              {/* Toggle between Assign, Add Driver, and Import CSV */}
               <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
                 <button
                   type="button"
-                  onClick={() => setShowAddDriverSection(false)}
+                  onClick={() => {
+                    setShowAddDriverSection(false)
+                    setDriverImportMode('form')
+                  }}
                   className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-                    !showAddDriverSection
+                    !showAddDriverSection && driverImportMode === 'form'
                       ? 'bg-white text-[#1B3D2F] shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
@@ -1172,17 +1476,84 @@ export default function DashboardPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAddDriverSection(true)}
+                  onClick={() => {
+                    setShowAddDriverSection(true)
+                    setDriverImportMode('form')
+                  }}
                   className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-                    showAddDriverSection
+                    showAddDriverSection && driverImportMode === 'form'
                       ? 'bg-white text-[#1B3D2F] shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   Add New Driver
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setDriverImportMode('csv')}
+                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
+                    driverImportMode === 'csv'
+                      ? 'bg-white text-[#1B3D2F] shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Import CSV
+                </button>
               </div>
 
+              {/* CSV Import View */}
+              {driverImportMode === 'csv' ? (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm font-medium text-blue-900 mb-2">CSV Format Requirements:</p>
+                    <p className="text-xs text-blue-700 mb-2">Your CSV file should have the following columns (header row required):</p>
+                    <code className="text-xs bg-white px-2 py-1 rounded block overflow-x-auto">
+                      name,email,password,licenseNumber,licenseExpiry,experienceYears,specializations,notes
+                    </code>
+                    <p className="text-xs text-blue-600 mt-2">Required: name, email, licenseNumber, licenseExpiry, experienceYears</p>
+                    <p className="text-xs text-blue-600 mt-1">Optional: password (defaults to Password@123), specializations, notes</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select CSV File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => setDriverCsvFile(e.target.files?.[0] || null)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                    />
+                    {driverCsvFile && (
+                      <p className="text-sm text-green-600 mt-2">Selected: {driverCsvFile.name}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleDriverCsvImport}
+                      disabled={!driverCsvFile || importing}
+                      className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {importing ? 'Importing...' : 'Import Drivers'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAssignDriverForm(false)
+                        setShowAddDriverSection(false)
+                        setDriverImportMode('form')
+                        setDriverCsvFile(null)
+                      }}
+                      className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
               {/* Assign Existing Driver Form */}
               {!showAddDriverSection && (
                 <form onSubmit={handleAssignDriver}>
@@ -1437,6 +1808,8 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </form>
+              )}
+              </>
               )}
             </div>
           </div>
