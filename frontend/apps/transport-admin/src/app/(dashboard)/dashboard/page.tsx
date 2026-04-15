@@ -1220,16 +1220,16 @@ export default function DashboardPage() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                       >
                         <option value="">Choose a driver</option>
-                        {allDrivers.filter((driver: any) => !driver.assignedVehicle).map((driver: any) => (
+                        {allDrivers.filter((driver: any) => !driver.assignedVehicle && driver.status !== 'OnTrip').map((driver: any) => (
                           <option key={driver.id} value={driver.id}>
                             {driver.user?.name} - License: {driver.licenseNumber} - {driver.status}
                           </option>
                         ))}
                       </select>
                       <p className="mt-1 text-xs text-gray-500">
-                        {allDrivers.filter((d: any) => !d.assignedVehicle).length === 0 
-                          ? 'All drivers are already assigned to vehicles. Please add a new driver.' 
-                          : 'Only drivers without assigned vehicles are shown'}
+                        {allDrivers.filter((d: any) => !d.assignedVehicle && d.status !== 'OnTrip').length === 0 
+                          ? 'All drivers are either assigned to vehicles or on trips. Please add a new driver.' 
+                          : 'Only available drivers (not assigned and not on trips) are shown'}
                       </p>
                     </div>
 
