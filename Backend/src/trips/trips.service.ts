@@ -1001,13 +1001,15 @@ export class TripsService {
       );
     }
 
-    // Only driver or transport office can complete trip
+    // Allow driver, transport office, or the trip requester to complete trip
+    const isRequester = trip.requester && trip.requester.id === user.id;
     if (
       user.role !== UserRole.Driver &&
-      user.role !== UserRole.TransportOffice
+      user.role !== UserRole.TransportOffice &&
+      !isRequester
     ) {
       throw new ForbiddenException(
-        'Only Driver or Transport Office can complete trip',
+        'Only Driver, Transport Office, or the trip requester can complete trip',
       );
     }
 
