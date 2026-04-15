@@ -34,12 +34,23 @@ export default function LoginPage() {
 
     try {
       const { authApi } = await import('../../lib/api')
-      const response: any = await authApi.login(email, password)
+      const response: any = await authApi.login(email, password, rememberMe)
 
-      localStorage.setItem('accessToken', response.access_token)
-      localStorage.setItem('access_token', response.access_token)
-      localStorage.setItem('refreshToken', response.refresh_token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      const storage = rememberMe ? localStorage : sessionStorage
+      if (!rememberMe) {
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+      }
+      storage.setItem('accessToken', response.access_token)
+      storage.setItem('access_token', response.access_token)
+      storage.setItem('refreshToken', response.refresh_token)
+      storage.setItem('user', JSON.stringify(response.user))
+
+      if (!rememberMe) {
+        storage.setItem('sessionExpiry', String(Date.now() + 7 * 60 * 60 * 1000))
+      }
 
       if (rememberMe) {
         const expiry = new Date()
@@ -51,7 +62,9 @@ export default function LoginPage() {
 
       const role = response.user?.role
       if (role !== 'Dean' && role !== 'CollegeHead') {
-        ;['accessToken', 'access_token', 'refreshToken', 'user'].forEach(k => localStorage.removeItem(k))
+        ;['accessToken', 'access_token', 'refreshToken', 'user'].forEach(k => {
+          localStorage.removeItem(k); sessionStorage.removeItem(k)
+        })
         setError('Access denied. This portal is for College Deans only.')
         setLoading(false)
         return

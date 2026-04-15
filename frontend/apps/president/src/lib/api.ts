@@ -102,17 +102,17 @@ async function apiFetch(url: string, options: RequestInit = {}): Promise<any> {
 
 // Auth API
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, keepMeSignedIn = false) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, appType: 'president' })
+      body: JSON.stringify({ email, password, appType: 'president', keepMeSignedIn })
     })
     return handleResponse(response, () =>
       fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, appType: 'president' }),
+        body: JSON.stringify({ email, password, appType: 'president', keepMeSignedIn }),
       })
     )
   },

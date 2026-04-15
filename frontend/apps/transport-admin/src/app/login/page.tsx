@@ -24,7 +24,7 @@ export default function LoginPage() {
     setError('')
     setIsLoading(true)
     try {
-      const response = await authApi.login(email, password) as any
+      const response = await authApi.login(email, password, rememberMe) as any
       const storage = rememberMe ? localStorage : sessionStorage
       if (!rememberMe) {
         localStorage.removeItem('access_token')
@@ -32,8 +32,12 @@ export default function LoginPage() {
       }
       storage.setItem('access_token', response.access_token)
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
-      if (rememberMe) localStorage.setItem('transport_admin_rememberedEmail', email)
-      else localStorage.removeItem('transport_admin_rememberedEmail')
+      if (rememberMe) {
+        localStorage.setItem('transport_admin_rememberedEmail', email)
+      } else {
+        localStorage.removeItem('transport_admin_rememberedEmail')
+        storage.setItem('sessionExpiry', String(Date.now() + 7 * 60 * 60 * 1000))
+      }
 
       // Role check — only TransportOffice allowed
       const role = response.user?.role

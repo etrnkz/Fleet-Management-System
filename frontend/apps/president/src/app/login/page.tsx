@@ -39,7 +39,7 @@ export default function LoginPage() {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, appType: 'president' }),
+        body: JSON.stringify({ email, password, appType: 'president', keepMeSignedIn: rememberMe }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Login failed')
@@ -47,6 +47,12 @@ export default function LoginPage() {
       localStorage.setItem('accessToken', data.access_token)
       localStorage.setItem('access_token', data.access_token)
       localStorage.setItem('user', JSON.stringify(data.user))
+
+      if (!rememberMe) {
+        localStorage.setItem('sessionExpiry', String(Date.now() + 7 * 60 * 60 * 1000))
+      } else {
+        localStorage.removeItem('sessionExpiry')
+      }
 
       if (rememberMe) {
         const expiry = new Date()

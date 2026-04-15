@@ -27,4 +27,8 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   appType?: string;
+
+  @ApiPropertyOptional({ example: false, description: 'Keep session alive for 45 days instead of 7 hours' })
+  @IsOptional()
+  keepMeSignedIn?: boolean;
 }

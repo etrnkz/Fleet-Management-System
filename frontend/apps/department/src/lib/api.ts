@@ -104,10 +104,10 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = 
 
 // Auth APIs
 export const authApi = {
-  login: (email: string, password: string) =>
+  login: (email: string, password: string, keepMeSignedIn = false) =>
     apiFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password, appType: 'department' }),
+      body: JSON.stringify({ email, password, appType: 'department', keepMeSignedIn }),
     }),
 
   logout: () =>
