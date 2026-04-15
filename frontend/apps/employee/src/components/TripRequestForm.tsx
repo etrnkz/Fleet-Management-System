@@ -41,7 +41,8 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
     purpose: '',
     startDateTime: '',
     endDateTime: '',
-    passengerCount: 1
+    passengerCount: 1,
+    phoneNumber: ''
   })
 
   // Calculate minimum date (48 hours from now)
@@ -90,6 +91,7 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
         startDateTime: formData.startDateTime,
         endDateTime: formData.endDateTime,
         passengerCount: Number(formData.passengerCount),
+        phoneNumber: formData.phoneNumber || undefined,
         tripType: mapped.tripType,
         tripCategory: mapped.tripCategory,
       })
@@ -111,7 +113,8 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
         purpose: '',
         startDateTime: '',
         endDateTime: '',
-        passengerCount: 1
+        passengerCount: 1,
+        phoneNumber: ''
       })
       
       onSuccess()
@@ -261,6 +264,25 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
               required
             />
+          </div>
+
+          {/* Contact Phone Number */}
+          <div>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+              Contact Phone Number
+            </label>
+            <input
+              type="tel"
+              id="phoneNumber"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              placeholder="+251912345678"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Optional: Provide a contact number for this trip
+            </p>
           </div>
           
           {/* Action Buttons */}
