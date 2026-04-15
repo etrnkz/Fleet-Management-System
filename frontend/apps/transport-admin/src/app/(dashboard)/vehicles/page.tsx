@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'   // ✅ this makes it a module
-import { vehicleApi } from '@/lib/api'
+import { vehicleApi, tripApi } from '@/lib/api'
 import Toast, { ToastType } from '@/components/Toast'
 interface ToastMessage {
   message: string
@@ -30,6 +30,7 @@ interface Vehicle {
   color?: string
   vipGeoRestrictionEnabled?: boolean
   restrictedZones?: RestrictedZone[] | null
+  onTrip?: boolean
   assignedDriver?: {
     id: string
     user: {
@@ -59,8 +60,28 @@ export default function VehiclesPage() {
   const loadVehicles = async () => {
     try {
       setLoading(true)
-      const data = await vehicleApi.getAll()
-      setVehicles(Array.isArray(data) ? data : [])
+      const [vehiclesData, tripsData] = await Promise.all([
+        vehicleApi.getAll(),
+        tripApi.getAll({ state: 'IN_PROGRESS' })
+      ])
+      
+      const vehiclesArray = Array.isArray(vehiclesData) ? vehiclesData : []
+      const tripsArray = Array.isArray(tripsData) ? tripsData : []
+      
+      // Create a set of vehicle IDs that are currently on trips
+      const vehiclesOnTrip = new Set(
+        tripsArray
+          .map((trip: any) => trip.allocatedVehicle?.id)
+          .filter((id: string) => id)
+      )
+      
+      // Add onTrip flag to vehicles
+      const vehiclesWithTripStatus = vehiclesArray.map((vehicle: any) => ({
+        ...vehicle,
+        onTrip: vehiclesOnTrip.has(vehicle.id)
+      }))
+      
+      setVehicles(vehiclesWithTripStatus)
     } catch (error: any) {
       showToast(error.message || 'Failed to load vehicles', 'error')
       setVehicles([])
@@ -330,7 +351,15 @@ export default function VehiclesPage() {
                     <span className="text-sm text-gray-600">{vehicle.vehicleType || 'N/A'}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>{vehicle.status}</span>
+                    {vehicle.onTrip ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                        On Duty
+                      </span>
+                    ) : (
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>
+                        {vehicle.status}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {vehicle.assignedDriver?.user?.name ? (
