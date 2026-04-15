@@ -116,8 +116,9 @@ export default function LiveTrackingPage() {
   const loadActiveTrips = async () => {
     try {
       setLoading(true)
+      // Only fetch trips that are actually in progress or ready to start
       const response = await tripApi.getAll({ 
-        state: 'IN_PROGRESS,CAR_ALLOCATED,READY' 
+        state: 'IN_PROGRESS' 
       })
       
       const tripsArray = Array.isArray(response) ? response : []
@@ -380,21 +381,13 @@ export default function LiveTrackingPage() {
   })
 
   const getStatusColor = (state: string) => {
-    switch (state) {
-      case 'IN_PROGRESS': return 'bg-green-100 text-green-700'
-      case 'CAR_ALLOCATED': return 'bg-blue-100 text-blue-700'
-      case 'READY': return 'bg-yellow-100 text-yellow-700'
-      default: return 'bg-gray-100 text-gray-700'
-    }
+    if (state === 'IN_PROGRESS') return 'bg-green-100 text-green-700'
+    return 'bg-gray-100 text-gray-700'
   }
 
   const getStatusText = (state: string) => {
-    switch (state) {
-      case 'IN_PROGRESS': return 'In Progress'
-      case 'CAR_ALLOCATED': return 'Allocated'
-      case 'READY': return 'Ready'
-      default: return state
-    }
+    if (state === 'IN_PROGRESS') return 'In Progress'
+    return state
   }
 
   if (loading) {
@@ -452,8 +445,6 @@ export default function LiveTrackingPage() {
             >
               <option value="all">All Status</option>
               <option value="IN_PROGRESS">In Progress</option>
-              <option value="CAR_ALLOCATED">Allocated</option>
-              <option value="READY">Ready</option>
             </select>
           </div>
         </div>
