@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { tripApi } from '@/lib/api'
+import { formatDate, formatDateTime } from '@/lib/dateUtils'
 
 export default function ApprovalsPage() {
   const [selectedTab, setSelectedTab] = useState('pending')
@@ -56,8 +57,8 @@ export default function ApprovalsPage() {
         purpose: trip.purpose || 'Official business',
         destination: trip.destination || 'N/A',
         tripDates: {
-          start: trip.startDateTime ? new Date(trip.startDateTime).toISOString().split('T')[0] : 'N/A',
-          end: trip.endDateTime ? new Date(trip.endDateTime).toISOString().split('T')[0] : 'N/A'
+          start: formatDate(trip.startDateTime),
+          end: formatDate(trip.endDateTime)
         },
         duration: trip.startDateTime && trip.endDateTime ? 
           `${Math.ceil((new Date(trip.endDateTime).getTime() - new Date(trip.startDateTime).getTime()) / (1000 * 60 * 60 * 24))} days` : 'N/A',
@@ -564,11 +565,11 @@ export default function ApprovalsPage() {
                     </div>
                     <div>
                       <p className="text-xs md:text-sm text-gray-600">Start Date</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates?.start || selectedRequest.startDateTime ? new Date(selectedRequest.startDateTime).toLocaleDateString() : 'N/A'}</p>
+                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates?.start || formatDate(selectedRequest.startDateTime)}</p>
                     </div>
                     <div>
                       <p className="text-xs md:text-sm text-gray-600">End Date</p>
-                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates?.end || selectedRequest.endDateTime ? new Date(selectedRequest.endDateTime).toLocaleDateString() : 'N/A'}</p>
+                      <p className="text-sm md:text-base font-medium text-gray-800">{selectedRequest.tripDates?.end || formatDate(selectedRequest.endDateTime)}</p>
                     </div>
                   </div>
                 </div>
