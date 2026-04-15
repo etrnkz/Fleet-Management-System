@@ -1310,6 +1310,8 @@ export class TripsService {
 
     return savedTrip;
   }
+
+  async submitFeedback(
     id: string,
     createFeedbackDto: CreateFeedbackDto,
     user: User,
