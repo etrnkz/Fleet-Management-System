@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useTheme } from '@/contexts/ThemeContext'
 import Toast from '@/components/Toast'
 import { getCurrentUser } from '@/lib/api'
 
@@ -17,6 +18,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { theme, toggleTheme } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
@@ -289,11 +291,11 @@ export default function DashboardLayout({
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--fa-background)] transition-colors duration-300">
       {/* Navigation Loading Spinner */}
       {isLoading && (
         <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-[200] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[#1B3D2F]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[var(--fa-primary)]"></div>
         </div>
       )}
 
@@ -305,20 +307,20 @@ export default function DashboardLayout({
         ></div>
       )}
 
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-300 ease-in-out ${
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-[var(--fa-surface)] border-r border-[var(--fa-outline-variant)]/20 transition-colors duration-300 z-50 transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200">
           <img src="/hulogo.png" alt="Haramaya University" className="w-8 h-8 object-contain rounded-full" />
           <div>
-            <div className="font-bold text-[#1B3D2F] tracking-tight">Haramaya University</div>
+            <div className="font-bold text-[var(--fa-primary)] tracking-tight">Haramaya University</div>
             <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 space-y-1 flex-1">
           {navigation.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -331,8 +333,8 @@ export default function DashboardLayout({
                 }}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
-                    ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
-                    : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
+                    ? 'text-[var(--fa-primary)] font-bold border-l-4 border-[var(--fa-primary)]'
+                    : 'text-[var(--fa-secondary)] hover:text-[var(--fa-primary)] hover:bg-[var(--fa-surface-container)]'
                 }`}
               >
                 <span>{item.icon}</span>
@@ -344,6 +346,26 @@ export default function DashboardLayout({
             )
           })}
         </nav>
+
+        {/* Theme Toggle at bottom of sidebar */}
+        <div className="p-4 border-t border-[var(--fa-outline-variant)]/20">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[var(--fa-secondary)] font-medium hover:text-[var(--fa-primary)] hover:bg-[var(--fa-surface-container)] transition-colors"
+          >
+            {theme === 'light' ? (
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            )}
+            <span className="antialiased tracking-tight">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -367,7 +389,7 @@ export default function DashboardLayout({
           </div>
 
           <div className="hidden lg:flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-[#1B3D2F]">
+            <h1 className="text-xl font-semibold text-[var(--fa-primary)]">
               {pathname === '/dashboard' && 'Department Head Dashboard'}
               {pathname === '/my-trips' && 'My Trips'}
               {pathname === '/approvals' && 'Trip Requests'}
@@ -418,7 +440,7 @@ export default function DashboardLayout({
                           >
                             <div className="flex items-start gap-2 sm:gap-3">
                               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--fa-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
                               </div>
@@ -429,7 +451,7 @@ export default function DashboardLayout({
                               </div>
                               <button
                                 onClick={() => handleMarkAsRead(notification.id)}
-                                className="flex-shrink-0 text-xs text-[#1B3D2F] font-semibold hover:underline px-2 py-1 rounded hover:bg-[#1B3D2F]/10 transition-colors"
+                                className="flex-shrink-0 text-xs text-[var(--fa-primary)] font-semibold hover:underline px-2 py-1 rounded hover:bg-[#1B3D2F]/10 transition-colors"
                               >
                                 Mark read
                               </button>
@@ -452,14 +474,14 @@ export default function DashboardLayout({
                           notifications.filter((n: any) => !n.isRead).forEach(n => handleMarkAsRead(n.id))
                           setNotificationDropdownOpen(false)
                         }}
-                        className="text-sm font-bold text-[#1B3D2F] hover:text-[#1B3D2F]/80 transition-colors"
+                        className="text-sm font-bold text-[var(--fa-primary)] hover:text-[var(--fa-primary)]/80 transition-colors"
                       >
                         Mark all as read
                       </button>
                       <Link
                         href="/notifications"
                         onClick={() => setNotificationDropdownOpen(false)}
-                        className="text-xs text-gray-500 hover:text-[#1B3D2F] font-medium"
+                        className="text-xs text-gray-500 hover:text-[var(--fa-primary)] font-medium"
                       >
                         View all
                       </Link>
@@ -612,7 +634,7 @@ export default function DashboardLayout({
                     onClick={() => setActiveTab('profile')}
                     className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                       activeTab === 'profile'
-                        ? 'border-[#1B3D2F] text-[#1B3D2F]'
+                        ? 'border-[var(--fa-primary)] text-[var(--fa-primary)]'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
@@ -622,7 +644,7 @@ export default function DashboardLayout({
                     onClick={() => setActiveTab('password')}
                     className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                       activeTab === 'password'
-                        ? 'border-[#1B3D2F] text-[#1B3D2F]'
+                        ? 'border-[var(--fa-primary)] text-[var(--fa-primary)]'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
@@ -646,7 +668,7 @@ export default function DashboardLayout({
                         <div>
                           <button
                             type="button"
-                            className="px-4 py-2 bg-[#1B3D2F]/10 text-[#1B3D2F] rounded-lg hover:bg-[#1B3D2F]/15 transition-colors text-sm font-medium"
+                            className="px-4 py-2 bg-[#1B3D2F]/10 text-[var(--fa-primary)] rounded-lg hover:bg-[#1B3D2F]/15 transition-colors text-sm font-medium"
                           >
                             Change Photo
                           </button>
@@ -916,7 +938,7 @@ export default function DashboardLayout({
                 <div className="flex gap-4">
                   {['profile', 'account', 'invite'].map(tab => (
                     <button key={tab} onClick={() => setSettingsTab(tab)}
-                      className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors capitalize ${settingsTab === tab ? 'border-[#1B3D2F] text-[#1B3D2F]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                      className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors capitalize ${settingsTab === tab ? 'border-[var(--fa-primary)] text-[var(--fa-primary)]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
                       {tab === 'invite' ? 'Invite Employees' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                   ))}
@@ -928,7 +950,7 @@ export default function DashboardLayout({
                   <div className="space-y-6">
                     <div className="flex items-center gap-6">
                       <div className="relative">
-                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-4 border-[#1B3D2F]">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-4 border-[var(--fa-primary)]">
                           {profileImage ? <img src={profileImage} alt="Profile" className="w-full h-full object-cover" /> : (
                             <div className="w-full h-full flex items-center justify-center">
                               <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1012,7 +1034,7 @@ export default function DashboardLayout({
                     ) : (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">CSV File <span className="text-gray-400 font-normal">(must have "email" column)</span></label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[#1B3D2F] transition-colors">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-[var(--fa-primary)] transition-colors">
                           <input type="file" accept=".csv" onChange={e => setCsvFile(e.target.files?.[0] || null)} className="hidden" id="csvUploadModal" />
                           <label htmlFor="csvUploadModal" className="cursor-pointer text-sm text-gray-500">{csvFile ? csvFile.name : 'Click to upload CSV'}</label>
                         </div>
@@ -1028,7 +1050,7 @@ export default function DashboardLayout({
                     </button>
                     {inviteResult && (
                       <div className="space-y-2">
-                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3"><p className="text-sm font-medium text-[#1B3D2F]">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p></div>}
+                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[var(--fa-primary)]/20 rounded-lg p-3"><p className="text-sm font-medium text-[var(--fa-primary)]">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p></div>}
                         {inviteResult.failed.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-sm font-medium text-red-800">✗ {inviteResult.failed.length} failed</p></div>}
                       </div>
                     )}
