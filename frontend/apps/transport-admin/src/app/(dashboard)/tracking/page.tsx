@@ -20,6 +20,13 @@ const Map = dynamic(() => import('@/components/Map'), {
   )
 })
 
+interface RoutePoint {
+  latitude: number
+  longitude: number
+  timestamp: string
+  speed?: number
+}
+
 interface ToastMessage {
   message: string
   type: ToastType
@@ -83,6 +90,13 @@ export default function LiveTrackingPage() {
   const [zoneName, setZoneName] = useState('')
   const [zoneRadius, setZoneRadius] = useState(500)
   const [showGeofenceModal, setShowGeofenceModal] = useState(false)
+  const [routePoints, setRoutePoints] = useState<RoutePoint[]>([])
+  const [tripStats, setTripStats] = useState<{
+    distance: number
+    fuelUsed: number
+    averageSpeed: number
+    duration: number
+  } | null>(null)
 
   const showToast = (message: string, type: ToastType) => {
     setToast({ message, type })
@@ -179,7 +193,7 @@ export default function LiveTrackingPage() {
   }
 
   // Handle track button click
-  const handleTrackTrip = (trip: Trip) => {
+  const handleTrackTrip = async (trip: Trip) => {
     if (!trip.currentLocation) {
       showToast('No live location available for this trip', 'error')
       return
@@ -210,6 +224,50 @@ export default function LiveTrackingPage() {
     
     setVehicles([vehicle])
     setSelectedVehicle(vehicle.id)
+    
+    // Fetch trip route and calculate stats
+    try {
+      const route = await trackingApi.getTripRoute(trip.id) as RoutePoint[]
+      setRoutePoints(route)
+      
+      // Calculate distance and fuel consumption
+      if (route.length > 1) {
+        let totalDistance = 0
+        for (let i = 1; i < route.length; i++) {
+          const dist = calculateDistance(
+            route[i - 1].latitude,
+            route[i - 1].longitude,
+            route[i].latitude,
+            route[i].longitude
+          )
+          totalDistance += dist
+        }
+        
+        // Assume average fuel consumption of 10 km/L (can be customized per vehicle)
+        const fuelConsumptionRate = 10 // km per liter
+        const fuelUsed = totalDistance / fuelConsumptionRate
+        
+        // Calculate duration
+        const startTime = new Date(route[0].timestamp).getTime()
+        const endTime = new Date(route[route.length - 1].timestamp).getTime()
+        const duration = (endTime - startTime) / 1000 / 60 // minutes
+        
+        // Calculate average speed
+        const speeds = route.filter((p: RoutePoint) => p.speed).map((p: RoutePoint) => p.speed!)
+        const averageSpeed = speeds.length > 0 
+          ? speeds.reduce((a: number, b: number) => a + b, 0) / speeds.length 
+          : 0
+        
+        setTripStats({
+          distance: Math.round(totalDistance * 100) / 100,
+          fuelUsed: Math.round(fuelUsed * 100) / 100,
+          averageSpeed: Math.round(averageSpeed * 100) / 100,
+          duration: Math.round(duration * 100) / 100
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load trip route:', error)
+    }
   }
 
   const getTimeAgo = (date: Date): string => {
@@ -624,6 +682,67 @@ export default function LiveTrackingPage() {
         </div>
       </div>
 
+      {/* Trip Statistics */}
+      {tripStats && (
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Distance</p>
+                <p className="text-2xl font-bold text-gray-900">{tripStats.distance} km</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Fuel Used</p>
+                <p className="text-2xl font-bold text-gray-900">{tripStats.fuelUsed} L</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Avg Speed</p>
+                <p className="text-2xl font-bold text-gray-900">{tripStats.averageSpeed} km/h</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Duration</p>
+                <p className="text-2xl font-bold text-gray-900">{tripStats.duration} min</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="h-[calc(100vh-200px)]">
           <Map 
@@ -639,6 +758,7 @@ export default function LiveTrackingPage() {
             }}
             restrictedZones={selectedTrip?.allocatedVehicle?.restrictedZones || []}
             tempZone={tempZone}
+            routePoints={routePoints}
           />
         </div>
       </div>
