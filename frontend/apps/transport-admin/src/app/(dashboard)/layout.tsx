@@ -77,12 +77,35 @@ export default function DashboardLayout({
 
   // Load user and notifications on mount
   useEffect(() => {
-    const currentUser = getCurrentUser()
-    if (!currentUser) {
-      router.push('/login')
-      return
+    const loadUserData = async () => {
+      try {
+        // Check if user is logged in
+        const cachedUser = getCurrentUser()
+        if (!cachedUser) {
+          router.push('/login')
+          return
+        }
+        
+        // Set cached user immediately for display
+        setUser(cachedUser)
+
+        // Fetch fresh data from API in background
+        try {
+          const freshUser = await userApi.getProfile()
+          // Update state and cache with fresh data
+          setUser(freshUser)
+          localStorage.setItem('user', JSON.stringify(freshUser))
+        } catch (apiError) {
+          // If API fails, keep using cached data
+          console.warn('Using cached user data, API fetch failed:', apiError)
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error)
+        router.push('/login')
+      }
     }
-    setUser(currentUser)
+
+    loadUserData()
     loadNotifications()
   }, [])
 
