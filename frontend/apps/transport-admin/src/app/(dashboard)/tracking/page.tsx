@@ -42,7 +42,16 @@ interface Trip {
   endDateTime: string
   state: string
   tripCategory: string
-  allocatedVehicle?: { id: string; plateNumber: string; make: string; model: string; vipGeoRestrictionEnabled: boolean; restrictedZones: RestrictedZone[] }
+  allocatedVehicle?: { 
+    id: string
+    plateNumber: string
+    make: string
+    model: string
+    vipGeoRestrictionEnabled: boolean
+    restrictedZones: RestrictedZone[]
+    fuelType?: string
+    fuelEfficiency?: number
+  }
   allocatedDriver?: { user: { name: string }; licenseNumber: string }
   passengerCount: number
   currentLocation?: { lat: number; lng: number; speed: number; timestamp: string; address?: string }
@@ -94,6 +103,7 @@ export default function LiveTrackingPage() {
   const [tripStats, setTripStats] = useState<{
     distance: number
     fuelUsed: number
+    fuelCost: number
     averageSpeed: number
     duration: number
   } | null>(null)
@@ -243,9 +253,20 @@ export default function LiveTrackingPage() {
           totalDistance += dist
         }
         
-        // Assume average fuel consumption of 10 km/L (can be customized per vehicle)
-        const fuelConsumptionRate = 10 // km per liter
-        const fuelUsed = totalDistance / fuelConsumptionRate
+        // Get vehicle's actual fuel efficiency (km/L) or use default based on fuel type
+        const fuelEfficiency = trip.allocatedVehicle?.fuelEfficiency || 
+          (trip.allocatedVehicle?.fuelType === 'Diesel' ? 8 : 10) // Default: Diesel 8km/L, Gasoline 10km/L
+        
+        // Calculate actual fuel used based on distance and efficiency
+        const fuelUsed = totalDistance / fuelEfficiency
+        
+        // Fuel prices in Ethiopian Birr
+        const PETROL_PRICE = 132.18 // Birr per liter
+        const DIESEL_PRICE = 139.84 // Birr per liter
+        
+        // Get fuel price based on vehicle's fuel type
+        const fuelPricePerLiter = trip.allocatedVehicle?.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE
+        const fuelCost = fuelUsed * fuelPricePerLiter
         
         // Calculate duration
         const startTime = new Date(route[0].timestamp).getTime()
@@ -261,6 +282,7 @@ export default function LiveTrackingPage() {
         setTripStats({
           distance: Math.round(totalDistance * 100) / 100,
           fuelUsed: Math.round(fuelUsed * 100) / 100,
+          fuelCost: Math.round(fuelCost * 100) / 100,
           averageSpeed: Math.round(averageSpeed * 100) / 100,
           duration: Math.round(duration * 100) / 100
         })
@@ -709,6 +731,7 @@ export default function LiveTrackingPage() {
               <div>
                 <p className="text-sm text-gray-600">Fuel Used</p>
                 <p className="text-2xl font-bold text-gray-900">{tripStats.fuelUsed} L</p>
+                <p className="text-xs text-gray-500">{tripStats.fuelCost} Birr</p>
               </div>
             </div>
           </div>
