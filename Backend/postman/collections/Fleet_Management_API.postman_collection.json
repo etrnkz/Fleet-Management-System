@@ -612,6 +612,39 @@
                      "item":  [
                                   {
                                       "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{base_url}}/api/v1/drivers",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"userId\": \"{{driver_user_id}}\",\n  \"licenseNumber\": \"DL-123456789\",\n  \"licenseExpiry\": \"2028-12-31\",\n  \"experienceYears\": 5,\n  \"phoneNumber\": \"+251912345678\",\n  \"specializations\": \"Heavy vehicles, Long distance\",\n  \"notes\": \"Excellent safety record\"\n}"
+                                                               }
+                                                  },
+                                      "name":  "POST /drivers (create driver)",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                                                                                    "pm.test('Returns driver', () => { const j = pm.response.json(); pm.expect(j).to.have.property('id'); pm.environment.set('driver_id', j.id); });"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "request":  {
                                                       "method":  "GET",
                                                       "url":  "{{base_url}}/api/v1/drivers",
                                                       "header":  [
