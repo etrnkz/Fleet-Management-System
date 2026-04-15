@@ -1,8 +1,9 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'   // ✅ this makes it a module
+import { useState, useEffect } from 'react'
 import { vehicleApi, tripApi } from '@/lib/api'
 import Toast, { ToastType } from '@/components/Toast'
+import Combobox from '@/components/Combobox'
 interface ToastMessage {
   message: string
   type: ToastType
@@ -247,42 +248,26 @@ export default function VehiclesPage() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
         <div className="flex flex-col gap-3">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by plate, make, or model..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-sm"
-            />
-            <svg className="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+          <Combobox
+            value={searchQuery}
+            onChange={setSearchQuery}
+            options={[...new Set(vehicles.flatMap(v => [v.plateNumber, v.make, v.model].filter(Boolean)))]}
+            placeholder="Search by plate, make, or model..."
+          />
 
-          <select
-            value={vehicleType}
-            onChange={(e) => setVehicleType(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white"
-          >
-            <option value="all">Vehicle Type</option>
-            <option value="truck">Truck</option>
-            <option value="van">Van</option>
-            <option value="bus">Bus</option>
-            <option value="sedan">Sedan</option>
-            <option value="suv">SUV</option>
-          </select>
+          <Combobox
+            value={vehicleType === 'all' ? '' : vehicleType}
+            onChange={val => setVehicleType(val || 'all')}
+            options={['Truck', 'Van', 'Bus', 'Sedan', 'SUV', 'Pickup', 'Minibus']}
+            placeholder="Vehicle Type"
+          />
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white"
-          >
-            <option value="all">Status</option>
-            <option value="active">Active</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="inactive">Inactive</option>
-          </select>
+          <Combobox
+            value={statusFilter === 'all' ? '' : statusFilter}
+            onChange={val => setStatusFilter(val || 'all')}
+            options={['Active', 'Maintenance', 'Inactive']}
+            placeholder="Status"
+          />
 
           {(searchQuery || vehicleType !== 'all' || statusFilter !== 'all') && (
             <button 

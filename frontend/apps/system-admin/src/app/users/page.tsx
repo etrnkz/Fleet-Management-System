@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { systemAdminApi } from '../../lib/api'
+import Combobox from '../../components/Combobox'
 
 const ROLES = ['User', 'DepartmentHead', 'CollegeHead', 'Dean', 'President', 'TransportOffice', 'DeploymentTeam', 'MaintenanceTeam', 'Driver', 'SystemAdmin', 'Developer']
 
@@ -218,10 +219,14 @@ export default function UsersPage() {
             className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-[#1B3D2F] outline-none" />
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] outline-none">
-            <option value="">All Roles</option>
-            {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
+          <div className="flex-1">
+            <Combobox
+              value={filterRole}
+              onChange={setFilterRole}
+              options={['', ...ROLES]}
+              placeholder="Filter by role..."
+            />
+          </div>
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] outline-none">
             <option value="">All Status</option>
             <option value="active">Active</option>
@@ -316,9 +321,12 @@ export default function UsersPage() {
                 ))}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select value={form.role} onChange={e => setForm(p => ({...p, role: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm">
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <Combobox
+                    value={form.role}
+                    onChange={val => setForm(p => ({...p, role: val}))}
+                    options={ROLES}
+                    placeholder="Select role..."
+                  />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
@@ -358,9 +366,12 @@ export default function UsersPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select value={form.role} onChange={e => setForm(p => ({...p, role: e.target.value}))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm">
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <Combobox
+                    value={form.role}
+                    onChange={val => setForm(p => ({...p, role: val}))}
+                    options={ROLES}
+                    placeholder="Select role..."
+                  />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>

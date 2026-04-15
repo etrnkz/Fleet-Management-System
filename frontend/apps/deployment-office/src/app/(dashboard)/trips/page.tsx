@@ -15,15 +15,10 @@ export default function TripsPage() {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
-  const [assignmentData, setAssignmentData] = useState({
-    vehicleId: '',
-    driverId: ''
-  })
-  const [fuelRequest, setFuelRequest] = useState({
-    amount: '',
-    urgency: 'normal',
-    notes: ''
-  })
+  const [assignmentData, setAssignmentData] = useState({ vehicleId: '', driverId: '' })
+  const [vehicleSearch, setVehicleSearch] = useState('')
+  const [driverSearch, setDriverSearch] = useState('')
+  const [fuelRequest, setFuelRequest] = useState({ amount: '', urgency: 'normal', notes: '' })
   const [tripsList, setTripsList] = useState<any[]>([])
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([])
   const [availableDrivers, setAvailableDrivers] = useState<any[]>([])
@@ -399,8 +394,22 @@ export default function TripsPage() {
             {/* Vehicle Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">Select Vehicle</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {availableVehicles.map((vehicle) => (
+              <div className="relative mb-3">
+                <input
+                  type="text"
+                  value={vehicleSearch}
+                  onChange={e => setVehicleSearch(e.target.value)}
+                  placeholder="Search by plate, model, type..."
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                />
+                <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-52 overflow-y-auto">
+                {availableVehicles
+                  .filter((v: any) => !vehicleSearch || [v.name, v.plate, v.type, v.model].some(f => f?.toLowerCase().includes(vehicleSearch.toLowerCase())))
+                  .map((vehicle: any) => (
                   <div
                     key={vehicle.id}
                     onClick={() => setAssignmentData({...assignmentData, vehicleId: vehicle.id})}
@@ -436,8 +445,22 @@ export default function TripsPage() {
             {/* Driver Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">Select Driver</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {availableDrivers.map((driver) => (
+              <div className="relative mb-3">
+                <input
+                  type="text"
+                  value={driverSearch}
+                  onChange={e => setDriverSearch(e.target.value)}
+                  placeholder="Search by name, license, phone..."
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                />
+                <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-52 overflow-y-auto">
+                {availableDrivers
+                  .filter((d: any) => !driverSearch || [d.name, d.license, d.phone].some(f => f?.toLowerCase().includes(driverSearch.toLowerCase())))
+                  .map((driver: any) => (
                   <div
                     key={driver.id}
                     onClick={() => setAssignmentData({...assignmentData, driverId: driver.id})}
