@@ -17,6 +17,8 @@ export default function DashboardPage() {
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [loading, setLoading] = useState(true)
   const [showAddDriverSection, setShowAddDriverSection] = useState(false)
+  const [vehicleAddSuccess, setVehicleAddSuccess] = useState(false)
+  const [driverAddSuccess, setDriverAddSuccess] = useState(false)
   
   // Import states
   const [vehicleImportMode, setVehicleImportMode] = useState<'form' | 'csv'>('form')
@@ -239,7 +241,11 @@ export default function DashboardPage() {
 
       await vehicleApi.create(vehicleData)
       showToast('Vehicle added successfully!', 'success')
-      setShowAddVehicleForm(false)
+      setVehicleAddSuccess(true)
+      setTimeout(() => {
+        setShowAddVehicleForm(false)
+        setVehicleAddSuccess(false)
+      }, 2000)
       loadDashboardData() // Reload data
     } catch (error: any) {
       showToast(error.message || 'Failed to add vehicle', 'error')
@@ -295,8 +301,13 @@ export default function DashboardPage() {
       await driverApi.create(driverData)
       
       showToast('Driver added successfully! You can now assign them to a vehicle.', 'success')
+      setDriverAddSuccess(true)
+      setTimeout(() => {
+        setShowAssignDriverForm(false)
+        setShowAddDriverSection(false)
+        setDriverAddSuccess(false)
+      }, 2000)
       ;(e.target as HTMLFormElement).reset()
-      setShowAddDriverSection(false)
       loadDashboardData()
     } catch (error: any) {
       showToast(error.message || 'Failed to add driver', 'error')
@@ -1066,6 +1077,19 @@ export default function DashboardPage() {
               </div>
             ) : (
               /* Form Content */
+              <>
+              {vehicleAddSuccess ? (
+                /* Success State */
+                <div className="p-12 flex flex-col items-center justify-center">
+                  <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                    <svg className="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-green-600 mb-2">Vehicle Added Successfully!</h3>
+                  <p className="text-gray-600 text-center">The vehicle has been added to your fleet.</p>
+                </div>
+              ) : (
               <form onSubmit={handleAddVehicle} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Vehicle Information */}
@@ -1323,6 +1347,8 @@ export default function DashboardPage() {
               </div>
             </form>
             )}
+            </>
+            )}
           </div>
         </div>
       )}
@@ -1561,6 +1587,19 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : (
+                <>
+                {driverAddSuccess ? (
+                  /* Success State */
+                  <div className="p-12 flex flex-col items-center justify-center">
+                    <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                      <svg className="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-green-600 mb-2">Driver Added Successfully!</h3>
+                    <p className="text-gray-600 text-center">The driver account has been created and is ready to be assigned to a vehicle.</p>
+                  </div>
+                ) : (
                 <>
               {/* Assign Existing Driver Form */}
               {!showAddDriverSection && (
@@ -1816,6 +1855,8 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </form>
+              )}
+              </>
               )}
               </>
               )}
