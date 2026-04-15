@@ -2318,9 +2318,65 @@ export default function DashboardPage() {
                   )}
 
                 {selectedTrip.completedAt && (
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <p className="text-sm text-green-600 font-medium">Completed at</p>
-                    <p className="text-base text-green-900">{new Date(selectedTrip.completedAt).toLocaleString()}</p>
+                  <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
+                    <div>
+                      <p className="text-sm text-green-600 font-medium">Completed at</p>
+                      <p className="text-base text-green-900">{new Date(selectedTrip.completedAt).toLocaleString()}</p>
+                    </div>
+                    
+                    {/* Trip Completion Statistics */}
+                    {(selectedTrip.actualDistance || selectedTrip.actualFuelCost) && (
+                      <div className="pt-3 border-t border-green-200">
+                        <p className="text-sm text-green-600 font-medium mb-2">Trip Statistics</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {selectedTrip.actualDistance && (
+                            <div className="bg-white rounded-lg p-3">
+                              <div className="flex items-center gap-2 mb-1">
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                </svg>
+                                <p className="text-xs text-gray-600 font-medium">Distance</p>
+                              </div>
+                              <p className="text-lg font-bold text-gray-900">{selectedTrip.actualDistance} km</p>
+                            </div>
+                          )}
+                          
+                          {selectedTrip.actualFuelCost && selectedTrip.allocatedVehicle && (
+                            <>
+                              <div className="bg-white rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                  <p className="text-xs text-gray-600 font-medium">Fuel Used</p>
+                                </div>
+                                <p className="text-lg font-bold text-gray-900">
+                                  {(() => {
+                                    // Calculate fuel used from cost and fuel type
+                                    const fuelPricePerLiter = selectedTrip.allocatedVehicle.fuelType === 'Diesel' ? 139.84 : 132.18
+                                    const fuelUsed = selectedTrip.actualFuelCost / fuelPricePerLiter
+                                    return Math.round(fuelUsed * 100) / 100
+                                  })()} L
+                                </p>
+                              </div>
+                              
+                              <div className="bg-white rounded-lg p-3 col-span-2">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <p className="text-xs text-gray-600 font-medium">Fuel Cost</p>
+                                </div>
+                                <p className="text-lg font-bold text-gray-900">{selectedTrip.actualFuelCost} Birr</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {selectedTrip.allocatedVehicle.fuelType} @ {selectedTrip.allocatedVehicle.fuelType === 'Diesel' ? '139.84' : '132.18'} Birr/L
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
