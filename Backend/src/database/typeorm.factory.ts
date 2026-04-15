@@ -20,16 +20,14 @@ function useSqlite(): boolean {
 }
 
 /**
- * DB_SYNCHRONIZE=true|false overrides everything.
- * Else: SQLite always syncs; Postgres syncs in non-production (dev convenience), off in production.
+ * DB_SYNCHRONIZE=true|false controls sync.
+ * Defaults to false — use migrations for all environments.
  */
 function synchronizeDefault(): boolean {
   const sync = envTrimmed('DB_SYNCHRONIZE').toLowerCase();
   if (sync === 'true') return true;
-  if (sync === 'false') return false;
-  if (useSqlite()) return true;
-  const nodeEnv = envTrimmed('NODE_ENV') || 'development';
-  return nodeEnv !== 'production';
+  if (useSqlite()) return true; // SQLite dev convenience only
+  return false;
 }
 
 function srcOrDistRoot(): string {
