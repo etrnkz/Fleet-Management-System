@@ -69,7 +69,16 @@ export class DriversService {
       notes: createDriverDto.notes,
     });
 
-    return this.driverRepository.save(driver);
+    const saved = await this.driverRepository.save(driver);
+
+    // Save phoneNumber to the linked user if provided
+    if (createDriverDto.phoneNumber) {
+      await this.usersService.update(createDriverDto.userId, {
+        phoneNumber: createDriverDto.phoneNumber,
+      });
+    }
+
+    return saved;
   }
 
   async findAll(): Promise<Driver[]> {
