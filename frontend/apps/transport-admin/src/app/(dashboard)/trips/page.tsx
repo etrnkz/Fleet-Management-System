@@ -16,7 +16,13 @@ interface Trip {
   endDateTime: string
   passengerCount: number
   state: string
-  allocatedVehicle?: { id: string; plateNumber: string; make: string; model: string }
+  allocatedVehicle?: { 
+    id: string
+    plateNumber: string
+    make: string
+    model: string
+    fuelType?: string
+  }
   allocatedDriver?: {
     id: string
     name: string
@@ -26,6 +32,8 @@ interface Trip {
   estimatedDistance?: number
   estimatedFuelCost?: number
   actualDistance?: number
+  actualFuelCost?: number
+  completedAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -493,6 +501,43 @@ export default function TripsPage() {
                       <p className="text-xs md:text-sm font-semibold text-blue-900">Status: {getTripStatus(selectedTrip.state).text}</p>
                       <p className="text-[10px] md:text-xs text-blue-700 mt-1">State: {selectedTrip.state}</p>
                     </div>
+
+                    {/* Trip Completion Statistics */}
+                    {selectedTrip.state === 'COMPLETED' && selectedTrip.completedAt && (
+                      <div className="mt-3 md:mt-4 p-2.5 md:p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                        <p className="text-xs font-semibold text-green-900">Completed</p>
+                        <p className="text-[10px] text-green-700">{new Date(selectedTrip.completedAt).toLocaleString()}</p>
+                        
+                        {(selectedTrip.actualDistance || selectedTrip.actualFuelCost) && (
+                          <div className="pt-2 border-t border-green-200 space-y-2">
+                            {selectedTrip.actualDistance && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-green-700">Distance:</span>
+                                <span className="text-xs font-bold text-green-900">{selectedTrip.actualDistance} km</span>
+                              </div>
+                            )}
+                            {selectedTrip.actualFuelCost && selectedTrip.allocatedVehicle && (
+                              <>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] text-green-700">Fuel Used:</span>
+                                  <span className="text-xs font-bold text-green-900">
+                                    {(() => {
+                                      const fuelPricePerLiter = selectedTrip.allocatedVehicle.fuelType === 'Diesel' ? 139.84 : 132.18
+                                      const fuelUsed = selectedTrip.actualFuelCost / fuelPricePerLiter
+                                      return Math.round(fuelUsed * 100) / 100
+                                    })()} L
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] text-green-700">Fuel Cost:</span>
+                                  <span className="text-xs font-bold text-green-900">{selectedTrip.actualFuelCost} Birr</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Fuel Approval Panel - for CAR_ALLOCATED trips */}
