@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import { getCurrentUser } from '../lib/api'
+import { useTheme } from '../contexts/ThemeContext'
 
 const navItems: { href: string; label: string; requestSection?: boolean; icon: (active: boolean) => ReactNode }[] = [
   {
@@ -12,7 +13,7 @@ const navItems: { href: string; label: string; requestSection?: boolean; icon: (
     label: 'Dashboard',
     icon: (active) => (
       <svg
-        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B3D2F]' : 'text-[#565F71] group-hover:text-[#1B3D2F]'}`}
+        className={`w-5 h-5 shrink-0 ${active ? 'text-[var(--fa-primary)]' : 'text-[var(--fa-secondary)] group-hover:text-[var(--fa-primary)]'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -31,7 +32,7 @@ const navItems: { href: string; label: string; requestSection?: boolean; icon: (
     label: 'My Trips',
     icon: (active) => (
       <svg
-        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B3D2F]' : 'text-[#565F71] group-hover:text-[#1B3D2F]'}`}
+        className={`w-5 h-5 shrink-0 ${active ? 'text-[var(--fa-primary)]' : 'text-[var(--fa-secondary)] group-hover:text-[var(--fa-primary)]'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -51,7 +52,7 @@ const navItems: { href: string; label: string; requestSection?: boolean; icon: (
     requestSection: true,
     icon: (active) => (
       <svg
-        className={`w-5 h-5 shrink-0 ${active ? 'text-[#1B3D2F]' : 'text-[#565F71] group-hover:text-[#1B3D2F]'}`}
+        className={`w-5 h-5 shrink-0 ${active ? 'text-[var(--fa-primary)]' : 'text-[var(--fa-secondary)] group-hover:text-[var(--fa-primary)]'}`}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -73,6 +74,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { theme, toggleTheme } = useTheme()
   const [user, setUser] = useState<{ name?: string; email?: string; role?: string } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -110,7 +112,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#191C20] flex flex-row">
+    <div className="min-h-screen bg-[var(--fa-background)] text-[var(--fa-on-surface)] flex flex-row transition-colors duration-300">
       {sidebarOpen && (
         <button
           type="button"
@@ -121,12 +123,12 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-50 h-screen w-64 shrink-0 flex flex-col py-8 px-4 bg-white border-r border-[#C4C6D0]/30 transition-transform duration-300 lg:static lg:z-auto ${
+        className={`fixed top-0 left-0 z-50 h-screen w-64 shrink-0 flex flex-col py-8 px-4 bg-[var(--fa-surface)] border-r border-[var(--fa-outline-variant)]/30 transition-all duration-300 lg:static lg:z-auto ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="mb-10 px-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-[#1B3D2F] flex items-center justify-center text-white shadow-sm">
+          <div className="w-10 h-10 rounded bg-[var(--fa-primary)] flex items-center justify-center text-[var(--fa-on-primary)] shadow-sm">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path
                 strokeLinecap="round"
@@ -137,8 +139,8 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-[#1B3D2F] font-serif">Fleet Authority</h1>
-            <p className="text-[10px] uppercase tracking-widest text-[#565F71] font-bold">University Portal</p>
+            <h1 className="text-xl font-bold tracking-tight text-[var(--fa-primary)] font-serif">Fleet Authority</h1>
+            <p className="text-[10px] uppercase tracking-widest text-[var(--fa-secondary)] font-bold">University Portal</p>
           </div>
         </div>
 
@@ -152,8 +154,8 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
                 onClick={() => setSidebarOpen(false)}
                 className={`group flex items-center gap-3 px-4 py-3 rounded transition-colors duration-200 ${
                   active
-                    ? 'text-[#1B3D2F] font-bold bg-[#D1E1FF]/30 border-l-4 border-[#1B3D2F]'
-                    : 'text-[#565F71] font-medium hover:text-[#1B3D2F] hover:bg-[#ECEEF3]'
+                    ? 'text-[var(--fa-primary)] font-bold bg-[var(--fa-primary-container)]/30 border-l-4 border-[var(--fa-primary)]'
+                    : 'text-[var(--fa-secondary)] font-medium hover:text-[var(--fa-primary)] hover:bg-[var(--fa-surface-container)]'
                 }`}
               >
                 {item.icon(active)}
@@ -163,11 +165,28 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
           })}
         </nav>
 
-        <div className="mt-auto space-y-1 pt-8 border-t border-[#C4C6D0]/20">
+        <div className="mt-auto space-y-1 pt-8 border-t border-[var(--fa-outline-variant)]/20">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded text-[var(--fa-secondary)] font-medium hover:text-[var(--fa-primary)] hover:bg-[var(--fa-surface-container)] transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? (
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            )}
+            <span className="antialiased tracking-tight">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
           <Link
             href="/profile"
             onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 rounded text-[#565F71] font-medium hover:text-[#1B3D2F] hover:bg-[#ECEEF3] transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded text-[var(--fa-secondary)] font-medium hover:text-[var(--fa-primary)] hover:bg-[var(--fa-surface-container)] transition-colors"
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -182,7 +201,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
           </Link>
           <a
             href="mailto:transport@hu.edu.et"
-            className="flex items-center gap-3 px-4 py-3 rounded text-[#565F71] font-medium hover:text-[#1B3D2F] hover:bg-[#ECEEF3] transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded text-[var(--fa-secondary)] font-medium hover:text-[var(--fa-primary)] hover:bg-[var(--fa-surface-container)] transition-colors"
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -197,7 +216,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded text-[#BA1A1A] font-medium hover:bg-[#FFDAD6]/40 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded text-[var(--fa-error)] font-medium hover:bg-[var(--fa-error)]/10 transition-colors"
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -213,12 +232,12 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 w-full lg:ml-0">
-        <header className="sticky top-0 z-30 w-full h-16 flex flex-wrap gap-y-2 justify-between items-center px-4 sm:px-8 bg-white/95 backdrop-blur-md border-b border-[#C4C6D0]/20 shadow-sm">
+        <header className="sticky top-0 z-30 w-full h-16 flex flex-wrap gap-y-2 justify-between items-center px-4 sm:px-8 bg-[var(--fa-surface)]/95 backdrop-blur-md border-b border-[var(--fa-outline-variant)]/20 shadow-sm transition-colors duration-300">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded hover:bg-[#ECEEF3] text-[#565F71]"
+              className="lg:hidden p-2 rounded hover:bg-[var(--fa-surface-container)] text-[var(--fa-secondary)]"
               aria-label="Open menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,13 +245,13 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
               </svg>
             </button>
             <div className="min-w-0 hidden sm:block lg:hidden">
-              <h1 className="text-base font-bold text-[#1B3D2F] font-serif tracking-tight truncate">{title}</h1>
+              <h1 className="text-base font-bold text-[var(--fa-primary)] font-serif tracking-tight truncate">{title}</h1>
             </div>
           </div>
 
           <div className="relative w-full max-w-md hidden md:block order-last md:order-none md:flex-1 md:max-w-md">
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#74777F]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--fa-secondary)]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -243,16 +262,32 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
               type="search"
               readOnly
               placeholder="Search trip ID, destination…"
-              className="w-full bg-[#ECEEF3] border-none rounded py-2 pl-10 pr-4 text-sm text-[#191C20] placeholder:text-[#565F71] focus:ring-1 focus:ring-[#1B3D2F] focus:bg-white transition-all outline-none"
+              className="w-full bg-[var(--fa-surface-container)] border-none rounded py-2 pl-10 pr-4 text-sm text-[var(--fa-on-surface)] placeholder:text-[var(--fa-secondary)] focus:ring-1 focus:ring-[var(--fa-primary)] focus:bg-[var(--fa-surface)] transition-all outline-none"
               aria-label="Search trips"
             />
           </div>
 
           <div className="flex items-center gap-4 sm:gap-6 ml-auto">
             <div className="flex items-center gap-2 sm:gap-4">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="text-[var(--fa-secondary)] hover:text-[var(--fa-primary)] transition-colors p-1 hidden sm:inline"
+                aria-label="Toggle theme"
+              >
+                {theme === 'light' ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                )}
+              </button>
               <Link
                 href="/notifications"
-                className="text-[#565F71] hover:text-[#1B3D2F] transition-colors p-1"
+                className="text-[var(--fa-secondary)] hover:text-[var(--fa-primary)] transition-colors p-1"
                 aria-label="Notifications"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,7 +301,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
               </Link>
               <a
                 href="mailto:transport@hu.edu.et"
-                className="text-[#565F71] hover:text-[#1B3D2F] transition-colors p-1 hidden sm:inline"
+                className="text-[var(--fa-secondary)] hover:text-[var(--fa-primary)] transition-colors p-1 hidden sm:inline"
                 aria-label="Help"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,28 +314,28 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
                 </svg>
               </a>
             </div>
-            <div className="h-8 w-px bg-[#C4C6D0]/30 hidden sm:block" />
+            <div className="h-8 w-px bg-[var(--fa-outline-variant)]/30 hidden sm:block" />
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-[#1B3D2F] font-serif leading-tight truncate max-w-[160px]">
+                <p className="text-sm font-bold text-[var(--fa-primary)] font-serif leading-tight truncate max-w-[160px]">
                   {user?.name ?? '—'}
                 </p>
-                <p className="text-[10px] text-[#565F71] uppercase tracking-wider font-semibold">
+                <p className="text-[10px] text-[var(--fa-secondary)] uppercase tracking-wider font-semibold">
                   {user?.role ?? 'Employee'}
                 </p>
               </div>
-              <div className="w-10 h-10 rounded border border-[#C4C6D0]/30 bg-[#1B3D2F] flex items-center justify-center text-white text-sm font-bold">
+              <div className="w-10 h-10 rounded border border-[var(--fa-outline-variant)]/30 bg-[var(--fa-primary)] flex items-center justify-center text-[var(--fa-on-primary)] text-sm font-bold">
                 {(user?.name || 'U').charAt(0).toUpperCase()}
               </div>
             </div>
           </div>
         </header>
 
-        <div className="px-4 sm:px-8 pt-4 pb-2 border-b border-[#C4C6D0]/15 bg-[#F8F9FA] hidden lg:block">
+        <div className="px-4 sm:px-8 pt-4 pb-2 border-b border-[var(--fa-outline-variant)]/15 bg-[var(--fa-background)] hidden lg:block transition-colors duration-300">
           <div className="max-w-7xl mx-auto flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1B3D2F] font-serif">{title}</h1>
-              {subtitle && <p className="text-[#44474E] mt-1 font-medium text-sm">{subtitle}</p>}
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--fa-primary)] font-serif">{title}</h1>
+              {subtitle && <p className="text-[var(--fa-on-surface-variant)] mt-1 font-medium text-sm">{subtitle}</p>}
             </div>
             {headerActions ? <div className="flex items-center gap-2 shrink-0">{headerActions}</div> : null}
           </div>
@@ -316,8 +351,8 @@ export function EmployeeShell(props: EmployeeShellProps) {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
+        <div className="min-h-screen bg-[var(--fa-background)] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-[var(--fa-primary)] border-t-transparent" />
         </div>
       }
     >

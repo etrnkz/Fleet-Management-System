@@ -19,6 +19,25 @@
   --foreground: var(--fa-on-surface);
 }
 
+/* Dark mode colors */
+.dark {
+  --fa-primary: #9ECDB3;
+  --fa-on-primary: #003823;
+  --fa-primary-container: #005234;
+  --fa-on-primary-container: #BBEBCE;
+  --fa-secondary: #B3C5D7;
+  --fa-on-surface: #E2E2E5;
+  --fa-on-surface-variant: #C4C6D0;
+  --fa-background: #111318;
+  --fa-surface: #191C20;
+  --fa-surface-container-low: #1A1C21;
+  --fa-surface-container: #1E2025;
+  --fa-outline-variant: #44474E;
+  --fa-error: #FFB4AB;
+  --background: var(--fa-background);
+  --foreground: var(--fa-on-surface);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
