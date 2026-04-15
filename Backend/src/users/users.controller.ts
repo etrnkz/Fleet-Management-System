@@ -40,7 +40,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles(UserRole.Developer, UserRole.Dean)
+  @Roles(UserRole.Developer, UserRole.Dean, UserRole.SystemAdmin, UserRole.TransportOffice, UserRole.DeploymentTeam)
   @ApiOperation({
     summary: 'Create a new user',
     description:
