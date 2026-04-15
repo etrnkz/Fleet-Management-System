@@ -145,6 +145,13 @@ export class TrackingGateway
       tripId,
       vehicleId: location.vehicleId ?? null,
       plateNumber: location.plateNumber ?? null,
+      make: location.make ?? null,
+      model: location.model ?? null,
+      fuelType: location.fuelType ?? null,
+      driverName: location.driverName ?? null,
+      requesterName: location.requesterName ?? null,
+      destination: location.destination ?? null,
+      requestNumber: location.requestNumber ?? null,
       latitude: location.latitude,
       longitude: location.longitude,
       speed: location.speed ?? null,
@@ -153,6 +160,15 @@ export class TrackingGateway
       engineSimulatedOff: location.engineSimulatedOff ?? false,
       geofenceStatus: location.geofenceStatus ?? 'clear',
       violationZoneName: location.violationZoneName ?? null,
+      // Travel & fuel stats
+      traveledKm: location.traveledKm ?? null,
+      estimatedDistance: location.estimatedDistance ?? null,
+      fuelUsedLiters: location.fuelUsedLiters ?? null,
+      fuelRemainingLiters: location.fuelRemainingLiters ?? null,
+      fuelRemainingPercent: location.fuelRemainingPercent ?? null,
+      fuelRemainingKm: location.fuelRemainingKm ?? null,
+      actualFuelCost: location.actualFuelCost ?? null,
+      expectedTotalFuelCost: location.expectedTotalFuelCost ?? null,
     });
   }
 

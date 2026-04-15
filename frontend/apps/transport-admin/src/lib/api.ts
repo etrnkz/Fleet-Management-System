@@ -381,7 +381,7 @@ export const trackingApi = {
   // Get latest locations for vehicles on active trips
   getAll: () => apiFetch('/tracking/live'),
 
-  // Get route for a specific trip
+  // Get route for a specific trip (returns { route, stats })
   getTripRoute: (tripId: string) => apiFetch(`/tracking/${tripId}/route`),
 
   // Get latest location for a specific trip

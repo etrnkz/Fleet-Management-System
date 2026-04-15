@@ -332,6 +332,7 @@ export class TrackingService {
         'allocatedVehicle',
         'allocatedDriver',
         'allocatedDriver.user',
+        'requester',
       ],
       order: { updatedAt: 'DESC' },
     });
@@ -343,20 +344,69 @@ export class TrackingService {
           return null;
         }
 
+        // Calculate traveled distance from route
+        const route = await this.gpsLocationRepository.find({
+          where: { tripId: trip.id },
+          order: { timestamp: 'ASC' },
+          select: ['latitude', 'longitude'],
+        });
+
+        let traveledKm = 0;
+        for (let i = 1; i < route.length; i++) {
+          traveledKm += this.calculateDistance(
+            Number(route[i - 1].latitude), Number(route[i - 1].longitude),
+            Number(route[i].latitude), Number(route[i].longitude),
+          );
+        }
+        traveledKm = Math.round(traveledKm * 100) / 100;
+
+        // Fuel calculations
+        const v = trip.allocatedVehicle;
+        const PETROL_PRICE = 132.18;
+        const DIESEL_PRICE = 139.84;
+        const fuelPricePerLiter = v.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE;
+        const fuelEfficiency = Number(v.fuelEfficiency) || (v.fuelType === 'Diesel' ? 8 : 10);
+        const fuelCapacity = Number(v.fuelCapacity) || 60;
+
+        const fuelUsedLiters = traveledKm / fuelEfficiency;
+        const fuelRemainingLiters = Math.max(0, fuelCapacity - fuelUsedLiters);
+        const fuelRemainingPercent = Math.round((fuelRemainingLiters / fuelCapacity) * 100);
+        const fuelRemainingKm = Math.round(fuelRemainingLiters * fuelEfficiency);
+        const actualFuelCost = Math.round(fuelUsedLiters * fuelPricePerLiter * 100) / 100;
+
+        // Expected total fuel cost (based on estimated distance if available)
+        const estimatedDistance = Number(trip.estimatedDistance) || 0;
+        const expectedTotalFuelCost = estimatedDistance > 0
+          ? Math.round((estimatedDistance / fuelEfficiency) * fuelPricePerLiter * 100) / 100
+          : null;
+
         return {
           tripId: trip.id,
-          vehicleId: trip.allocatedVehicle.id,
-          plateNumber: trip.allocatedVehicle.plateNumber,
-          make: trip.allocatedVehicle.make,
-          model: trip.allocatedVehicle.model,
+          requestNumber: trip.requestNumber,
+          destination: trip.destination,
+          vehicleId: v.id,
+          plateNumber: v.plateNumber,
+          make: v.make,
+          model: v.model,
+          fuelType: v.fuelType,
           driverName: trip.allocatedDriver?.user?.name || null,
+          requesterName: trip.requester?.name || null,
           latitude: Number(latestLocation.latitude),
           longitude: Number(latestLocation.longitude),
           speed: latestLocation.speed ? Number(latestLocation.speed) : 0,
-          heading: latestLocation.heading
-            ? Number(latestLocation.heading)
-            : null,
+          heading: latestLocation.heading ? Number(latestLocation.heading) : null,
           timestamp: latestLocation.timestamp,
+          // Travel stats
+          traveledKm,
+          estimatedDistance: estimatedDistance || null,
+          // Fuel stats
+          fuelUsedLiters: Math.round(fuelUsedLiters * 100) / 100,
+          fuelRemainingLiters: Math.round(fuelRemainingLiters * 100) / 100,
+          fuelRemainingPercent,
+          fuelRemainingKm,
+          actualFuelCost,
+          expectedTotalFuelCost,
+          fuelPricePerLiter,
         };
       }),
     );
@@ -365,22 +415,69 @@ export class TrackingService {
   }
 
   /**
-   * Enriches a saved location payload with vehicle/driver info
+   * Enriches a saved location payload with vehicle/driver info + live travel stats
    * so the live-tracking broadcast has full context for the map.
    */
   async enrichLocationForBroadcast(tripId: string, location: LocationSavePayload): Promise<any> {
     try {
       const trip = await this.tripRepository.findOne({
         where: { id: tripId },
-        relations: ['allocatedVehicle', 'allocatedDriver', 'allocatedDriver.user'],
+        relations: ['allocatedVehicle', 'allocatedDriver', 'allocatedDriver.user', 'requester'],
       });
+
+      const v = trip?.allocatedVehicle;
+
+      // Recalculate traveled distance
+      let traveledKm = 0;
+      if (trip) {
+        const route = await this.gpsLocationRepository.find({
+          where: { tripId },
+          order: { timestamp: 'ASC' },
+          select: ['latitude', 'longitude'],
+        });
+        for (let i = 1; i < route.length; i++) {
+          traveledKm += this.calculateDistance(
+            Number(route[i - 1].latitude), Number(route[i - 1].longitude),
+            Number(route[i].latitude), Number(route[i].longitude),
+          );
+        }
+        traveledKm = Math.round(traveledKm * 100) / 100;
+      }
+
+      const PETROL_PRICE = 132.18;
+      const DIESEL_PRICE = 139.84;
+      const fuelPricePerLiter = v?.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE;
+      const fuelEfficiency = Number(v?.fuelEfficiency) || (v?.fuelType === 'Diesel' ? 8 : 10);
+      const fuelCapacity = Number(v?.fuelCapacity) || 60;
+      const fuelUsedLiters = traveledKm / fuelEfficiency;
+      const fuelRemainingLiters = Math.max(0, fuelCapacity - fuelUsedLiters);
+      const fuelRemainingPercent = Math.round((fuelRemainingLiters / fuelCapacity) * 100);
+      const actualFuelCost = Math.round(fuelUsedLiters * fuelPricePerLiter * 100) / 100;
+      const estimatedDistance = Number(trip?.estimatedDistance) || 0;
+      const expectedTotalFuelCost = estimatedDistance > 0
+        ? Math.round((estimatedDistance / fuelEfficiency) * fuelPricePerLiter * 100) / 100
+        : null;
+
       return {
         ...location,
-        vehicleId: trip?.allocatedVehicle?.id ?? null,
-        plateNumber: trip?.allocatedVehicle?.plateNumber ?? null,
-        make: trip?.allocatedVehicle?.make ?? null,
-        model: trip?.allocatedVehicle?.model ?? null,
+        vehicleId: v?.id ?? null,
+        plateNumber: v?.plateNumber ?? null,
+        make: v?.make ?? null,
+        model: v?.model ?? null,
+        fuelType: v?.fuelType ?? null,
         driverName: trip?.allocatedDriver?.user?.name ?? null,
+        requesterName: trip?.requester?.name ?? null,
+        destination: trip?.destination ?? null,
+        requestNumber: trip?.requestNumber ?? null,
+        traveledKm,
+        estimatedDistance: estimatedDistance || null,
+        fuelUsedLiters: Math.round(fuelUsedLiters * 100) / 100,
+        fuelRemainingLiters: Math.round(fuelRemainingLiters * 100) / 100,
+        fuelRemainingPercent,
+        fuelRemainingKm: Math.round(fuelRemainingLiters * fuelEfficiency),
+        actualFuelCost,
+        expectedTotalFuelCost,
+        fuelPricePerLiter,
       };
     } catch {
       return location;
