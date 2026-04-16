@@ -44,6 +44,7 @@ export class VehiclesService {
 
   async findAll(): Promise<Vehicle[]> {
     return this.vehicleRepository.find({
+      relations: ['assignedDriver', 'assignedDriver.user'],
       order: { plateNumber: 'ASC' },
     });
   }
@@ -82,6 +83,7 @@ export class VehiclesService {
   async findOne(id: string): Promise<Vehicle> {
     const vehicle = await this.vehicleRepository.findOne({
       where: { id },
+      relations: ['assignedDriver', 'assignedDriver.user'],
     });
 
     if (!vehicle) {
@@ -229,6 +231,12 @@ export class VehiclesService {
   async unassignDriver(vehicleId: string): Promise<Vehicle> {
     const vehicle = await this.findOne(vehicleId);
     vehicle.assignedDriver = null;
+    
+    // Set vehicle to Inactive when driver is unassigned
+    if (vehicle.status === VehicleStatus.Active) {
+      vehicle.status = VehicleStatus.Inactive;
+    }
+    
     return this.vehicleRepository.save(vehicle);
   }
 }
