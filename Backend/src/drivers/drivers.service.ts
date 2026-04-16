@@ -242,6 +242,7 @@ export class DriversService {
       throw new BadRequestException('Cannot unassign vehicle while driver is on a trip');
     }
     driver.assignedVehicle = null;
+    driver.status = DriverStatus.Inactive;
     return this.driverRepository.save(driver);
   }
 
