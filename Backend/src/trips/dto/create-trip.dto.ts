@@ -3,11 +3,12 @@ import {
   IsString,
   IsDateString,
   IsInt,
+  IsNumber,
   Min,
   IsNotEmpty,
   IsOptional,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TripType, TripCategory } from '../entities/trip-request.entity';
 
 export class CreateTripDto {
@@ -42,4 +43,14 @@ export class CreateTripDto {
   @IsInt()
   @Min(1)
   passengerCount: number;
+
+  // Extra fields sent by some frontends — accepted but not stored on creation
+  @IsString()
+  @IsOptional()
+  phoneNumber?: string;
+
+  @ApiPropertyOptional({ example: 150 })
+  @IsNumber()
+  @IsOptional()
+  estimatedDistance?: number;
 }
