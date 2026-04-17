@@ -86,6 +86,8 @@ interface Vehicle {
   actualFuelCost?: number | null
   expectedTotalFuelCost?: number | null
   fuelType?: string
+  stoppedSince?: string | null
+  tripType?: string | null
 }
 
 export default function LiveTrackingPage() {
@@ -285,6 +287,7 @@ export default function LiveTrackingPage() {
       tripDestination: trip.destination,
       tripPurpose: trip.purpose,
       requesterName: trip.requester.name,
+      tripType: trip.tripCategory || 'Normal',
       routePath,
       destLat,
       destLng,
@@ -296,6 +299,7 @@ export default function LiveTrackingPage() {
       actualFuelCost,
       expectedTotalFuelCost,
       fuelType: trip.allocatedVehicle?.fuelType,
+      stoppedSince: trip.currentLocation.speed === 0 ? trip.currentLocation.timestamp : null,
     }
     
     setVehicles([vehicle])
@@ -367,19 +371,22 @@ export default function LiveTrackingPage() {
         // Update vehicle on map with new stats
         setVehicles(prev => prev.map(v => {
           if (v.id === update.vehicleId || v.tripId === update.tripId) {
+            const newStatus: 'moving' | 'idle' | 'stopped' = (update.speed || 0) > 5 ? 'moving' : (update.speed || 0) > 0 ? 'idle' : 'stopped'
+            const wasMoving = v.status !== 'stopped'
+            const justStopped = newStatus === 'stopped' && wasMoving
             return {
               ...v,
               lat: update.latitude,
               lng: update.longitude,
               speed: `${Math.round(update.speed || 0)} km/h`,
-              status: (update.speed || 0) > 5 ? 'moving' : (update.speed || 0) > 0 ? 'idle' : 'stopped',
+              status: newStatus,
+              stoppedSince: newStatus === 'stopped' ? (justStopped ? new Date().toISOString() : v.stoppedSince) : null,
               traveledKm: update.traveledKm ?? v.traveledKm,
               fuelRemainingPercent: update.fuelRemainingPercent ?? v.fuelRemainingPercent,
               fuelRemainingLiters: update.fuelRemainingLiters ?? v.fuelRemainingLiters,
               fuelRemainingKm: update.fuelRemainingKm ?? v.fuelRemainingKm,
               actualFuelCost: update.actualFuelCost ?? v.actualFuelCost,
               expectedTotalFuelCost: update.expectedTotalFuelCost ?? v.expectedTotalFuelCost,
-              // Append new point to route path
               routePath: v.routePath
                 ? [...v.routePath, [update.latitude, update.longitude] as [number, number]]
                 : [[update.latitude, update.longitude] as [number, number]],
