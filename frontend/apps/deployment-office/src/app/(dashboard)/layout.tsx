@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { authApi, notificationApi, userApi, inviteApi } from '@/lib/api'
+import { useTheme } from '@/components/ThemeProvider'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -15,6 +16,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const profileRef = useRef<HTMLDivElement>(null)
   const [userData, setUserData] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
+  const { isDark, toggle: toggleTheme } = useTheme()
 
   // Settings modal state
   const [showSettings, setShowSettings] = useState(false)
@@ -224,7 +226,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200 flex-shrink-0">
           <img src="/hulogo.png" alt="Haramaya University" className="w-10 h-10 object-contain rounded-full" />
           <div>
-            <div className="font-bold text-emerald-700 tracking-tight text-sm">Haramaya University</div>
+            <div className="font-bold text-[#1B3D2F] tracking-tight text-sm">Haramaya University</div>
             <div className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">FLEET MANAGEMENT</div>
           </div>
         </div>
@@ -238,8 +240,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link key={item.path} href={item.path} onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
-                    ? 'text-emerald-700 font-bold border-l-4 border-emerald-700'
-                    : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-100'
+                    ? 'text-[#1B3D2F] font-bold border-l-4 border-[#1B3D2F]'
+                    : 'text-gray-600 hover:text-[#1B3D2F] hover:bg-gray-100'
                 }`}>
                 {item.icon}
                 <span className="flex-1 antialiased tracking-tight">{item.name}</span>
@@ -264,6 +266,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
             {/* Notifications */}
             <div className="relative" ref={notifRef}>
               <button onClick={() => setShowNotifDropdown(p => !p)} className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
