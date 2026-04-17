@@ -38,21 +38,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Dark mode colors */
+/* Dark mode colors - Premium Edition */
 .dark {
-  --fa-primary: #9ECDB3;
-  --fa-on-primary: #003823;
-  --fa-primary-container: #005234;
-  --fa-on-primary-container: #BBEBCE;
-  --fa-secondary: #B3C5D7;
-  --fa-on-surface: #E2E2E5;
-  --fa-on-surface-variant: #C4C6D0;
-  --fa-background: #111318;
-  --fa-surface: #191C20;
-  --fa-surface-container-low: #1A1C21;
-  --fa-surface-container: #1E2025;
-  --fa-outline-variant: #44474E;
-  --fa-error: #FFB4AB;
+  --fa-primary: #A8DADC;
+  --fa-on-primary: #1D3557;
+  --fa-primary-container: #457B9D;
+  --fa-on-primary-container: #F1FAEE;
+  --fa-secondary: #94A3B8;
+  --fa-on-surface: #F8FAFC;
+  --fa-on-surface-variant: #CBD5E1;
+  --fa-background: #0F172A;
+  --fa-surface: #1E293B;
+  --fa-surface-container-low: #1A2332;
+  --fa-surface-container: #334155;
+  --fa-outline-variant: #475569;
+  --fa-error: #FCA5A5;
   --background: var(--fa-background);
   --foreground: var(--fa-on-surface);
 }
