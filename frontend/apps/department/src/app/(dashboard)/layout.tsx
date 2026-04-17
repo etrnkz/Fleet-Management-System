@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
 import { getCurrentUser } from '@/lib/api'
+import { useTheme } from '@/components/ThemeProvider'
 
 interface ToastMessage {
   id: number
@@ -26,7 +27,7 @@ export default function DashboardLayout({
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [user, setUser] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
-  const [isDark, setIsDark] = useState(false)
+  const { isDark, toggle: toggleTheme } = useTheme()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -382,7 +383,7 @@ export default function DashboardLayout({
             {/* Theme Toggle */}
             <button
               type="button"
-              onClick={() => setIsDark(!isDark)}
+              onClick={() => toggleTheme()}
               className="p-2 text-[var(--fa-secondary)] hover:bg-[var(--fa-surface-container)] rounded-lg transition-colors"
               aria-label="Toggle theme"
             >
