@@ -71,10 +71,10 @@ export class Vehicle {
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   currentMileage: number;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   lastMaintenanceDate: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   nextMaintenanceDate: Date;
 
   @Column({ type: 'date', nullable: true })
