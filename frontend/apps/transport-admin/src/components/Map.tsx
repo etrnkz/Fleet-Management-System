@@ -32,6 +32,7 @@ interface Vehicle {
   tripDestination?: string | null
   tripPurpose?: string | null
   requesterName?: string | null
+  tripType?: string | null
   // Travel & fuel stats
   traveledKm?: number | null
   estimatedDistance?: number | null
@@ -46,6 +47,8 @@ interface Vehicle {
   // Destination coordinates (geocoded)
   destLat?: number | null
   destLng?: number | null
+  // Stop tracking
+  stoppedSince?: string | null
 }
 
 export interface RestrictedZone {
@@ -257,6 +260,33 @@ function VehiclePopupContent({ vehicle }: { vehicle: Vehicle }) {
         </div>
       </div>
 
+      {/* Stopped Duration */}
+      {vehicle.status === 'stopped' && vehicle.stoppedSince && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-2">
+          <div className="flex items-center gap-1.5 mb-1">
+            <svg className="w-4 h-4 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-xs font-semibold text-red-800">Vehicle Stopped</p>
+          </div>
+          <p className="text-xs text-red-700">
+            <span className="font-medium">Duration: </span>
+            {(() => {
+              const diff = Math.floor((Date.now() - new Date(vehicle.stoppedSince).getTime()) / 1000)
+              if (diff < 60) return `${diff} seconds`
+              if (diff < 3600) return `${Math.floor(diff / 60)} min ${diff % 60} sec`
+              const h = Math.floor(diff / 3600)
+              const m = Math.floor((diff % 3600) / 60)
+              return `${h} hr ${m} min`
+            })()}
+          </p>
+          <p className="text-xs text-red-600 mt-0.5">
+            <span className="font-medium">Stopped at: </span>
+            {loadingLocation ? 'Getting location...' : locationName}
+          </p>
+        </div>
+      )}
+
       {/* Travel & Fuel Stats */}
       {(vehicle.traveledKm != null || vehicle.fuelRemainingPercent != null) && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 mb-2 space-y-1.5">
@@ -449,9 +479,11 @@ export default function Map({
           <Polyline
             positions={routeCoordinates}
             pathOptions={{
-              color: '#3b82f6',
+              color: selectedVehicleData?.tripType?.toUpperCase() === 'VIP' ? '#10b981'
+                : selectedVehicleData?.tripType?.toUpperCase() === 'SERVICE' ? '#eab308'
+                : '#ef4444',
               weight: 4,
-              opacity: 0.7,
+              opacity: 0.8,
               lineJoin: 'round',
               lineCap: 'round'
             }}
@@ -466,15 +498,18 @@ export default function Map({
         )}
 
         {/* Per-vehicle route paths */}
-        {validVehicles.map(v =>
-          v.routePath && v.routePath.length > 1 ? (
+        {validVehicles.map(v => {
+          const routeColor = v.tripType?.toUpperCase() === 'VIP' ? '#10b981'
+            : v.tripType?.toUpperCase() === 'SERVICE' ? '#eab308'
+            : '#ef4444'
+          return v.routePath && v.routePath.length > 1 ? (
             <Polyline
               key={`route-${v.id}`}
               positions={v.routePath}
-              pathOptions={{ color: '#3b82f6', weight: 3, opacity: 0.6, lineJoin: 'round', lineCap: 'round' }}
+              pathOptions={{ color: routeColor, weight: 3, opacity: 0.8, lineJoin: 'round', lineCap: 'round' }}
             />
           ) : null
-        )}
+        })}
 
         {/* Destination markers */}
         {validVehicles.map(v =>
