@@ -38,30 +38,10 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Dark mode colors - Premium Edition */
-.dark {
-  --fa-primary: #A8DADC;
-  --fa-on-primary: #1D3557;
-  --fa-primary-container: #457B9D;
-  --fa-on-primary-container: #F1FAEE;
-  --fa-secondary: #94A3B8;
-  --fa-on-surface: #F8FAFC;
-  --fa-on-surface-variant: #CBD5E1;
-  --fa-background: #0F172A;
-  --fa-surface: #1E293B;
-  --fa-surface-container-low: #1A2332;
-  --fa-surface-container: #334155;
-  --fa-outline-variant: #475569;
-  --fa-error: #FCA5A5;
-  --background: var(--fa-background);
-  --foreground: var(--fa-on-surface);
-}
-
 body {
   background: var(--fa-background);
   color: var(--fa-on-surface);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  transition: background-color 0.3s, color 0.3s;
 }
 
 html {
