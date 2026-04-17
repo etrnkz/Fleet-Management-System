@@ -29,7 +29,15 @@ export default function DriverDashboard() {
   const [rejectTrip, setRejectTrip] = useState<any>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [rejecting, setRejecting] = useState(false)
-  const [maintenanceForm, setMaintenanceForm] = useState({ issueDescription: '', priority: 'Medium' })
+  const [selectedTrip, setSelectedTrip] = useState<any>(null)
+  const [maintenanceForm, setMaintenanceForm] = useState({
+    issueDescription: '',
+    priority: 'Medium',
+    issueType: '',
+    vehicleLocation: '',
+    odometerReading: '',
+    additionalNotes: '',
+  })
   const [settingsTab, setSettingsTab] = useState<'profile' | 'password'>('profile')
   const [profileForm, setProfileForm] = useState({ name: '', phoneNumber: '', licenseNumber: '', licenseExpiry: '', experienceYears: 0 })
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -107,9 +115,22 @@ export default function DriverDashboard() {
     e.preventDefault()
     if (!assignedVehicle?.id) { showToast('No vehicle assigned', 'error'); return }
     try {
-      await maintenanceApi.create({ vehicleId: assignedVehicle.id, ...maintenanceForm })
+      // Build a comprehensive description from all form fields
+      const fullDescription = [
+        `Issue Type: ${maintenanceForm.issueType || 'General'}`,
+        `Description: ${maintenanceForm.issueDescription}`,
+        maintenanceForm.vehicleLocation ? `Location on Vehicle: ${maintenanceForm.vehicleLocation}` : '',
+        maintenanceForm.odometerReading ? `Odometer: ${maintenanceForm.odometerReading} km` : '',
+        maintenanceForm.additionalNotes ? `Additional Notes: ${maintenanceForm.additionalNotes}` : '',
+      ].filter(Boolean).join('\n')
+
+      await maintenanceApi.create({
+        vehicleId: assignedVehicle.id,
+        issueDescription: fullDescription,
+        priority: maintenanceForm.priority,
+      })
       showToast('Maintenance request submitted', 'success')
-      setMaintenanceForm({ issueDescription: '', priority: 'Medium' })
+      setMaintenanceForm({ issueDescription: '', priority: 'Medium', issueType: '', vehicleLocation: '', odometerReading: '', additionalNotes: '' })
       loadMaintenanceRequests()
     } catch (err: any) { showToast(err.message || 'Failed', 'error') }
   }
@@ -204,6 +225,30 @@ export default function DriverDashboard() {
   const unreadCount = notifications.filter(n => !n.isRead).length
   const initials = userData?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'DR'
 
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('theme')
+    if (stored === 'dark') {
+      setIsDark(true)
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    setIsDark(prev => {
+      const next = !prev
+      if (next) {
+        document.documentElement.classList.add('dark')
+        localStorage.setItem('theme', 'dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+        localStorage.setItem('theme', 'light')
+      }
+      return next
+    })
+  }
+
   const navItems = [
     { id: 'assigned-trips', label: 'Assigned Trips' },
     { id: 'trip-history', label: 'Trip History' },
@@ -230,6 +275,17 @@ export default function DriverDashboard() {
           {toast.message}
         </div>
       )}
+
+      {/* License expiry warning */}
+      {userData?.licenseExpiry && (() => {
+        const daysLeft = Math.ceil((new Date(userData.licenseExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+        if (daysLeft <= 30) return (
+          <div className={`fixed top-0 left-0 right-0 z-[90] px-4 py-2 text-xs font-semibold text-center ${daysLeft <= 7 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-900'}`}>
+            ⚠️ Your driver's license {daysLeft <= 0 ? 'has expired!' : `expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}!`} Please renew immediately.
+          </div>
+        )
+        return null
+      })()}
 
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
@@ -271,6 +327,24 @@ export default function DriverDashboard() {
                 {gpsStatus.engineSimulatedOff ? 'Restricted' : 'GPS live'}
               </div>
             )}
+
+            {/* Theme Toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
 
             <div className="relative" ref={notifRef}>
               <button onClick={() => setShowNotifDropdown(p => !p)} className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
@@ -401,7 +475,7 @@ export default function DriverDashboard() {
                       )}
                     </div>
                     <div className="flex sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
-                      <button onClick={() => setQrTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 bg-[#1B3D2F] text-white text-xs rounded-lg hover:bg-[#152e22]">QR Code</button>
+                      <button onClick={() => setQrTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 bg-[#1B3D2F] text-white text-xs rounded-lg hover:bg-[#152e22] font-semibold">Accept & Show QR</button>
                       <button onClick={() => setRejectTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 border border-red-300 text-red-600 text-xs rounded-lg hover:bg-red-50">Reject</button>
                     </div>
                   </div>
@@ -455,8 +529,13 @@ export default function DriverDashboard() {
                     </div>
                   )}
                   {liveTripId === trip.id && (
-                    <div className={`rounded-lg p-3 text-xs sm:text-sm ${gpsStatus.engineSimulatedOff ? 'bg-red-50 text-red-700' : 'bg-#f0f9f4 text-[#1B3D2F]'}`}>
-                      {gpsStatus.engineSimulatedOff ? ` Restricted zone${gpsStatus.violationZoneName ? `: ${gpsStatus.violationZoneName}` : ''}` : ` GPS live${gpsStatus.lastPostedAt ? `  ${new Date(gpsStatus.lastPostedAt).toLocaleTimeString()}` : ''}`}
+                    <div className={`rounded-lg p-3 text-xs sm:text-sm flex items-center gap-2 ${gpsStatus.engineSimulatedOff ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${gpsStatus.engineSimulatedOff ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`} />
+                      <span className="font-semibold">
+                        {gpsStatus.engineSimulatedOff
+                          ? `⚠️ Restricted zone${gpsStatus.violationZoneName ? `: ${gpsStatus.violationZoneName}` : ''}`
+                          : `GPS Live — tracking active${gpsStatus.lastPostedAt ? ` · ${new Date(gpsStatus.lastPostedAt).toLocaleTimeString()}` : ''}`}
+                      </span>
                     </div>
                   )}
                   <button onClick={() => setQrTrip(trip)} className="w-full py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]">Show QR Code</button>
@@ -469,22 +548,59 @@ export default function DriverDashboard() {
           {activeSection === 'trip-history' && (
             <div className="space-y-4">
               <h2 className="text-base sm:text-lg font-semibold text-gray-900">Trip History</h2>
+
+              {/* Stats Summary */}
+              {completedTrips.length > 0 && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1B3D2F]">{completedTrips.length}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Total Trips</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1B3D2F]">
+                      {completedTrips.reduce((s: number, t: any) => s + (Number(t.actualDistance) || 0), 0).toFixed(0)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Total km</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1B3D2F]">
+                      {completedTrips.filter((t: any) => t.feedback?.rating).length > 0
+                        ? (completedTrips.reduce((s: number, t: any) => s + (t.feedback?.rating || 0), 0) / completedTrips.filter((t: any) => t.feedback?.rating).length).toFixed(1)
+                        : '—'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Avg Rating</p>
+                  </div>
+                </div>
+              )}
+
               {completedTrips.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-8 sm:p-12 text-center text-gray-400 text-sm">No completed trips yet</div>
-              ) : completedTrips.map(trip => (
-                <div key={trip.id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-                  <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
-                    <div className="flex-1 min-w-0 w-full">
+              ) : completedTrips.map((trip: any) => (
+                <div key={trip.id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedTrip(trip)}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-xs font-mono text-gray-400">{trip.requestNumber || trip.id.slice(0,8)}</span>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">COMPLETED</span>
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">COMPLETED</span>
                       </div>
                       <p className="font-semibold text-gray-900 truncate">{trip.destination}</p>
-                      <p className="text-sm text-gray-500 line-clamp-2">{trip.purpose}</p>
-                      <p className="text-xs text-gray-400 mt-1">{new Date(trip.startDateTime).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{new Date(trip.startDateTime).toLocaleDateString()} — {new Date(trip.completedAt || trip.endDateTime).toLocaleDateString()}</p>
                     </div>
-                    {trip.actualDistance && <p className="text-sm font-medium text-gray-700 flex-shrink-0">{trip.actualDistance} km</p>}
+                    <div className="text-right flex-shrink-0">
+                      {trip.actualDistance && <p className="text-sm font-bold text-[#1B3D2F]">{trip.actualDistance} km</p>}
+                      {trip.feedback?.rating && (
+                        <div className="flex items-center gap-0.5 justify-end mt-1">
+                          {[1,2,3,4,5].map(s => (
+                            <svg key={s} className={`w-3 h-3 ${s <= trip.feedback.rating ? 'text-yellow-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  <p className="text-xs text-gray-400 mt-2">Tap to view details →</p>
                 </div>
               ))}
             </div>
@@ -494,19 +610,87 @@ export default function DriverDashboard() {
           {activeSection === 'maintenance' && (
             <div className="space-y-4 sm:space-y-6">
               <h2 className="text-base sm:text-lg font-semibold text-gray-900">Report Vehicle Issue</h2>
-              <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+              <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
                 <form onSubmit={handleMaintenanceSubmit} className="space-y-4">
+
+                  {/* Issue Type */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Issue Description</label>
-                    <textarea value={maintenanceForm.issueDescription} onChange={e => setMaintenanceForm(p => ({ ...p, issueDescription: e.target.value }))} rows={4} placeholder="Describe the issue" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Priority</label>
-                    <select value={maintenanceForm.priority} onChange={e => setMaintenanceForm(p => ({ ...p, priority: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm">
-                      <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Issue Type <span className="text-red-500">*</span></label>
+                    <select value={maintenanceForm.issueType} onChange={e => setMaintenanceForm(p => ({ ...p, issueType: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required>
+                      <option value="">Select issue type</option>
+                      <option>Engine Problem</option>
+                      <option>Brake Issue</option>
+                      <option>Tire / Wheel</option>
+                      <option>Electrical / Battery</option>
+                      <option>Fuel System</option>
+                      <option>Transmission</option>
+                      <option>Cooling System</option>
+                      <option>Lights / Signals</option>
+                      <option>Body / Exterior Damage</option>
+                      <option>Air Conditioning</option>
+                      <option>Other</option>
                     </select>
                   </div>
-                  <button type="submit" className="w-full py-3 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22]">Submit Report</button>
+
+                  {/* Issue Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Issue Description <span className="text-red-500">*</span></label>
+                    <textarea value={maintenanceForm.issueDescription}
+                      onChange={e => setMaintenanceForm(p => ({ ...p, issueDescription: e.target.value }))}
+                      rows={4} placeholder="Describe the problem in detail — what you heard, saw, or felt..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm resize-none" required />
+                  </div>
+
+                  {/* Priority + Location row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Priority <span className="text-red-500">*</span></label>
+                      <select value={maintenanceForm.priority} onChange={e => setMaintenanceForm(p => ({ ...p, priority: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm">
+                        <option value="Low">Low — Can wait</option>
+                        <option value="Medium">Medium — Soon</option>
+                        <option value="High">High — Urgent</option>
+                        <option value="Critical">Critical — Cannot drive</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Location on Vehicle</label>
+                      <input type="text" value={maintenanceForm.vehicleLocation}
+                        onChange={e => setMaintenanceForm(p => ({ ...p, vehicleLocation: e.target.value }))}
+                        placeholder="e.g. Front left wheel, Engine bay"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+                    </div>
+                  </div>
+
+                  {/* Odometer */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Odometer Reading (km)</label>
+                    <input type="number" value={maintenanceForm.odometerReading}
+                      onChange={e => setMaintenanceForm(p => ({ ...p, odometerReading: e.target.value }))}
+                      placeholder="e.g. 45230"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
+                  </div>
+
+                  {/* Additional Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Additional Notes</label>
+                    <textarea value={maintenanceForm.additionalNotes}
+                      onChange={e => setMaintenanceForm(p => ({ ...p, additionalNotes: e.target.value }))}
+                      rows={2} placeholder="Any other relevant information..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm resize-none" />
+                  </div>
+
+                  {/* Vehicle info display */}
+                  {assignedVehicle && (
+                    <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 border border-gray-200">
+                      <span className="font-semibold">Vehicle:</span> {assignedVehicle.make} {assignedVehicle.model} — {assignedVehicle.plateNumber}
+                    </div>
+                  )}
+
+                  <button type="submit" className="w-full py-3 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22] transition-colors">
+                    Submit Maintenance Request
+                  </button>
                 </form>
               </div>
               {maintenanceRequests.length > 0 && (
@@ -754,17 +938,148 @@ export default function DriverDashboard() {
         </main>
       </div>
 
+      {/* Trip Detail Modal */}
+      {selectedTrip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 sticky top-0 bg-white">
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Trip Details</h3>
+                <p className="text-xs text-gray-400 font-mono">{selectedTrip.requestNumber || selectedTrip.id.slice(0,8)}</p>
+              </div>
+              <button onClick={() => setSelectedTrip(null)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {/* Status */}
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">COMPLETED</span>
+                {selectedTrip.completedAt && (
+                  <span className="text-xs text-gray-400">{new Date(selectedTrip.completedAt).toLocaleString()}</span>
+                )}
+              </div>
+
+              {/* Route */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Route</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#1B3D2F]" />
+                  <p className="text-sm text-gray-700">Main Campus</p>
+                </div>
+                <div className="ml-1 border-l-2 border-dashed border-gray-300 h-4" />
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <p className="text-sm font-semibold text-gray-900">{selectedTrip.destination}</p>
+                </div>
+              </div>
+
+              {/* Trip Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-[#1B3D2F]/5 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 mb-1">Distance</p>
+                  <p className="text-lg font-bold text-[#1B3D2F]">{selectedTrip.actualDistance || selectedTrip.estimatedDistance || '—'} <span className="text-xs font-normal">km</span></p>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 mb-1">Fuel Cost</p>
+                  <p className="text-lg font-bold text-orange-600">{selectedTrip.actualFuelCost ? `${Number(selectedTrip.actualFuelCost).toLocaleString()} ETB` : '—'}</p>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 mb-1">Passengers</p>
+                  <p className="text-lg font-bold text-blue-600">{selectedTrip.passengerCount || '—'}</p>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-500 mb-1">Trip Type</p>
+                  <p className="text-sm font-bold text-purple-600">{selectedTrip.tripCategory || selectedTrip.tripType || 'Normal'}</p>
+                </div>
+              </div>
+
+              {/* Requester */}
+              <div className="border border-gray-200 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Requester</p>
+                <p className="text-sm font-semibold text-gray-900">{selectedTrip.requester?.name || 'N/A'}</p>
+                <p className="text-xs text-gray-500">{selectedTrip.requester?.email || ''}</p>
+                {selectedTrip.requester?.phoneNumber && (
+                  <a href={`tel:${selectedTrip.requester.phoneNumber}`} className="text-xs text-green-700 font-semibold mt-1 block">
+                    📞 {selectedTrip.requester.phoneNumber}
+                  </a>
+                )}
+              </div>
+
+              {/* Purpose */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Purpose</p>
+                <p className="text-sm text-gray-700">{selectedTrip.purpose}</p>
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-gray-500">Departure</p>
+                  <p className="font-medium text-gray-900">{new Date(selectedTrip.startDateTime).toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Completed</p>
+                  <p className="font-medium text-gray-900">{selectedTrip.completedAt ? new Date(selectedTrip.completedAt).toLocaleString() : '—'}</p>
+                </div>
+              </div>
+
+              {/* Employee Feedback/Rating */}
+              {selectedTrip.feedback && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-yellow-700 uppercase tracking-wide mb-2">Employee Feedback</p>
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} className={`w-5 h-5 ${s <= selectedTrip.feedback.rating ? 'text-yellow-400' : 'text-gray-200'}`} fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                    <span className="text-sm font-bold text-yellow-700 ml-1">{selectedTrip.feedback.rating}/5</span>
+                  </div>
+                  {selectedTrip.feedback.comment && (
+                    <p className="text-sm text-gray-700 italic">"{selectedTrip.feedback.comment}"</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* QR Modal */}
       {qrTrip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">Trip QR Code</h3>
-              <button onClick={() => setQrTrip(null)} className="text-gray-400 hover:text-gray-600"></button>
+              <button onClick={() => setQrTrip(null)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <div className="flex justify-center mb-4"><QRCodeSVG value={qrTrip.id} size={200} className="w-full max-w-[200px] h-auto" /></div>
-            <p className="text-center text-sm text-gray-500 truncate">{qrTrip.destination}</p>
+            <p className="text-xs text-center text-gray-500 mb-3">Show this to the gate keeper to start the trip</p>
+            <div className="flex justify-center mb-4 p-3 bg-white border-2 border-[#1B3D2F]/20 rounded-xl">
+              <QRCodeSVG
+                value={JSON.stringify({
+                  tripId: qrTrip.id,
+                  requestNumber: qrTrip.requestNumber,
+                  destination: qrTrip.destination,
+                  vehicle: qrTrip.allocatedVehicle?.plateNumber,
+                  driver: userData?.name,
+                  action: 'GATE_START',
+                })}
+                size={220}
+                className="w-full max-w-[220px] h-auto"
+              />
+            </div>
+            <p className="text-center text-sm font-semibold text-gray-800 truncate">{qrTrip.destination}</p>
             <p className="text-center text-xs text-gray-400 font-mono mt-1">{qrTrip.requestNumber || qrTrip.id.slice(0,8)}</p>
+            {qrTrip.allocatedVehicle?.plateNumber && (
+              <p className="text-center text-xs text-[#1B3D2F] font-semibold mt-1">{qrTrip.allocatedVehicle.plateNumber}</p>
+            )}
           </div>
         </div>
       )}
