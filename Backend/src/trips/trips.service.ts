@@ -1079,7 +1079,7 @@ export class TripsService {
         completeTripDto.actualDistance,
       );
       // Reset driver status back to Available
-      await this.driversService.updateStatus(trip.allocatedDriver.id, 'Available' as any).catch(() => {});
+      await this.driversService.updateStatus(trip.allocatedDriver.id, DriverStatus.Available).catch(() => {});
     }
 
     const savedTrip = await this.tripRepository.save(trip);
