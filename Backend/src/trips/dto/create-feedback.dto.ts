@@ -1,81 +1,58 @@
 import {
-  IsEnum,
   IsString,
   IsOptional,
   IsBoolean,
   IsArray,
+  IsInt,
   Min,
   Max,
-  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { FeedbackRating } from '../entities/trip-feedback.entity';
 
 export class CreateFeedbackDto {
-  @ApiProperty({
-    enum: FeedbackRating,
-    example: FeedbackRating.GOOD,
-    description: 'Overall rating for the trip (1-5)',
-  })
-  @IsEnum(FeedbackRating)
-  overallRating: FeedbackRating;
+  @ApiProperty({ example: 4, description: 'Overall rating (1-5)' })
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  overallRating: number;
 
-  @ApiPropertyOptional({
-    enum: FeedbackRating,
-    example: FeedbackRating.EXCELLENT,
-    description: 'Driver performance rating (1-5)',
-  })
+  @ApiPropertyOptional({ example: 5 })
   @IsOptional()
-  @IsEnum(FeedbackRating)
-  driverRating?: FeedbackRating;
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  driverRating?: number;
 
-  @ApiPropertyOptional({
-    enum: FeedbackRating,
-    example: FeedbackRating.GOOD,
-    description: 'Vehicle condition rating (1-5)',
-  })
+  @ApiPropertyOptional({ example: 4 })
   @IsOptional()
-  @IsEnum(FeedbackRating)
-  vehicleRating?: FeedbackRating;
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  vehicleRating?: number;
 
-  @ApiPropertyOptional({
-    enum: FeedbackRating,
-    example: FeedbackRating.AVERAGE,
-    description: 'Punctuality rating (1-5)',
-  })
+  @ApiPropertyOptional({ example: 3 })
   @IsOptional()
-  @IsEnum(FeedbackRating)
-  punctualityRating?: FeedbackRating;
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  punctualityRating?: number;
 
-  @ApiPropertyOptional({
-    example:
-      'Great trip, driver was very professional and the vehicle was clean.',
-    description: 'General comments about the trip',
-  })
+  @ApiPropertyOptional({ example: 'Great trip, very professional.' })
   @IsOptional()
   @IsString()
   comments?: string;
 
-  @ApiPropertyOptional({
-    example: 'Could improve vehicle maintenance schedule.',
-    description: 'Suggestions for improvement',
-  })
+  @ApiPropertyOptional({ example: 'Could improve vehicle maintenance.' })
   @IsOptional()
   @IsString()
   suggestions?: string;
 
-  @ApiPropertyOptional({
-    example: true,
-    description: 'Would recommend this service to others',
-  })
+  @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
   wouldRecommend?: boolean;
 
-  @ApiPropertyOptional({
-    example: ['Late arrival', 'Vehicle AC not working'],
-    description: 'List of issues encountered during the trip',
-  })
+  @ApiPropertyOptional({ example: ['Late arrival', 'AC not working'] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

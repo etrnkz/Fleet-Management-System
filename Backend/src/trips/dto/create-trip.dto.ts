@@ -53,4 +53,13 @@ export class CreateTripDto {
   @IsNumber()
   @IsOptional()
   estimatedDistance?: number;
+
+  // Accepted but ignored — department/college-dean apps send these
+  @IsString()
+  @IsOptional()
+  priority?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
 }

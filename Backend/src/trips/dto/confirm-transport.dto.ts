@@ -42,4 +42,9 @@ export class ConfirmTransportDto {
   @IsNumber()
   @Min(0)
   estimatedDistance?: number;
+
+  @ApiPropertyOptional({ example: 'Ready for dispatch' })
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }
