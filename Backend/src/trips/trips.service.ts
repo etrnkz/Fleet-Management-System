@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, DataSource } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   TripRequest,
   TripState,
@@ -55,7 +55,6 @@ export class TripsService {
     private readonly workflowService: WorkflowService,
     private readonly auditService: AuditService,
     private readonly fuelService: FuelService,
-    private readonly dataSource: DataSource,
   ) {}
 
   async create(createTripDto: CreateTripDto, user: User): Promise<TripRequest> {
