@@ -144,8 +144,8 @@ export class MaintenanceService {
       );
     }
 
-    if (user.role !== UserRole.MaintenanceTeam && user.role !== UserRole.Driver && user.role !== UserRole.DeploymentTeam) {
-      throw new ForbiddenException('Only Driver or Deployment Team can start maintenance');
+    if (user.role !== UserRole.MaintenanceTeam && user.role !== UserRole.Driver && user.role !== UserRole.DeploymentTeam && user.role !== UserRole.TransportOffice) {
+      throw new ForbiddenException('Only Driver, Deployment Team, Maintenance Team or Transport Office can start maintenance');
     }
 
     maintenance.status = MaintenanceStatus.InProgress;
@@ -166,8 +166,8 @@ export class MaintenanceService {
       );
     }
 
-    if (user.role !== UserRole.MaintenanceTeam && user.role !== UserRole.Driver && user.role !== UserRole.DeploymentTeam) {
-      throw new ForbiddenException('Only Driver or Deployment Team can complete maintenance');
+    if (user.role !== UserRole.MaintenanceTeam && user.role !== UserRole.Driver && user.role !== UserRole.DeploymentTeam && user.role !== UserRole.TransportOffice) {
+      throw new ForbiddenException('Only Driver, Deployment Team, Maintenance Team or Transport Office can complete maintenance');
     }
 
     maintenance.actualCost = completeDto.actualCost;
