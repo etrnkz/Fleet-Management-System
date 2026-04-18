@@ -1,246 +1,99 @@
-﻿{
-  "info": {
-    "name": "Fleet Management API",
-    "_postman_id": "fleet-management-api",
-    "description": "Complete API test suite — covers auth, full trip lifecycle (STANDARD, VIP, SERVICE), vehicles, drivers, maintenance, fuel, tracking, notifications, and audit.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "variable": [
-    { "key": "base_url", "value": "{{base_url}}" }
-  ],
-  "item": [
-
-    {
-      "name": "0 — Health",
-      "item": [
-        {
-          "name": "GET /health",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/health" },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.test('DB connected', () => pm.expect(pm.response.json().database).to.eql('connected'));"
-          ]}}]
-        }
-      ]
-    },
-    {
-      "name": "1 — Auth",
-      "item": [
-        {
-          "name": "Login — Admin",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"{{admin_email}}\",\"password\":\"{{admin_password}}\",\"appType\":\"system-admin\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "const j = pm.response.json(); pm.environment.set('access_token', j.access_token); pm.environment.set('refresh_token', j.refresh_token);"
-          ]}}]
-        },
-        {
-          "name": "Login — President",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"{{president_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"president\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.environment.set('president_token', pm.response.json().access_token);"
-          ]}}]
-        },
-        {
-          "name": "Login — Transport Office",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"{{transport_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"transport-admin\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.environment.set('transport_token', pm.response.json().access_token);"
-          ]}}]
-        },
-        {
-          "name": "Login — Deployment Office",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"deployment@haramaya.edu.et\",\"password\":\"{{user_password}}\",\"appType\":\"deployment-office\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.environment.set('deployment_token', pm.response.json().access_token);"
-          ]}}]
-        },
-        {
-          "name": "Login — Driver",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"{{driver_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"driver\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.environment.set('driver_token', pm.response.json().access_token);"
-          ]}}]
-        },
-        {
-          "name": "Login — Dean (CCI)",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"{{dean_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"college-dean\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.environment.set('dean_token', pm.response.json().access_token);"
-          ]}}]
-        },
-        {
-          "name": "Login — Dept Head (CS)",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"{{dept_head_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"department\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.environment.set('dept_head_token', pm.response.json().access_token);"
-          ]}}]
-        },
-        {
-          "name": "Login — Postman Employee",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/login", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"email\":\"postman@haramaya.edu.et\",\"password\":\"Password@123\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.environment.set('employee_token', pm.response.json().access_token);",
-            "pm.environment.set('employee_id', pm.response.json().user.id);"
-          ]}}]
-        },
-        {
-          "name": "POST /auth/refresh",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/auth/refresh", "header": [{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"refresh_token\":\"{{refresh_token}}\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));"
-          ]}}]
-        }
-      ]
-    },
-
-    {
-      "name": "2 — Users",
-      "item": [
-        {
-          "name": "GET /users",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/users", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
-          ]}}]
-        },
-        {
-          "name": "GET /users/me",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/users/me", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.test('Has email', () => pm.expect(pm.response.json()).to.have.property('email'));"
-          ]}}]
-        },
-        {
-          "name": "POST /users (create postman user)",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/users", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"name\":\"Postman Tester\",\"email\":\"postman@haramaya.edu.et\",\"password\":\"Password@123\",\"role\":\"User\",\"phoneNumber\":\"+251912345678\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "const s = pm.response.status; pm.test('201 or 409', () => pm.expect([201,409]).to.include(pm.response.code));",
-            "if(pm.response.code===201){ pm.environment.set('postman_user_id', pm.response.json().id); }"
-          ]}}]
-        },
-        {
-          "name": "PATCH /users/me (update profile)",
-          "request": { "method": "PATCH", "url": "{{base_url}}/api/v1/users/me", "header": [{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"name\":\"Postman Tester Updated\",\"phoneNumber\":\"+251912345678\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));"
-          ]}}]
-        }
-      ]
-    },
-    {
-      "name": "3 — Colleges & Departments",
-      "item": [
-        {
-          "name": "GET /colleges",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/colleges", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "const j = pm.response.json(); pm.test('Has colleges', () => pm.expect(j.length).to.be.above(0));",
-            "if(j.length>0) pm.environment.set('college_id', j[0].id);"
-          ]}}]
-        },
-        {
-          "name": "GET /departments",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/departments", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "const j = pm.response.json(); if(j.length>0) pm.environment.set('department_id', j[0].id);"
-          ]}}]
-        }
-      ]
-    },
-    {
-      "name": "4 — Vehicles",
-      "item": [
-        {
-          "name": "GET /vehicles",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/vehicles", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "const j = pm.response.json(); if(j.length>0) pm.environment.set('vehicle_id', j[0].id);"
-          ]}}]
-        },
-        {
-          "name": "GET /vehicles/available",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/vehicles/available", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));"
-          ]}}]
-        },
-        {
-          "name": "GET /vehicles/statistics",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/vehicles/statistics", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "pm.test('Has total', () => pm.expect(pm.response.json()).to.have.property('total'));"
-          ]}}]
-        },
-        {
-          "name": "POST /vehicles (create test vehicle)",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/vehicles", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"plateNumber\":\"AA-TEST-001\",\"make\":\"Toyota\",\"model\":\"Land Cruiser\",\"year\":2022,\"capacity\":7,\"fuelType\":\"Diesel\",\"status\":\"Active\",\"currentMileage\":0,\"fuelCapacity\":80,\"fuelEfficiency\":8,\"color\":\"White\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "const c = pm.response.code; pm.test('201 or 409', () => pm.expect([201,409]).to.include(c));",
-            "if(c===201) pm.environment.set('vehicle_id', pm.response.json().id);"
-          ]}}]
-        },
-        {
-          "name": "GET /vehicles/:id",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));"
-          ]}}]
-        }
-      ]
-    },
-    {
-      "name": "5 — Drivers",
-      "item": [
-        {
-          "name": "GET /drivers",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/drivers", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-            "const j = pm.response.json(); if(j.length>0) pm.environment.set('driver_id', j[0].id);"
-          ]}}]
-        },
-        {
-          "name": "GET /drivers/available",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/drivers/available", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));"
-          ]}}]
-        },
-        {
-          "name": "GET /drivers/statistics",
-          "request": { "method": "GET", "url": "{{base_url}}/api/v1/drivers/statistics", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}] },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));"
-          ]}}]
-        },
-        {
-          "name": "POST /drivers (create driver profile)",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/drivers", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"userId\":\"{{driver_user_id}}\",\"licenseNumber\":\"DL-POSTMAN-001\",\"licenseExpiry\":\"2028-12-31\",\"experienceYears\":5,\"phoneNumber\":\"+251912345678\",\"specializations\":\"Heavy vehicles, Long distance\",\"notes\":\"Postman test driver\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "const c = pm.response.code; pm.test('201 or 409', () => pm.expect([201,409]).to.include(c));",
-            "if(c===201) pm.environment.set('driver_id', pm.response.json().id);"
-          ]}}]
-        },
-        {
-          "name": "POST /drivers/:id/assign-vehicle",
-          "request": { "method": "POST", "url": "{{base_url}}/api/v1/drivers/{{driver_id}}/assign-vehicle", "header": [{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}], "body": { "mode": "raw", "raw": "{\"vehicleId\":\"{{vehicle_id}}\"}" } },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
-            "pm.test('Status 200', () => pm.response.to.have.status(200));"
-          ]}}]
-        }
-      ]
-    },
+{"info":{"name":"Fleet Management API","_postman_id":"fleet-management-api","description":"Complete API test suite — all roles, full trip lifecycle (STANDARD/VIP/SERVICE), vehicles, drivers, maintenance, fuel, tracking, notifications, audit.","schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},"item":[
+{"name":"0 — Health","item":[{"name":"GET /health","request":{"method":"GET","url":"{{base_url}}/api/v1/health"},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200 OK',()=>pm.response.to.have.status(200));","pm.test('DB connected',()=>pm.expect(pm.response.json().database).to.eql('connected'));"]}}]}]},
+{"name":"1 — Auth","item":[
+{"name":"Login Admin","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{admin_email}}\",\"password\":\"{{admin_password}}\",\"appType\":\"system-admin\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();pm.environment.set('access_token',j.access_token);pm.environment.set('refresh_token',j.refresh_token);"]}}]},
+{"name":"Login President","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{president_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"president\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.environment.set('president_token',pm.response.json().access_token);"]}}]},
+{"name":"Login Transport","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{transport_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"transport-admin\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.environment.set('transport_token',pm.response.json().access_token);"]}}]},
+{"name":"Login Deployment","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{deployment_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"deployment-office\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.environment.set('deployment_token',pm.response.json().access_token);"]}}]},
+{"name":"Login Driver","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{driver_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"driver\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.environment.set('driver_token',pm.response.json().access_token);"]}}]},
+{"name":"Login Dean","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{dean_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"college-dean\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.environment.set('dean_token',pm.response.json().access_token);"]}}]},
+{"name":"Login Dept Head","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{dept_head_email}}\",\"password\":\"{{user_password}}\",\"appType\":\"department\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.environment.set('dept_head_token',pm.response.json().access_token);"]}}]},
+{"name":"Login Postman Employee","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/login","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{employee_email}}\",\"password\":\"{{user_password}}\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();pm.environment.set('employee_token',j.access_token);pm.environment.set('employee_id',j.user?.id||'');"]}}]},
+{"name":"POST /auth/refresh","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/refresh","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"refresh_token\":\"{{refresh_token}}\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"POST /auth/forgot-password","request":{"method":"POST","url":"{{base_url}}/api/v1/auth/forgot-password","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"email\":\"{{employee_email}}\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]},
+{"name":"2 — Users","item":[
+{"name":"GET /users","request":{"method":"GET","url":"{{base_url}}/api/v1/users","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();pm.test('array',()=>pm.expect(j).to.be.an('array'));if(j.length>0)pm.environment.set('user_id',j[0].id);"]}}]},
+{"name":"GET /users/me","request":{"method":"GET","url":"{{base_url}}/api/v1/users/me","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('has email',()=>pm.expect(pm.response.json()).to.have.property('email'));"]}}]},
+{"name":"POST /users (create postman user)","request":{"method":"POST","url":"{{base_url}}/api/v1/users","header":[{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"name\":\"Postman Tester\",\"email\":\"postman@haramaya.edu.et\",\"password\":\"Password@123\",\"role\":\"User\",\"phoneNumber\":\"+251912345678\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201 or 409',()=>pm.expect([201,409]).to.include(pm.response.code));","if(pm.response.code===201)pm.environment.set('postman_user_id',pm.response.json().id);"]}}]},
+{"name":"PATCH /users/me","request":{"method":"PATCH","url":"{{base_url}}/api/v1/users/me","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"name\":\"Postman Tester\",\"phoneNumber\":\"+251912345678\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]},
+{"name":"3 — Colleges & Departments","item":[
+{"name":"GET /colleges","request":{"method":"GET","url":"{{base_url}}/api/v1/colleges","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();pm.test('has colleges',()=>pm.expect(j.length).to.be.above(0));if(j.length>0)pm.environment.set('college_id',j[0].id);"]}}]},
+{"name":"GET /departments","request":{"method":"GET","url":"{{base_url}}/api/v1/departments","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();if(j.length>0)pm.environment.set('department_id',j[0].id);"]}}]}
+]},
+{"name":"4 — Vehicles","item":[
+{"name":"GET /vehicles","request":{"method":"GET","url":"{{base_url}}/api/v1/vehicles","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();const active=j.find(v=>v.status==='Active');if(active)pm.environment.set('vehicle_id',active.id);"]}}]},
+{"name":"GET /vehicles/available","request":{"method":"GET","url":"{{base_url}}/api/v1/vehicles/available","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"GET /vehicles/statistics","request":{"method":"GET","url":"{{base_url}}/api/v1/vehicles/statistics","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('has total',()=>pm.expect(pm.response.json()).to.have.property('total'));"]}}]},
+{"name":"POST /vehicles","request":{"method":"POST","url":"{{base_url}}/api/v1/vehicles","header":[{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"plateNumber\":\"AA-POSTMAN-001\",\"make\":\"Toyota\",\"model\":\"Land Cruiser\",\"year\":2022,\"capacity\":7,\"fuelType\":\"Diesel\",\"status\":\"Active\",\"currentMileage\":0,\"fuelCapacity\":80,\"fuelEfficiency\":8,\"color\":\"White\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201 or 409',()=>pm.expect([201,409]).to.include(pm.response.code));","if(pm.response.code===201)pm.environment.set('vehicle_id',pm.response.json().id);"]}}]},
+{"name":"GET /vehicles/:id","request":{"method":"GET","url":"{{base_url}}/api/v1/vehicles/{{vehicle_id}}","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]},
+{"name":"5 — Drivers","item":[
+{"name":"GET /drivers","request":{"method":"GET","url":"{{base_url}}/api/v1/drivers","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();const avail=j.find(d=>d.status==='Available');if(avail)pm.environment.set('driver_id',avail.id);"]}}]},
+{"name":"GET /drivers/available","request":{"method":"GET","url":"{{base_url}}/api/v1/drivers/available","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"GET /drivers/statistics","request":{"method":"GET","url":"{{base_url}}/api/v1/drivers/statistics","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"POST /users (driver user)","request":{"method":"POST","url":"{{base_url}}/api/v1/users","header":[{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"name\":\"Postman Driver\",\"email\":\"postman.driver@haramaya.edu.et\",\"password\":\"Password@123\",\"role\":\"Driver\",\"phoneNumber\":\"+251912345679\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201 or 409',()=>pm.expect([201,409]).to.include(pm.response.code));","if(pm.response.code===201)pm.environment.set('driver_user_id',pm.response.json().id);"]}}]},
+{"name":"POST /drivers (create profile)","request":{"method":"POST","url":"{{base_url}}/api/v1/drivers","header":[{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"userId\":\"{{driver_user_id}}\",\"licenseNumber\":\"DL-POSTMAN-001\",\"licenseExpiry\":\"2028-12-31\",\"experienceYears\":5,\"phoneNumber\":\"+251912345679\",\"specializations\":\"Heavy vehicles\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201 or 409',()=>pm.expect([201,409]).to.include(pm.response.code));","if(pm.response.code===201)pm.environment.set('driver_id',pm.response.json().id);"]}}]},
+{"name":"POST /drivers/:id/assign-vehicle","request":{"method":"POST","url":"{{base_url}}/api/v1/drivers/{{driver_id}}/assign-vehicle","header":[{"key":"Authorization","value":"Bearer {{access_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"vehicleId\":\"{{vehicle_id}}\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"DELETE /drivers/:id/assign-vehicle (revoke)","request":{"method":"DELETE","url":"{{base_url}}/api/v1/drivers/{{driver_id}}/assign-vehicle","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]},
+{"name":"6 — STANDARD Trip (Full Flow)","item":[
+{"name":"POST /trips (create STANDARD)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"tripType\":\"Normal\",\"tripCategory\":\"STANDARD\",\"purpose\":\"OFFICIAL | Standard test trip\",\"destination\":\"Dire Dawa\",\"startDateTime\":\"2026-07-10T09:00:00Z\",\"endDateTime\":\"2026-07-10T17:00:00Z\",\"passengerCount\":2}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201',()=>pm.response.to.have.status(201));","pm.environment.set('trip_id',pm.response.json().id);","pm.test('DRAFT',()=>pm.expect(pm.response.json().state).to.eql('DRAFT'));"]}}]},
+{"name":"POST /trips/:id/submit","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/submit","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('PENDING_DEPARTMENT',()=>pm.expect(pm.response.json().state).to.eql('PENDING_DEPARTMENT'));"]}}]},
+{"name":"POST /trips/:id/approve (Dept Head)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/approve","header":[{"key":"Authorization","value":"Bearer {{dept_head_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"comments\":\"Approved by department head\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('PENDING_COLLEGE',()=>pm.expect(pm.response.json().state).to.eql('PENDING_COLLEGE'));"]}}]},
+{"name":"POST /trips/:id/approve (Dean)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/approve","header":[{"key":"Authorization","value":"Bearer {{dean_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"comments\":\"Approved by dean\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('PENDING_PRESIDENT',()=>pm.expect(pm.response.json().state).to.eql('PENDING_PRESIDENT'));"]}}]},
+{"name":"POST /trips/:id/approve (President)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/approve","header":[{"key":"Authorization","value":"Bearer {{president_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"comments\":\"Approved by president\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('APPROVED_FOR_ALLOCATION',()=>pm.expect(pm.response.json().state).to.eql('APPROVED_FOR_ALLOCATION'));"]}}]},
+{"name":"POST /trips/:id/allocate (Deployment)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/allocate","header":[{"key":"Authorization","value":"Bearer {{deployment_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"vehicleId\":\"{{vehicle_id}}\",\"driverId\":\"{{driver_id}}\",\"estimatedFuelCost\":500,\"estimatedDistance\":150}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('CAR_ALLOCATED',()=>pm.expect(pm.response.json().state).to.eql('CAR_ALLOCATED'));"]}}]},
+{"name":"POST /trips/:id/confirm-transport (Transport)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/confirm-transport","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"fuelApproved\":true,\"estimatedFuelCost\":500,\"estimatedDistance\":150,\"notes\":\"Ready for dispatch\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('READY',()=>pm.expect(pm.response.json().state).to.eql('READY'));"]}}]},
+{"name":"POST /trips/:id/start (Driver)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/start","header":[{"key":"Authorization","value":"Bearer {{driver_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"plateNumber\":\"ET-6-75504\",\"scannerValidation\":true}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('IN_PROGRESS',()=>pm.expect(pm.response.json().state).to.eql('IN_PROGRESS'));"]}}]},
+{"name":"POST /trips/:id/complete (Employee)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/complete","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"actualDistance\":148,\"actualFuelCost\":490,\"finalMileage\":15148}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('COMPLETED',()=>pm.expect(pm.response.json().state).to.eql('COMPLETED'));"]}}]},
+{"name":"POST /trips/:id/feedback","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{trip_id}}/feedback","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"overallRating\":5,\"driverRating\":5,\"vehicleRating\":4,\"punctualityRating\":5,\"comments\":\"Excellent service\",\"wouldRecommend\":true}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201',()=>pm.response.to.have.status(201));","pm.test('has id',()=>pm.expect(pm.response.json()).to.have.property('id'));"]}}]}
+]},
+{"name":"7 — VIP Trip (Full Flow)","item":[
+{"name":"POST /trips (create VIP)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"tripType\":\"VIP\",\"tripCategory\":\"VIP\",\"purpose\":\"VIP | Official VIP trip\",\"destination\":\"Addis Ababa\",\"startDateTime\":\"2026-07-15T08:00:00Z\",\"endDateTime\":\"2026-07-15T20:00:00Z\",\"passengerCount\":1}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201',()=>pm.response.to.have.status(201));","pm.environment.set('vip_trip_id',pm.response.json().id);"]}}]},
+{"name":"POST /trips/:id/submit (VIP)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{vip_trip_id}}/submit","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('PENDING_PRESIDENT',()=>pm.expect(pm.response.json().state).to.eql('PENDING_PRESIDENT'));"]}}]},
+{"name":"POST /trips/:id/approve (President — VIP)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{vip_trip_id}}/approve","header":[{"key":"Authorization","value":"Bearer {{president_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"comments\":\"VIP approved\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('APPROVED_FOR_ALLOCATION',()=>pm.expect(pm.response.json().state).to.eql('APPROVED_FOR_ALLOCATION'));"]}}]},
+{"name":"POST /trips/:id/allocate (VIP)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{vip_trip_id}}/allocate","header":[{"key":"Authorization","value":"Bearer {{deployment_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"vehicleId\":\"{{vehicle_id}}\",\"driverId\":\"{{driver_id}}\",\"estimatedFuelCost\":1200,\"estimatedDistance\":500}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"POST /trips/:id/confirm-transport (VIP)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{vip_trip_id}}/confirm-transport","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"fuelApproved\":true,\"estimatedFuelCost\":1200,\"estimatedDistance\":500}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('READY',()=>pm.expect(pm.response.json().state).to.eql('READY'));"]}}]},
+{"name":"POST /trips/:id/start (VIP)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{vip_trip_id}}/start","header":[{"key":"Authorization","value":"Bearer {{driver_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"plateNumber\":\"ET-6-75504\",\"scannerValidation\":true}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('IN_PROGRESS',()=>pm.expect(pm.response.json().state).to.eql('IN_PROGRESS'));"]}}]},
+{"name":"POST /trips/:id/complete (VIP)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{vip_trip_id}}/complete","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"actualDistance\":495,\"actualFuelCost\":1180,\"finalMileage\":15643}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('COMPLETED',()=>pm.expect(pm.response.json().state).to.eql('COMPLETED'));"]}}]}
+]},
+{"name":"8 — SERVICE Trip (Full Flow)","item":[
+{"name":"POST /trips (create SERVICE)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"tripType\":\"Normal\",\"tripCategory\":\"SERVICE\",\"purpose\":\"SERVICE | University service trip\",\"destination\":\"Harar\",\"startDateTime\":\"2026-07-20T07:00:00Z\",\"endDateTime\":\"2026-07-20T15:00:00Z\",\"passengerCount\":3}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201',()=>pm.response.to.have.status(201));","pm.environment.set('service_trip_id',pm.response.json().id);"]}}]},
+{"name":"POST /trips/:id/submit (SERVICE)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{service_trip_id}}/submit","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('PENDING_PRESIDENT',()=>pm.expect(pm.response.json().state).to.eql('PENDING_PRESIDENT'));"]}}]},
+{"name":"POST /trips/:id/approve (President — SERVICE)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{service_trip_id}}/approve","header":[{"key":"Authorization","value":"Bearer {{president_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"comments\":\"Service approved\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"POST /trips/:id/allocate (SERVICE)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{service_trip_id}}/allocate","header":[{"key":"Authorization","value":"Bearer {{deployment_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"vehicleId\":\"{{vehicle_id}}\",\"driverId\":\"{{driver_id}}\",\"estimatedFuelCost\":300,\"estimatedDistance\":100}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"POST /trips/:id/confirm-transport (SERVICE)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{service_trip_id}}/confirm-transport","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"fuelApproved\":true}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('READY',()=>pm.expect(pm.response.json().state).to.eql('READY'));"]}}]},
+{"name":"POST /trips/:id/start (SERVICE)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{service_trip_id}}/start","header":[{"key":"Authorization","value":"Bearer {{driver_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"plateNumber\":\"ET-6-75504\",\"scannerValidation\":true}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"POST /trips/:id/complete (SERVICE)","request":{"method":"POST","url":"{{base_url}}/api/v1/trips/{{service_trip_id}}/complete","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"actualDistance\":98,\"actualFuelCost\":295,\"finalMileage\":15741}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('COMPLETED',()=>pm.expect(pm.response.json().state).to.eql('COMPLETED'));"]}}]}
+]},
+{"name":"9 — Trips (Read & Stats)","item":[
+{"name":"GET /trips","request":{"method":"GET","url":"{{base_url}}/api/v1/trips","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"GET /trips/:id","request":{"method":"GET","url":"{{base_url}}/api/v1/trips/{{trip_id}}","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"GET /trips/pending/approvals","request":{"method":"GET","url":"{{base_url}}/api/v1/trips/pending/approvals","header":[{"key":"Authorization","value":"Bearer {{dept_head_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"GET /trips/feedback/statistics","request":{"method":"GET","url":"{{base_url}}/api/v1/trips/feedback/statistics","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('has totalFeedbacks',()=>pm.expect(pm.response.json()).to.have.property('totalFeedbacks'));"]}}]}
+]},
+{"name":"10 — Maintenance (Full Flow)","item":[
+{"name":"POST /maintenance (create)","request":{"method":"POST","url":"{{base_url}}/api/v1/maintenance","header":[{"key":"Authorization","value":"Bearer {{driver_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"vehicleId\":\"{{vehicle_id}}\",\"issueDescription\":\"Engine oil change required\",\"priority\":\"Medium\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201',()=>pm.response.to.have.status(201));","pm.environment.set('maintenance_id',pm.response.json().id);","pm.test('Submitted',()=>pm.expect(pm.response.json().status).to.eql('Submitted'));"]}}]},
+{"name":"GET /maintenance","request":{"method":"GET","url":"{{base_url}}/api/v1/maintenance","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"POST /maintenance/:id/inspect","request":{"method":"POST","url":"{{base_url}}/api/v1/maintenance/{{maintenance_id}}/inspect","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"inspectionNotes\":\"Oil change confirmed\",\"estimatedCost\":500}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('EstimateProvided',()=>pm.expect(pm.response.json().status).to.eql('EstimateProvided'));"]}}]},
+{"name":"POST /maintenance/:id/approve-budget","request":{"method":"POST","url":"{{base_url}}/api/v1/maintenance/{{maintenance_id}}/approve-budget","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('BudgetApproved',()=>pm.expect(pm.response.json().status).to.eql('BudgetApproved'));"]}}]},
+{"name":"POST /maintenance/:id/start","request":{"method":"POST","url":"{{base_url}}/api/v1/maintenance/{{maintenance_id}}/start","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('InProgress',()=>pm.expect(pm.response.json().status).to.eql('InProgress'));"]}}]},
+{"name":"POST /maintenance/:id/complete","request":{"method":"POST","url":"{{base_url}}/api/v1/maintenance/{{maintenance_id}}/complete","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"completionNotes\":\"Oil changed successfully\",\"actualCost\":480}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","pm.test('Completed',()=>pm.expect(pm.response.json().status).to.eql('Completed'));"]}}]},
+{"name":"GET /maintenance/statistics","request":{"method":"GET","url":"{{base_url}}/api/v1/maintenance/statistics","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]},
+{"name":"11 — Fuel","item":[
+{"name":"POST /fuel (create record)","request":{"method":"POST","url":"{{base_url}}/api/v1/fuel","header":[{"key":"Authorization","value":"Bearer {{transport_token}}"},{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"vehicleId\":\"{{vehicle_id}}\",\"type\":\"Refuel\",\"quantity\":50,\"pricePerLiter\":139.84,\"totalCost\":6992,\"mileageAtRefuel\":15741,\"station\":\"Haramaya Fuel Station\",\"notes\":\"Full tank\"}"}},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('201',()=>pm.response.to.have.status(201));","pm.environment.set('fuel_id',pm.response.json().id);"]}}]},
+{"name":"GET /fuel","request":{"method":"GET","url":"{{base_url}}/api/v1/fuel","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"GET /fuel/statistics","request":{"method":"GET","url":"{{base_url}}/api/v1/fuel/statistics","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]},
+{"name":"12 — Notifications & Audit","item":[
+{"name":"GET /notifications","request":{"method":"GET","url":"{{base_url}}/api/v1/notifications","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));","const j=pm.response.json();pm.test('array',()=>pm.expect(j).to.be.an('array'));if(j.length>0)pm.environment.set('notification_id',j[0].id);"]}}]},
+{"name":"PATCH /notifications/:id/read","request":{"method":"PATCH","url":"{{base_url}}/api/v1/notifications/{{notification_id}}/read","header":[{"key":"Authorization","value":"Bearer {{employee_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]},
+{"name":"GET /audit","request":{"method":"GET","url":"{{base_url}}/api/v1/audit","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]},
+{"name":"13 — Tracking","item":[
+{"name":"GET /tracking/live","request":{"method":"GET","url":"{{base_url}}/api/v1/tracking/live","header":[{"key":"Authorization","value":"Bearer {{access_token}}"}]},"event":[{"listen":"test","script":{"type":"text/javascript","exec":["pm.test('200',()=>pm.response.to.have.status(200));"]}}]}
+]}
+]}
