@@ -121,6 +121,10 @@ async function seed() {
   const driverUser = await createUser(userRepo, { name: 'Test Driver', email: 'driver@haramaya.edu.et', role: UserRole.Driver })
   await createUser(userRepo, { name: 'Gate Security',         email: 'gate@haramaya.edu.et',       role: UserRole.Gate })
 
+  // Postman test user — seeded in Computer Science / CCI for full trip flow testing
+  const cciCollege = colleges['College of Computing and Informatics']
+  const csDept = departments['Computer Science']
+  await createUser(userRepo, { name: 'Postman Tester', email: 'postman@haramaya.edu.et', role: UserRole.User, department: csDept, college: cciCollege })
   // Create driver profile for the test driver (required to appear in GET /drivers)
   const existingDriverProfile = await driverRepo.findOne({ where: { user: { id: driverUser.id } } })
   if (!existingDriverProfile) {
