@@ -37,6 +37,12 @@ export class CreateFuelRecordDto {
   @Min(0)
   pricePerLiter: number;
 
+  @ApiPropertyOptional({ example: 3312.5, description: 'Total cost (quantity × pricePerLiter). Calculated server-side if omitted.' })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  totalCost?: number;
+
   @ApiPropertyOptional({
     example: 125000,
     description: 'Vehicle mileage at refuel',
