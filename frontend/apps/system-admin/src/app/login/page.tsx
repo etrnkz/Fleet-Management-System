@@ -34,6 +34,7 @@ export default function LoginPage() {
           return
         }
 
+        storage.setItem('user', JSON.stringify(userData))
         window.location.href = '/'
       } else {
         setError(response.message || 'Login failed')

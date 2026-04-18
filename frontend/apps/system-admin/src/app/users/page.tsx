@@ -180,7 +180,7 @@ export default function UsersPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-2">
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-sm font-medium text-white ${toast.type === 'success' ? 'bg-[#1B3D2F]' : 'bg-red-600'}`}>
           {toast.message}
