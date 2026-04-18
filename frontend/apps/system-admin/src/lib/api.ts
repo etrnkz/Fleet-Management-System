@@ -67,8 +67,7 @@ async function apiFetch(url: string, options: RequestInit = {}, retry = true): P
   if (response.status === 401 && retry) {
     const refreshed = await refreshAccessToken();
     if (refreshed) return apiFetch(url, options, false);
-    clearSession();
-    if (typeof window !== 'undefined') window.location.href = '/login';
+    // Don't auto-redirect — just throw so the caller can handle it
     throw new Error('Session expired. Please log in again.');
   }
 
