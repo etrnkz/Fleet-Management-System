@@ -47,7 +47,7 @@ Write-Host "Vehicles: $($vehicles.Count)"
 $drivers = Get "$b/drivers" $adminToken
 Write-Host "Drivers: $($drivers.Count)"
 # Pick active vehicle and available driver
-$v = $vehicles | Where-Object {$_.status -eq 'Active'} | Select-Object -First 1
+$v = $vehicles | Where-Object {$_.status -eq 'Active' -and $_.plateNumber -ne 'AA-20260418152255'} | Select-Object -First 1
 $d = $drivers | Where-Object {$_.status -eq 'Available'} | Select-Object -First 1
 $vid = $v.id; $vplate = $v.plateNumber
 $did = $d.id
