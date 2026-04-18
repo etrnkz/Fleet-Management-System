@@ -566,50 +566,36 @@ export class TripsService {
     const vehicle = await this.vehiclesService.findOne(vehicleId);
     const driver = await this.driversService.findOne(driverId);
 
-    // Use a transaction with pessimistic lock to prevent race conditions
-    // where two concurrent requests assign the same driver/vehicle
-    const savedTrip = await this.dataSource.transaction(async (manager) => {
-      // Lock the trip row to prevent concurrent allocation
-      const lockedTrip = await manager.findOne(TripRequest, {
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
-      });
-
-      if (!lockedTrip || lockedTrip.state !== TripState.APPROVED_FOR_ALLOCATION) {
-        throw new BadRequestException('Trip is no longer available for allocation');
-      }
-
-      // Check driver not already on an active trip
-      const driverInUse = await manager.count(TripRequest, {
-        where: {
-          allocatedDriver: { id: driverId },
-          state: In(TRIP_STATES_HOLDING_ALLOCATION),
-        },
-      });
-      if (driverInUse > 0) {
-        throw new BadRequestException('This driver is already assigned to an active trip');
-      }
-
-      // Check vehicle not already on an active trip
-      const vehicleInUse = await manager.count(TripRequest, {
-        where: {
-          allocatedVehicle: { id: vehicleId },
-          state: In(TRIP_STATES_HOLDING_ALLOCATION),
-        },
-      });
-      if (vehicleInUse > 0) {
-        throw new BadRequestException('This vehicle is already assigned to an active trip');
-      }
-
-      lockedTrip.allocatedVehicle = vehicle;
-      lockedTrip.allocatedDriver = driver;
-      lockedTrip.deploymentTeamMember = user;
-      lockedTrip.estimatedFuelCost = allocateTripDto.estimatedFuelCost;
-      lockedTrip.estimatedDistance = allocateTripDto.estimatedDistance;
-      lockedTrip.state = TripState.CAR_ALLOCATED;
-
-      return manager.save(TripRequest, lockedTrip);
+    // Check driver not already on an active trip
+    const driverInUse = await this.tripRepository.count({
+      where: {
+        allocatedDriver: { id: driverId },
+        state: In(TRIP_STATES_HOLDING_ALLOCATION),
+      },
     });
+    if (driverInUse > 0) {
+      throw new BadRequestException('This driver is already assigned to an active trip');
+    }
+
+    // Check vehicle not already on an active trip
+    const vehicleInUse = await this.tripRepository.count({
+      where: {
+        allocatedVehicle: { id: vehicleId },
+        state: In(TRIP_STATES_HOLDING_ALLOCATION),
+      },
+    });
+    if (vehicleInUse > 0) {
+      throw new BadRequestException('This vehicle is already assigned to an active trip');
+    }
+
+    trip.allocatedVehicle = vehicle;
+    trip.allocatedDriver = driver;
+    trip.deploymentTeamMember = user;
+    trip.estimatedFuelCost = allocateTripDto.estimatedFuelCost;
+    trip.estimatedDistance = allocateTripDto.estimatedDistance;
+    trip.state = TripState.CAR_ALLOCATED;
+
+    const savedTrip = await this.tripRepository.save(trip);
 
     // Set driver status to OnTrip
     try {
