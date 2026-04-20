@@ -186,12 +186,12 @@ export default function DriversPage() {
 
   const filteredDrivers = getFilteredDrivers()
 
-  // Vehicles not already assigned to another driver
+  // Vehicles not already assigned to another driver, not on trip, not under maintenance
   const unassignedVehicles = vehicles.filter(v => {
     const assignedToOther = drivers.some(
       d => d.id !== selectedDriver?.id && d.assignedVehicle?.id === v.id
     )
-    return !assignedToOther && v.status !== 'UnderMaintenance'
+    return !assignedToOther && v.status !== 'UnderMaintenance' && v.status !== 'Maintenance' && v.status !== 'Inactive'
   })
 
   const availableCount = drivers.filter(d => getStatusInfo(d).label === 'AVAILABLE').length

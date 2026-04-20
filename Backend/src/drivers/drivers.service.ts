@@ -207,6 +207,22 @@ export class DriversService {
       throw new NotFoundException('Vehicle not found');
     }
 
+    // Block if vehicle is under maintenance
+    if (vehicle.status === 'Maintenance') {
+      throw new BadRequestException('Cannot assign a vehicle that is under maintenance');
+    }
+
+    // Block if vehicle is currently on an active trip
+    const vehicleOnTrip = await this.tripRepository.count({
+      where: {
+        allocatedVehicle: { id: vehicleId },
+        state: In(TRIP_STATES_HOLDING_ALLOCATION),
+      },
+    });
+    if (vehicleOnTrip > 0) {
+      throw new BadRequestException('Cannot assign a vehicle that is currently on an active trip');
+    }
+
     // Enforce strict 1-to-1: vehicle must not be assigned to ANY other driver
     const alreadyAssigned = await this.driverRepository
       .createQueryBuilder('driver')
