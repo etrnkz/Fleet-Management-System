@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import { Driver, DriverStatus } from './entities/driver.entity';
-import { Vehicle } from '../vehicles/entities/vehicle.entity';
+import { Vehicle, VehicleStatus } from '../vehicles/entities/vehicle.entity';
 import {
   TripRequest,
   TRIP_STATES_HOLDING_ALLOCATION,
@@ -249,7 +249,12 @@ export class DriversService {
     driver.assignedVehicle = vehicle;
     // Mark driver as Available (on-duty, ready for assignment)
     driver.status = DriverStatus.Available;
-    return this.driverRepository.save(driver);
+    const saved = await this.driverRepository.save(driver);
+
+    // Set vehicle to Active — it now has a driver
+    await this.vehicleRepository.update(vehicle.id, { status: VehicleStatus.Active });
+
+    return saved;
   }
 
   async unassignVehicle(driverId: string): Promise<Driver> {
@@ -257,9 +262,17 @@ export class DriversService {
     if (driver.status === DriverStatus.OnTrip) {
       throw new BadRequestException('Cannot unassign vehicle while driver is on a trip');
     }
+    const vehicleId = driver.assignedVehicle?.id;
     driver.assignedVehicle = null;
     driver.status = DriverStatus.Inactive;
-    return this.driverRepository.save(driver);
+    const saved = await this.driverRepository.save(driver);
+
+    // Set the vehicle to Inactive too — no driver means not deployable
+    if (vehicleId) {
+      await this.vehicleRepository.update(vehicleId, { status: VehicleStatus.Inactive });
+    }
+
+    return saved;
   }
 
   async getAssignedVehicle(driverId: string) {
