@@ -29,6 +29,7 @@ import { EarlyCompleteTripDto } from './dto/early-complete-trip.dto';
 import { ConfirmTransportDto } from './dto/confirm-transport.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { VehiclesService } from '../vehicles/vehicles.service';
+import { VehicleStatus } from '../vehicles/entities/vehicle.entity';
 import { DriversService } from '../drivers/drivers.service';
 import { DriverStatus } from '../drivers/entities/driver.entity';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -564,6 +565,11 @@ export class TripsService {
     // Verify vehicle and driver exist
     const vehicle = await this.vehiclesService.findOne(vehicleId);
     const driver = await this.driversService.findOne(driverId);
+
+    // Block allocation if vehicle is under maintenance
+    if (vehicle.status === VehicleStatus.Maintenance) {
+      throw new BadRequestException('Cannot allocate a vehicle that is under maintenance');
+    }
 
     // Check driver not already on an active trip
     const driverInUse = await this.tripRepository.count({
