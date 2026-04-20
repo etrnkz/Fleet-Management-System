@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   MaintenanceRequest,
   MaintenanceStatus,
@@ -16,12 +16,15 @@ import { CompleteMaintenanceDto } from './dto/complete-maintenance.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { VehiclesService } from '../vehicles/vehicles.service';
 import { VehicleStatus } from '../vehicles/entities/vehicle.entity';
+import { TripRequest, TRIP_STATES_HOLDING_ALLOCATION } from '../trips/entities/trip-request.entity';
 
 @Injectable()
 export class MaintenanceService {
   constructor(
     @InjectRepository(MaintenanceRequest)
     private readonly maintenanceRepository: Repository<MaintenanceRequest>,
+    @InjectRepository(TripRequest)
+    private readonly tripRepository: Repository<TripRequest>,
     private readonly vehiclesService: VehiclesService,
   ) {}
 
@@ -33,6 +36,19 @@ export class MaintenanceService {
     const vehicle = await this.vehiclesService.findOne(
       createMaintenanceDto.vehicleId,
     );
+
+    // Block if vehicle is currently on an active trip
+    const activeTrip = await this.tripRepository.count({
+      where: {
+        allocatedVehicle: { id: vehicle.id },
+        state: In(TRIP_STATES_HOLDING_ALLOCATION),
+      },
+    });
+    if (activeTrip > 0) {
+      throw new BadRequestException(
+        'Cannot submit maintenance request — vehicle is currently on an active trip',
+      );
+    }
 
     // Generate request number
     const count = await this.maintenanceRepository.count();
