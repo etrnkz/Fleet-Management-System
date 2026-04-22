@@ -286,10 +286,10 @@ export default function VehiclesPage() {
         </div>
       </div>
 
-      {/* Mobile Card View */}
-      <div className="lg:hidden flex flex-col gap-3">
+      {/* Mobile / Tablet Card View */}
+      <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredVehicles.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center md:col-span-2">
             <svg className="w-12 h-12 text-gray-300 mb-3 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
@@ -375,7 +375,7 @@ export default function VehiclesPage() {
           ))
         )}
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 md:col-span-2">
           <p className="text-xs text-gray-600">Showing {filteredVehicles.length} of {vehicles.length} vehicles</p>
           <button onClick={loadVehicles} className="flex items-center gap-2 px-3 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-xs font-medium">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
