@@ -189,7 +189,7 @@ export default function LoginPage() {
             <div className="flex items-center">
               <input id="remember" type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 text-[#1B3D2F] focus:ring-[#1B3D2F]" />
-              <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Remember me for 30 days</label>
+              <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Remember me</label>
             </div>
 
             <button type="submit" disabled={loading}

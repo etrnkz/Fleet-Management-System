@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { authApi } from '../../lib/api'
 
@@ -11,6 +11,32 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string } | null>(null)
+
+  useEffect(() => {
+    const remembered = localStorage.getItem('system_admin_remembered')
+    if (remembered) {
+      try {
+        const data = JSON.parse(remembered)
+        if (new Date(data.expiry) > new Date()) {
+          setSavedCredentials({ email: data.email, password: data.password })
+        } else {
+          localStorage.removeItem('system_admin_remembered')
+        }
+      } catch {}
+    }
+  }, [])
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value; setEmail(val)
+    if (savedCredentials && val.length > 0) setShowSuggestions(savedCredentials.email.toLowerCase().startsWith(val.toLowerCase()))
+    else if (savedCredentials && val.length === 0) setShowSuggestions(true)
+    else setShowSuggestions(false)
+  }
+  const handleSuggestionClick = () => {
+    if (savedCredentials) { setEmail(savedCredentials.email); setPassword(savedCredentials.password); setRememberMe(true); setShowSuggestions(false) }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,6 +61,12 @@ export default function LoginPage() {
         }
 
         storage.setItem('user', JSON.stringify(userData))
+        if (rememberMe) {
+          const expiry = new Date(); expiry.setDate(expiry.getDate() + 30)
+          localStorage.setItem('system_admin_remembered', JSON.stringify({ email, password, expiry: expiry.toISOString() }))
+        } else {
+          localStorage.removeItem('system_admin_remembered')
+        }
         window.location.href = '/'
       } else {
         setError(response.message || 'Login failed')
@@ -93,11 +125,29 @@ export default function LoginPage() {
                   type="email"
                   id="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
+                  onFocus={() => { if (savedCredentials && email.length === 0) setShowSuggestions(true) }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   placeholder="admin@haramaya.edu.et"
                   className="w-full pl-10 pr-4 py-3 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
                   required
                 />
+                {showSuggestions && savedCredentials && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    <button type="button" onClick={handleSuggestionClick}
+                      className="w-full px-4 py-3 text-left hover:bg-[#1B3D2F]/10 transition-colors flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">{savedCredentials.email}</div>
+                        <div className="text-xs text-gray-500">Click to fill credentials</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -152,7 +202,7 @@ export default function LoginPage() {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded border-[#c1c8c4] text-[#1B3D2F] focus:ring-[#1B3D2F]"
               />
-              <label htmlFor="remember" className="ml-2 text-sm text-[#424845]">Keep me signed in</label>
+              <label htmlFor="remember" className="ml-2 text-sm text-[#424845]">Remember me</label>
             </div>
 
             <button

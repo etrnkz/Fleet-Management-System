@@ -12,11 +12,22 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string } | null>(null)
   const { isDark, toggle: toggleTheme } = useTheme()
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('transport_admin_rememberedEmail')
-      if (saved) { setEmail(saved); setRememberMe(true) }
+      const remembered = localStorage.getItem('transport_admin_remembered')
+      if (remembered) {
+        try {
+          const data = JSON.parse(remembered)
+          if (new Date(data.expiry) > new Date()) {
+            setSavedCredentials({ email: data.email, password: data.password })
+          } else {
+            localStorage.removeItem('transport_admin_remembered')
+          }
+        } catch {}
+      }
       const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
       if (token) router.replace('/dashboard')
     }
@@ -35,9 +46,10 @@ export default function LoginPage() {
       storage.setItem('access_token', response.access_token)
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
       if (rememberMe) {
-        localStorage.setItem('transport_admin_rememberedEmail', email)
+        const expiry = new Date(); expiry.setDate(expiry.getDate() + 30)
+        localStorage.setItem('transport_admin_remembered', JSON.stringify({ email, password, expiry: expiry.toISOString() }))
       } else {
-        localStorage.removeItem('transport_admin_rememberedEmail')
+        localStorage.removeItem('transport_admin_remembered')
         storage.setItem('sessionExpiry', String(Date.now() + 7 * 60 * 60 * 1000))
       }
 
@@ -56,6 +68,16 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   }
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value; setEmail(val)
+    if (savedCredentials && val.length > 0) setShowSuggestions(savedCredentials.email.toLowerCase().startsWith(val.toLowerCase()))
+    else if (savedCredentials && val.length === 0) setShowSuggestions(true)
+    else setShowSuggestions(false)
+  }
+  const handleSuggestionClick = () => {
+    if (savedCredentials) { setEmail(savedCredentials.email); setPassword(savedCredentials.password); setRememberMe(true); setShowSuggestions(false) }
+  }
+
   return (
     <div className="min-h-screen flex">
       {isLoading && (
@@ -100,7 +122,26 @@ export default function LoginPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@haramaya.edu.et" className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 dark:focus:ring-[#A8DADC]/30 focus:border-[#1B3D2F] dark:focus:border-[#A8DADC] outline-none transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100" required />
+                <input type="email" id="email" value={email} onChange={handleEmailChange}
+                  onFocus={() => { if (savedCredentials && email.length === 0) setShowSuggestions(true) }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder="admin@haramaya.edu.et" className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 dark:focus:ring-[#A8DADC]/30 focus:border-[#1B3D2F] dark:focus:border-[#A8DADC] outline-none transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100" required />
+                {showSuggestions && savedCredentials && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg">
+                    <button type="button" onClick={handleSuggestionClick}
+                      className="w-full px-4 py-3 text-left hover:bg-[#1B3D2F]/10 dark:hover:bg-[#A8DADC]/10 transition-colors flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#1B3D2F]/15 dark:bg-[#A8DADC]/15 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-[#1B3D2F] dark:text-[#A8DADC]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate">{savedCredentials.email}</div>
+                        <div className="text-xs text-gray-500 dark:text-slate-400">Click to fill credentials</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div>
@@ -128,7 +169,7 @@ export default function LoginPage() {
             </div>
             <div className="flex items-center">
               <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-[#1B3D2F] focus:ring-[#1B3D2F]" />
-              <label htmlFor="remember" className="ml-2 text-sm text-gray-600 dark:text-slate-400">Keep me signed in</label>
+              <label htmlFor="remember" className="ml-2 text-sm text-gray-600 dark:text-slate-400">Remember me</label>
             </div>
             <button type="submit" disabled={isLoading} className="w-full bg-[#152e22] dark:bg-[#1E3A5F] text-white py-3 rounded-lg font-semibold text-sm hover:bg-[#1B3D2F] dark:hover:bg-[#1a3356] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading ? 'Signing in…' : 'Sign in'}

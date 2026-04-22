@@ -14,14 +14,36 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string } | null>(null)
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('driver_rememberedEmail')
-      if (saved) { setEmail(saved); setRememberMe(true) }
+      const remembered = localStorage.getItem('driver_remembered')
+      if (remembered) {
+        try {
+          const data = JSON.parse(remembered)
+          if (new Date(data.expiry) > new Date()) {
+            setSavedCredentials({ email: data.email, password: data.password })
+          } else {
+            localStorage.removeItem('driver_remembered')
+          }
+        } catch {}
+      }
       const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
       if (token) router.replace('/dashboard')
     }
   }, [])
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value; setEmail(val)
+    if (savedCredentials && val.length > 0) setShowSuggestions(savedCredentials.email.toLowerCase().startsWith(val.toLowerCase()))
+    else if (savedCredentials && val.length === 0) setShowSuggestions(true)
+    else setShowSuggestions(false)
+  }
+  const handleSuggestionClick = () => {
+    if (savedCredentials) { setEmail(savedCredentials.email); setPassword(savedCredentials.password); setRememberMe(true); setShowSuggestions(false) }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,9 +59,10 @@ export default function LoginPage() {
       storage.setItem('access_token', response.access_token)
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
       if (rememberMe) {
-        localStorage.setItem('driver_rememberedEmail', email)
+        const expiry = new Date(); expiry.setDate(expiry.getDate() + 30)
+        localStorage.setItem('driver_remembered', JSON.stringify({ email, password, expiry: expiry.toISOString() }))
       } else {
-        localStorage.removeItem('driver_rememberedEmail')
+        localStorage.removeItem('driver_remembered')
         storage.setItem('sessionExpiry', String(Date.now() + 7 * 60 * 60 * 1000))
       }
 
@@ -108,11 +131,29 @@ export default function LoginPage() {
                   type="email"
                   id="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
+                  onFocus={() => { if (savedCredentials && email.length === 0) setShowSuggestions(true) }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   placeholder="driver@haramaya.edu.et"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all bg-white"
                   required
                 />
+                {showSuggestions && savedCredentials && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    <button type="button" onClick={handleSuggestionClick}
+                      className="w-full px-4 py-3 text-left hover:bg-[#1B3D2F]/10 transition-colors flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">{savedCredentials.email}</div>
+                        <div className="text-xs text-gray-500">Click to fill credentials</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -168,7 +209,7 @@ export default function LoginPage() {
                 className="w-4 h-4 rounded border-gray-300 text-[#1B3D2F] focus:ring-[#1B3D2F]"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
-                Keep me signed in
+                Remember me
               </label>
             </div>
 
