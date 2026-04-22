@@ -259,9 +259,9 @@ export default function TripsPage() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 md:gap-6 min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row gap-3 md:gap-4 lg:gap-6 min-h-0">
         {/* Left Panel - Trip List */}
-        <div className="w-full lg:w-96 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden max-h-[400px] lg:max-h-none">
+        <div className="w-full md:w-72 lg:w-96 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden max-h-[360px] md:max-h-none flex-shrink-0">
           {/* Header */}
           <div className="p-3 md:p-6 border-b border-gray-200 bg-gradient-to-r from-[#1B3D2F] to-white">
             <div className="flex items-center justify-between mb-3 md:mb-4">
@@ -377,7 +377,7 @@ export default function TripsPage() {
           {selectedTrip ? (
             <>
               {/* Map Area */}
-              <div className="flex-1 min-h-[300px] md:min-h-0 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+              <div className="flex-1 min-h-[200px] md:min-h-[220px] lg:min-h-0 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#1B3D2F] via-blue-50 to-purple-50">
                   {/* Map decorative elements */}
                   <div className="absolute top-1/4 left-1/4 w-20 h-20 md:w-32 md:h-32 bg-white rounded-lg opacity-40 shadow-sm"></div>
@@ -415,7 +415,7 @@ export default function TripsPage() {
 
               {/* Trip Details Panel */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-4 lg:gap-6">
                   {/* Trip Info */}
                   <div className="space-y-3 md:space-y-4">
                     <div>
