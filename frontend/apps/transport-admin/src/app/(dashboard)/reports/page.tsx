@@ -56,8 +56,8 @@ export default function ReportsPage() {
     activeDrivers: drivers.filter(d => d.status === 'Available').length,
     totalTrips: trips.length,
     completedTrips: trips.filter(t => t.state === 'COMPLETED').length,
-    totalFuelCost: fuelRecords.reduce((sum, f) => sum + (f.totalCost || 0), 0),
-    totalMaintenanceCost: maintenanceRequests.reduce((sum, m) => sum + (m.actualCost || m.estimatedCost || 0), 0),
+    totalFuelCost: fuelRecords.reduce((sum, f) => sum + Number(f.totalCost || 0), 0),
+    totalMaintenanceCost: maintenanceRequests.reduce((sum, m) => sum + Number(m.actualCost || m.estimatedCost || 0), 0),
   }
 
   if (loading) {
@@ -129,8 +129,8 @@ export default function ReportsPage() {
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
             <p className="text-xs md:text-sm text-gray-600 mb-2">Total Fuel Cost</p>
-            <p className="text-2xl md:text-3xl font-bold text-[#1B3D2F]">
-              ETB {stats.totalFuelCost.toLocaleString()}
+            <p className="text-lg md:text-xl font-bold text-[#1B3D2F] break-all leading-tight">
+              ETB {Number(stats.totalFuelCost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -235,8 +235,8 @@ export default function ReportsPage() {
             </div>
             <div className="bg-purple-50 rounded-lg p-3 md:p-4 border border-purple-200">
               <p className="text-xs text-purple-600 mb-1">Total Cost</p>
-              <p className="text-xl md:text-2xl font-bold text-purple-700">
-                ETB {stats.totalMaintenanceCost.toLocaleString()}
+              <p className="text-base md:text-lg font-bold text-purple-700 break-all leading-tight">
+                ETB {Number(stats.totalMaintenanceCost).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
           </div>
