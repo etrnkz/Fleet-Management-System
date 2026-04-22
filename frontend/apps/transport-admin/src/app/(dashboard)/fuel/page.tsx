@@ -106,8 +106,9 @@ export default function FuelPage() {
   }
 
   // Format currency
-  const formatCurrency = (amount: number) => {
-    return `ETB ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const formatCurrency = (amount: number | string) => {
+    const n = Number(amount)
+    return `ETB ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
   // Format date
@@ -120,7 +121,7 @@ export default function FuelPage() {
   const calculateEfficiency = (record: FuelRecord, prevRecord?: FuelRecord) => {
     if (!record.mileageAtRefuel || !prevRecord?.mileageAtRefuel) return null
     const distance = record.mileageAtRefuel - prevRecord.mileageAtRefuel
-    const efficiency = (distance / record.quantity) * 100
+    const efficiency = (distance / Number(record.quantity)) * 100
     return efficiency.toFixed(1)
   }
 
@@ -168,13 +169,13 @@ export default function FuelPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
               <p className="text-xs md:text-sm text-gray-600 mb-2">Total Quantity</p>
               <p className="text-2xl md:text-3xl font-bold text-blue-600">
-                {statistics.totalQuantity.toFixed(1)} L
+                {Number(statistics.totalQuantity).toFixed(1)} L
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6">
               <p className="text-xs md:text-sm text-gray-600 mb-2">Avg Price/L</p>
               <p className="text-2xl md:text-3xl font-bold text-purple-600">
-                ETB {statistics.averagePricePerLiter.toFixed(2)}
+                ETB {Number(statistics.averagePricePerLiter).toFixed(2)}
               </p>
             </div>
           </div>
@@ -239,7 +240,7 @@ export default function FuelPage() {
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Total Fuel:</span>
-                      <span className="font-medium text-blue-600">{data.totalQuantity.toFixed(1)} L</span>
+                      <span className="font-medium text-blue-600">{Number(data.totalQuantity).toFixed(1)} L</span>
                     </div>
                   </div>
                 </div>
@@ -320,7 +321,7 @@ export default function FuelPage() {
                       </td>
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                         <span className="text-xs md:text-sm font-semibold text-blue-600">
-                          {record.quantity.toFixed(1)} L
+                          {Number(record.quantity).toFixed(1)} L
                         </span>
                       </td>
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
@@ -335,7 +336,7 @@ export default function FuelPage() {
                       </td>
                       <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
                         <span className="text-xs md:text-sm text-gray-600">
-                          {record.mileageAtRefuel ? `${record.mileageAtRefuel.toLocaleString()} km` : '-'}
+                          {record.mileageAtRefuel ? `${Number(record.mileageAtRefuel).toLocaleString()} km` : '-'}
                         </span>
                       </td>
                     </tr>
