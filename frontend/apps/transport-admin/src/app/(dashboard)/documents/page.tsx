@@ -218,10 +218,10 @@ export default function DocumentsPage() {
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search by owner or document type..."
           className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1 flex-shrink-0">
           {['all', 'valid', 'expiring', 'expired', 'unknown'].map(f => (
             <button key={f} onClick={() => setFilterStatus(f)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium capitalize transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs font-medium capitalize transition-colors whitespace-nowrap ${
                 filterStatus === f ? 'bg-[#1B3D2F] text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}>
               {f}
@@ -235,7 +235,8 @@ export default function DocumentsPage() {
 
       {!loading && !error && (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop table — hidden below lg */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr className="text-left text-xs text-gray-500 uppercase">
@@ -251,10 +252,10 @@ export default function DocumentsPage() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map(row => (
                   <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">{row.ownerName}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900 max-w-[200px] truncate">{row.ownerName}</td>
                     <td className="px-4 py-3 text-gray-500">{row.ownerType}</td>
                     <td className="px-4 py-3 text-gray-700">{row.documentType}</td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-4 py-3">
@@ -265,11 +266,11 @@ export default function DocumentsPage() {
                     <td className="px-4 py-3">
                       {row.uploadedFile ? (
                         <a href={row.uploadedFile.url} download={row.uploadedFile.name}
-                          className="flex items-center gap-1 text-[#1B3D2F] hover:text-[#1B3D2F] text-xs font-medium">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          className="flex items-center gap-1 text-[#1B3D2F] text-xs font-medium">
+                          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                           </svg>
-                          {row.uploadedFile.name.slice(0, 16)}...
+                          <span className="truncate max-w-[100px]">{row.uploadedFile.name}</span>
                         </a>
                       ) : (
                         <span className="text-xs text-gray-400">No file</span>
@@ -289,6 +290,61 @@ export default function DocumentsPage() {
               </tbody>
             </table>
             {filtered.length === 0 && <div className="p-8 text-center text-sm text-gray-400">No documents found</div>}
+          </div>
+
+          {/* Mobile / Tablet cards — shown below lg */}
+          <div className="lg:hidden divide-y divide-gray-100">
+            {filtered.length === 0 && (
+              <div className="p-8 text-center text-sm text-gray-400">No documents found</div>
+            )}
+            {filtered.map(row => (
+              <div key={row.id} className="p-4 hover:bg-gray-50 transition-colors">
+                {/* Owner + status row */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">{row.ownerName}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{row.ownerType}</span>
+                      <span className="text-xs text-gray-700 font-medium">{row.documentType}</span>
+                    </div>
+                  </div>
+                  <span className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium capitalize ${statusColors[row.status]}`}>
+                    {row.status}
+                  </span>
+                </div>
+
+                {/* Expiry + file row */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Expiry: {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : 'N/A'}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {row.uploadedFile ? (
+                      <a href={row.uploadedFile.url} download={row.uploadedFile.name}
+                        className="flex items-center gap-1 text-[#1B3D2F] text-xs font-medium">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        View
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-400">No file</span>
+                    )}
+                    <button onClick={() => handleUploadClick(row.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-[#1B3D2F] text-white rounded-lg text-xs font-medium hover:bg-[#152e22] transition-colors">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      Upload
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
