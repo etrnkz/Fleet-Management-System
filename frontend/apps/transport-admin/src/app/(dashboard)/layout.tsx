@@ -289,7 +289,7 @@ export default function DashboardLayout({
   }, [pathname])
 
   return (
-    <div className="flex h-screen bg-gray-50 transition-colors duration-300">
+    <div className="flex h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -524,7 +524,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 transition-colors duration-300 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -749,7 +749,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto min-w-0">
           {children}
         </main>
       </div>
