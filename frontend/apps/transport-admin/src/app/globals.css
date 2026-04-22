@@ -72,6 +72,28 @@ html.dark .text-emerald-700 { color: #A8DADC !important; }
 html.dark .border-emerald-700 { border-color: #A8DADC !important; }
 html.dark .hover\:text-emerald-700:hover { color: #A8DADC !important; }
 
+/* Landing page dark mode overrides */
+html.dark .bg-\[\#F8F9FA\] { background-color: #0F172A !important; }
+html.dark .bg-\[\#F2F3F7\] { background-color: #1E293B !important; }
+html.dark .text-\[\#191C20\] { color: #E2E8F0 !important; }
+html.dark .text-\[\#1B3D2F\] { color: #A8DADC !important; }
+html.dark .text-\[\#44474E\] { color: #CBD5E1 !important; }
+html.dark .text-\[\#565F71\] { color: #94A3B8 !important; }
+html.dark .border-\[\#C4C6D0\]\/20,
+html.dark .border-\[\#C4C6D0\]\/30,
+html.dark .border-\[\#C4C6D0\]\/40 { border-color: #334155 !important; }
+html.dark .bg-white\/95 { background-color: rgba(30,41,59,0.97) !important; }
+html.dark .hover\:text-\[\#1B3D2F\]:hover { color: #A8DADC !important; }
+html.dark .hover\:bg-\[\#F2F3F7\]:hover { background-color: #273549 !important; }
+html.dark .bg-\[\#D1E1FF\]\/60 { background-color: rgba(168,218,220,0.15) !important; }
+html.dark .bg-\[\#1B3D2F\]\/10 { background-color: rgba(168,218,220,0.1) !important; }
+html.dark .border-\[\#ECEEF3\] { border-color: #334155 !important; }
+html.dark .text-amber-700 { color: #FCD34D !important; }
+html.dark .bg-amber-100 { background-color: rgba(252,211,77,0.12) !important; }
+html.dark .bg-\[\#1B3D2F\] { background-color: #1E3A5F !important; }
+html.dark .hover\:bg-\[\#152e22\]:hover { background-color: #1E3A5F !important; }
+html.dark .hover\:border-\[\#1B3D2F\]\/25:hover { border-color: rgba(168,218,220,0.25) !important; }
+
 html { scroll-behavior: smooth; }
 
 input::placeholder, textarea::placeholder, select::placeholder {
@@ -84,6 +106,12 @@ input[type="number"], input[type="datetime-local"], select, textarea {
   color: var(--fa-on-surface) !important;
   background-color: var(--fa-surface) !important;
   -webkit-text-fill-color: var(--fa-on-surface) !important;
+}
+
+html.dark input:-webkit-autofill, html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus, html.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #273549 inset !important;
+  -webkit-text-fill-color: #E2E8F0 !important;
 }
 
 input:-webkit-autofill, input:-webkit-autofill:hover,

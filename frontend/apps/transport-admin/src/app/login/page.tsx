@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authApi } from '@/lib/api'
+import { useTheme } from '@/components/ThemeProvider'
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const { isDark, toggle: toggleTheme } = useTheme()
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('transport_admin_rememberedEmail')
@@ -57,56 +59,65 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {isLoading && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-gray-50/80 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-xl flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] border-t-transparent" />
-            <p className="mt-4 text-gray-600 text-sm font-semibold uppercase tracking-wide">Authenticating…</p>
+        <div className="fixed inset-0 backdrop-blur-sm bg-gray-50/80 dark:bg-slate-900/80 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-8 shadow-xl flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-[#1B3D2F] dark:border-[#A8DADC] border-t-transparent" />
+            <p className="mt-4 text-gray-600 dark:text-slate-300 text-sm font-semibold uppercase tracking-wide">Authenticating…</p>
           </div>
         </div>
       )}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-10 bg-gray-50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-10 bg-gray-50 dark:bg-slate-900">
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-6">
-              <img src="/hulogo.png" alt="Haramaya University" className="w-10 h-10 object-contain rounded-full" />
-              <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Haramaya University</p>
-                <h1 className="text-lg font-bold text-[#1B3D2F] tracking-tight">Transport Admin Portal</h1>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <img src="/hulogo.png" alt="Haramaya University" className="w-10 h-10 object-contain rounded-full" />
+                <div>
+                  <p className="text-[10px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Haramaya University</p>
+                  <h1 className="text-lg font-bold text-[#1B3D2F] dark:text-[#A8DADC] tracking-tight">Transport Admin Portal</h1>
+                </div>
               </div>
+              <button onClick={toggleTheme} className="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" aria-label="Toggle dark mode">
+                {isDark ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                )}
+              </button>
             </div>
-            <h2 className="text-2xl font-bold text-[#1B3D2F] font-serif tracking-tight">Secure sign in</h2>
-            <p className="text-gray-600 text-sm mt-2 font-medium">Use your assigned transport admin credentials to access the portal.</p>
+            <h2 className="text-2xl font-bold text-[#1B3D2F] dark:text-[#A8DADC] font-serif tracking-tight">Secure sign in</h2>
+            <p className="text-gray-600 dark:text-slate-400 text-sm mt-2 font-medium">Use your assigned transport admin credentials to access the portal.</p>
           </div>
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400">{error}</div>
           )}
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Email address</label>
+              <label htmlFor="email" className="block text-xs font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wide mb-2">Email address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#1B3D2F] dark:text-[#A8DADC]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@haramaya.edu.et" className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all bg-white" required />
+                <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@haramaya.edu.et" className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 dark:focus:ring-[#A8DADC]/30 focus:border-[#1B3D2F] dark:focus:border-[#A8DADC] outline-none transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100" required />
               </div>
             </div>
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label htmlFor="password" className="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
-                <Link href="/forgot-password" className="text-sm font-semibold text-[#1B3D2F] hover:underline transition-colors">
+                <label htmlFor="password" className="block text-xs font-semibold text-gray-600 dark:text-slate-400 uppercase tracking-wide">Password</label>
+                <Link href="/forgot-password" className="text-sm font-semibold text-[#1B3D2F] dark:text-[#A8DADC] hover:underline transition-colors">
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#1B3D2F] dark:text-[#A8DADC]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <input type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all bg-white" required />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1B3D2F]">
+                <input type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 dark:focus:ring-[#A8DADC]/30 focus:border-[#1B3D2F] dark:focus:border-[#A8DADC] outline-none transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 hover:text-[#1B3D2F] dark:hover:text-[#A8DADC]">
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                   ) : (
@@ -116,10 +127,10 @@ export default function LoginPage() {
               </div>
             </div>
             <div className="flex items-center">
-              <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-[#1B3D2F] focus:ring-[#1B3D2F]" />
-              <label htmlFor="remember" className="ml-2 text-sm text-gray-600">Keep me signed in</label>
+              <input type="checkbox" id="remember" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-[#1B3D2F] focus:ring-[#1B3D2F]" />
+              <label htmlFor="remember" className="ml-2 text-sm text-gray-600 dark:text-slate-400">Keep me signed in</label>
             </div>
-            <button type="submit" disabled={isLoading} className="w-full bg-[#152e22] text-white py-3 rounded-lg font-semibold text-sm hover:bg-[#1B3D2F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={isLoading} className="w-full bg-[#152e22] dark:bg-[#1E3A5F] text-white py-3 rounded-lg font-semibold text-sm hover:bg-[#1B3D2F] dark:hover:bg-[#1a3356] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {isLoading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
