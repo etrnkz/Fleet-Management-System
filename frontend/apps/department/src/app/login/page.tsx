@@ -254,7 +254,7 @@ export default function LoginPage() {
                 className="w-4 h-4 text-[#1B3D2F] border-gray-300 rounded focus:ring-[#1B3D2F]"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-gray-700">
-                Remember me for 30 days
+                Remember me
               </label>
             </div>
 

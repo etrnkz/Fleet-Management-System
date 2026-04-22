@@ -16,26 +16,26 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<{ type: 'email' | 'password' | 'general'; message: string } | null>(null)
 
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string } | null>(null)
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Clear any existing sessions on page load to ensure clean login
       const urlParams = new URLSearchParams(window.location.search)
       const fromLogout = urlParams.get('logout') === 'true'
-      
-      if (fromLogout) {
-        // User just logged out, clear everything
-        localStorage.clear()
-        sessionStorage.clear()
-        return
+      if (fromLogout) { localStorage.clear(); sessionStorage.clear(); return }
+
+      const remembered = localStorage.getItem('employee_remembered')
+      if (remembered) {
+        try {
+          const data = JSON.parse(remembered)
+          if (new Date(data.expiry) > new Date()) {
+            setSavedCredentials({ email: data.email, password: data.password })
+          } else {
+            localStorage.removeItem('employee_remembered')
+          }
+        } catch {}
       }
-      
-      const savedEmail = localStorage.getItem('rememberedEmail')
-      if (savedEmail) {
-        setEmail(savedEmail)
-        setRememberMe(true)
-      }
-      
-      // If already logged in (token in either storage), redirect
       const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
       if (token) router.replace('/dashboard')
     }
@@ -93,10 +93,10 @@ export default function LoginPage() {
       storage.setItem('access_token', data.access_token)
 
       if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email)
+        const expiry = new Date(); expiry.setDate(expiry.getDate() + 30)
+        localStorage.setItem('employee_remembered', JSON.stringify({ email, password, expiry: expiry.toISOString() }))
       } else {
-        localStorage.removeItem('rememberedEmail')
-        // Store 7h expiry for non-persistent sessions
+        localStorage.removeItem('employee_remembered')
         const expiry = Date.now() + 7 * 60 * 60 * 1000
         storage.setItem('sessionExpiry', String(expiry))
       }
@@ -106,6 +106,17 @@ export default function LoginPage() {
       setIsLoading(false)
       setError({ type: 'general', message: 'Network error. Please check your connection and try again.' })
     }
+  }
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value; setEmail(val)
+    if (error?.type === 'email') setError(null)
+    if (savedCredentials && val.length > 0) setShowSuggestions(savedCredentials.email.toLowerCase().startsWith(val.toLowerCase()))
+    else if (savedCredentials && val.length === 0) setShowSuggestions(true)
+    else setShowSuggestions(false)
+  }
+  const handleSuggestionClick = () => {
+    if (savedCredentials) { setEmail(savedCredentials.email); setPassword(savedCredentials.password); setRememberMe(true); setShowSuggestions(false) }
   }
 
   return (
@@ -163,16 +174,31 @@ export default function LoginPage() {
                   type="email"
                   id="email"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    if (error?.type === 'email') setError(null) // Clear error when user types
-                  }}
+                  onChange={handleEmailChange}
+                  onFocus={() => { if (savedCredentials && email.length === 0) setShowSuggestions(true) }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   placeholder="name@institution.edu"
                   className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${
                     error?.type === 'email' ? 'border-red-500 bg-red-50' : 'border-[#c1c8c4]'
                   }`}
                   required
                 />
+                {showSuggestions && savedCredentials && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    <button type="button" onClick={handleSuggestionClick}
+                      className="w-full px-4 py-3 text-left hover:bg-[#1B3D2F]/10 transition-colors flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#1B3D2F]/15 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">{savedCredentials.email}</div>
+                        <div className="text-xs text-gray-500">Click to fill credentials</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
               {error && error.type === 'email' && (
                 <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -249,7 +275,7 @@ export default function LoginPage() {
                 className="w-4 h-4 rounded border-[#c1c8c4] text-[#1B3D2F] focus:ring-[#1B3D2F]"
               />
               <label htmlFor="remember" className="ml-2 text-sm text-[#424845]">
-                Keep me signed in
+                Remember me
               </label>
             </div>
 
