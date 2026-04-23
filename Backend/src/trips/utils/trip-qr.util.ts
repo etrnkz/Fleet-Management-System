@@ -32,9 +32,7 @@ export function parseTripQrPayload(raw: string): ParsedTripQr {
   if (typeof tripId !== 'string' || !UUID_RE.test(tripId)) {
     throw new BadRequestException('Invalid QR: missing or invalid tripId');
   }
-  if (obj.action != null && obj.action !== 'START_TRIP') {
-    throw new BadRequestException('Invalid QR: only START_TRIP is supported');
-  }
+  // Accept any action value — gate scanner only needs the tripId
   return {
     tripId,
     requestNumber:
