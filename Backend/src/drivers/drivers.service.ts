@@ -257,9 +257,10 @@ export class DriversService {
     driver.status = DriverStatus.Available;
     await this.driverRepository.save(driver);
 
-    // Set vehicle to Active and link back to this driver
+    // Set vehicle to Active and link back to this driver (load full driver to set relation properly)
+    const fullDriver = await this.driverRepository.findOne({ where: { id: driverId } });
     vehicle.status = VehicleStatus.Active;
-    vehicle.assignedDriver = { id: driverId } as any;
+    vehicle.assignedDriver = fullDriver;
     await this.vehicleRepository.save(vehicle);
 
     // Return fresh driver with vehicle relation loaded
