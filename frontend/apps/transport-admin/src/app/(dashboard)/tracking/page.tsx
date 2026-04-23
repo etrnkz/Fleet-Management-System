@@ -408,15 +408,25 @@ export default function LiveTrackingPage() {
     }
   }, [])
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 10 seconds to pick up trip completions
   useEffect(() => {
     const interval = setInterval(() => {
-      if (view === 'list') {
-        loadActiveTrips()
+      loadActiveTrips()
+      // If in map view and the tracked trip is no longer in progress, go back to list
+      if (view === 'map' && selectedTrip) {
+        tripApi.getAll({ state: 'IN_PROGRESS' }).then((res: any) => {
+          const active = Array.isArray(res) ? res : []
+          const stillActive = active.find((t: any) => t.id === selectedTrip.id)
+          if (!stillActive) {
+            setView('list')
+            setSelectedTrip(null)
+            setVehicles([])
+          }
+        }).catch(() => {})
       }
-    }, 30000)
+    }, 10000)
     return () => clearInterval(interval)
-  }, [view])
+  }, [view, selectedTrip])
 
   const filteredTrips = trips.filter(trip => {
     const matchesSearch = 
