@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [showAddDriverSection, setShowAddDriverSection] = useState(false)
   const [vehicleAddSuccess, setVehicleAddSuccess] = useState(false)
   const [driverAddSuccess, setDriverAddSuccess] = useState(false)
+  const [driverSubmitting, setDriverSubmitting] = useState(false)
   
   // Import states
   const [vehicleImportMode, setVehicleImportMode] = useState<'form' | 'csv'>('form')
@@ -272,6 +273,7 @@ export default function DashboardPage() {
   const handleAddNewDriver = async (e: React.FormEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target as HTMLFormElement)
+    setDriverSubmitting(true)
     
     try {
       // First create the user account
@@ -313,6 +315,8 @@ export default function DashboardPage() {
       }, 2500)
     } catch (error: any) {
       showToast(error.message || 'Failed to add driver', 'error')
+    } finally {
+      setDriverSubmitting(false)
     }
   }
 
@@ -1787,9 +1791,18 @@ export default function DashboardPage() {
                   <div className="mt-6 flex gap-3">
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
+                      disabled={driverSubmitting}
+                      className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      Add Driver
+                      {driverSubmitting ? (
+                        <>
+                          <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          Adding Driver...
+                        </>
+                      ) : 'Add Driver'}
                     </button>
                     <button
                       type="button"
