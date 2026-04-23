@@ -249,12 +249,16 @@ export class DriversService {
     driver.assignedVehicle = vehicle;
     // Mark driver as Available (on-duty, ready for assignment)
     driver.status = DriverStatus.Available;
-    const saved = await this.driverRepository.save(driver);
+    await this.driverRepository.save(driver);
 
-    // Set vehicle to Active — it now has a driver
-    await this.vehicleRepository.update(vehicle.id, { status: VehicleStatus.Active });
+    // Set vehicle to Active and link back to this driver
+    await this.vehicleRepository.update(vehicle.id, {
+      status: VehicleStatus.Active,
+      assignedDriver: { id: driverId } as any,
+    });
 
-    return saved;
+    // Return fresh driver with vehicle relation loaded
+    return this.findOne(driverId);
   }
 
   async unassignVehicle(driverId: string): Promise<Driver> {
@@ -269,7 +273,10 @@ export class DriversService {
 
     // Set the vehicle to Inactive too — no driver means not deployable
     if (vehicleId) {
-      await this.vehicleRepository.update(vehicleId, { status: VehicleStatus.Inactive });
+      await this.vehicleRepository.update(vehicleId, {
+        status: VehicleStatus.Inactive,
+        assignedDriver: null as any,
+      });
     }
 
     return saved;
