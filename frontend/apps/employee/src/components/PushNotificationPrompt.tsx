@@ -36,7 +36,8 @@ export function PushNotificationPrompt() {
       await sendSubscriptionToBackend(existingSubscription)
     } else if (Notification.permission === 'default') {
       // Show prompt if user hasn't decided yet
-      setShowPrompt(true)
+      const dismissed = localStorage.getItem('pushNotificationPromptDismissed')
+      if (!dismissed) setShowPrompt(true)
     }
   }
 
