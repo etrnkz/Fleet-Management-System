@@ -44,6 +44,7 @@ interface Vehicle {
   model: string
   year: number
   status: string
+  onTrip?: boolean
 }
 
 export default function DriversPage() {
