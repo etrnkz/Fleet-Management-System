@@ -65,34 +65,15 @@ export default function TripsPage() {
   const handleAssignTrip = (trip: any) => {
     setSelectedTrip(trip)
     setAssignmentData({ vehicleId: '', driverId: '' })
-    setVehicleSearch('')
     setDriverSearch('')
     setShowAssignModal(true)
   }
 
-  // Auto-fill driver when vehicle is selected, and vice versa
-  const handleSelectVehicle = (vehicleId: string) => {
-    const vehicle = availableVehicles.find((v: any) => v.id === vehicleId)
-    const pairedDriver = vehicle?.assignedDriver
-      ? availableDrivers.find((d: any) => d.id === vehicle.assignedDriver.id)
-      : null
-
-    setAssignmentData(prev => ({
-      vehicleId,
-      driverId: pairedDriver ? pairedDriver.id : prev.driverId,
-    }))
-  }
-
+  // When driver is selected, auto-fill their assigned vehicle
   const handleSelectDriver = (driverId: string) => {
     const driver = availableDrivers.find((d: any) => d.id === driverId)
-    const pairedVehicle = driver?.assignedVehicle
-      ? availableVehicles.find((v: any) => v.id === driver.assignedVehicle.id)
-      : null
-
-    setAssignmentData(prev => ({
-      driverId,
-      vehicleId: pairedVehicle ? pairedVehicle.id : prev.vehicleId,
-    }))
+    const vehicleId = driver?.assignedVehicle?.id || ''
+    setAssignmentData({ driverId, vehicleId })
   }
 
   // Handle Save Assignment
@@ -422,153 +403,93 @@ export default function TripsPage() {
               </div>
             </div>
 
-            {/* Vehicle Selection */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Select Vehicle</label>
-              <div className="relative mb-3">
-                <input
-                  type="text"
-                  value={vehicleSearch}
-                  onChange={e => setVehicleSearch(e.target.value)}
-                  placeholder="Search by plate, model, type..."
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                />
-                <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-52 overflow-y-auto">
-                {availableVehicles
-                  .filter((v: any) => !vehicleSearch || [v.name, v.plate, v.type, v.model, v.plateNumber, v.make].some(f => f?.toLowerCase().includes(vehicleSearch.toLowerCase())))
-                  .map((vehicle: any) => {
-                    const isSelected = assignmentData.vehicleId === vehicle.id
-                    const pairedDriverId = vehicle.assignedDriver?.id
-                    const isAutoFilled = isSelected && pairedDriverId && assignmentData.driverId === pairedDriverId
-                    return (
-                  <div
-                    key={vehicle.id}
-                    onClick={() => handleSelectVehicle(vehicle.id)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      isSelected
-                        ? 'border-[#1B3D2F] bg-[#1B3D2F]/10'
-                        : 'border-gray-200 hover:border-emerald-300'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? 'bg-[#1B3D2F]' : 'bg-gray-100'
-                      }`}>
-                        <svg className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                          <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-medium text-gray-900 text-sm">{vehicle.plateNumber || vehicle.plate || vehicle.name}</p>
-                          {isAutoFilled && <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded font-semibold">Auto-filled driver</span>}
-                        </div>
-                        <p className="text-xs text-gray-500">{vehicle.make} {vehicle.model}{vehicle.year ? ` (${vehicle.year})` : ''}</p>
-                        {vehicle.assignedDriver?.user?.name && (
-                          <p className="text-xs text-[#1B3D2F] mt-0.5">Driver: {vehicle.assignedDriver.user.name}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          {vehicle.vehicleType && <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">{vehicle.vehicleType}</span>}
-                          {vehicle.capacity && <span className="text-xs text-gray-600">{vehicle.capacity} seats</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                    )
-                  })}
-              </div>
-            </div>
-
-            {/* Driver Selection */}
+            {/* Driver Selection — vehicle auto-fills from transport admin assignment */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">Select Driver</label>
+              <p className="text-xs text-gray-500 mb-3">The vehicle assigned by Transport Admin will be automatically allocated with the driver.</p>
               <div className="relative mb-3">
                 <input
                   type="text"
                   value={driverSearch}
                   onChange={e => setDriverSearch(e.target.value)}
-                  placeholder="Search by name, license, phone..."
+                  placeholder="Search by name, license..."
                   className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                 />
                 <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-52 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
                 {availableDrivers
-                  .filter((d: any) => !driverSearch || [d.user?.name, d.name, d.licenseNumber, d.user?.phoneNumber].some(f => f?.toLowerCase().includes(driverSearch.toLowerCase())))
+                  .filter((d: any) => d.assignedVehicle) // only drivers with a vehicle assigned by transport admin
+                  .filter((d: any) => !driverSearch || [d.user?.name, d.name, d.licenseNumber].some(f => f?.toLowerCase().includes(driverSearch.toLowerCase())))
                   .map((driver: any) => {
                     const isSelected = assignmentData.driverId === driver.id
-                    const pairedVehicleId = driver.assignedVehicle?.id
-                    const isAutoFilled = isSelected && pairedVehicleId && assignmentData.vehicleId === pairedVehicleId
                     const driverName = driver.user?.name || driver.name || '—'
+                    const vehicle = driver.assignedVehicle
                     return (
-                  <div
-                    key={driver.id}
-                    onClick={() => handleSelectDriver(driver.id)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isSelected ? 'bg-blue-500' : 'bg-gray-100'
-                      }`}>
-                        <svg className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-medium text-gray-900 text-sm">{driverName}</p>
-                          {isAutoFilled && <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-semibold">Auto-filled vehicle</span>}
+                      <div
+                        key={driver.id}
+                        onClick={() => handleSelectDriver(driver.id)}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          isSelected ? 'border-[#1B3D2F] bg-[#1B3D2F]/5' : 'border-gray-200 hover:border-[#1B3D2F]/50'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm ${
+                            isSelected ? 'bg-[#1B3D2F] text-white' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm truncate">{driverName}</p>
+                            {driver.licenseNumber && <p className="text-xs text-gray-500">{driver.licenseNumber}</p>}
+                            {vehicle && (
+                              <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[#1B3D2F] bg-[#1B3D2F]/8 px-2 py-1 rounded">
+                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
+                                </svg>
+                                <span className="font-medium">{vehicle.plateNumber}</span>
+                                <span className="text-gray-500">· {vehicle.make} {vehicle.model}</span>
+                              </div>
+                            )}
+                          </div>
+                          {isSelected && (
+                            <svg className="w-5 h-5 text-[#1B3D2F] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
                         </div>
-                        {driver.user?.phoneNumber && <p className="text-xs text-gray-500">{driver.user.phoneNumber}</p>}
-                        {driver.assignedVehicle && (
-                          <p className="text-xs text-[#1B3D2F] mt-0.5">Vehicle: {driver.assignedVehicle.plateNumber}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          {driver.licenseNumber && <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded">{driver.licenseNumber}</span>}
-                          {driver.experienceYears != null && <span className="text-xs text-gray-600">{driver.experienceYears}y exp</span>}
-                        </div>
                       </div>
-                    </div>
-                  </div>
                     )
                   })}
+                {availableDrivers.filter((d: any) => d.assignedVehicle).length === 0 && (
+                  <div className="col-span-2 p-6 text-center text-sm text-gray-500 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    No drivers with assigned vehicles found. Transport Admin must assign vehicles to drivers first.
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Selection summary */}
-            {(assignmentData.vehicleId || assignmentData.driverId) && (
-              <div className={`mb-4 p-3 rounded-lg border text-sm ${
-                assignmentData.vehicleId && assignmentData.driverId
-                  ? 'bg-green-50 border-green-200 text-green-800'
-                  : 'bg-yellow-50 border-yellow-200 text-yellow-800'
-              }`}>
-                {assignmentData.vehicleId && assignmentData.driverId ? (
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Auto-filled vehicle preview */}
+            {assignmentData.driverId && assignmentData.vehicleId && (() => {
+              const driver = availableDrivers.find((d: any) => d.id === assignmentData.driverId)
+              const vehicle = driver?.assignedVehicle
+              return vehicle ? (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>
-                      <span className="font-semibold">{availableVehicles.find((v: any) => v.id === assignmentData.vehicleId)?.plateNumber}</span>
-                      {' '}→{' '}
-                      <span className="font-semibold">{availableDrivers.find((d: any) => d.id === assignmentData.driverId)?.user?.name || availableDrivers.find((d: any) => d.id === assignmentData.driverId)?.name}</span>
-                    </span>
+                    <span className="text-sm font-semibold text-green-800">Ready to assign</span>
                   </div>
-                ) : (
-                  <span>{assignmentData.vehicleId ? 'Select a driver to continue' : 'Select a vehicle to continue'}</span>
-                )}
-              </div>
-            )}
+                  <p className="text-sm text-green-700">
+                    <span className="font-medium">{driver?.user?.name || driver?.name}</span> with vehicle <span className="font-medium">{vehicle.plateNumber} — {vehicle.make} {vehicle.model}</span>
+                  </p>
+                </div>
+              ) : null
+            })()}
 
             <div className="flex gap-3">
               <button
