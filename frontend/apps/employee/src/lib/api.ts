@@ -169,6 +169,11 @@ export const tripApi = {
     body: JSON.stringify(data),
   }),
 
+  requesterCompleteTrip: (id: string) => apiFetch(`/trips/${id}/requester-complete`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  }),
+
   submitFeedback: (id: string, feedback: {
     overallRating: number;
     driverRating?: number;
