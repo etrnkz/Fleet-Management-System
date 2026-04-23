@@ -59,6 +59,13 @@ export default function DriversPage() {
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
   const [toast, setToast] = useState<ToastMessage | null>(null)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addForm, setAddForm] = useState({
+    name: '', email: '', password: '', phoneNumber: '',
+    licenseNumber: '', licenseExpiry: '', experienceYears: 1,
+    specializations: '', notes: '',
+  })
+  const [adding, setAdding] = useState(false)
 
   useEffect(() => {
     loadDrivers()
@@ -122,6 +129,57 @@ export default function DriversPage() {
     }
   }
 
+  const handleAddDriver = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      setAdding(true)
+      let userId: string
+
+      // Try to create user — if email exists, find the existing user
+      try {
+        const user: any = await userApi.create({
+          name: addForm.name,
+          email: addForm.email,
+          password: addForm.password,
+          phoneNumber: addForm.phoneNumber || undefined,
+          role: 'Driver',
+        })
+        userId = user.id
+      } catch (err: any) {
+        if (err.message?.includes('already exists') || err.message?.includes('409')) {
+          // User exists — find them
+          const users: any = await userApi.getAll()
+          const existing = Array.isArray(users) ? users.find((u: any) => u.email === addForm.email) : null
+          if (!existing) throw new Error('Email already in use by a non-Driver account')
+          if (existing.role !== 'Driver') throw new Error(`Email belongs to a ${existing.role} account, not a Driver`)
+          userId = existing.id
+        } else {
+          throw err
+        }
+      }
+
+      // Create driver profile
+      await driverApi.create({
+        userId,
+        licenseNumber: addForm.licenseNumber,
+        licenseExpiry: addForm.licenseExpiry,
+        experienceYears: Number(addForm.experienceYears),
+        phoneNumber: addForm.phoneNumber || undefined,
+        specializations: addForm.specializations || undefined,
+        notes: addForm.notes || undefined,
+      })
+
+      showToast(`Driver "${addForm.name}" created successfully`, 'success')
+      setShowAddModal(false)
+      setAddForm({ name: '', email: '', password: '', phoneNumber: '', licenseNumber: '', licenseExpiry: '', experienceYears: 1, specializations: '', notes: '' })
+      await loadDrivers()
+    } catch (error: any) {
+      showToast(error.message || 'Failed to create driver', 'error')
+    } finally {
+      setAdding(false)
+    }
+  }
+
   const getStatusInfo = (driver: Driver) => {
     switch (driver.status) {
       case 'OnTrip':
@@ -178,6 +236,15 @@ export default function DriversPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Driver Management</h1>
           <p className="text-gray-600 text-sm sm:text-base">Monitor and manage your fleet drivers' status and assignments.</p>
         </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium text-sm flex-shrink-0"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Driver
+        </button>
       </div>
 
       {/* Filters */}
@@ -523,6 +590,73 @@ export default function DriversPage() {
       />
     )}
 
+    {/* Add Driver Modal */}
+    {showAddModal && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+          <h3 className="font-bold text-gray-900 text-lg mb-4">Add New Driver</h3>
+          <form onSubmit={handleAddDriver} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Full Name *</label>
+                <input required value={addForm.name} onChange={e => setAddForm(p => ({...p, name: e.target.value}))}
+                  placeholder="Driver name" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
+                <input required type="email" value={addForm.email} onChange={e => setAddForm(p => ({...p, email: e.target.value}))}
+                  placeholder="driver@fleet.com" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Password *</label>
+                <input required type="password" value={addForm.password} onChange={e => setAddForm(p => ({...p, password: e.target.value}))}
+                  placeholder="Min 8 chars" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                <input value={addForm.phoneNumber} onChange={e => setAddForm(p => ({...p, phoneNumber: e.target.value}))}
+                  placeholder="+251912345678" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">License Number *</label>
+                <input required value={addForm.licenseNumber} onChange={e => setAddForm(p => ({...p, licenseNumber: e.target.value}))}
+                  placeholder="DL-123456789" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">License Expiry *</label>
+                <input required type="date" value={addForm.licenseExpiry} onChange={e => setAddForm(p => ({...p, licenseExpiry: e.target.value}))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Experience (years) *</label>
+                <input required type="number" min={0} max={50} value={addForm.experienceYears} onChange={e => setAddForm(p => ({...p, experienceYears: Number(e.target.value)}))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Specializations</label>
+                <input value={addForm.specializations} onChange={e => setAddForm(p => ({...p, specializations: e.target.value}))}
+                  placeholder="Heavy vehicles, Long distance" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Notes</label>
+                <input value={addForm.notes} onChange={e => setAddForm(p => ({...p, notes: e.target.value}))}
+                  placeholder="Optional notes" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => setShowAddModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">
+                Cancel
+              </button>
+              <button type="submit" disabled={adding}
+                className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium text-sm disabled:opacity-50">
+                {adding ? 'Creating...' : 'Create Driver'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
     
     </>
   )
