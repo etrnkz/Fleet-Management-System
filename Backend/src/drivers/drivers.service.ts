@@ -242,6 +242,12 @@ export class DriversService {
 
     // If this driver already has a different vehicle, unassign it first (1 driver = 1 vehicle)
     if (driver.assignedVehicle && driver.assignedVehicle.id !== vehicleId) {
+      const oldVehicle = await this.vehicleRepository.findOne({ where: { id: driver.assignedVehicle.id } });
+      if (oldVehicle) {
+        oldVehicle.status = VehicleStatus.Inactive;
+        oldVehicle.assignedDriver = null;
+        await this.vehicleRepository.save(oldVehicle);
+      }
       driver.assignedVehicle = null;
       await this.driverRepository.save(driver);
     }
