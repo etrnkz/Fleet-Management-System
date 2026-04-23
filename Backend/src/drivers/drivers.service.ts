@@ -252,10 +252,9 @@ export class DriversService {
     await this.driverRepository.save(driver);
 
     // Set vehicle to Active and link back to this driver
-    await this.vehicleRepository.update(vehicle.id, {
-      status: VehicleStatus.Active,
-      assignedDriver: { id: driverId } as any,
-    });
+    vehicle.status = VehicleStatus.Active;
+    vehicle.assignedDriver = { id: driverId } as any;
+    await this.vehicleRepository.save(vehicle);
 
     // Return fresh driver with vehicle relation loaded
     return this.findOne(driverId);
@@ -273,10 +272,12 @@ export class DriversService {
 
     // Set the vehicle to Inactive too — no driver means not deployable
     if (vehicleId) {
-      await this.vehicleRepository.update(vehicleId, {
-        status: VehicleStatus.Inactive,
-        assignedDriver: null as any,
-      });
+      const vehicle = await this.vehicleRepository.findOne({ where: { id: vehicleId } });
+      if (vehicle) {
+        vehicle.status = VehicleStatus.Inactive;
+        vehicle.assignedDriver = null;
+        await this.vehicleRepository.save(vehicle);
+      }
     }
 
     return saved;
