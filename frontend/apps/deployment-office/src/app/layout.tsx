@@ -8,12 +8,14 @@ const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 })
 
 const playfair = Playfair_Display({
   variable: '--font-newsreader',
   subsets: ['latin'],
   display: 'swap',
+  preload: false,
 })
 
 export const metadata: Metadata = {
