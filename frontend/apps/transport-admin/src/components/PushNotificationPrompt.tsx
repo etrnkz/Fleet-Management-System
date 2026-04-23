@@ -25,7 +25,8 @@ export function PushNotificationPrompt() {
       setIsSubscribed(true)
       await sendSubscriptionToBackend(existing)
     } else if (Notification.permission === 'default') {
-      setShowPrompt(true)
+      const dismissed = localStorage.getItem('pushNotificationPromptDismissed')
+      if (!dismissed) setShowPrompt(true)
     }
   }
 
