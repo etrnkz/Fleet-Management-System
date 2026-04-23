@@ -151,7 +151,7 @@ export default function DriversPage() {
     const assignedToOther = drivers.some(
       d => d.id !== selectedDriver?.id && d.assignedVehicle?.id === v.id
     )
-    return !assignedToOther && v.status !== 'UnderMaintenance' && v.status !== 'Maintenance' && v.status !== 'Inactive'
+    return !assignedToOther && !v.onTrip && v.status !== 'UnderMaintenance' && v.status !== 'Maintenance'
   })
 
   const availableCount = drivers.filter(d => getStatusInfo(d).label === 'AVAILABLE').length
