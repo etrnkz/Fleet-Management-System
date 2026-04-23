@@ -303,11 +303,6 @@ export default function DashboardPage() {
       
       showToast('Driver added successfully! You can now assign them to a vehicle.', 'success')
       setDriverAddSuccess(true)
-      setTimeout(() => {
-        setShowAssignDriverForm(false)
-        setShowAddDriverSection(false)
-        setDriverAddSuccess(false)
-      }, 2000)
       ;(e.target as HTMLFormElement).reset()
       loadDashboardData()
     } catch (error: any) {
@@ -1716,14 +1711,30 @@ export default function DashboardPage() {
                 <>
                 {driverAddSuccess ? (
                   /* Success State */
-                  <div className="p-12 flex flex-col items-center justify-center">
-                    <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                      <svg className="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="py-10 flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-5">
+                      <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-green-600 mb-2">Driver Added Successfully!</h3>
-                    <p className="text-gray-600 text-center">The driver account has been created and is ready to be assigned to a vehicle.</p>
+                    <h3 className="text-xl font-bold text-green-600 mb-2">Driver Added Successfully!</h3>
+                    <p className="text-gray-600 text-center text-sm mb-6">The driver account has been created and is ready to be assigned to a vehicle.</p>
+                    <div className="flex gap-3 w-full max-w-xs">
+                      <button
+                        type="button"
+                        onClick={() => { setDriverAddSuccess(false); setShowAddDriverSection(false) }}
+                        className="flex-1 px-4 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium text-sm"
+                      >
+                        Assign to Vehicle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowAssignDriverForm(false); setShowAddDriverSection(false); setDriverAddSuccess(false) }}
+                        className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
                 ) : (
                 <form onSubmit={handleAddNewDriver}>
