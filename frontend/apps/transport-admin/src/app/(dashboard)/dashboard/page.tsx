@@ -1617,18 +1617,14 @@ export default function DashboardPage() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                       >
                         <option value="">Choose a vehicle</option>
-                        {allVehicles.filter((vehicle: any) => 
-                          !vehicle.assignedDriver && 
-                          !vehicle.assignedDriverId &&
-                          !vehicle.onTrip
-                        ).map((vehicle: any) => (
+                        {allVehicles.filter((vehicle: any) => !vehicle.assignedDriver).map((vehicle: any) => (
                           <option key={vehicle.id} value={vehicle.id}>
                             {vehicle.plateNumber} - {vehicle.make} {vehicle.model} ({vehicle.vehicleType || 'N/A'}) - {vehicle.status}
                           </option>
                         ))}
                       </select>
                       <p className="mt-1 text-xs text-gray-500">
-                        {allVehicles.filter((v: any) => !v.assignedDriver && !v.assignedDriverId && !v.onTrip).length === 0 
+                        {allVehicles.filter((v: any) => !v.assignedDriver).length === 0 
                           ? 'All vehicles are already assigned to drivers' 
                           : 'Only vehicles without assigned drivers are shown'}
                       </p>
@@ -1644,28 +1640,16 @@ export default function DashboardPage() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                       >
                         <option value="">Choose a driver</option>
-                        {allDrivers.filter((driver: any) => 
-                          !driver.assignedVehicle && 
-                          !driver.assignedVehicleId && 
-                          driver.status !== 'OnTrip' &&
-                          driver.status !== 'Inactive' &&
-                          driver.status !== 'OnLeave'
-                        ).map((driver: any) => (
+                        {allDrivers.filter((driver: any) => !driver.assignedVehicle).map((driver: any) => (
                           <option key={driver.id} value={driver.id}>
                             {driver.user?.name} - License: {driver.licenseNumber} - {driver.status}
                           </option>
                         ))}
                       </select>
                       <p className="mt-1 text-xs text-gray-500">
-                        {allDrivers.filter((d: any) => 
-                          !d.assignedVehicle && 
-                          !d.assignedVehicleId && 
-                          d.status !== 'OnTrip' &&
-                          d.status !== 'Inactive' &&
-                          d.status !== 'OnLeave'
-                        ).length === 0 
-                          ? 'All drivers are either assigned to vehicles or on trips. Please add a new driver.' 
-                          : 'Only available unassigned drivers are shown'}
+                        {allDrivers.filter((d: any) => !d.assignedVehicle).length === 0 
+                          ? 'All drivers are already assigned to vehicles. Please add a new driver.' 
+                          : 'Only unassigned drivers are shown'}
                       </p>
                     </div>
 
