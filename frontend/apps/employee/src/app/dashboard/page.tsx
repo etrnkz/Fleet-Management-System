@@ -289,6 +289,7 @@ export default function DashboardPage() {
   }
 
   const [showCompleteModal, setShowCompleteModal] = useState(false)
+  const [tripCompleted, setTripCompleted] = useState(false)
   const [completeForm, setCompleteForm] = useState({
     actualDistance: '',
     actualFuelCost: '',
@@ -310,11 +311,15 @@ export default function DashboardPage() {
         actualFuelCost: parseFloat(completeForm.actualFuelCost),
         finalMileage: parseFloat(completeForm.finalMileage)
       })
-      showToast('Trip completed successfully', 'success')
-      setShowCompleteModal(false)
+      setTripCompleted(true)
       setCompleteForm({ actualDistance: '', actualFuelCost: '', finalMileage: '' })
       loadTrips()
       setSelectedTrip(null)
+      // Auto-close after 2.5s
+      setTimeout(() => {
+        setShowCompleteModal(false)
+        setTripCompleted(false)
+      }, 2500)
     } catch (error: any) {
       showToast(error.message || 'Failed to complete trip', 'error')
     } finally {
@@ -2519,77 +2524,100 @@ export default function DashboardPage() {
       )}
 
       {/* Complete Trip Modal */}
-      {showCompleteModal && selectedTrip && (
+      {showCompleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Complete Trip</h2>
-              <p className="text-sm text-gray-600 mt-1">Enter trip completion details</p>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Actual Distance (km) *
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={completeForm.actualDistance}
-                  onChange={(e) => setCompleteForm({ ...completeForm, actualDistance: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  placeholder="Enter actual distance"
-                />
+            {tripCompleted ? (
+              /* Success State */
+              <div className="p-10 flex flex-col items-center justify-center">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-5">
+                  <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-green-600 mb-2">Trip Completed!</h3>
+                <p className="text-gray-500 text-sm text-center">Your trip has been marked as completed successfully.</p>
               </div>
+            ) : (
+              <>
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">Complete Trip</h2>
+                  <p className="text-sm text-gray-600 mt-1">Enter trip completion details</p>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Actual Fuel Cost (ETB) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={completeForm.actualFuelCost}
-                  onChange={(e) => setCompleteForm({ ...completeForm, actualFuelCost: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  placeholder="Enter actual fuel cost"
-                />
-              </div>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Actual Distance (km) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={completeForm.actualDistance}
+                      onChange={(e) => setCompleteForm({ ...completeForm, actualDistance: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                      placeholder="Enter actual distance"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Final Mileage (km) *
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={completeForm.finalMileage}
-                  onChange={(e) => setCompleteForm({ ...completeForm, finalMileage: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
-                  placeholder="Enter final vehicle mileage"
-                />
-              </div>
-            </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Actual Fuel Cost (ETB) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={completeForm.actualFuelCost}
+                      onChange={(e) => setCompleteForm({ ...completeForm, actualFuelCost: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                      placeholder="Enter actual fuel cost"
+                    />
+                  </div>
 
-            <div className="p-6 border-t border-gray-200 flex gap-3">
-              <button
-                onClick={() => {
-                  setShowCompleteModal(false)
-                  setCompleteForm({ actualDistance: '', actualFuelCost: '', finalMileage: '' })
-                }}
-                disabled={actionLoading}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCompleteTrip}
-                disabled={actionLoading}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
-              >
-                {actionLoading ? 'Completing...' : 'Complete Trip'}
-              </button>
-            </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Final Mileage (km) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={completeForm.finalMileage}
+                      onChange={(e) => setCompleteForm({ ...completeForm, finalMileage: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                      placeholder="Enter final vehicle mileage"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-6 border-t border-gray-200 flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowCompleteModal(false)
+                      setCompleteForm({ actualDistance: '', actualFuelCost: '', finalMileage: '' })
+                    }}
+                    disabled={actionLoading}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCompleteTrip}
+                    disabled={actionLoading}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Completing...
+                      </>
+                    ) : 'Complete Trip'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
