@@ -530,6 +530,24 @@ export default function Map({
           ) : null
         )}
 
+        {/* Red line from current vehicle position to destination */}
+        {validVehicles.map(v =>
+          v.destLat && v.destLng ? (
+            <Polyline
+              key={`dest-line-${v.id}`}
+              positions={[[v.lat, v.lng], [v.destLat, v.destLng]]}
+              pathOptions={{
+                color: '#ef4444',
+                weight: 3,
+                opacity: 0.7,
+                dashArray: '10 8',
+                lineJoin: 'round',
+                lineCap: 'round'
+              }}
+            />
+          ) : null
+        )}
+
         {/* Display existing restricted zones */}
         {restrictedZones.map((zone, index) => (
           <Circle

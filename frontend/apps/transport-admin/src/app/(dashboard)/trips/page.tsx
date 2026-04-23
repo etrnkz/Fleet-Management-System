@@ -388,12 +388,18 @@ export default function TripsPage() {
                   <svg className="absolute inset-0 w-full h-full">
                     <defs>
                       <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+                        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#dc2626" stopOpacity="0.9" />
                       </linearGradient>
                     </defs>
-                    <path d="M 100 300 Q 300 200 500 350" stroke="url(#routeGradient)" strokeWidth="5" fill="none" strokeLinecap="round" />
-                    <path d="M 200 150 Q 400 100 600 200" stroke="#3b82f6" strokeWidth="4" fill="none" strokeLinecap="round" opacity="0.6" />
+                    {/* Start point marker */}
+                    <circle cx="100" cy="300" r="8" fill="#22c55e" stroke="white" strokeWidth="2" />
+                    <text x="115" y="305" fontSize="11" fill="#166534" fontWeight="bold">Start</text>
+                    {/* Route line */}
+                    <path d="M 100 300 Q 300 200 500 350" stroke="url(#routeGradient)" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="8 4" />
+                    {/* Destination marker */}
+                    <circle cx="500" cy="350" r="8" fill="#ef4444" stroke="white" strokeWidth="2" />
+                    <text x="515" y="355" fontSize="11" fill="#991b1b" fontWeight="bold">Destination</text>
                   </svg>
 
                   {/* Active vehicle marker */}
