@@ -305,6 +305,12 @@ export default function DashboardPage() {
       setDriverAddSuccess(true)
       ;(e.target as HTMLFormElement).reset()
       loadDashboardData()
+      // Auto-close modal after 2.5 seconds
+      setTimeout(() => {
+        setShowAssignDriverForm(false)
+        setShowAddDriverSection(false)
+        setDriverAddSuccess(false)
+      }, 2500)
     } catch (error: any) {
       showToast(error.message || 'Failed to add driver', 'error')
     }
