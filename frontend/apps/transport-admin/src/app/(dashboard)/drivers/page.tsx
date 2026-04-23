@@ -45,6 +45,7 @@ interface Vehicle {
   year: number
   status: string
   onTrip?: boolean
+  assignedDriver?: { id: string } | null
 }
 
 export default function DriversPage() {
@@ -147,12 +148,9 @@ export default function DriversPage() {
 
   const filteredDrivers = getFilteredDrivers()
 
-  // Vehicles not already assigned to another driver, not on trip, not under maintenance
+  // Vehicles not already assigned to any driver, not on trip, not under maintenance
   const unassignedVehicles = vehicles.filter(v => {
-    const assignedToOther = drivers.some(
-      d => d.id !== selectedDriver?.id && d.assignedVehicle?.id === v.id
-    )
-    return !assignedToOther && !v.onTrip && v.status !== 'UnderMaintenance' && v.status !== 'Maintenance'
+    return !v.assignedDriver && !v.onTrip && v.status !== 'UnderMaintenance' && v.status !== 'Maintenance'
   })
 
   const availableCount = drivers.filter(d => getStatusInfo(d).label === 'AVAILABLE').length
