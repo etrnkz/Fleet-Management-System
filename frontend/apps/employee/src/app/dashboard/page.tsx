@@ -295,7 +295,11 @@ export default function DashboardPage() {
     if (!selectedTrip) return
     try {
       setActionLoading(true)
-      await tripApi.requesterCompleteTrip(selectedTrip.id)
+      await tripApi.completeTrip(selectedTrip.id, {
+        actualDistance: 0,
+        actualFuelCost: 0,
+        finalMileage: 0
+      })
       setTripCompleted(true)
       loadTrips()
       setSelectedTrip(null)
