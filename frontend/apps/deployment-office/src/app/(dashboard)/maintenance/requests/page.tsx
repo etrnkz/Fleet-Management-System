@@ -23,8 +23,12 @@ const PRIORITY_COLORS: Record<string, string> = {
 function getNextActions(status: string, role: string | undefined) {
   const actions: { key: string; label: string; color: string }[] = []
   const isMaint = role === 'MaintenanceTeam'
-  const isDeployment = role === 'DeploymentOffice'
+  const isDeployment = role === 'DeploymentOffice' || role === 'DeploymentTeam'
 
+  // Deployment office can schedule directly from Submitted
+  if (status === 'Submitted' && isDeployment) {
+    actions.push({ key: 'schedule', label: 'Schedule & Approve', color: 'bg-[#1B3D2F] text-white' })
+  }
   if (status === 'Submitted' && isMaint) {
     actions.push({ key: 'inspect', label: 'Inspect', color: 'bg-emerald-600 text-white' })
   }
@@ -91,6 +95,15 @@ export default function MaintenanceRequestsPage() {
         })
       } else if (!selected) {
         return
+      } else if (actionModal === 'schedule') {
+        // Deployment office: inspect (with schedule notes) then approve budget
+        const scheduleNote = `Scheduled by Deployment Office. Date: ${actionData.scheduledDate || 'TBD'}. Notes: ${actionData.scheduleNotes || 'Maintenance approved and scheduled.'}`
+        await maintenanceApi.inspect(selected.id, {
+          inspectionNotes: scheduleNote,
+          estimatedCost: Number(actionData.estimatedCost) || 0,
+        })
+        await maintenanceApi.approveBudget(selected.id)
+        showToast('Maintenance scheduled and approved. Driver will be notified.')
       } else if (actionModal === 'inspect') {
         await maintenanceApi.inspect(selected.id, {
           inspectionNotes: actionData.inspectionNotes || '',
@@ -359,6 +372,48 @@ export default function MaintenanceRequestsPage() {
               </p>
             )}
 
+            {actionModal === 'schedule' && (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600 dark:text-gray-300 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  This will schedule and approve the maintenance request. The driver and maintenance team will be notified.
+                </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Scheduled Date *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={actionData.scheduledDate || ''}
+                    onChange={(e) => setActionData({ ...actionData, scheduledDate: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Estimated Cost (ETB)
+                  </label>
+                  <input
+                    type="number"
+                    value={actionData.estimatedCost ?? ''}
+                    onChange={(e) => setActionData({ ...actionData, estimatedCost: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Notes for driver / maintenance team
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={actionData.scheduleNotes || ''}
+                    onChange={(e) => setActionData({ ...actionData, scheduleNotes: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                    placeholder="e.g. Bring vehicle to workshop at 9am..."
+                  />
+                </div>
+              </div>
+            )}
             {actionModal === 'inspect' && (
               <div className="space-y-3">
                 <div>
