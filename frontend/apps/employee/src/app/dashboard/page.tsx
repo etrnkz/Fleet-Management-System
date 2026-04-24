@@ -611,6 +611,7 @@ export default function DashboardPage() {
       issues: [] as string[]
     })
     const [submitting, setSubmitting] = useState(false)
+    const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
     const [completedTripsForFeedback, setCompletedTripsForFeedback] = useState<any[]>([])
 
     useEffect(() => {
@@ -668,9 +669,8 @@ export default function DashboardPage() {
 
       setSubmitting(true)
       try {
-        // Submit feedback via API
         await tripApi.submitFeedback(selectedTrip.id, feedbackForm)
-        showToast('Feedback submitted successfully!', 'success')
+        setFeedbackSubmitted(true)
         setSelectedTrip(null)
         setFeedbackForm({
           overallRating: 0,
@@ -683,6 +683,8 @@ export default function DashboardPage() {
           issues: []
         })
         loadCompletedTrips()
+        // Auto-hide success after 3 seconds
+        setTimeout(() => setFeedbackSubmitted(false), 3000)
       } catch (error: any) {
         showToast(error.message || 'Failed to submit feedback', 'error')
       } finally {
@@ -699,7 +701,20 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {!selectedTrip ? (
+        {/* Success state */}
+        {feedbackSubmitted && (
+          <div className="bg-white rounded-xl border border-green-200 shadow-sm p-12 flex flex-col items-center justify-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-5">
+              <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-green-600 mb-2">Feedback Submitted!</h3>
+            <p className="text-gray-500 text-sm text-center">Thank you for your feedback. It has been sent to the transport office.</p>
+          </div>
+        )}
+
+        {!feedbackSubmitted && !selectedTrip ? (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Select a completed trip to provide feedback</h3>
             {completedTripsForFeedback.length === 0 ? (
@@ -734,7 +749,7 @@ export default function DashboardPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-gray-300 shadow-sm p-4 sm:p-8">
+          !feedbackSubmitted && <div className="bg-white rounded-xl border border-gray-300 shadow-sm p-4 sm:p-8">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Feedback for Trip</h3>
               <div className="bg-gray-50 rounded-lg p-4">
