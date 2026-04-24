@@ -50,10 +50,14 @@ function LandingPageContent() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-xl p-6 space-y-4">
               <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
                 <div className="w-10 h-10 bg-emerald-700 rounded-full flex items-center justify-center"><span className="text-white text-sm font-bold">DO</span></div>
-                <div><p className="font-semibold text-gray-900 text-sm">Deployment Dashboard</p><p className="text-xs text-gray-400">Real-time trip management</p></div>
-                <span className="ml-auto flex items-center gap-1.5 text-xs text-emerald-600 font-medium"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />GPS Live</span>
+                <div><p className="font-semibold text-gray-900 text-sm">Deployment Office Portal</p><p className="text-xs text-gray-400">Haramaya University Fleet Management</p></div>
               </div>
-              {[{label:'Assigned Trips',value:'3',color:'bg-blue-50 text-blue-700'},{label:'Active Trip',value:'1',color:'bg-emerald-50 text-emerald-700'},{label:'Completed',value:'47',color:'bg-gray-50 text-gray-700'}].map(s=>(<div key={s.label} className={`flex items-center justify-between px-4 py-3 rounded-lg ${s.color}`}><span className="text-sm font-medium">{s.label}</span><span className="text-lg font-bold">{s.value}</span></div>))}
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center gap-2"><span className="w-2 h-2 bg-emerald-500 rounded-full" /><span>Manage trip allocations</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 bg-emerald-500 rounded-full" /><span>Assign vehicles and drivers</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 bg-emerald-500 rounded-full" /><span>Coordinate with transport office</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 bg-emerald-500 rounded-full" /><span>Track maintenance requests</span></div>
+              </div>
             </div>
           </div>
         </div>
