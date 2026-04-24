@@ -47,6 +47,8 @@ export function PushNotificationPrompt() {
       }
     } catch (error) {
       console.error('Error enabling notifications:', error)
+      setShowPrompt(false)
+      localStorage.setItem('pushNotificationPromptDismissed', Date.now().toString())
     } finally {
       setIsLoading(false)
     }
