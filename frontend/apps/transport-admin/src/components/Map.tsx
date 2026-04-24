@@ -90,6 +90,35 @@ function MapController({ center, zoom }: { center: [number, number], zoom: numbe
   return null
 }
 
+// Fits map to show both vehicle and destination on first load, then pans without resetting zoom
+function TripBoundsController({ vehicleLat, vehicleLng, destLat, destLng, followMode }: {
+  vehicleLat: number
+  vehicleLng: number
+  destLat: number | null | undefined
+  destLng: number | null | undefined
+  followMode: boolean
+}) {
+  const map = useMap()
+  const initialFitDone = useRef(false)
+
+  useEffect(() => {
+    if (!initialFitDone.current && destLat && destLng) {
+      // First load: fit bounds to show both vehicle and destination
+      const bounds = L.latLngBounds(
+        [vehicleLat, vehicleLng],
+        [destLat, destLng]
+      )
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 13 })
+      initialFitDone.current = true
+    } else if (followMode && initialFitDone.current) {
+      // After initial fit: only pan to vehicle without changing zoom
+      map.panTo([vehicleLat, vehicleLng], { animate: true, duration: 1 })
+    }
+  }, [vehicleLat, vehicleLng])
+
+  return null
+}
+
 // Component to handle geofence drawing
 function GeofenceDrawer({ 
   drawingMode, 
@@ -469,8 +498,14 @@ export default function Map({
           </LayersControl.BaseLayer>
         </LayersControl>
         
-        {followMode && selectedVehicleData && (
-          <MapController center={[Number(selectedVehicleData.lat), Number(selectedVehicleData.lng)]} zoom={15} />
+        {selectedVehicleData && (
+          <TripBoundsController
+            vehicleLat={Number(selectedVehicleData.lat)}
+            vehicleLng={Number(selectedVehicleData.lng)}
+            destLat={selectedVehicleData.destLat}
+            destLng={selectedVehicleData.destLng}
+            followMode={followMode}
+          />
         )}
 
         {/* Geofence drawing handler */}
