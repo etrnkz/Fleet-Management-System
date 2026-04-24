@@ -1,4 +1,4 @@
-﻿const API_BASE_URL =
+const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 const getAuthToken = () => {
@@ -132,13 +132,25 @@ export const tripApi = {
 // Vehicle API
 export const vehicleApi = {
   getAssignedVehicle: async () => {
-    const trips = await apiFetch(`${API_BASE_URL}/trips`)
     const userId = getCurrentUserId()
-    const active = (Array.isArray(trips) ? trips : []).find((t: any) =>
-      ['READY', 'CAR_ALLOCATED', 'IN_PROGRESS'].includes(t.state) &&
-      (t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId)
-    )
-    return active?.allocatedVehicle || null
+    // Primary: get driver profile and return directly assigned vehicle (set by transport admin)
+    try {
+      const drivers = await apiFetch(`${API_BASE_URL}/drivers`)
+      const myDriver = (Array.isArray(drivers) ? drivers : []).find(
+        (d: any) => d.user?.id === userId || d.userId === userId
+      )
+      if (myDriver?.assignedVehicle) return myDriver.assignedVehicle
+    } catch {}
+    // Fallback: check active trips
+    try {
+      const trips = await apiFetch(`${API_BASE_URL}/trips`)
+      const active = (Array.isArray(trips) ? trips : []).find((t: any) =>
+        ['READY', 'CAR_ALLOCATED', 'IN_PROGRESS'].includes(t.state) &&
+        (t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId)
+      )
+      return active?.allocatedVehicle || null
+    } catch {}
+    return null
   },
   getVehicleInfo: (vehicleId: string) => apiFetch(`${API_BASE_URL}/vehicles/${vehicleId}`),
 }
