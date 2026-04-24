@@ -130,16 +130,15 @@ export default function LiveTrackingPage() {
   const loadActiveTrips = async () => {
     try {
       setLoading(true)
-      // Only fetch trips that are actually in progress or ready to start
-      const response = await tripApi.getAll({ 
-        state: 'IN_PROGRESS' 
-      })
-      
+      const response = await tripApi.getAll()
       const tripsArray = Array.isArray(response) ? response : []
+      
+      // Only keep IN_PROGRESS trips — completed/cancelled must never appear here
+      const inProgressTrips = tripsArray.filter((t: any) => t.state === 'IN_PROGRESS')
       
       // Fetch location data for each trip
       const tripsWithLocation = await Promise.all(
-        tripsArray.map(async (trip: any) => {
+        inProgressTrips.map(async (trip: any) => {
           try {
             const location: any = await trackingApi.getLatest(trip.id)
             return {
@@ -429,13 +428,15 @@ export default function LiveTrackingPage() {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const response = await tripApi.getAll({ state: 'IN_PROGRESS' })
-        const activeIds = new Set((Array.isArray(response) ? response : []).map((t: any) => t.id))
+        const response = await tripApi.getAll()
+        const allTrips = Array.isArray(response) ? response : []
+        // Only IN_PROGRESS trips are trackable
+        const activeIds = new Set(allTrips.filter((t: any) => t.state === 'IN_PROGRESS').map((t: any) => t.id))
 
-        // Remove completed trips from list immediately
+        // Remove completed/non-active trips from list immediately
         setTrips(prev => prev.filter(t => activeIds.has(t.id)))
 
-        // If in map view and tracked trip is no longer active, go back to list
+        // If in map view and tracked trip is no longer IN_PROGRESS, go back to list
         if (view === 'map' && selectedTrip && !activeIds.has(selectedTrip.id)) {
           setView('list')
           setSelectedTrip(null)
