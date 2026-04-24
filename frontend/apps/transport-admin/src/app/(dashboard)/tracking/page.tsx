@@ -76,6 +76,7 @@ interface Vehicle {
   tripPurpose?: string | null
   requesterName?: string | null
   routePath?: [number, number][]
+  plannedRoute?: [number, number][] // Road-following route from current pos to destination
   destLat?: number | null
   destLng?: number | null
   traveledKm?: number | null
@@ -254,6 +255,21 @@ export default function LiveTrackingPage() {
       }
     } catch {}
 
+    // Fetch road-following route from OSRM (free, no API key needed)
+    let plannedRoute: [number, number][] = []
+    if (destLat && destLng && trip.currentLocation) {
+      try {
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${trip.currentLocation.lng},${trip.currentLocation.lat};${destLng},${destLat}?overview=full&geometries=geojson`
+        const osrmRes = await fetch(osrmUrl)
+        const osrmData = await osrmRes.json()
+        if (osrmData?.routes?.[0]?.geometry?.coordinates) {
+          plannedRoute = osrmData.routes[0].geometry.coordinates.map(
+            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+          )
+        }
+      } catch {}
+    }
+
     // Fuel stats from backend stats or calculate locally
     const fuelEfficiency = trip.allocatedVehicle?.fuelEfficiency || (trip.allocatedVehicle?.fuelType === 'Diesel' ? 8 : 10)
     const PETROL_PRICE = 132.18
@@ -289,6 +305,7 @@ export default function LiveTrackingPage() {
       requesterName: trip.requester.name,
       tripType: trip.tripCategory || 'Normal',
       routePath,
+      plannedRoute: plannedRoute.length > 1 ? plannedRoute : undefined,
       destLat,
       destLng,
       traveledKm,
