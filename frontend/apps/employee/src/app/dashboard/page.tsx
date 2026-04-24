@@ -596,8 +596,9 @@ export default function DashboardPage() {
     </div>
   )
 
-  // Feedback Component
-  const FeedbackSection = () => {
+  // Feedback Component — memoized to prevent remount on parent re-renders
+  // eslint-disable-next-line react/display-name
+  const FeedbackSection = useMemo(() => () => {
     const [selectedTrip, setSelectedTrip] = useState<any>(null)
     const [feedbackForm, setFeedbackForm] = useState({
       overallRating: 0,
@@ -839,7 +840,7 @@ export default function DashboardPage() {
         )}
       </div>
     )
-  }
+  }, [])
 
   // Settings/Profile Component
   const SettingsProfile = () => {
