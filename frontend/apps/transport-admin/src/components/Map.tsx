@@ -44,6 +44,8 @@ interface Vehicle {
   fuelType?: string | null
   // Route path
   routePath?: [number, number][]
+  // Planned road-following route to destination (from OSRM)
+  plannedRoute?: [number, number][]
   // Destination coordinates (geocoded)
   destLat?: number | null
   destLng?: number | null
@@ -530,9 +532,26 @@ export default function Map({
           ) : null
         )}
 
-        {/* Red line from current vehicle position to destination */}
-        {validVehicles.map(v =>
-          v.destLat && v.destLng ? (
+        {/* Red line from current vehicle position to destination — road-following if available, straight dashed fallback */}
+        {validVehicles.map(v => {
+          if (!v.destLat || !v.destLng) return null
+          // Use OSRM road route if available, otherwise straight dashed line
+          if (v.plannedRoute && v.plannedRoute.length > 1) {
+            return (
+              <Polyline
+                key={`dest-line-${v.id}`}
+                positions={v.plannedRoute}
+                pathOptions={{
+                  color: '#ef4444',
+                  weight: 5,
+                  opacity: 0.8,
+                  lineJoin: 'round',
+                  lineCap: 'round'
+                }}
+              />
+            )
+          }
+          return (
             <Polyline
               key={`dest-line-${v.id}`}
               positions={[[v.lat, v.lng], [v.destLat, v.destLng]]}
@@ -545,8 +564,8 @@ export default function Map({
                 lineCap: 'round'
               }}
             />
-          ) : null
-        )}
+          )
+        })}
 
         {/* Display existing restricted zones */}
         {restrictedZones.map((zone, index) => (
