@@ -567,15 +567,27 @@ export default function Map({
           ) : null
         )}
 
-        {/* Red line from current vehicle position to destination — road-following if available, straight dashed fallback */}
+        {/* Red line from current vehicle position to destination — trims as vehicle moves */}
         {validVehicles.map(v => {
           if (!v.destLat || !v.destLng) return null
-          // Use OSRM road route if available, otherwise straight dashed line
+
+          // Use OSRM road route if available — trim to remaining portion ahead of vehicle
           if (v.plannedRoute && v.plannedRoute.length > 1) {
+            // Find the closest point on the planned route to the vehicle's current position
+            let closestIdx = 0
+            let minDist = Infinity
+            for (let i = 0; i < v.plannedRoute.length; i++) {
+              const [lat, lng] = v.plannedRoute[i]
+              const d = Math.sqrt(Math.pow(lat - v.lat, 2) + Math.pow(lng - v.lng, 2))
+              if (d < minDist) { minDist = d; closestIdx = i }
+            }
+            // Only draw from the closest point onward (remaining route)
+            const remainingRoute = v.plannedRoute.slice(closestIdx)
+            if (remainingRoute.length < 2) return null
             return (
               <Polyline
                 key={`dest-line-${v.id}`}
-                positions={v.plannedRoute}
+                positions={remainingRoute}
                 pathOptions={{
                   color: '#ef4444',
                   weight: 5,
@@ -586,8 +598,9 @@ export default function Map({
               />
             )
           }
+
+          // Fallback: straight dashed line from vehicle to destination
           return (
-            <Polyline
               key={`dest-line-${v.id}`}
               positions={[[v.lat, v.lng], [v.destLat, v.destLng]]}
               pathOptions={{
