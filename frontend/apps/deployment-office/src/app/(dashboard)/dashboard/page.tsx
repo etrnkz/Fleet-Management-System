@@ -362,24 +362,34 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
-                <select value={assignmentData.vehicleId} onChange={e => setAssignmentData({ ...assignmentData, vehicleId: e.target.value })}
+                <p className="text-xs text-gray-500 mb-2">Select a vehicle — the assigned driver will fill automatically.</p>
+                <select
+                  value={assignmentData.vehicleId}
+                  onChange={e => {
+                    const vid = e.target.value
+                    const vehicle = availableVehicles.find((v: any) => v.id === vid)
+                    const driverId = vehicle?.assignedDriver?.id || ''
+                    setAssignmentData({ ...assignmentData, vehicleId: vid, driverId })
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]">
                   <option value="">Select vehicle...</option>
-                  {availableVehicles.map((v: any) => (
+                  {availableVehicles.filter((v: any) => v.assignedDriver).map((v: any) => (
                     <option key={v.id} value={v.id}>{v.make} {v.model} ({v.plateNumber})</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Driver</label>
-                <select value={assignmentData.driverId} onChange={e => setAssignmentData({ ...assignmentData, driverId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]">
-                  <option value="">Select driver...</option>
-                  {availableDrivers.map((d: any) => (
-                    <option key={d.id} value={d.id}>{d.user?.name || d.name} ({d.licenseNumber})</option>
-                  ))}
-                </select>
-              </div>
+
+              {/* Auto-filled driver */}
+              {assignmentData.driverId && (() => {
+                const vehicle = availableVehicles.find((v: any) => v.id === assignmentData.vehicleId)
+                const driver = vehicle?.assignedDriver
+                return driver ? (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+                    <p className="text-green-700 font-medium">Driver auto-assigned:</p>
+                    <p className="text-green-800 font-semibold">{driver.user?.name || driver.name} — {driver.licenseNumber}</p>
+                  </div>
+                ) : null
+              })()}
 
               {/* Fuel & Distance Section */}
               <div className="border-t border-gray-100 pt-4">
