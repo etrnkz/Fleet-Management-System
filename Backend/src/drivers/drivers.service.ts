@@ -17,10 +17,6 @@ import { UpdateDriverDto } from './dto/update-driver.dto';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
 import { NotificationsService } from '../notifications/notifications.service';
-import { UpdateDriverDto } from './dto/update-driver.dto';
-import { UsersService } from '../users/users.service';
-import { UserRole } from '../users/entities/user.entity';
-import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
