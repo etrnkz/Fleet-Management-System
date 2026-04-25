@@ -6,9 +6,10 @@ import { Driver } from './entities/driver.entity';
 import { UsersModule } from '../users/users.module';
 import { TripRequest } from '../trips/entities/trip-request.entity';
 import { Vehicle } from '../vehicles/entities/vehicle.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Driver, TripRequest, Vehicle]), UsersModule],
+  imports: [TypeOrmModule.forFeature([Driver, TripRequest, Vehicle]), UsersModule, NotificationsModule],
   controllers: [DriversController],
   providers: [DriversService],
   exports: [DriversService, TypeOrmModule],
