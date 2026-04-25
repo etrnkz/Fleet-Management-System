@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -28,6 +29,7 @@ export enum NotificationType {
 }
 
 @Entity('notifications')
+@Index(['isRead', 'sentAt'])
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -44,7 +46,7 @@ export class Notification {
   @Column({ type: 'text' })
   message: string;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   data: any;
 
   @Column({ default: false })

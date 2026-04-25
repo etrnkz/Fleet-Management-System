@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Vehicle } from '../../vehicles/entities/vehicle.entity';
 import { User } from '../../users/entities/user.entity';
@@ -18,25 +19,27 @@ export enum FuelRecordType {
 }
 
 @Entity('fuel_records')
+@Index(['vehicleId', 'createdAt'])
+@Index(['type'])
 export class FuelRecord {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'uuid' })
   vehicleId: string;
 
   @ManyToOne(() => Vehicle, { eager: true })
   @JoinColumn({ name: 'vehicleId' })
   vehicle: Vehicle;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   tripId: string;
 
   @ManyToOne(() => TripRequest, { nullable: true })
   @JoinColumn({ name: 'tripId' })
   trip: TripRequest;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'uuid' })
   recordedById: string;
 
   @ManyToOne(() => User, { eager: true })
