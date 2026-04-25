@@ -46,7 +46,7 @@ export class Notification {
   @Column({ type: 'text' })
   message: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   data: any;
 
   @Column({ default: false })
