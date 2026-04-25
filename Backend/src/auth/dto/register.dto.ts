@@ -33,11 +33,14 @@ export class RegisterDto {
 
   @ApiProperty({
     example: 'SecurePass@123',
-    description: 'Password (min 6 chars)',
+    description: 'Password (min 8 chars, must include uppercase, lowercase, number and special character)',
   })
   @IsString({ message: 'Password must be a string' })
   @IsNotEmpty({ message: 'Password is required' })
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{8,}$/, {
+    message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&_-#)',
+  })
   password: string;
 
   @ApiPropertyOptional({
@@ -53,10 +56,13 @@ export class RegisterDto {
 
   @ApiPropertyOptional({
     example: '+251912345678',
-    description: 'Phone number',
+    description: 'Phone number in international format',
   })
   @IsOptional()
   @IsString({ message: 'Phone must be a string' })
+  @Matches(/^\+?[1-9]\d{6,14}$/, {
+    message: 'Phone number must be a valid international format (e.g. +251912345678)',
+  })
   phoneNumber?: string;
 
   @ApiPropertyOptional({

@@ -961,16 +961,18 @@ export class TripsService {
   }
 
   /**
-   * Gate device scans the driver QR (JSON or trip UUID). Starts trip when READY and QR fields match the server record.
+   * Gate device scans the driver QR (JSON or trip UUID).
+   * - If trip is READY → starts the trip (IN_PROGRESS)
+   * - If trip is PENDING_RETURN → vehicle returned, fully completes the trip (COMPLETED)
    * Caller must be Gate, TransportOffice, or Developer (enforced by RolesGuard on the controller).
    */
   async startTripFromGateScan(qrPayload: string): Promise<TripRequest> {
     const parsed = parseTripQrPayload(qrPayload);
     const trip = await this.findOne(parsed.tripId);
 
-    if (trip.state !== TripState.READY) {
+    if (trip.state !== TripState.READY && trip.state !== TripState.PENDING_RETURN) {
       throw new BadRequestException(
-        `Trip is not ready to start (current state: ${trip.state})`,
+        `Trip cannot be scanned at gate (current state: ${trip.state}). Expected READY or PENDING_RETURN.`,
       );
     }
 
@@ -978,24 +980,53 @@ export class TripsService {
       throw new BadRequestException('Trip has no allocated vehicle');
     }
 
-    if (
-      parsed.requestNumber != null &&
-      parsed.requestNumber !== trip.requestNumber
-    ) {
+    if (parsed.requestNumber != null && parsed.requestNumber !== trip.requestNumber) {
       throw new BadRequestException('QR request number does not match trip');
     }
 
-    if (
-      parsed.vehiclePlate != null &&
-      parsed.vehiclePlate !== trip.allocatedVehicle.plateNumber
-    ) {
-      throw new BadRequestException(
-        'QR vehicle plate does not match allocated vehicle',
-      );
+    if (parsed.vehiclePlate != null && parsed.vehiclePlate !== trip.allocatedVehicle.plateNumber) {
+      throw new BadRequestException('QR vehicle plate does not match allocated vehicle');
     }
 
-    trip.state = TripState.IN_PROGRESS;
-    return this.tripRepository.save(trip);
+    // READY → start the trip
+    if (trip.state === TripState.READY) {
+      trip.state = TripState.IN_PROGRESS;
+      return this.tripRepository.save(trip);
+    }
+
+    // PENDING_RETURN → vehicle returned, fully complete the trip
+    trip.state = TripState.COMPLETED;
+
+    const savedTrip = await this.tripRepository.save(trip);
+
+    // Now release driver and vehicle
+    if (trip.allocatedDriver) {
+      await this.driversService.updateStatus(trip.allocatedDriver.id, DriverStatus.Available).catch(() => {});
+    }
+
+    // Send full completion notifications
+    try {
+      await this.notificationsService.notifyTripCompleted(savedTrip);
+    } catch (error) {
+      console.error('Failed to send completion notification:', error);
+    }
+
+    // Audit log
+    try {
+      await this.auditService.log(
+        { id: 'gate', role: UserRole.Gate } as any,
+        AuditAction.COMPLETE,
+        AuditEntity.Trip,
+        savedTrip.id,
+        null,
+        { state: TripState.COMPLETED },
+        undefined,
+        undefined,
+        `Trip fully completed via gate return scan: ${savedTrip.requestNumber}`,
+      );
+    } catch (e) { /* non-blocking */ }
+
+    return savedTrip;
   }
 
   async completeTrip(
@@ -1025,7 +1056,8 @@ export class TripsService {
 
     trip.actualDistance = completeTripDto.actualDistance;
     trip.actualFuelCost = completeTripDto.actualFuelCost;
-    trip.state = TripState.COMPLETED;
+    // Employee/driver marks trip as PENDING_RETURN — gate must scan on return to fully complete
+    trip.state = TripState.PENDING_RETURN;
     trip.completedAt = new Date();
 
     // Update vehicle mileage
@@ -1069,15 +1101,20 @@ export class TripsService {
         trip.allocatedDriver.id,
         completeTripDto.actualDistance,
       );
-      // Reset driver status back to Available
-      await this.driversService.updateStatus(trip.allocatedDriver.id, DriverStatus.Available).catch(() => {});
+      // Driver stays OnTrip until gate confirms return — do NOT reset yet
     }
 
     const savedTrip = await this.tripRepository.save(trip);
 
-    // Send notification
+    // Notify requester that trip is pending return scan
     try {
-      await this.notificationsService.notifyTripCompleted(savedTrip);
+      await this.notificationsService.create(
+        trip.requester,
+        'TripCompleted' as any,
+        'Trip Marked Complete — Awaiting Gate Return Scan',
+        `Your trip ${trip.requestNumber} has been marked complete. The vehicle must be scanned at the gate on return to finalize.`,
+        { tripId: trip.id, requestNumber: trip.requestNumber },
+      );
     } catch (error) {
       console.error('Failed to send notification:', error);
     }
@@ -1090,10 +1127,10 @@ export class TripsService {
         AuditEntity.Trip,
         savedTrip.id,
         null,
-        { state: TripState.COMPLETED, actualDistance: completeTripDto.actualDistance },
+        { state: TripState.PENDING_RETURN, actualDistance: completeTripDto.actualDistance },
         undefined,
         undefined,
-        `Trip completed: ${savedTrip.requestNumber}`,
+        `Trip marked complete by ${user.role}, pending gate return scan: ${savedTrip.requestNumber}`,
       );
     } catch (e) { /* non-blocking */ }
 
