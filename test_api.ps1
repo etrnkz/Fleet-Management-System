@@ -46,8 +46,12 @@ $vehicles = Get "$b/vehicles" $adminToken
 Write-Host "Vehicles: $($vehicles.Count)"
 $drivers = Get "$b/drivers" $adminToken
 Write-Host "Drivers: $($drivers.Count)"
-# Pick active vehicle and available driver
-$v = $vehicles | Where-Object {$_.status -eq 'Active' -and $_.plateNumber -ne 'AA-20260418152255'} | Select-Object -First 1
+# Get active trips to exclude vehicles/drivers already in use
+$activeTrips = Get "$b/trips" $adminToken
+$busyVehicleIds = ($activeTrips | Where-Object {$_.state -in @('CAR_ALLOCATED','PENDING_TRANSPORT_CONFIRM','READY','IN_PROGRESS','PENDING_RETURN')} | ForEach-Object {$_.allocatedVehicle.id}) | Where-Object {$_}
+$busyDriverIds = ($activeTrips | Where-Object {$_.state -in @('CAR_ALLOCATED','PENDING_TRANSPORT_CONFIRM','READY','IN_PROGRESS','PENDING_RETURN')} | ForEach-Object {$_.allocatedDriver.id}) | Where-Object {$_}
+# Pick active vehicle not on a trip
+$v = $vehicles | Where-Object {$_.status -eq 'Active' -and $_.id -notin $busyVehicleIds} | Select-Object -First 1
 $d = $drivers | Where-Object {$_.status -eq 'Available'} | Select-Object -First 1
 $vid = $v.id; $vplate = $v.plateNumber
 $did = $d.id
