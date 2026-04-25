@@ -21,7 +21,7 @@ export class WorkflowConfiguration {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ type: 'simple-json' })
+  @Column({ type: 'jsonb' })
   steps: WorkflowStep[];
 
   @CreateDateColumn()

@@ -57,10 +57,10 @@ export class AuditLog {
   @Column()
   entityId: string;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   oldValues: any;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   newValues: any;
 
   @Column({ nullable: true })

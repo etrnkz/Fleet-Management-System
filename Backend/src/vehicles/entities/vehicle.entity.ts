@@ -98,7 +98,7 @@ export class Vehicle {
   @Column({ default: false })
   vipGeoRestrictionEnabled: boolean;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   restrictedZones: VehicleRestrictedZone[] | null;
 
   @ManyToOne(() => Driver, { nullable: true, eager: true })

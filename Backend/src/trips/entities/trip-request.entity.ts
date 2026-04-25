@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Vehicle } from '../../vehicles/entities/vehicle.entity';
@@ -50,6 +51,8 @@ export const TRIP_STATES_HOLDING_ALLOCATION: TripState[] = [
 ];
 
 @Entity('trip_requests')
+@Index(['state'])
+@Index(['createdAt'])
 export class TripRequest {
   @PrimaryGeneratedColumn('uuid')
   id: string;
