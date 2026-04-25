@@ -16,6 +16,8 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class DriversService {
@@ -27,6 +29,7 @@ export class DriversService {
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
     private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createDriverDto: CreateDriverDto): Promise<Driver> {
@@ -264,7 +267,27 @@ export class DriversService {
     await this.vehicleRepository.save(vehicle);
 
     // Return fresh driver with vehicle relation loaded
-    return this.findOne(driverId);
+    const result = await this.findOne(driverId);
+
+    // Notify the driver that a vehicle has been assigned
+    if (result.user) {
+      this.notificationsService.create(
+        result.user,
+        NotificationType.TripAllocated,
+        'Vehicle Assigned to You',
+        `Vehicle ${vehicle.plateNumber} (${vehicle.make} ${vehicle.model}${vehicle.color ? ', ' + vehicle.color : ''}) has been assigned to you by the transport office.`,
+        {
+          vehicleId: vehicle.id,
+          plateNumber: vehicle.plateNumber,
+          make: vehicle.make,
+          model: vehicle.model,
+          color: vehicle.color,
+          fuelType: vehicle.fuelType,
+        },
+      ).catch(() => {});
+    }
+
+    return result;
   }
 
   async unassignVehicle(driverId: string): Promise<Driver> {
@@ -285,6 +308,17 @@ export class DriversService {
         vehicle.assignedDriver = null;
         await this.vehicleRepository.save(vehicle);
       }
+    }
+
+    // Notify the driver that their vehicle was unassigned
+    if (driver.user) {
+      this.notificationsService.create(
+        driver.user,
+        NotificationType.TripAllocated,
+        'Vehicle Unassigned',
+        'Your assigned vehicle has been removed by the transport office. You are now inactive until a new vehicle is assigned.',
+        { vehicleId },
+      ).catch(() => {});
     }
 
     return saved;
