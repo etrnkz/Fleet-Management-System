@@ -5,6 +5,7 @@ export function getCorsOrigin(): string[] | boolean {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
+    'https://hu-fm-system.vercel.app',
     'https://fms-transport-admin.vercel.app',
     'https://fms-deployment-office.vercel.app',
     'https://fms-employee.vercel.app',
