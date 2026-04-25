@@ -35,6 +35,7 @@ export enum TripState {
   PENDING_TRANSPORT_CONFIRM = 'PENDING_TRANSPORT_CONFIRM',
   READY = 'READY',
   IN_PROGRESS = 'IN_PROGRESS',
+  PENDING_RETURN = 'PENDING_RETURN',  // Employee marked complete, waiting for gate scan on return
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
 }
@@ -45,6 +46,7 @@ export const TRIP_STATES_HOLDING_ALLOCATION: TripState[] = [
   TripState.PENDING_TRANSPORT_CONFIRM,
   TripState.READY,
   TripState.IN_PROGRESS,
+  TripState.PENDING_RETURN,
 ];
 
 @Entity('trip_requests')

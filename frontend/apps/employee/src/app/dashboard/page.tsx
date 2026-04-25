@@ -318,7 +318,8 @@ export default function DashboardPage() {
 
   const getStateColor = (state: string) => {
     if (state === 'DRAFT') return 'bg-slate-100 text-slate-800'
-    if (state?.includes('PENDING')) return 'bg-yellow-100 text-yellow-700'
+    if (state?.includes('PENDING') && state !== 'PENDING_RETURN') return 'bg-yellow-100 text-yellow-700'
+    if (state === 'PENDING_RETURN') return 'bg-orange-100 text-orange-700'
     if (
       state === 'APPROVED_FOR_ALLOCATION' ||
       state === 'CAR_ALLOCATED' ||
@@ -371,7 +372,7 @@ export default function DashboardPage() {
       'READY',
       'PENDING_TRANSPORT_CONFIRM',
     ].includes(trip.state)
-    else if (filter === 'active') statusMatch = trip.state === 'IN_PROGRESS'
+    else if (filter === 'active') statusMatch = trip.state === 'IN_PROGRESS' || trip.state === 'PENDING_RETURN'
     else if (filter === 'completed') statusMatch = trip.state === 'COMPLETED'
     
     // Filter by search query
@@ -399,7 +400,7 @@ export default function DashboardPage() {
     'PENDING_TRANSPORT_CONFIRM',
   ]
   const approvedTrips = trips.filter((t: any) => approvedStates.includes(t.state))
-  const activeTrips = trips.filter((t: any) => t.state === 'IN_PROGRESS')
+  const activeTrips = trips.filter((t: any) => t.state === 'IN_PROGRESS' || t.state === 'PENDING_RETURN')
   const kmTotal = trips.reduce((acc: number, t: any) => {
     const d = t.actualDistance ?? t.estimatedDistance
     if (d == null || d === '') return acc
@@ -2285,7 +2286,11 @@ export default function DashboardPage() {
                       ? 'bg-green-50 border-green-200'
                       : 'bg-[#D1E1FF]/20 border-[#D1E1FF]'
                   }`}>
-                    {['READY', 'IN_PROGRESS'].includes(selectedTrip.state) && (
+                    {['READY', 'IN_PROGRESS', 'PENDING_RETURN'].includes(selectedTrip.state) && (
+                      <p className="text-sm font-bold text-gray-700">
+                        {selectedTrip.state === 'IN_PROGRESS' ? 'Trip In Progress'
+                          : selectedTrip.state === 'PENDING_RETURN' ? 'Awaiting Gate Return Scan'
+                          : 'Trip Ready — Your Assignment'}</p>
                       <div className="flex items-center gap-2 mb-3">
                         <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         <p className="text-sm font-bold text-green-700 uppercase tracking-wide">
@@ -2538,13 +2543,13 @@ export default function DashboardPage() {
       {showCompleteModal && tripCompleted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-10 flex flex-col items-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-5">
-              <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-5">
+              <svg className="w-12 h-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-green-600 mb-2">Trip Completed!</h3>
-            <p className="text-gray-500 text-sm text-center">Your trip has been marked as completed successfully.</p>
+            <h3 className="text-xl font-bold text-orange-600 mb-2">Pending Return Scan</h3>
+            <p className="text-gray-500 text-sm text-center">Trip marked complete. The vehicle must be scanned at the gate on return to fully close the trip.</p>
           </div>
         </div>
       )}
