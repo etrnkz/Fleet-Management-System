@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
-import { tripApi, vehicleApi, statsApi, maintenanceApi, notificationApi, authApi, userApi } from '@/lib/api'
+import { tripApi, vehicleApi, statsApi, maintenanceApi, notificationApi, authApi, userApi, getCurrentUser } from '@/lib/api'
 import { useDriverGpsTracking } from '@/hooks/useDriverGpsTracking'
 import { useTheme, ThemeProvider } from '@/components/ThemeProvider'
 
@@ -121,15 +121,17 @@ export default function DriverDashboard() {
       setProfileForm({ name: user?.name || '', phoneNumber: user?.phoneNumber || '', licenseNumber: '', licenseExpiry: '', experienceYears: 0 })
       if (user?.profileImage) setProfileImage(user.profileImage)
       prevVehicleIdRef.current = vehicle?.id ?? null
-      await loadActiveTrips()
+      const uid = user?.id
+      const allActive = (await tripApi.getActiveTrips()) as any[]
+      setActiveTrips(tripApi.filterForDriver(allActive, uid))
     } catch (err: any) {
       if (err.message?.includes('401') || err.message?.includes('expired')) router.push('/login')
     } finally { setLoading(false) }
   }
 
-  const loadAssignedTrips = async () => { try { setAssignedTrips((await tripApi.getAssignedTrips()) as any[]) } catch {} }
-  const loadActiveTrips = async () => { try { setActiveTrips((await tripApi.getActiveTrips()) as any[]) } catch {} }
-  const loadCompletedTrips = async () => { try { setCompletedTrips((await tripApi.getCompletedTrips()) as any[]) } catch {} }
+  const loadAssignedTrips = async () => { try { const trips = (await tripApi.getAssignedTrips()) as any[]; const uid = userData?.id || getCurrentUser()?.id; setAssignedTrips(tripApi.filterForDriver(trips, uid)) } catch {} }
+  const loadActiveTrips = async () => { try { const trips = (await tripApi.getActiveTrips()) as any[]; const uid = userData?.id || getCurrentUser()?.id; setActiveTrips(tripApi.filterForDriver(trips, uid)) } catch {} }
+  const loadCompletedTrips = async () => { try { const trips = (await tripApi.getCompletedTrips()) as any[]; const uid = userData?.id || getCurrentUser()?.id; setCompletedTrips(tripApi.filterForDriver(trips, uid)) } catch {} }
   const loadMaintenanceRequests = async () => { try { setMaintenanceRequests((await maintenanceApi.getMyRequests()) as any[]) } catch {} }
   const loadNotifications = async () => { try { setNotifications((await notificationApi.getAll()) as any[]) } catch {} }
 

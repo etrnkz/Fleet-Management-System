@@ -217,15 +217,6 @@ export default function LoginPage() {
           <p className="text-[#A8DADC] text-xs font-semibold uppercase tracking-[0.2em] mb-4">Unified portal — all roles</p>
           <h2 className="text-3xl font-bold font-serif tracking-tight leading-tight">Fleet Management System</h2>
           <p className="mt-4 text-white/85 text-sm leading-relaxed font-medium">One sign-in for all roles. Your dashboard is automatically determined by your institutional role — transport staff, drivers, deans, departments, or executives.</p>
-          <div className="mt-10 h-px w-24 bg-[#D1E1FF]/50" />
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            {['Transport Admin', 'College Dean', 'Department Head', 'Deployment Office', 'Employee', 'Driver', 'President', 'System Admin'].map(r => (
-              <div key={r} className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#A8DADC]/60 flex-shrink-0" />
-                <span className="text-xs text-white/70 font-medium">{r}</span>
-              </div>
-            ))}
-          </div>
           <p className="mt-8 text-xs text-white/50 uppercase tracking-widest font-semibold">Haramaya University · Authorized users only</p>
         </div>
       </div>

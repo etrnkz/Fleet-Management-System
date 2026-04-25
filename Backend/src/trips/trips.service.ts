@@ -1392,7 +1392,7 @@ export class TripsService {
   ): Promise<TripFeedback> {
     const trip = await this.findOne(id);
 
-    if (trip.state !== TripState.COMPLETED) {
+    if (trip.state !== TripState.COMPLETED && trip.state !== TripState.PENDING_RETURN) {
       throw new BadRequestException(
         'Can only submit feedback for completed trips',
       );

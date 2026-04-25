@@ -153,6 +153,11 @@ export const tripApi = {
   getApprovedTrips: () => apiFetch('/trips?status=APPROVED'),
   getCompletedTrips: () => apiFetch('/trips?status=COMPLETED'),
   getAssignedTrips: () => apiFetch('/trips?assigned=true'),
+  filterForDriver: (trips: any[], userId: string) =>
+    trips.filter((t: any) =>
+      t.allocatedDriver?.user?.id === userId ||
+      t.allocatedDriver?.userId === userId
+    ),
 }
 
 // ── Vehicles ──────────────────────────────────────────────────────────────────
@@ -163,7 +168,14 @@ export const vehicleApi = {
     return apiFetch(`/vehicles${q}`)
   },
   getAvailableVehicles: () => apiFetch('/vehicles?status=AVAILABLE'),
-  getAssignedVehicle: () => apiFetch('/vehicles/my-assigned'),
+  getAssignedVehicle: async () => {
+    // Get current driver's profile and return their assigned vehicle
+    const drivers: any[] = await apiFetch('/drivers') as any[]
+    const user = getCurrentUser()
+    if (!user) return null
+    const myDriver = Array.isArray(drivers) ? drivers.find((d: any) => d.user?.id === user.id) : null
+    return myDriver?.assignedVehicle ?? null
+  },
   getById: (id: string) => apiFetch(`/vehicles/${id}`),
   create: (data: any) => apiFetch('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) =>

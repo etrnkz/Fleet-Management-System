@@ -1,5 +1,6 @@
 // login.dto.ts
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
@@ -30,5 +31,7 @@ export class LoginDto {
 
   @ApiPropertyOptional({ example: false, description: 'Keep session alive for 45 days instead of 7 hours' })
   @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
   keepMeSignedIn?: boolean;
 }

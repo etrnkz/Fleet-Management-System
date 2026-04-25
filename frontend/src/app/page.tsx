@@ -78,7 +78,7 @@ function LandingPageContent() {
               Unified Portal — Haramaya University
             </div>
             <h1 className="text-4xl lg:text-5xl font-bold text-[#1B3D2F] font-serif leading-tight mb-6">
-              Smart Fleet Control<br />
+              Fleet Management System<br />
               for <span className="text-[#1B3D2F]">Haramaya<br />University</span>
             </h1>
             <p className="text-gray-600 text-base leading-relaxed mb-8">
@@ -277,7 +277,7 @@ function LandingPageContent() {
                 </div>
                 <span className="font-bold text-sm">HUFMS</span>
               </div>
-              <p className="text-emerald-200 text-xs leading-relaxed">Smart Fleet Control for Haramaya University</p>
+              <p className="text-emerald-200 text-xs leading-relaxed">Fleet Management System for Haramaya University</p>
             </div>
             <div>
               <h4 className="font-semibold text-sm mb-3">Quick Links</h4>

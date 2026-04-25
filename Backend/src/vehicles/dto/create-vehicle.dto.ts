@@ -95,6 +95,15 @@ export class CreateVehicleDto {
   fuelCapacity?: number;
 
   @ApiPropertyOptional({
+    example: 8,
+    description: 'Fuel efficiency in km per liter',
+  })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  fuelEfficiency?: number;
+
+  @ApiPropertyOptional({
     enum: VehicleStatus,
     example: VehicleStatus.Active,
     description: 'Vehicle status',
