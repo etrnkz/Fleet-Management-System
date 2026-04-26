@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Toast, { ToastType } from '@/components/Toast'
 import { tripApi, vehicleApi, trackingApi, WS_URL } from '@/lib/api'
+import { getFuelPriceForType } from '@/lib/fuelPrices'
 import { io, Socket } from 'socket.io-client'
 import type { RestrictedZone } from '@/components/Map'
 
@@ -88,6 +89,7 @@ interface Vehicle {
   expectedTotalFuelCost?: number | null
   fuelType?: string
   stoppedSince?: string | null
+  heading?: number | null
   tripType?: string | null
 }
 
@@ -218,14 +220,15 @@ export default function LiveTrackingPage() {
 
   // Handle track button click
   const handleTrackTrip = async (trip: Trip) => {
-    if (!trip.currentLocation) {
-      showToast('No live location available for this trip', 'error')
-      return
-    }
-    
     setSelectedTrip(trip)
     setView('map')
-    
+
+    // Use live GPS or fall back to Haramaya University coords
+    const currentLat = trip.currentLocation?.lat ?? 9.4145
+    const currentLng = trip.currentLocation?.lng ?? 42.0187
+    const currentSpeed = trip.currentLocation?.speed ?? 0
+    const currentTimestamp = trip.currentLocation?.timestamp ?? new Date().toISOString()
+
     // Fetch trip route
     let routePath: [number, number][] = []
     let stats: any = null
@@ -239,41 +242,49 @@ export default function LiveTrackingPage() {
       setRoutePoints(rawRoute)
     } catch {}
 
-    // Geocode destination to get coordinates
+    // Ethiopia bounding box
+    const ET_BOUNDS = { minLat: 3.4, maxLat: 14.9, minLng: 33.0, maxLng: 47.9 }
+    const inEthiopia = (lat: number, lng: number) =>
+      lat >= ET_BOUNDS.minLat && lat <= ET_BOUNDS.maxLat &&
+      lng >= ET_BOUNDS.minLng && lng <= ET_BOUNDS.maxLng
+
+    // Geocode destination — restrict to Ethiopia
     let destLat: number | null = null
     let destLng: number | null = null
     try {
       const geo = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trip.destination)}&limit=1`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trip.destination)}&countrycodes=et&limit=1`,
         { headers: { 'User-Agent': 'FleetManagementSystem/1.0' } }
       )
       const geoData = await geo.json()
       if (geoData?.[0]) {
-        destLat = parseFloat(geoData[0].lat)
-        destLng = parseFloat(geoData[0].lon)
+        const lat = parseFloat(geoData[0].lat)
+        const lng = parseFloat(geoData[0].lon)
+        if (inEthiopia(lat, lng)) { destLat = lat; destLng = lng }
       }
     } catch {}
 
-    // Fetch road-following route from OSRM (free, no API key needed)
+    // Fetch road-following route from OSRM — filter points outside Ethiopia
     let plannedRoute: [number, number][] = []
-    if (destLat && destLng && trip.currentLocation) {
+    if (destLat && destLng && inEthiopia(currentLat, currentLng)) {
       try {
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${trip.currentLocation.lng},${trip.currentLocation.lat};${destLng},${destLat}?overview=full&geometries=geojson`
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${currentLng},${currentLat};${destLng},${destLat}?overview=full&geometries=geojson`
         const osrmRes = await fetch(osrmUrl)
         const osrmData = await osrmRes.json()
         if (osrmData?.routes?.[0]?.geometry?.coordinates) {
-          plannedRoute = osrmData.routes[0].geometry.coordinates.map(
+          const raw: [number, number][] = osrmData.routes[0].geometry.coordinates.map(
             ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
           )
+          // Only keep points within Ethiopia
+          const filtered = raw.filter(([lat, lng]) => inEthiopia(lat, lng))
+          if (filtered.length > 1) plannedRoute = filtered
         }
       } catch {}
     }
 
-    // Fuel stats from backend stats or calculate locally
+    // Fuel stats
     const fuelEfficiency = trip.allocatedVehicle?.fuelEfficiency || (trip.allocatedVehicle?.fuelType === 'Diesel' ? 8 : 10)
-    const PETROL_PRICE = 132.18
-    const DIESEL_PRICE = 139.84
-    const fuelPricePerLiter = trip.allocatedVehicle?.fuelType === 'Diesel' ? DIESEL_PRICE : PETROL_PRICE
+    const fuelPricePerLiter = getFuelPriceForType(trip.allocatedVehicle?.fuelType)
     const traveledKm = stats?.distance ?? 0
     const fuelUsed = traveledKm / fuelEfficiency
     const fuelCapacity = 60
@@ -286,17 +297,17 @@ export default function LiveTrackingPage() {
       : null
 
     const vehicle: Vehicle = {
-      id: trip.allocatedVehicle?.id || '',
+      id: trip.allocatedVehicle?.id || trip.id,
       vehicleId: trip.allocatedVehicle?.plateNumber || '',
-      plateNumber: trip.allocatedVehicle?.plateNumber || '',
+      plateNumber: trip.allocatedVehicle?.plateNumber || 'N/A',
       make: trip.allocatedVehicle?.make,
       model: trip.allocatedVehicle?.model,
-      status: trip.currentLocation.speed > 5 ? 'moving' : trip.currentLocation.speed > 0 ? 'idle' : 'stopped',
-      speed: `${Math.round(trip.currentLocation.speed)} km/h`,
-      location: 'Live',
-      lastUpdate: getTimeAgo(new Date(trip.currentLocation.timestamp)),
-      lat: trip.currentLocation.lat,
-      lng: trip.currentLocation.lng,
+      status: currentSpeed > 5 ? 'moving' : currentSpeed > 0 ? 'idle' : 'stopped',
+      speed: `${Math.round(currentSpeed)} km/h`,
+      location: trip.currentLocation ? 'Live' : 'Awaiting GPS',
+      lastUpdate: getTimeAgo(new Date(currentTimestamp)),
+      lat: currentLat,
+      lng: currentLng,
       driver: trip.allocatedDriver?.user.name,
       tripId: trip.id,
       tripDestination: trip.destination,
@@ -315,7 +326,8 @@ export default function LiveTrackingPage() {
       actualFuelCost,
       expectedTotalFuelCost,
       fuelType: trip.allocatedVehicle?.fuelType,
-      stoppedSince: trip.currentLocation.speed === 0 ? trip.currentLocation.timestamp : null,
+      stoppedSince: currentSpeed === 0 ? currentTimestamp : null,
+      heading: null,
     }
     
     setVehicles([vehicle])
@@ -332,6 +344,15 @@ export default function LiveTrackingPage() {
     }
   }
 
+  const calcHeading = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const dLng = (lng2 - lng1) * Math.PI / 180
+    const lat1R = lat1 * Math.PI / 180
+    const lat2R = lat2 * Math.PI / 180
+    const y = Math.sin(dLng) * Math.cos(lat2R)
+    const x = Math.cos(lat1R) * Math.sin(lat2R) - Math.sin(lat1R) * Math.cos(lat2R) * Math.cos(dLng)
+    return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360
+  }
+
   const getTimeAgo = (date: Date): string => {
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
     if (seconds < 60) return `${seconds} sec ago`
@@ -341,86 +362,109 @@ export default function LiveTrackingPage() {
     return `${hours} hr ago`
   }
 
-  // Initialize
+  // Load trips on mount
+  useEffect(() => { loadActiveTrips() }, [])
+
+  // Initialize WebSocket — persistent connection regardless of view
   useEffect(() => {
-    loadActiveTrips()
-
-    // WebSocket for real-time updates
     const token = typeof window !== 'undefined'
-      ? (localStorage.getItem('accessToken') || localStorage.getItem('access_token'))
+      ? (localStorage.getItem('accessToken') || localStorage.getItem('access_token') ||
+         sessionStorage.getItem('accessToken') || sessionStorage.getItem('access_token'))
       : null
-    
-    if (token) {
-      socketRef.current = io(`${WS_URL}/tracking`, {
-        auth: { token },
-        transports: ['websocket']
-      })
 
-      socketRef.current.on('connect', () => {
-        console.log('WebSocket connected')
-        socketRef.current?.emit('join-live')
-      })
+    if (!token) return
 
-      socketRef.current.on('vehicle-location', (update: any) => {
-        // Update trip location in real-time
-        setTrips(prev => prev.map(trip => {
-          if (trip.allocatedVehicle?.id === update.vehicleId) {
-            const newLocation = {
-              lat: update.latitude,
-              lng: update.longitude,
-              speed: update.speed || 0,
-              timestamp: update.timestamp
-            }
-            return {
-              ...trip,
-              currentLocation: newLocation,
-              isInRestrictedZone: checkIfInRestrictedZone(
-                newLocation.lat,
-                newLocation.lng,
-                trip.allocatedVehicle?.restrictedZones
-              )
-            }
+    socketRef.current = io(`${WS_URL}/tracking`, {
+      auth: { token },
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    })
+
+    socketRef.current.on('connect', () => {
+      console.log('✅ WebSocket connected:', socketRef.current?.id)
+      socketRef.current?.emit('join-live')
+    })
+
+    socketRef.current.on('disconnect', (reason) => {
+      console.warn('⚠️ WebSocket disconnected:', reason)
+    })
+
+    socketRef.current.on('reconnect', (attempt) => {
+      console.log('🔄 WebSocket reconnected after', attempt, 'attempts')
+      socketRef.current?.emit('join-live')
+    })
+
+    socketRef.current.on('connect_error', (err) => {
+      console.error('❌ WebSocket error:', err.message)
+    })
+
+    socketRef.current.on('live-snapshot', (snapshot: any[]) => {
+      setVehicles(prev => prev.map(v => {
+        const match = Array.isArray(snapshot) ? snapshot.find((s: any) => s.tripId === v.tripId) : null
+        if (!match) return v
+        return {
+          ...v,
+          lat: match.latitude ?? v.lat,
+          lng: match.longitude ?? v.lng,
+          speed: `${Math.round(match.speed || 0)} km/h`,
+          status: (match.speed || 0) > 5 ? 'moving' : (match.speed || 0) > 0 ? 'idle' : 'stopped',
+          heading: match.heading ?? v.heading,
+          traveledKm: match.traveledKm ?? v.traveledKm,
+          estimatedDistance: match.estimatedDistance ?? v.estimatedDistance,
+          fuelRemainingLiters: match.fuelRemainingLiters ?? v.fuelRemainingLiters,
+          fuelRemainingPercent: match.fuelRemainingPercent ?? v.fuelRemainingPercent,
+          fuelRemainingKm: match.fuelRemainingKm ?? v.fuelRemainingKm,
+          actualFuelCost: match.actualFuelCost ?? v.actualFuelCost,
+          expectedTotalFuelCost: match.expectedTotalFuelCost ?? v.expectedTotalFuelCost,
+        }
+      }))
+    })
+
+    socketRef.current.on('vehicle-location', (update: any) => {
+      setTrips(prev => prev.map(trip => {
+        if (trip.allocatedVehicle?.id === update.vehicleId) {
+          const newLocation = { lat: update.latitude, lng: update.longitude, speed: update.speed || 0, timestamp: update.timestamp }
+          return { ...trip, currentLocation: newLocation, isInRestrictedZone: checkIfInRestrictedZone(newLocation.lat, newLocation.lng, trip.allocatedVehicle?.restrictedZones) }
+        }
+        return trip
+      }))
+
+      setVehicles(prev => prev.map(v => {
+        if (v.id === update.vehicleId || v.tripId === update.tripId) {
+          const newStatus: 'moving' | 'idle' | 'stopped' = (update.speed || 0) > 5 ? 'moving' : (update.speed || 0) > 0 ? 'idle' : 'stopped'
+          const justStopped = newStatus === 'stopped' && v.status !== 'stopped'
+          const newHeading = update.heading != null ? update.heading : (v.lat && v.lng ? calcHeading(v.lat, v.lng, update.latitude, update.longitude) : v.heading)
+          return {
+            ...v,
+            lat: update.latitude,
+            lng: update.longitude,
+            speed: `${Math.round(update.speed || 0)} km/h`,
+            status: newStatus,
+            heading: newHeading,
+            stoppedSince: newStatus === 'stopped' ? (justStopped ? new Date().toISOString() : v.stoppedSince) : null,
+            traveledKm: update.traveledKm ?? v.traveledKm,
+            fuelRemainingPercent: update.fuelRemainingPercent ?? v.fuelRemainingPercent,
+            fuelRemainingLiters: update.fuelRemainingLiters ?? v.fuelRemainingLiters,
+            fuelRemainingKm: update.fuelRemainingKm ?? v.fuelRemainingKm,
+            actualFuelCost: update.actualFuelCost ?? v.actualFuelCost,
+            expectedTotalFuelCost: update.expectedTotalFuelCost ?? v.expectedTotalFuelCost,
+            routePath: v.routePath ? [...v.routePath, [update.latitude, update.longitude] as [number, number]] : [[update.latitude, update.longitude] as [number, number]],
           }
-          return trip
-        }))
+        }
+        return v
+      }))
+    })
 
-        // Update vehicle on map with new stats
-        setVehicles(prev => prev.map(v => {
-          if (v.id === update.vehicleId || v.tripId === update.tripId) {
-            const newStatus: 'moving' | 'idle' | 'stopped' = (update.speed || 0) > 5 ? 'moving' : (update.speed || 0) > 0 ? 'idle' : 'stopped'
-            const wasMoving = v.status !== 'stopped'
-            const justStopped = newStatus === 'stopped' && wasMoving
-            return {
-              ...v,
-              lat: update.latitude,
-              lng: update.longitude,
-              speed: `${Math.round(update.speed || 0)} km/h`,
-              status: newStatus,
-              stoppedSince: newStatus === 'stopped' ? (justStopped ? new Date().toISOString() : v.stoppedSince) : null,
-              traveledKm: update.traveledKm ?? v.traveledKm,
-              fuelRemainingPercent: update.fuelRemainingPercent ?? v.fuelRemainingPercent,
-              fuelRemainingLiters: update.fuelRemainingLiters ?? v.fuelRemainingLiters,
-              fuelRemainingKm: update.fuelRemainingKm ?? v.fuelRemainingKm,
-              actualFuelCost: update.actualFuelCost ?? v.actualFuelCost,
-              expectedTotalFuelCost: update.expectedTotalFuelCost ?? v.expectedTotalFuelCost,
-              routePath: v.routePath
-                ? [...v.routePath, [update.latitude, update.longitude] as [number, number]]
-                : [[update.latitude, update.longitude] as [number, number]],
-            }
-          }
-          return v
-        }))
-      })
-
-      socketRef.current.on('geofence-violation', (data: any) => {
-        showToast(`⚠️ ALERT: ${data.vehiclePlate} entered restricted zone!`, 'error')
-      })
-    }
+    socketRef.current.on('geofence-violation', (data: any) => {
+      showToast(`⚠️ ALERT: ${data.vehiclePlate} entered restricted zone!`, 'error')
+    })
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect()
-      }
+      socketRef.current?.disconnect()
     }
   }, [])
 
@@ -571,18 +615,16 @@ export default function LiveTrackingPage() {
                   </div>
                   
                   <div className="flex gap-2">
-                    {trip.currentLocation && (
-                      <button
-                        onClick={() => handleTrackTrip(trip)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        Track
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleTrackTrip(trip)}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Track
+                    </button>
                     {trip.tripCategory === 'VIP' && trip.allocatedVehicle?.vipGeoRestrictionEnabled && (
                       <button
                         onClick={() => {
@@ -777,62 +819,62 @@ export default function LiveTrackingPage() {
         </div>
       </div>
 
-      {/* Trip Statistics */}
-      {tripStats && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
+      {/* Trip Statistics — live from GPS WebSocket */}
+      {vehicles.length > 0 && vehicles[0].traveledKm != null && vehicles[0].traveledKm > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Distance</p>
-                <p className="text-2xl font-bold text-gray-900">{tripStats.distance} km</p>
+                <p className="text-xs text-gray-500">Distance Traveled</p>
+                <p className="text-xl font-bold text-gray-900">{vehicles[0].traveledKm} km</p>
+                {vehicles[0].estimatedDistance ? <p className="text-xs text-gray-400">of {vehicles[0].estimatedDistance} km est.</p> : null}
               </div>
             </div>
           </div>
-
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Fuel Used</p>
-                <p className="text-2xl font-bold text-gray-900">{tripStats.fuelUsed} L</p>
-                <p className="text-xs text-gray-500">{tripStats.fuelCost} Birr</p>
+                <p className="text-xs text-gray-500">Fuel Remaining</p>
+                <p className="text-xl font-bold text-gray-900">{vehicles[0].fuelRemainingLiters?.toFixed(1)} L</p>
+                <p className="text-xs text-gray-400">{vehicles[0].fuelRemainingPercent}% · ~{vehicles[0].fuelRemainingKm} km</p>
               </div>
             </div>
           </div>
-
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Avg Speed</p>
-                <p className="text-2xl font-bold text-gray-900">{tripStats.averageSpeed} km/h</p>
+                <p className="text-xs text-gray-500">Current Speed</p>
+                <p className="text-xl font-bold text-gray-900">{vehicles[0].speed}</p>
+                <p className="text-xs text-gray-400 capitalize">{vehicles[0].status}</p>
               </div>
             </div>
           </div>
-
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Duration</p>
-                <p className="text-2xl font-bold text-gray-900">{tripStats.duration} min</p>
+                <p className="text-xs text-gray-500">Fuel Cost So Far</p>
+                <p className="text-xl font-bold text-gray-900">{vehicles[0].actualFuelCost?.toLocaleString()} ETB</p>
+                {vehicles[0].expectedTotalFuelCost ? <p className="text-xs text-gray-400">of {vehicles[0].expectedTotalFuelCost?.toLocaleString()} ETB est.</p> : null}
               </div>
             </div>
           </div>
@@ -840,6 +882,12 @@ export default function LiveTrackingPage() {
       )}
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {!selectedTrip?.currentLocation && (
+          <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-500 border-t-transparent" />
+            <span className="text-sm text-yellow-700 font-medium">Waiting for live GPS from driver — showing trip start area</span>
+          </div>
+        )}
         <div className="h-[calc(100vh-200px)]">
           <Map 
             vehicles={vehicles}

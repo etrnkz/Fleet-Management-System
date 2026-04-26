@@ -71,13 +71,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
   }
 
-  const handleLogout = () => {
-    // Clear all authentication tokens and user session
+  const handleLogout = async () => {
     localStorage.clear()
     sessionStorage.clear()
-    
-    // Redirect to login with logout flag to prevent auto-login
-    router.push('/?logout=true')
+    try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+    window.location.href = '/?logout=true'
   }
 
   const showSettingsToast = (message: string, type: 'success' | 'error') => {

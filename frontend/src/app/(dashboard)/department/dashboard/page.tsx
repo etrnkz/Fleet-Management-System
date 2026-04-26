@@ -6,6 +6,8 @@ import ConfirmModal from '@/components/ConfirmModal'
 import Toast from '@/components/Toast'
 import { tripApi, vehicleApi, auditApi, getCurrentUser } from '@/lib/api'
 
+const minDateTime = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().slice(0, 16)
+
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
@@ -15,6 +17,13 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [showTripForm, setShowTripForm] = useState(false)
+  const [submittingTrip, setSubmittingTrip] = useState(false)
+  const [tripForm, setTripForm] = useState({
+    destination: '', purpose: '', purposeCategory: 'Official Meeting',
+    pickupLocation: '', notes: '', startDateTime: '', endDateTime: '',
+    passengerCount: 1, tripType: 'Normal' as 'Normal' | 'VIP',
+  })
   const [trips, setTrips] = useState<any[]>([])
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([])
   const [vehicles, setVehicles] = useState<any[]>([])
@@ -72,6 +81,50 @@ export default function DashboardPage() {
     
     loadDashboardData()
   }, [])
+
+  const handleTripSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (new Date(tripForm.startDateTime).getTime() - Date.now() < 48 * 60 * 60 * 1000) {
+      showToast('Trip must be requested at least 48 hours in advance', 'error'); return
+    }
+    if (new Date(tripForm.endDateTime) <= new Date(tripForm.startDateTime)) {
+      showToast('End date must be after start date', 'error'); return
+    }
+    setSubmittingTrip(true)
+    try {
+      // Check for existing active/pending trips
+      const allTrips = await tripApi.getAll() as any[]
+      const currentUser = getCurrentUser()
+      const uid = currentUser?.id
+      const activeStates = ['DRAFT','PENDING_DEPARTMENT','PENDING_COLLEGE','PENDING_PRESIDENT','APPROVED_FOR_ALLOCATION','CAR_ALLOCATED','PENDING_TRANSPORT_CONFIRM','READY','IN_PROGRESS']
+      const hasActive = Array.isArray(allTrips) && allTrips.some((t: any) =>
+        (t.requester?.id === uid || t.requesterId === uid) && activeStates.includes(t.state)
+      )
+      if (hasActive) {
+        showToast('You already have an active or pending trip request. Please wait until it is completed before submitting a new one.', 'error')
+        setSubmittingTrip(false)
+        return
+      }
+      const purposeText = [
+        tripForm.purposeCategory,
+        tripForm.purpose ? `Details: ${tripForm.purpose}` : '',
+        tripForm.pickupLocation ? `Pickup: ${tripForm.pickupLocation}` : '',
+        tripForm.notes ? `Notes: ${tripForm.notes}` : '',
+      ].filter(Boolean).join(' | ')
+      const created: any = await tripApi.create({
+        destination: tripForm.destination, purpose: purposeText,
+        startDateTime: tripForm.startDateTime, endDateTime: tripForm.endDateTime,
+        passengerCount: tripForm.passengerCount, tripType: tripForm.tripType,
+      })
+      await tripApi.submit(created.id)
+      showToast('Trip request submitted successfully!', 'success')
+      setShowTripForm(false)
+      setTripForm({ destination: '', purpose: '', purposeCategory: 'Official Meeting', pickupLocation: '', notes: '', startDateTime: '', endDateTime: '', passengerCount: 1, tripType: 'Normal' })
+      loadDashboardData()
+    } catch (err: any) {
+      showToast(err.message || 'Failed to submit trip', 'error')
+    } finally { setSubmittingTrip(false) }
+  }
 
   const loadDashboardData = async () => {
     try {
@@ -336,11 +389,11 @@ export default function DashboardPage() {
           </p>
         </div>
         <button 
-          onClick={() => setShowRequestModal(true)}
+          onClick={() => setShowTripForm(true)}
           className="bg-[#152e22] text-white px-4 py-2 rounded-lg hover:bg-[#1B3D2F] transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <span className="text-lg">+</span>
-          <span className="text-sm font-medium">New Special Request</span>
+          <span className="text-sm font-medium">New Trip Request</span>
         </button>
       </div>
 
@@ -873,6 +926,82 @@ export default function DashboardPage() {
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(null)}
         />
+      )}
+
+      {/* New Trip Request Form Modal */}
+      {showTripForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h2 className="text-lg font-bold text-gray-900">New Trip Request</h2>
+              <button onClick={() => setShowTripForm(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleTripSubmit} className="p-5 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Purpose Category</label>
+                  <select value={tripForm.purposeCategory} onChange={e => setTripForm({...tripForm, purposeCategory: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]">
+                    {['Official Meeting','Conference','Research Activity','Field Work','Training','Other'].map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Trip Type</label>
+                  <select value={tripForm.tripType} onChange={e => setTripForm({...tripForm, tripType: e.target.value as 'Normal'|'VIP'})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]">
+                    <option value="Normal">Normal</option>
+                    <option value="VIP">VIP</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Destination *</label>
+                  <input required value={tripForm.destination} onChange={e => setTripForm({...tripForm, destination: e.target.value})}
+                    placeholder="e.g. Addis Ababa" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Purpose Details</label>
+                  <textarea rows={2} value={tripForm.purpose} onChange={e => setTripForm({...tripForm, purpose: e.target.value})}
+                    placeholder="Describe the purpose..." className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F] resize-none" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
+                  <input value={tripForm.pickupLocation} onChange={e => setTripForm({...tripForm, pickupLocation: e.target.value})}
+                    placeholder="e.g. Main Campus Gate" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Passengers</label>
+                  <input type="number" min={1} max={50} value={tripForm.passengerCount} onChange={e => setTripForm({...tripForm, passengerCount: Number(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
+                  <input required type="datetime-local" min={minDateTime} value={tripForm.startDateTime} onChange={e => setTripForm({...tripForm, startDateTime: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date & Time *</label>
+                  <input required type="datetime-local" min={tripForm.startDateTime || minDateTime} value={tripForm.endDateTime} onChange={e => setTripForm({...tripForm, endDateTime: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
+                  <textarea rows={2} value={tripForm.notes} onChange={e => setTripForm({...tripForm, notes: e.target.value})}
+                    placeholder="Any additional information..." className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F] resize-none" />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setShowTripForm(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={submittingTrip} className="flex-1 px-4 py-2 bg-[#152e22] text-white rounded-lg text-sm font-semibold hover:bg-[#1B3D2F] disabled:opacity-50">
+                  {submittingTrip ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )

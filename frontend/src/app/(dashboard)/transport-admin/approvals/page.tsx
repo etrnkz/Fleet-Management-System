@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { tripApi } from '@/lib/api'
 import Toast, { ToastType } from '@/components/Toast'
+import { getFuelPrices } from '@/lib/fuelPrices'
 
 // TypeScript interfaces
 interface Trip {
@@ -115,6 +116,52 @@ export default function ApprovalsPage() {
       setToast({ message: error.message || 'Failed to reject transport', type: 'error' })
     } finally {
       setProcessingTrip(null)
+    }
+  }
+
+  const [autoCalculating, setAutoCalculating] = useState(false)
+
+  // Auto-calculate distance and fuel cost from OSRM when a trip is selected
+  const autoCalculateFromRoute = async (trip: Trip) => {
+    if (!trip.destination) return
+    setAutoCalculating(true)
+    try {
+      // Geocode destination — restrict to Ethiopia
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(trip.destination)}&countrycodes=et&limit=1`,
+        { headers: { 'User-Agent': 'FleetManagementSystem/1.0' } }
+      )
+      const geoData = await geoRes.json()
+      if (!geoData?.[0]) return
+
+      const destLat = parseFloat(geoData[0].lat)
+      const destLng = parseFloat(geoData[0].lon)
+
+      // Haramaya University coordinates as origin
+      const originLat = 9.4145
+      const originLng = 42.0187
+
+      // Get road distance from OSRM
+      const osrmRes = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${originLng},${originLat};${destLng},${destLat}?overview=false`
+      )
+      const osrmData = await osrmRes.json()
+      if (!osrmData?.routes?.[0]) return
+
+      const distanceKm = Math.round(osrmData.routes[0].distance / 1000 * 10) / 10 // meters to km
+
+      // Estimate fuel cost using configured prices
+      const { petrol: PETROL_PRICE } = getFuelPrices()
+      const fuelEfficiency = 10 // L/100km default
+      const fuelUsed = (distanceKm / 100) * fuelEfficiency
+      const fuelCost = Math.round(fuelUsed * PETROL_PRICE * 100) / 100
+
+      setFuelConfirmForm({
+        estimatedDistance: String(distanceKm),
+        estimatedFuelCost: String(fuelCost),
+      })
+    } catch {} finally {
+      setAutoCalculating(false)
     }
   }
 
@@ -385,6 +432,10 @@ export default function ApprovalsPage() {
                         setFuelApproved(false)
                         setComments('')
                         setShowApprovalModal(true)
+                        // Auto-calculate from route if no values yet
+                        if (!selectedTrip.estimatedDistance && !selectedTrip.estimatedFuelCost) {
+                          autoCalculateFromRoute(selectedTrip)
+                        }
                       }}
                       disabled={processingTrip === selectedTrip.id}
                       className="flex-1 bg-[#1B3D2F] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#152e22] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -449,45 +500,53 @@ export default function ApprovalsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Est. fuel (ETB)
+                      Est. distance (km)
                     </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      value={fuelConfirmForm.estimatedFuelCost}
-                      onChange={(e) =>
-                        setFuelConfirmForm((f) => ({
-                          ...f,
-                          estimatedFuelCost: e.target.value,
-                        }))
-                      }
-                      placeholder="From deployment"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Leave blank to keep deployment value</p>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        value={fuelConfirmForm.estimatedDistance}
+                        onChange={(e) =>
+                          setFuelConfirmForm((f) => ({ ...f, estimatedDistance: e.target.value }))
+                        }
+                        placeholder={autoCalculating ? 'Calculating...' : 'Auto from route'}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm"
+                        disabled={autoCalculating}
+                      />
+                      {autoCalculating && <div className="absolute right-2 top-2.5 animate-spin rounded-full h-4 w-4 border-2 border-[#1B3D2F] border-t-transparent" />}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Est. distance (km)
+                      Est. fuel cost (ETB)
                     </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      value={fuelConfirmForm.estimatedDistance}
-                      onChange={(e) =>
-                        setFuelConfirmForm((f) => ({
-                          ...f,
-                          estimatedDistance: e.target.value,
-                        }))
-                      }
-                      placeholder="From deployment"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Leave blank to keep deployment value</p>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        value={fuelConfirmForm.estimatedFuelCost}
+                        onChange={(e) =>
+                          setFuelConfirmForm((f) => ({ ...f, estimatedFuelCost: e.target.value }))
+                        }
+                        placeholder={autoCalculating ? 'Calculating...' : 'Auto calculated'}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent text-sm"
+                        disabled={autoCalculating}
+                      />
+                      {autoCalculating && <div className="absolute right-2 top-2.5 animate-spin rounded-full h-4 w-4 border-2 border-[#1B3D2F] border-t-transparent" />}
+                    </div>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => selectedTrip && autoCalculateFromRoute(selectedTrip)}
+                  disabled={autoCalculating}
+                  className="w-full text-xs text-[#1B3D2F] border border-[#1B3D2F]/30 rounded-lg py-1.5 hover:bg-[#1B3D2F]/5 disabled:opacity-50"
+                >
+                  {autoCalculating ? 'Calculating route...' : '↻ Recalculate from destination'}
+                </button>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

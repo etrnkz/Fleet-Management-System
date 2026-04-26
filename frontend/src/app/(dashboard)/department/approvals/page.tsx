@@ -36,8 +36,15 @@ export default function ApprovalsPage() {
   const loadRequests = async () => {
     try {
       setLoading(true)
+      const currentUser = getCurrentUser()
       const data = await tripApi.getPendingApprovals()
-      setRequests(Array.isArray(data) ? data : [])
+      const all = Array.isArray(data) ? data : []
+      // Exclude trips submitted by the department head themselves
+      const filtered = all.filter((t: any) =>
+        t.requester?.id !== currentUser?.id &&
+        t.requesterId !== currentUser?.id
+      )
+      setRequests(filtered)
     } catch (error) {
       console.error('Failed to load requests:', error)
     } finally {

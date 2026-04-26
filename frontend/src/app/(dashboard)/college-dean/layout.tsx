@@ -618,7 +618,9 @@ export default function DashboardLayout({
                           sessionStorage.clear()
                           document.cookie = 'accessToken=; path=/; max-age=0'
                           document.cookie = 'user=; path=/; max-age=0'
-                          router.push('/?logout=true')
+                          fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+                          localStorage.clear(); sessionStorage.clear()
+                          window.location.href = '/?logout=true'
                         }}
                         className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >

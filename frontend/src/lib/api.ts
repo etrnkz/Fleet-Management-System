@@ -43,7 +43,7 @@ async function refreshAccessToken(): Promise<boolean> {
       storage.setItem('access_token', data.access_token)
       if (data.refresh_token) storage.setItem('refreshToken', data.refresh_token)
       // Sync cookie for middleware
-      document.cookie = `accessToken=${data.access_token}; path=/; SameSite=Lax`
+      document.cookie = `accessToken=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 7}`
       return true
     } catch {
       return false
@@ -76,8 +76,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = 
   if (response.status === 401 && retry) {
     const refreshed = await refreshAccessToken()
     if (refreshed) return apiFetch<T>(endpoint, options, false)
-    clearSession()
-    if (typeof window !== 'undefined') window.location.href = '/login'
+    // Don't auto-logout — let middleware handle it on next navigation
     throw new Error('Session expired. Please log in again.')
   }
 
@@ -143,16 +142,26 @@ export const tripApi = {
     apiFetch(`/trips/${id}/feedback`, { method: 'POST', body: JSON.stringify(data) }),
   submitFeedback: (id: string, data: any) =>
     apiFetch(`/trips/${id}/feedback`, { method: 'POST', body: JSON.stringify(data) }),
+  getFeedback: (id: string) => apiFetch(`/trips/${id}/feedback`),
   getFeedbackStatistics: () => apiFetch('/trips/feedback/statistics'),
   getStatistics: () => apiFetch('/trips/statistics'),
   getPendingApprovals: (params?: Record<string, string | number>) => {
     const q = new URLSearchParams(Object.entries({ ...params, status: 'PENDING_APPROVAL' }).reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}))
     return apiFetch(`/trips?${q}`)
   },
-  getActiveTrips: () => apiFetch('/trips?status=IN_PROGRESS'),
+  getActiveTrips: async () => {
+    const trips = await apiFetch('/trips') as any[]
+    return Array.isArray(trips) ? trips.filter((t: any) => t.state === 'IN_PROGRESS' || t.state === 'PENDING_RETURN') : []
+  },
   getApprovedTrips: () => apiFetch('/trips?status=APPROVED'),
-  getCompletedTrips: () => apiFetch('/trips?status=COMPLETED'),
-  getAssignedTrips: () => apiFetch('/trips?assigned=true'),
+  getCompletedTrips: async () => {
+    const trips = await apiFetch('/trips') as any[]
+    return Array.isArray(trips) ? trips.filter((t: any) => t.state === 'COMPLETED') : []
+  },
+  getAssignedTrips: async () => {
+    const trips = await apiFetch('/trips') as any[]
+    return Array.isArray(trips) ? trips.filter((t: any) => t.state === 'READY') : []
+  },
   filterForDriver: (trips: any[], userId: string) =>
     trips.filter((t: any) =>
       t.allocatedDriver?.user?.id === userId ||
@@ -288,11 +297,14 @@ export const trackingApi = {
   getLatest: (tripId: string) => apiFetch(`/tracking/${tripId}/current`),
   postLocation: (tripId: string, data: { latitude: number; longitude: number; speed?: number; heading?: number }) =>
     apiFetch(`/tracking/${tripId}/location`, { method: 'POST', body: JSON.stringify(data) }),
+  bulkUpdateLocations: (tripId: string, locations: any[]) =>
+    apiFetch(`/tracking/${tripId}/bulk-update`, { method: 'POST', body: JSON.stringify({ locations }) }),
 }
 
 export const WS_URL = (() => {
   const base = (process.env.NEXT_PUBLIC_WS_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com').replace(/\/$/, '')
-  return base.endsWith('/tracking') ? base : `${base}/tracking`
+  // Remove /tracking suffix if present — the namespace is added by socket.io client
+  return base.endsWith('/tracking') ? base.slice(0, -'/tracking'.length) : base
 })()
 
 // ── Departments / Colleges ────────────────────────────────────────────────────

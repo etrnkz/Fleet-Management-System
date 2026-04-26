@@ -82,29 +82,20 @@ export default function DashboardLayout({
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        // Check if user is logged in
         const cachedUser = getCurrentUser()
-        if (!cachedUser) {
-          router.push('/login')
-          return
+        if (cachedUser) {
+          setUser(cachedUser)
         }
-        
-        // Set cached user immediately for display
-        setUser(cachedUser)
-
-        // Fetch fresh data from API in background
+        // Fetch fresh data from API in background — don't redirect on failure
         try {
           const freshUser = await userApi.getProfile()
-          // Update state and cache with fresh data
           setUser(freshUser)
           localStorage.setItem('user', JSON.stringify(freshUser))
         } catch (apiError) {
-          // If API fails, keep using cached data
-          console.warn('Using cached user data, API fetch failed:', apiError)
+          console.warn('Using cached user data:', apiError)
         }
       } catch (error) {
         console.error('Failed to load user data:', error)
-        router.push('/login')
       }
     }
 
@@ -142,13 +133,11 @@ export default function DashboardLayout({
 
   const unreadCount = notifications.filter((n: any) => !n.read && !n.isRead).length
 
-  const handleLogout = () => {
-    // Clear all authentication tokens and user session
+  const handleLogout = async () => {
     localStorage.clear()
     sessionStorage.clear()
-    
-    // Redirect to login with logout flag to prevent auto-login
-    router.push('/?logout=true')
+    try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+    window.location.href = '/?logout=true'
   }
 
   const showSettingsToast = (message: string, type: string) => {

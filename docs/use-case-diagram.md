@@ -1,598 +1,405 @@
-# Fleet Management System - Use Case Diagram
+# Fleet Management System — Use Case Diagram
 
-## Complete System with All Actors
+## Actors (9)
 
-```mermaid
-graph TB
-    subgraph "Fleet Management System"
-        subgraph "Authentication & Profile"
-            UC1[Login]
-            UC2[Logout]
-            UC3[Update Profile]
-            UC4[Change Password]
-            UC5[Upload Profile Picture]
-            UC6[Forgot Password]
-            UC7[Reset Password]
-        end
-        
-        subgraph "Trip Management"
-            UC8[Request Trip]
-            UC9[View Trip Details]
-            UC10[Approve - Department]
-            UC11[Approve - College]
-            UC12[Approve - Dean]
-            UC13[Approve - President]
-            UC14[Reject Trip]
-            UC15[Cancel Trip]
-            UC16[Provide Feedback]
-            UC17[Log Trip]
-        end
-        
-        subgraph "Resource Allocation"
-            UC18[Allocate Vehicle]
-            UC19[Check Availability]
-            UC20[Check Condition]
-        end
-        
-        subgraph "Vehicle Management"
-            UC21[Manage Fleet]
-            UC22[Inspect]
-            UC23[View Details]
-        end
-        
-        subgraph "Driver Management"
-            UC24[Manage Drivers]
-        end
-        
-        subgraph "Maintenance"
-            UC25[Request Maintenance]
-            UC26[Process Maintenance]
-            UC27[Approve Maintenance Budget]
-        end
-        
-        subgraph "User Management"
-            UC28[Create User]
-            UC29[Security]
-        end
-        
-        subgraph "Gate Operations"
-            UC30[Scan Trip QR]
-            UC31[Verify Trip Start]
-        end
-        
-        subgraph "Development"
-            UC32[System Development]
-            UC33[Debug]
-            UC34[Deploy]
-        end
-    end
-    
-    %% All 12 Actors from UserRole enum
-    Employee((Employee<br/>User))
-    DeptHead((Department<br/>Head))
-    CollegeHead((College<br/>Head))
-    Dean((Dean))
-    President((President))
-    DeploymentTeam((Deployment<br/>Team))
-    TransportOffice((Transport<br/>Office))
-    MaintenanceTeam((Maintenance<br/>Team))
-    Driver((Driver))
-    Gate((Gate/<br/>Security))
-    Developer((Developer))
-    SystemAdmin((System<br/>Admin))
-    
-    %% Employee (User) Use Cases
-    Employee --> UC1
-    Employee --> UC2
-    Employee --> UC3
-    Employee --> UC4
-    Employee --> UC5
-    Employee --> UC6
-    Employee --> UC7
-    Employee --> UC8
-    Employee --> UC9
-    Employee --> UC15
-    Employee --> UC16
-    Employee --> UC23
-    
-    %% Department Head Use Cases
-    DeptHead --> UC1
-    DeptHead --> UC2
-    DeptHead --> UC3
-    DeptHead --> UC4
-    DeptHead --> UC9
-    DeptHead --> UC10
-    DeptHead --> UC14
-    
-    %% College Head Use Cases
-    CollegeHead --> UC1
-    CollegeHead --> UC2
-    CollegeHead --> UC3
-    CollegeHead --> UC4
-    CollegeHead --> UC9
-    CollegeHead --> UC11
-    CollegeHead --> UC14
-    
-    %% Dean Use Cases
-    Dean --> UC1
-    Dean --> UC2
-    Dean --> UC3
-    Dean --> UC4
-    Dean --> UC9
-    Dean --> UC12
-    Dean --> UC14
-    Dean --> UC27
-    
-    %% President Use Cases
-    President --> UC1
-    President --> UC2
-    President --> UC3
-    President --> UC4
-    President --> UC9
-    President --> UC13
-    President --> UC14
-    President --> UC27
-    
-    %% Deployment Team Use Cases
-    DeploymentTeam --> UC1
-    DeploymentTeam --> UC2
-    DeploymentTeam --> UC3
-    DeploymentTeam --> UC4
-    DeploymentTeam --> UC9
-    DeploymentTeam --> UC18
-    DeploymentTeam --> UC19
-    DeploymentTeam --> UC20
-    DeploymentTeam --> UC21
-    DeploymentTeam --> UC23
-    DeploymentTeam --> UC24
-    DeploymentTeam --> UC25
-    DeploymentTeam --> UC26
-    
-    %% Transport Office Use Cases
-    TransportOffice --> UC1
-    TransportOffice --> UC2
-    TransportOffice --> UC3
-    TransportOffice --> UC4
-    TransportOffice --> UC9
-    TransportOffice --> UC18
-    TransportOffice --> UC19
-    TransportOffice --> UC21
-    TransportOffice --> UC22
-    TransportOffice --> UC23
-    TransportOffice --> UC24
-    
-    %% Maintenance Team Use Cases
-    MaintenanceTeam --> UC1
-    MaintenanceTeam --> UC2
-    MaintenanceTeam --> UC3
-    MaintenanceTeam --> UC4
-    MaintenanceTeam --> UC20
-    MaintenanceTeam --> UC22
-    MaintenanceTeam --> UC25
-    MaintenanceTeam --> UC26
-    
-    %% Driver Use Cases
-    Driver --> UC1
-    Driver --> UC2
-    Driver --> UC3
-    Driver --> UC4
-    Driver --> UC9
-    Driver --> UC17
-    Driver --> UC25
-    
-    %% Gate/Security Use Cases
-    Gate --> UC1
-    Gate --> UC2
-    Gate --> UC30
-    Gate --> UC31
-    
-    %% Developer Use Cases
-    Developer --> UC1
-    Developer --> UC2
-    Developer --> UC32
-    Developer --> UC33
-    Developer --> UC34
-    
-    %% System Admin Use Cases
-    SystemAdmin --> UC1
-    SystemAdmin --> UC2
-    SystemAdmin --> UC3
-    SystemAdmin --> UC4
-    SystemAdmin --> UC28
-    SystemAdmin --> UC29
-    
-    style Employee fill:#e1f5ff
-    style DeptHead fill:#fff4e1
-    style CollegeHead fill:#ffe1f5
-    style Dean fill:#f5e1ff
-    style President fill:#e1ffe1
-    style DeploymentTeam fill:#ffe1e1
-    style TransportOffice fill:#f5ffe1
-    style MaintenanceTeam fill:#e1e1ff
-    style Driver fill:#ffe1e1
-    style Gate fill:#f5f5e1
-    style Developer fill:#e1fff5
-    style SystemAdmin fill:#ffe1ff
+| # | Actor | Description |
+|---|-------|-------------|
+| 1 | Employee | University staff who request transportation |
+| 2 | Department Head | First-level trip approver |
+| 3 | Dean / College Head | Second-level trip approver |
+| 4 | President | Final trip approver |
+| 5 | Deployment Office | Allocates vehicle and driver to approved trips |
+| 6 | Transport Admin | Confirms allocation, manages fleet, drivers, live tracking |
+| 7 | Driver | Executes assigned trips, reports maintenance |
+| 8 | System Admin | Manages users, system config, audit logs |
+| 9 | Gate Keeper | Scans QR at departure and return to start/complete trip |
+
+---
+
+## Use Case Diagram
+
+```plantuml
+@startuml Fleet_Management_System_Use_Case
+
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #f9f9f9
+  BorderColor #1B3D2F
+  ArrowColor #1B3D2F
+}
+
+' ── Actors ──────────────────────────────────────────────
+actor "Employee"          as EMP
+actor "Department Head"   as DEPT
+actor "Dean/College Head" as DEAN
+actor "President"         as PRES
+actor "Deployment Office" as DEPLOY
+actor "Transport Admin"   as TRANS
+actor "Driver"            as DRV
+actor "System Admin"      as SADMIN
+actor "Gate Keeper"       as GATE
+
+' ── System Boundary ─────────────────────────────────────
+rectangle "Fleet Management System" {
+
+  ' Authentication (shared)
+  usecase "Login"               as UC_LOGIN
+  usecase "Logout"              as UC_LOGOUT
+  usecase "Forgot Password"     as UC_FORGOT
+  usecase "Reset Password"      as UC_RESET
+  usecase "Update Profile"      as UC_PROFILE
+  usecase "Change Password"     as UC_CHPWD
+
+  ' Employee use cases
+  usecase "Submit Trip Request"   as UC_SUBMIT
+  usecase "View Trip Status"      as UC_STATUS
+  usecase "Cancel Trip"           as UC_CANCEL
+  usecase "Mark Trip Complete"    as UC_MARKCOMPLETE
+  usecase "Provide Trip Feedback" as UC_FEEDBACK
+  usecase "Receive Notification"  as UC_NOTIF
+
+  ' Approval use cases
+  usecase "View Pending Approvals"    as UC_PENDING
+  usecase "Approve Trip"              as UC_APPROVE
+  usecase "Reject Trip"               as UC_REJECT
+
+  ' Deployment Office use cases
+  usecase "Allocate Vehicle & Driver"  as UC_ALLOC
+  usecase "Check Vehicle Availability" as UC_AVAIL
+  usecase "Check Driver Availability"  as UC_DRVAVAIL
+
+  ' Transport Admin use cases
+  usecase "Confirm Transport Allocation" as UC_CONFIRM
+  usecase "Reject Allocation"            as UC_REJALLOC
+  usecase "Manage Vehicles"              as UC_VEHICLES
+  usecase "Manage Drivers"               as UC_DRIVERS
+  usecase "Assign Vehicle to Driver"     as UC_ASSIGNVEH
+  usecase "Live Trip Tracking"           as UC_TRACK
+  usecase "View Fuel Reports"            as UC_FUEL
+  usecase "Generate Reports"             as UC_REPORTS
+
+  ' Driver use cases
+  usecase "View Assigned Trip"       as UC_VIEWTRIP
+  usecase "Accept Trip Assignment"   as UC_ACCEPT
+  usecase "Reject Trip Assignment"   as UC_REJECTTRIP
+  usecase "Show Departure QR"        as UC_DEPQR
+  usecase "Show Return QR"           as UC_RETQR
+  usecase "Report Maintenance Issue" as UC_MAINT
+
+  ' Gate Keeper use cases
+  usecase "Scan Departure QR" as UC_SCANDEP
+  usecase "Scan Return QR"    as UC_SCANRET
+  usecase "Start Trip"        as UC_START
+  usecase "Complete Trip"     as UC_COMPLETE
+
+  ' System Admin use cases
+  usecase "Manage Users"           as UC_USERS
+  usecase "View Audit Logs"        as UC_AUDIT
+  usecase "System Configuration"   as UC_CONFIG
+  usecase "Broadcast Notification" as UC_BROADCAST
+
+  ' ── Include Relations ──────────────────────────────────
+  UC_SUBMIT       ..> UC_LOGIN     : <<include>>
+  UC_APPROVE      ..> UC_PENDING   : <<include>>
+  UC_ALLOC        ..> UC_AVAIL     : <<include>>
+  UC_ALLOC        ..> UC_DRVAVAIL  : <<include>>
+  UC_CONFIRM      ..> UC_ALLOC     : <<include>>
+  UC_ACCEPT       ..> UC_DEPQR     : <<include>>
+  UC_SCANDEP      ..> UC_START     : <<include>>
+  UC_SCANRET      ..> UC_COMPLETE  : <<include>>
+  UC_FORGOT       ..> UC_RESET     : <<include>>
+  UC_ASSIGNVEH    ..> UC_DRIVERS   : <<include>>
+  UC_MARKCOMPLETE ..> UC_RETQR     : <<include>>
+
+  ' ── Extend Relations ───────────────────────────────────
+  UC_NOTIF    ..> UC_APPROVE      : <<extend>>
+  UC_NOTIF    ..> UC_REJECT       : <<extend>>
+  UC_NOTIF    ..> UC_ALLOC        : <<extend>>
+  UC_NOTIF    ..> UC_CONFIRM      : <<extend>>
+  UC_NOTIF    ..> UC_ACCEPT       : <<extend>>
+  UC_NOTIF    ..> UC_START        : <<extend>>
+  UC_NOTIF    ..> UC_COMPLETE     : <<extend>>
+  UC_FEEDBACK ..> UC_COMPLETE     : <<extend>>
+  UC_TRACK    ..> UC_START        : <<extend>>
+  UC_FUEL     ..> UC_COMPLETE     : <<extend>>
+}
+
+' ── Employee ─────────────────────────────────────────────
+EMP --> UC_LOGIN
+EMP --> UC_LOGOUT
+EMP --> UC_FORGOT
+EMP --> UC_PROFILE
+EMP --> UC_CHPWD
+EMP --> UC_SUBMIT
+EMP --> UC_STATUS
+EMP --> UC_CANCEL
+EMP --> UC_MARKCOMPLETE
+EMP --> UC_FEEDBACK
+EMP --> UC_NOTIF
+
+' ── Department Head ──────────────────────────────────────
+DEPT --> UC_LOGIN
+DEPT --> UC_LOGOUT
+DEPT --> UC_PROFILE
+DEPT --> UC_PENDING
+DEPT --> UC_APPROVE
+DEPT --> UC_REJECT
+DEPT --> UC_STATUS
+DEPT --> UC_NOTIF
+
+' ── Dean / College Head ──────────────────────────────────
+DEAN --> UC_LOGIN
+DEAN --> UC_LOGOUT
+DEAN --> UC_PROFILE
+DEAN --> UC_PENDING
+DEAN --> UC_APPROVE
+DEAN --> UC_REJECT
+DEAN --> UC_STATUS
+DEAN --> UC_NOTIF
+
+' ── President ────────────────────────────────────────────
+PRES --> UC_LOGIN
+PRES --> UC_LOGOUT
+PRES --> UC_PROFILE
+PRES --> UC_PENDING
+PRES --> UC_APPROVE
+PRES --> UC_REJECT
+PRES --> UC_STATUS
+PRES --> UC_NOTIF
+PRES --> UC_REPORTS
+
+' ── Deployment Office ────────────────────────────────────
+DEPLOY --> UC_LOGIN
+DEPLOY --> UC_LOGOUT
+DEPLOY --> UC_PROFILE
+DEPLOY --> UC_ALLOC
+DEPLOY --> UC_AVAIL
+DEPLOY --> UC_DRVAVAIL
+DEPLOY --> UC_STATUS
+DEPLOY --> UC_NOTIF
+
+' ── Transport Admin ──────────────────────────────────────
+TRANS --> UC_LOGIN
+TRANS --> UC_LOGOUT
+TRANS --> UC_PROFILE
+TRANS --> UC_CONFIRM
+TRANS --> UC_REJALLOC
+TRANS --> UC_VEHICLES
+TRANS --> UC_DRIVERS
+TRANS --> UC_ASSIGNVEH
+TRANS --> UC_TRACK
+TRANS --> UC_FUEL
+TRANS --> UC_NOTIF
+TRANS --> UC_REPORTS
+
+' ── Driver ───────────────────────────────────────────────
+DRV --> UC_LOGIN
+DRV --> UC_LOGOUT
+DRV --> UC_PROFILE
+DRV --> UC_CHPWD
+DRV --> UC_VIEWTRIP
+DRV --> UC_ACCEPT
+DRV --> UC_REJECTTRIP
+DRV --> UC_DEPQR
+DRV --> UC_RETQR
+DRV --> UC_MAINT
+DRV --> UC_NOTIF
+
+' ── Gate Keeper ──────────────────────────────────────────
+GATE --> UC_LOGIN
+GATE --> UC_LOGOUT
+GATE --> UC_SCANDEP
+GATE --> UC_SCANRET
+GATE --> UC_START
+GATE --> UC_COMPLETE
+
+' ── System Admin ─────────────────────────────────────────
+SADMIN --> UC_LOGIN
+SADMIN --> UC_LOGOUT
+SADMIN --> UC_PROFILE
+SADMIN --> UC_USERS
+SADMIN --> UC_AUDIT
+SADMIN --> UC_CONFIG
+SADMIN --> UC_BROADCAST
+SADMIN --> UC_REPORTS
+
+@enduml
 ```
 
 ---
 
-## Complete Actor Descriptions (All 12 Roles)
-
-### 1. Employee (User)
-**Role**: University staff/faculty who request transportation for official business
-
-**Primary Use Cases**:
-- Login/Logout
-- Request trips
-- View trip details and status
-- Cancel pending trips
-- Provide feedback after trip completion
-- Update profile and change password
-- Upload profile picture
-- Password recovery
-
-**Access Level**: Basic user - can only manage own trip requests
-
----
-
-### 2. Department Head
-**Role**: First-level approver for trips from their department
-
-**Primary Use Cases**:
-- Login/Logout
-- View trip details from department
-- Approve trips at department level
-- Reject trips with reason
-- Update profile
-
-**Access Level**: Department-level approval authority
-
----
-
-### 3. College Head
-**Role**: Second-level approver for trips from their college
-
-**Primary Use Cases**:
-- Login/Logout
-- View trip details from college
-- Approve trips at college level
-- Reject trips with reason
-- Update profile
-
-**Access Level**: College-level approval authority
-
----
-
-### 4. Dean
-**Role**: Third-level approver (Dean level) for trips
-
-**Primary Use Cases**:
-- Login/Logout
-- View trip details
-- Approve trips at dean level
-- Reject trips with reason
-- Approve maintenance budgets
-- Update profile
-
-**Access Level**: Dean-level approval authority with budget approval
-
----
-
-### 5. President
-**Role**: Final approver for all university trips (highest authority)
-
-**Primary Use Cases**:
-- Login/Logout
-- View trip details
-- Approve trips at presidential level (final approval)
-- Reject trips with reason
-- Approve major maintenance budgets
-- Update profile
-
-**Access Level**: Presidential approval authority - final decision maker
-
----
-
-### 6. Deployment Team
-**Role**: Operations team that manages fleet deployment and maintenance
-
-**Primary Use Cases**:
-- Login/Logout
-- View trip details
-- Allocate vehicles to approved trips
-- Check vehicle availability
-- Check vehicle condition
-- Manage fleet (vehicles)
-- Manage drivers
-- Request maintenance
-- Process maintenance requests
-- Update profile
-
-**Access Level**: Fleet operations and maintenance management
-
----
-
-### 7. Transport Office
-**Role**: Transport office staff managing vehicle allocation and inspections
-
-**Primary Use Cases**:
-- Login/Logout
-- View trip details
-- Allocate vehicles to trips
-- Check vehicle availability
-- Manage fleet
-- Inspect vehicles
-- View vehicle details
-- Manage drivers
-- Update profile
-
-**Access Level**: Vehicle allocation and inspection authority
-
----
-
-### 8. Maintenance Team
-**Role**: Team responsible for vehicle maintenance and repairs
-
-**Primary Use Cases**:
-- Login/Logout
-- Check vehicle condition
-- Inspect vehicles
-- Request maintenance
-- Process maintenance work
-- Update profile
-
-**Access Level**: Maintenance operations and vehicle inspection
-
----
-
-### 9. Driver
-**Role**: Drivers who execute assigned trips
-
-**Primary Use Cases**:
-- Login/Logout
-- View trip details (assigned trips)
-- Log trip (start, update, complete)
-- Request maintenance for vehicle issues
-- Update profile
-
-**Access Level**: Trip execution and vehicle issue reporting
-
----
-
-### 10. Gate (Security)
-**Role**: Gate/security personnel who verify trip starts
-
-**Primary Use Cases**:
-- Login/Logout
-- Scan trip QR code
-- Verify trip start authorization
-
-**Access Level**: Trip verification at gate/entry points
-
----
-
-### 11. Developer
-**Role**: System developers with full system access
-
-**Primary Use Cases**:
-- Login/Logout
-- System development
-- Debug system issues
-- Deploy system updates
-
-**Access Level**: Full system access for development and debugging
-
----
-
-### 12. System Admin
-**Role**: System administrator managing users and security
-
-**Primary Use Cases**:
-- Login/Logout
-- Create user accounts
-- Manage user security and roles
-- Update profile
-
-**Access Level**: User management and system security administration
-
----
-
-## Use Case Summary by Category
-
-### Authentication & Profile (7 use cases)
-- Login
-- Logout
-- Update Profile
-- Change Password
-- Upload Profile Picture
-- Forgot Password
-- Reset Password
-
-### Trip Management (10 use cases)
-- Request Trip
-- View Trip Details
-- Approve - Department
-- Approve - College
-- Approve - Dean
-- Approve - President
-- Reject Trip
-- Cancel Trip
-- Provide Feedback
-- Log Trip
-
-### Resource Allocation (3 use cases)
-- Allocate Vehicle
-- Check Availability
-- Check Condition
-
-### Vehicle Management (3 use cases)
-- Manage Fleet
-- Inspect
-- View Details
-
-### Driver Management (1 use case)
-- Manage Drivers
-
-### Maintenance (3 use cases)
-- Request Maintenance
-- Process Maintenance
-- Approve Maintenance Budget
-
-### User Management (2 use cases)
-- Create User
-- Security
-
-### Gate Operations (2 use cases)
-- Scan Trip QR
-- Verify Trip Start
-
-### Development (3 use cases)
-- System Development
-- Debug
-- Deploy
-
----
-
-## Approval Workflow Hierarchy
-
-The system implements a multi-level approval workflow:
+## Actor-to-Actor Flow (Where Each Action Triggers the Next Actor)
 
 ```
-Employee (User)
-    ↓ submits trip
-Department Head
-    ↓ approves
-College Head
-    ↓ approves
-Dean
-    ↓ approves
-President
-    ↓ final approval
-Deployment Team / Transport Office
-    ↓ allocates resources
-Driver
-    ↓ executes trip
-Gate (Security)
-    ↓ verifies at gate
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        TRIP LIFECYCLE FLOW                                  │
+│                                                                             │
+│  EMPLOYEE                                                                   │
+│    │  Submit Trip Request                                                   │
+│    │  ─────────────────────────────────────────────► DEPARTMENT HEAD        │
+│    │                                                   │ Approve / Reject   │
+│    │                                                   │                    │
+│    │                                          ─────────┘                    │
+│    │                                          │ Approved                    │
+│    │                                          ▼                             │
+│    │                                    DEAN / COLLEGE HEAD                 │
+│    │                                          │ Approve / Reject            │
+│    │                                          │                             │
+│    │                                          ▼                             │
+│    │                                       PRESIDENT                        │
+│    │                                          │ Final Approve / Reject      │
+│    │                                          │                             │
+│    │                                          ▼                             │
+│    │                                   DEPLOYMENT OFFICE                    │
+│    │                                          │ Allocate Vehicle + Driver   │
+│    │                                          │                             │
+│    │                                          ▼                             │
+│    │                                   TRANSPORT ADMIN                      │
+│    │                                          │ Confirm Allocation          │
+│    │                                          │                             │
+│    │                                          ▼                             │
+│    │                                        DRIVER                          │
+│    │                                          │ Accept → Show Departure QR  │
+│    │                                          │                             │
+│    │                                          ▼                             │
+│    │                                      GATE KEEPER                       │
+│    │                                          │ Scan Departure QR           │
+│    │                                          │ → Trip STARTS               │
+│    │                                          │                             │
+│    │  ◄────────────────────────────────────── │ Notification: Trip Started  │
+│    │                                          │                             │
+│    │  [Trip in progress — Transport Admin     │                             │
+│    │   tracks live on map]                    │                             │
+│    │                                          │                             │
+│    │  Mark Trip Complete                      │                             │
+│    │  ─────────────────────────────────────── ▼                             │
+│    │                                        DRIVER                          │
+│    │                                          │ Show Return QR              │
+│    │                                          │                             │
+│    │                                          ▼                             │
+│    │                                      GATE KEEPER                       │
+│    │                                          │ Scan Return QR              │
+│    │                                          │ → Trip COMPLETED            │
+│    │                                          │                             │
+│    │  ◄────────────────────────────────────── │ Notification: Trip Done     │
+│    │                                                                        │
+│    │  Provide Feedback                                                      │
+│    │  ─────────────────────────────────────────► TRANSPORT ADMIN            │
+│    │                                              (Feedback visible)        │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Actor Hierarchy and Relationships
+## Each Actor's Use Cases
 
-### Approval Chain
-1. **Employee** → Creates trip request
-2. **Department Head** → First approval
-3. **College Head** → Second approval
-4. **Dean** → Third approval
-5. **President** → Final approval
+### Employee
+| Use Case | Triggers Next Actor |
+|---|---|
+| Submit Trip Request | → Department Head (notified) |
+| Mark Trip Complete | → Driver (PENDING_RETURN state) |
+| Provide Feedback | → Transport Admin (feedback visible) |
+| Cancel Trip | → Deployment Office / Transport Admin (notified) |
 
-### Operations Chain
-6. **Deployment Team** → Allocates resources
-7. **Transport Office** → Manages allocation
-8. **Driver** → Executes trip
-9. **Gate** → Verifies at entry/exit
+### Department Head
+| Use Case | Triggers Next Actor |
+|---|---|
+| Approve Trip | → Dean/College Head (notified) |
+| Reject Trip | → Employee (notified with reason) |
 
-### Support Roles
-10. **Maintenance Team** → Maintains vehicles
-11. **System Admin** → Manages users
-12. **Developer** → Develops system
+### Dean / College Head
+| Use Case | Triggers Next Actor |
+|---|---|
+| Approve Trip | → President (notified) |
+| Reject Trip | → Employee (notified with reason) |
 
----
+### President
+| Use Case | Triggers Next Actor |
+|---|---|
+| Approve Trip (final) | → Deployment Office (notified to allocate) |
+| Reject Trip | → Employee (notified with reason) |
 
-## Total Statistics
+### Deployment Office
+| Use Case | Triggers Next Actor |
+|---|---|
+| Allocate Vehicle & Driver | → Transport Admin (notified to confirm) |
 
-- **Total Actors**: 12 (all UserRole enum values)
-- **Total Use Cases**: 34 (simplified from 72)
-- **Approval Levels**: 4 (Department → College → Dean → President)
-- **Operational Roles**: 5 (Deployment, Transport, Driver, Gate, Maintenance)
-- **Administrative Roles**: 2 (System Admin, Developer)
+### Transport Admin
+| Use Case | Triggers Next Actor |
+|---|---|
+| Confirm Allocation | → Driver (notified: trip assigned) |
+| Reject Allocation | → Deployment Office (back for reassignment) |
+| Assign Vehicle to Driver | → Driver (notified: vehicle assigned) |
 
----
+### Driver
+| Use Case | Triggers Next Actor |
+|---|---|
+| Accept Trip Assignment | → Shows Departure QR (for Gate Keeper) |
+| Show Departure QR | → Gate Keeper (scans to start trip) |
+| Show Return QR | → Gate Keeper (scans to complete trip) |
+| Reject Trip Assignment | → Deployment Office (reassignment needed) |
 
-## Key Differences from Original 8-Actor Model
+### Gate Keeper
+| Use Case | Triggers Next Actor |
+|---|---|
+| Scan Departure QR → Start Trip | → Transport Admin (live tracking activates) + Employee (notified) |
+| Scan Return QR → Complete Trip | → Employee (notified, can give feedback) + Transport Admin (fuel report) |
 
-### Additional Actors (4 new)
-1. **College Head** - Separate from Dean for college-level approval
-2. **Dean** - Distinct dean-level approval with budget authority
-3. **Gate (Security)** - QR code scanning and trip verification
-4. **Developer** - System development and maintenance
-
-### Role Clarifications
-- **Deployment Team** - Replaces "Deployment Office" for operations
-- **Transport Office** - Replaces "Transport Admin" for consistency
-- **Maintenance Team** - Explicit maintenance role
-- **Employee (User)** - Clarified as base user role
-
----
-
-## Access Control Matrix
-
-| Actor | Trip Mgmt | Approval | Fleet Mgmt | Maintenance | User Mgmt | Development | Gate Ops |
-|-------|-----------|----------|------------|-------------|-----------|-------------|----------|
-| Employee | ✓ (own) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Dept Head | ✓ (view) | ✓ (dept) | ✗ | ✗ | ✗ | ✗ | ✗ |
-| College Head | ✓ (view) | ✓ (college) | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Dean | ✓ (view) | ✓ (dean) | ✗ | ✓ (budget) | ✗ | ✗ | ✗ |
-| President | ✓ (view) | ✓ (final) | ✗ | ✓ (budget) | ✗ | ✗ | ✗ |
-| Deployment | ✓ (all) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ |
-| Transport | ✓ (all) | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
-| Maintenance | ✗ | ✗ | ✓ (inspect) | ✓ | ✗ | ✗ | ✗ |
-| Driver | ✓ (assigned) | ✗ | ✗ | ✓ (request) | ✗ | ✗ | ✗ |
-| Gate | ✓ (verify) | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
-| Developer | ✓ (all) | ✓ (all) | ✓ (all) | ✓ (all) | ✓ (all) | ✓ | ✓ |
-| System Admin | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ |
+### System Admin
+| Use Case | Triggers Next Actor |
+|---|---|
+| Broadcast Notification | → All actors (system-wide message) |
+| Manage Users | → All actors (account creation/deactivation) |
 
 ---
 
-## Integration Points
+## Include & Extend Relationships
 
-### External Systems
-- Email service (notifications, password recovery)
-- SMS service (optional notifications)
-- GPS tracking (vehicle location)
-- QR code system (gate verification)
+### <<include>> — mandatory sub-steps
 
-### Internal Systems
-- Authentication service (JWT-based)
-- Notification service (real-time push)
-- Audit logging service
-- Workflow engine (approval automation)
+| Base Use Case | Includes | Reason |
+|---|---|---|
+| Submit Trip Request | Login | Must be authenticated |
+| Approve Trip | View Pending Approvals | Must see list before acting |
+| Allocate Vehicle & Driver | Check Vehicle Availability | Must verify before allocating |
+| Allocate Vehicle & Driver | Check Driver Availability | Must verify before allocating |
+| Confirm Transport Allocation | Allocate Vehicle & Driver | Confirmation builds on allocation |
+| Accept Trip Assignment | Show Departure QR | Acceptance generates QR |
+| Mark Trip Complete | Show Return QR | Completion triggers return QR |
+| Scan Departure QR | Start Trip | Scanning triggers trip start |
+| Scan Return QR | Complete Trip | Scanning triggers trip completion |
+| Forgot Password | Reset Password | Reset is part of forgot flow |
+| Assign Vehicle to Driver | Manage Drivers | Assignment is within driver management |
+
+### <<extend>> — optional or conditional extensions
+
+| Extension | Extends | Condition |
+|---|---|---|
+| Receive Notification | Approve Trip | When trip is approved |
+| Receive Notification | Reject Trip | When trip is rejected |
+| Receive Notification | Allocate Vehicle & Driver | When allocation is done |
+| Receive Notification | Confirm Transport | When transport is confirmed |
+| Receive Notification | Accept Trip | When driver accepts |
+| Receive Notification | Start Trip | When trip starts at gate |
+| Receive Notification | Complete Trip | When trip completes at gate |
+| Provide Trip Feedback | Complete Trip | After trip is completed |
+| Live Trip Tracking | Start Trip | Tracking activates after trip starts |
+| View Fuel Reports | Complete Trip | Fuel data available after completion |
 
 ---
 
-## Security Considerations
+## Actor Summary
 
-### Role-Based Access Control (RBAC)
-- Each actor has specific permissions
-- Department/college-level data isolation
-- Hierarchical approval enforcement
-
-### Authentication
-- JWT-based authentication
-- Token blacklisting on logout
-- Password recovery workflow
-- Multi-factor authentication (optional)
-
-### Audit Trail
-- Complete audit logging
-- User action tracking
-- System change monitoring
-
----
-
-## Notes
-
-This updated use case diagram represents the complete Fleet Management System with all 12 actors from the UserRole enum. The system supports:
-
-1. **Multi-level approval workflow** (4 levels: Department → College → Dean → President)
-2. **Comprehensive fleet operations** (Deployment Team, Transport Office, Maintenance Team)
-3. **Trip execution and verification** (Driver, Gate/Security)
-4. **System administration** (System Admin, Developer)
-5. **Role-based access control** for all 12 actor types
-6. **Complete audit trail** for compliance
-7. **QR code integration** for gate verification
-8. **Flexible workflow** supporting different trip types
-
-The system is designed to handle the complete lifecycle of university fleet management from trip request through multiple approval levels to execution, with appropriate oversight and verification at each stage.
+| Actor | Use Cases | Key Responsibility | Triggers |
+|---|---|---|---|
+| Employee | 11 | Trip requests and feedback | Dept Head, Driver |
+| Department Head | 8 | First-level approval | Dean/College Head |
+| Dean/College Head | 8 | Second-level approval | President |
+| President | 9 | Final approval + reports | Deployment Office |
+| Deployment Office | 8 | Vehicle & driver allocation | Transport Admin |
+| Transport Admin | 12 | Fleet management + tracking | Driver |
+| Driver | 11 | Trip execution + QR codes | Gate Keeper |
+| Gate Keeper | 6 | QR scanning at gate | Employee, Transport Admin |
+| System Admin | 8 | User & system management | All actors |

@@ -1,9 +1,14 @@
-﻿'use client'
+'use client'
+
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function SettingsPage() {
+export default function NotFound() {
   const router = useRouter()
-  useEffect(() => { router.replace('/transport-admin/fuel') }, [])
+
+  useEffect(() => {
+    router.replace('/')
+  }, [router])
+
   return null
 }

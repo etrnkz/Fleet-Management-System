@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { fuelApi, vehicleApi } from '@/lib/api'
 import Toast, { ToastType } from '@/components/Toast'
+import { getFuelPrices, saveFuelPrices } from '@/lib/fuelPrices'
 
 // TypeScript interfaces
 interface FuelRecord {
@@ -55,6 +56,15 @@ export default function FuelPage() {
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
   const [timeRange, setTimeRange] = useState('Last 30 Days')
+  const [petrolPrice, setPetrolPrice] = useState('')
+  const [dieselPrice, setDieselPrice] = useState('')
+  const [priceSaved, setPriceSaved] = useState(false)
+
+  useEffect(() => {
+    const prices = getFuelPrices()
+    setPetrolPrice(String(prices.petrol))
+    setDieselPrice(String(prices.diesel))
+  }, [])
   const [selectedVehicle, setSelectedVehicle] = useState<string>('all')
 
   // Fetch data on mount
@@ -151,6 +161,43 @@ export default function FuelPage() {
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Fuel Management</h1>
           <p className="text-xs md:text-sm text-gray-500">Monitor consumption and manage fuel records</p>
+        </div>
+
+        {/* Fuel Price Configuration */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4 text-[#1B3D2F]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Current Fuel Prices (ETB/liter)
+          </h2>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const p = parseFloat(petrolPrice)
+            const d = parseFloat(dieselPrice)
+            if (!isNaN(p) && !isNaN(d) && p > 0 && d > 0) {
+              saveFuelPrices({ petrol: p, diesel: d })
+              setPriceSaved(true)
+              setTimeout(() => setPriceSaved(false), 3000)
+            }
+          }} className="flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Petrol</label>
+              <input type="number" min="1" step="0.01" value={petrolPrice}
+                onChange={e => setPetrolPrice(e.target.value)}
+                className="w-28 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" required />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Diesel</label>
+              <input type="number" min="1" step="0.01" value={dieselPrice}
+                onChange={e => setDieselPrice(e.target.value)}
+                className="w-28 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" required />
+            </div>
+            <button type="submit" className="px-4 py-1.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]">
+              Update
+            </button>
+            {priceSaved && <span className="text-xs text-green-600 font-medium">✓ Saved</span>}
+          </form>
         </div>
 
         {/* Statistics Cards */}

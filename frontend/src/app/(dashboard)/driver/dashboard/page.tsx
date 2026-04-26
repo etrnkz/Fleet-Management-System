@@ -130,7 +130,18 @@ export default function DriverDashboard() {
   }
 
   const loadAssignedTrips = async () => { try { const trips = (await tripApi.getAssignedTrips()) as any[]; const uid = userData?.id || getCurrentUser()?.id; setAssignedTrips(tripApi.filterForDriver(trips, uid)) } catch {} }
-  const loadActiveTrips = async () => { try { const trips = (await tripApi.getActiveTrips()) as any[]; const uid = userData?.id || getCurrentUser()?.id; setActiveTrips(tripApi.filterForDriver(trips, uid)) } catch {} }
+  const loadActiveTrips = async () => { 
+    try { 
+      const trips = (await tripApi.getActiveTrips()) as any[]
+      const uid = userData?.id || getCurrentUser()?.id
+      const filtered = tripApi.filterForDriver(trips, uid)
+      setActiveTrips(filtered)
+      // Auto-navigate to active trip if there's a PENDING_RETURN trip
+      if (filtered.some((t: any) => t.state === 'PENDING_RETURN')) {
+        setActiveSection('active-trip')
+      }
+    } catch {} 
+  }
   const loadCompletedTrips = async () => { try { const trips = (await tripApi.getCompletedTrips()) as any[]; const uid = userData?.id || getCurrentUser()?.id; setCompletedTrips(tripApi.filterForDriver(trips, uid)) } catch {} }
   const loadMaintenanceRequests = async () => { try { setMaintenanceRequests((await maintenanceApi.getMyRequests()) as any[]) } catch {} }
   const loadNotifications = async () => { try { setNotifications((await notificationApi.getAll()) as any[]) } catch {} }
@@ -246,13 +257,11 @@ export default function DriverDashboard() {
     finally { setSavingPassword(false) }
   }
 
-  const handleLogout = () => {
-    // Clear all authentication tokens and user session
+  const handleLogout = async () => {
     localStorage.clear()
     sessionStorage.clear()
-    
-    // Redirect to login with logout flag to prevent auto-login
-    router.push('/?logout=true')
+    try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+    window.location.href = '/?logout=true'
   }
 
   const unreadCount = notifications.filter(n => !n.isRead).length
@@ -262,6 +271,7 @@ export default function DriverDashboard() {
 
   const navItems = [
     { id: 'assigned-trips', label: 'Assigned Trips' },
+    { id: 'active-trip', label: 'Active Trip' },
     { id: 'trip-history', label: 'Trip History' },
     { id: 'maintenance', label: 'Maintenance' },
     { id: 'vehicle-info', label: 'Vehicle Info' },
@@ -520,8 +530,14 @@ export default function DriverDashboard() {
                       )}
                     </div>
                     <div className="flex sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
-                      <button onClick={() => setQrTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 bg-[#1B3D2F] text-white text-xs rounded-lg hover:bg-[#152e22] font-semibold">Accept & Show QR</button>
-                      <button onClick={() => setRejectTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 border border-red-300 text-red-600 text-xs rounded-lg hover:bg-red-50">Reject</button>
+                      {trip.state === 'CAR_ALLOCATED' || trip.state === 'READY' ? (
+                        <>
+                          <button onClick={() => setQrTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 bg-[#1B3D2F] text-white text-xs rounded-lg hover:bg-[#152e22] font-semibold">Accept & Show QR</button>
+                          <button onClick={() => setRejectTrip(trip)} className="flex-1 sm:flex-none px-3 py-1.5 border border-red-300 text-red-600 text-xs rounded-lg hover:bg-red-50">Reject</button>
+                        </>
+                      ) : (
+                        <span className="px-3 py-1.5 bg-green-100 text-green-700 text-xs rounded-lg font-semibold text-center">Accepted ✓</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -542,48 +558,81 @@ export default function DriverDashboard() {
                 <div key={trip.id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 space-y-4">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="w-2.5 h-2.5 bg-#f0f9f40 rounded-full animate-pulse" />
-                    <span className="text-xs sm:text-sm font-semibold text-[#1B3D2F]">IN PROGRESS</span>
+                    <span className="text-xs sm:text-sm font-semibold text-[#1B3D2F]">
+                      {trip.state === 'PENDING_RETURN' ? 'PENDING RETURN' : 'IN PROGRESS'}
+                    </span>
                     <span className="text-xs text-gray-400 ml-auto font-mono">{trip.requestNumber || trip.id.slice(0,8)}</span>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-base sm:text-lg">{trip.destination}</p>
-                    <p className="text-sm text-gray-500 line-clamp-2">{trip.purpose}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400 mb-0.5">Passengers</p><p className="font-semibold text-gray-900">{trip.passengerCount}</p></div>
-                    <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400 mb-0.5">Start</p><p className="font-semibold text-gray-900 text-xs sm:text-sm">{new Date(trip.startDateTime).toLocaleTimeString()}</p></div>
-                  </div>
-                  {/* Requester contact */}
-                  {(trip.requester?.name || trip.requester?.phoneNumber) && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-xs font-semibold text-blue-600 mb-1.5">Passenger / Requester</p>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-semibold text-gray-900">{trip.requester?.name}</span>
-                        {trip.requester?.phoneNumber && (
-                          <a
-                            href={`tel:${trip.requester.phoneNumber}`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            {trip.requester.phoneNumber}
-                          </a>
-                        )}
+
+                  {/* PENDING RETURN — show return QR */}
+                  {trip.state === 'PENDING_RETURN' && (
+                    <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 text-center space-y-3">
+                      <div className="flex items-center justify-center gap-2 text-amber-700 font-semibold text-sm">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                        Passenger arrived — return to campus
                       </div>
+                      <p className="text-xs text-amber-600">Show this QR to the gate keeper when you return to complete the trip</p>
+                      <div className="flex justify-center p-3 bg-white border-2 border-amber-300 rounded-xl">
+                        <QRCodeSVG
+                          value={JSON.stringify({
+                            tripId: trip.id,
+                            requestNumber: trip.requestNumber,
+                            destination: trip.destination,
+                            vehicle: trip.allocatedVehicle?.plateNumber,
+                            driver: userData?.name,
+                            action: 'GATE_RETURN',
+                          })}
+                          size={180}
+                          level="M"
+                        />
+                      </div>
+                      <p className="text-xs font-mono text-gray-400">{trip.requestNumber}</p>
                     </div>
                   )}
-                  {liveTripId === trip.id && (
-                    <div className={`rounded-lg p-3 text-xs sm:text-sm flex items-center gap-2 ${gpsStatus.engineSimulatedOff ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${gpsStatus.engineSimulatedOff ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`} />
-                      <span className="font-semibold">
-                        {gpsStatus.engineSimulatedOff
-                          ? `⚠️ Restricted zone${gpsStatus.violationZoneName ? `: ${gpsStatus.violationZoneName}` : ''}`
-                          : `GPS Live — tracking active${gpsStatus.lastPostedAt ? ` · ${new Date(gpsStatus.lastPostedAt).toLocaleTimeString()}` : ''}`}
-                      </span>
-                    </div>
+
+                  {trip.state !== 'PENDING_RETURN' && (
+                    <>
+                      <div>
+                        <p className="font-semibold text-gray-900 text-base sm:text-lg">{trip.destination}</p>
+                        <p className="text-sm text-gray-500 line-clamp-2">{trip.purpose}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400 mb-0.5">Passengers</p><p className="font-semibold text-gray-900">{trip.passengerCount}</p></div>
+                        <div className="bg-gray-50 rounded-lg p-3"><p className="text-xs text-gray-400 mb-0.5">Start</p><p className="font-semibold text-gray-900 text-xs sm:text-sm">{new Date(trip.startDateTime).toLocaleTimeString()}</p></div>
+                      </div>
+                      {(trip.requester?.name || trip.requester?.phoneNumber) && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-xs font-semibold text-blue-600 mb-1.5">Passenger / Requester</p>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-semibold text-gray-900">{trip.requester?.name}</span>
+                            {trip.requester?.phoneNumber && (
+                              <a href={`tel:${trip.requester.phoneNumber}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                {trip.requester.phoneNumber}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {liveTripId === trip.id && (
+                        <div className={`rounded-lg p-3 text-xs sm:text-sm flex items-center gap-2 ${gpsStatus.engineSimulatedOff ? 'bg-red-50 text-red-700 border border-red-200' : gpsStatus.offlineQueueSize > 0 ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${gpsStatus.engineSimulatedOff ? 'bg-red-500' : gpsStatus.offlineQueueSize > 0 ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`} />
+                          <span className="font-semibold">
+                            {gpsStatus.engineSimulatedOff
+                              ? `⚠️ Restricted zone${gpsStatus.violationZoneName ? `: ${gpsStatus.violationZoneName}` : ''}`
+                              : gpsStatus.offlineQueueSize > 0
+                              ? `📡 Offline — ${gpsStatus.offlineQueueSize} points queued`
+                              : `GPS Live — tracking active${gpsStatus.lastPostedAt ? ` · ${new Date(gpsStatus.lastPostedAt).toLocaleTimeString()}` : ''}`}
+                          </span>
+                        </div>
+                      )}
+                      <button onClick={() => setQrTrip(trip)} className="w-full py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]">Show QR Code</button>
+                    </>
                   )}
-                  <button onClick={() => setQrTrip(trip)} className="w-full py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22]">Show QR Code</button>
                 </div>
               ))}
             </div>

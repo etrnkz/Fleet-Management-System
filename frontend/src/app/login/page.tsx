@@ -47,21 +47,85 @@ export default function LoginPage() {
     const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token') ||
                   localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')
     const user = localStorage.getItem('user') || sessionStorage.getItem('user')
-    if (token && user) {
+    // Also check cookie for session
+    const cookieToken = document.cookie.split(';').find(c => c.trim().startsWith('accessToken='))
+    const cookieUser = document.cookie.split(';').find(c => c.trim().startsWith('user='))
+    if ((token || cookieToken) && (user || cookieUser)) {
       try {
-        const parsed = JSON.parse(user)
-        const dest = ROLE_PATHS[parsed.role]
-        if (dest) router.replace(dest)
+        const userStr = user || (cookieUser ? decodeURIComponent(cookieUser.split('=').slice(1).join('=')) : null)
+        if (userStr) {
+          const parsed = JSON.parse(userStr)
+          const dest = ROLE_PATHS[parsed.role]
+          if (dest) {
+            window.location.href = dest
+            return
+          }
+        }
       } catch {}
     }
   }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Block login if already logged in
+    const existingUser = localStorage.getItem('user') || sessionStorage.getItem('user')
+    const existingCookie = document.cookie.split(';').find(c => c.trim().startsWith('accessToken='))
+    if (existingUser && existingCookie) {
+      try {
+        const parsed = JSON.parse(existingUser)
+        const dest = ROLE_PATHS[parsed.role]
+        if (dest) { window.location.href = dest; return }
+      } catch {}
+    }
     setError('')
     setIsLoading(true)
     try {
-      const response = await authApi.login(email, password, rememberMe) as any
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
+
+      // Step 1: attempt login
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, keepMeSignedIn: rememberMe }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        const msg = (err.message || '').toLowerCase()
+
+        if (msg.includes('no account') || msg.includes('not found') || msg.includes('user not found')) {
+          // Backend already tells us email is wrong
+          setError('Wrong email address. Please try with a correct valid email.')
+        } else if (msg.includes('incorrect password') || msg.includes('wrong password')) {
+          setError('Wrong password. Please enter a valid password.')
+        } else if (msg.includes('inactive')) {
+          setError('Your account is inactive. Contact the administrator.')
+        } else {
+          // Backend says "Invalid credentials" — check email existence separately
+          const checkRes = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          }).catch(() => null)
+
+          // forgot-password always returns 200/201 with a generic message
+          // but if email doesn't exist backend still returns 200 (to prevent enumeration)
+          // So we check: try login with a dummy password to see if we get same error
+          // Simplest: just show targeted messages based on input validity
+          const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+          if (!emailValid) {
+            setError('Wrong email address. Please try with a correct valid email.')
+          } else if (password.length < 8) {
+            setError('Wrong password. Please enter a valid password.')
+          } else {
+            setError('Please enter a valid email address and password.')
+          }
+        }
+        setIsLoading(false)
+        return
+      }
+
+      const response = await res.json()
       const storage = rememberMe ? localStorage : sessionStorage
       if (!rememberMe) {
         localStorage.removeItem('access_token')
@@ -73,10 +137,12 @@ export default function LoginPage() {
       if (response.refresh_token) storage.setItem('refreshToken', response.refresh_token)
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
 
-      // Set cookies for middleware
-      const maxAgeStr = rememberMe ? `; max-age=${60 * 60 * 24 * 30}` : ''
-      document.cookie = `accessToken=${response.access_token}; path=/; SameSite=Lax${maxAgeStr}`
-      document.cookie = `user=${encodeURIComponent(JSON.stringify(response.user))}; path=/; SameSite=Lax${maxAgeStr}`
+      // Set cookies server-side via API route to avoid race condition with middleware
+      await fetch('/api/auth/set-cookie', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: response.access_token, user: response.user, rememberMe }),
+      })
 
       if (rememberMe) {
         const expiry = new Date(); expiry.setDate(expiry.getDate() + 30)
@@ -92,9 +158,15 @@ export default function LoginPage() {
         setIsLoading(false)
         return
       }
-      router.push(dest)
+      // Use window.location for hard navigation so middleware sees the new cookie
+      window.location.href = dest
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.')
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      if (!emailValid) {
+        setError('Wrong email address. Please try with a correct valid email.')
+      } else {
+        setError('Please enter a valid email address and password.')
+      }
     } finally {
       setIsLoading(false)
     }

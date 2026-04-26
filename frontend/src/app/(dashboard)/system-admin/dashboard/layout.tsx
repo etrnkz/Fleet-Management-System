@@ -87,13 +87,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }).catch(() => {})
   }, [])
 
-  const handleLogout = () => {
-    // Clear all authentication tokens and user session
+  const handleLogout = async () => {
     localStorage.clear()
     sessionStorage.clear()
-    
-    // Redirect to login with logout flag to prevent auto-login
-    router.push('/?logout=true')
+    try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+    window.location.href = '/?logout=true'
   }
 
   const handleSaveProfile = async () => {

@@ -163,6 +163,19 @@ export default function DashboardPage() {
     e.preventDefault()
     
     try {
+      // Check for existing active/pending trips
+      const allTrips = await tripApi.getAll() as any[]
+      const currentUser = getCurrentUser()
+      const uid = currentUser?.id
+      const activeStates = ['DRAFT','PENDING_DEPARTMENT','PENDING_COLLEGE','PENDING_PRESIDENT','APPROVED_FOR_ALLOCATION','CAR_ALLOCATED','PENDING_TRANSPORT_CONFIRM','READY','IN_PROGRESS']
+      const hasActive = Array.isArray(allTrips) && allTrips.some((t: any) =>
+        (t.requester?.id === uid || t.requesterId === uid) && activeStates.includes(t.state)
+      )
+      if (hasActive) {
+        showToast('You already have an active or pending trip request. Please wait until it is completed before submitting a new one.', 'error')
+        return
+      }
+
       // Combine date and time for startDateTime
       const startDateTime = `${formData.departureDate}T${formData.departureTime}:00`
       const endDateTime = `${formData.returnDate}T${formData.departureTime}:00`

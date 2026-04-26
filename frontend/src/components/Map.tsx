@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Circle, useMapEvents, Polyline } from 'react-leaflet'
 import L from 'leaflet'
@@ -51,6 +52,8 @@ interface Vehicle {
   destLng?: number | null
   // Stop tracking
   stoppedSince?: string | null
+  // Heading in degrees (0 = north, 90 = east)
+  heading?: number | null
 }
 
 export interface RestrictedZone {
@@ -372,33 +375,55 @@ function VehiclePopupContent({ vehicle }: { vehicle: Vehicle }) {
 }
 
 // Custom vehicle marker icons
-const createVehicleIcon = (status: string) => {
+const createVehicleIcon = (status: string, heading?: number | null, speed?: string) => {
   const color = status === 'moving' ? '#10b981' : status === 'idle' ? '#eab308' : '#ef4444'
-  
+  const rotation = heading != null ? heading : 0
+  const speedNum = speed ? parseInt(speed) : 0
+  const showSpeed = status === 'moving' && speedNum > 0
+
   return L.divIcon({
     className: 'custom-vehicle-marker',
     html: `
-      <div style="
-        width: 40px;
-        height: 40px;
-        background-color: ${color};
-        border: 3px solid white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        ${status === 'moving' ? 'animation: pulse 2s infinite;' : ''}
-      ">
-        <svg width="24" height="24" viewBox="0 0 20 20" fill="white">
-          <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-          <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
-        </svg>
+      <div style="position:relative; width:48px; height:48px;">
+        <div style="
+          width: 44px;
+          height: 44px;
+          background-color: ${color};
+          border: 3px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+          ${status === 'moving' ? 'animation: pulse 1.5s infinite;' : ''}
+          transform: rotate(0deg);
+        ">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="white" style="transform: rotate(${rotation}deg); transition: transform 0.5s ease;">
+            <path d="M12 2L8 8H4l2 10h12L20 8h-4L12 2z" opacity="0.3"/>
+            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+          </svg>
+        </div>
+        ${showSpeed ? `
+        <div style="
+          position: absolute;
+          bottom: -18px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: ${color};
+          color: white;
+          font-size: 10px;
+          font-weight: 700;
+          padding: 1px 5px;
+          border-radius: 8px;
+          white-space: nowrap;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+          font-family: monospace;
+        ">${speedNum} km/h</div>` : ''}
       </div>
     `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20]
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+    popupAnchor: [0, -28]
   })
 }
 
@@ -478,7 +503,7 @@ export default function Map({
         zoomControl={true}
       >
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Satellite">
+          <LayersControl.BaseLayer name="Satellite">
             <>
               <TileLayer
                 attribution='Tiles &copy; Esri'
@@ -490,7 +515,7 @@ export default function Map({
               />
             </>
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Map">
+          <LayersControl.BaseLayer checked name="Map">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -534,16 +559,13 @@ export default function Map({
           </Polyline>
         )}
 
-        {/* Per-vehicle route paths */}
+        {/* Per-vehicle traveled route paths — darker blue trail showing where vehicle has been */}
         {validVehicles.map(v => {
-          const routeColor = v.tripType?.toUpperCase() === 'VIP' ? '#10b981'
-            : v.tripType?.toUpperCase() === 'SERVICE' ? '#eab308'
-            : '#ef4444'
           return v.routePath && v.routePath.length > 1 ? (
             <Polyline
               key={`route-${v.id}`}
               positions={v.routePath}
-              pathOptions={{ color: routeColor, weight: 3, opacity: 0.8, lineJoin: 'round', lineCap: 'round' }}
+              pathOptions={{ color: '#1a56db', weight: 5, opacity: 0.7, lineJoin: 'round', lineCap: 'round', dashArray: '6 4' }}
             />
           ) : null
         })}
@@ -567,37 +589,41 @@ export default function Map({
           ) : null
         )}
 
-        {/* Red line from current vehicle position to destination — road-following if available, straight dashed fallback */}
+        {/* Planned route ahead — thick blue road-following line like Google Maps */}
         {validVehicles.map(v => {
           if (!v.destLat || !v.destLng) return null
-          // Use OSRM road route if available, otherwise straight dashed line
           if (v.plannedRoute && v.plannedRoute.length > 1) {
+            // Find closest point to vehicle and only draw remaining route
+            let closestIdx = 0
+            let minDist = Infinity
+            for (let i = 0; i < v.plannedRoute.length; i++) {
+              const [rLat, rLng] = v.plannedRoute[i]
+              const d = Math.sqrt(Math.pow(rLat - v.lat, 2) + Math.pow(rLng - v.lng, 2))
+              if (d < minDist) { minDist = d; closestIdx = i }
+            }
+            const remainingRoute = v.plannedRoute.slice(closestIdx)
+            if (remainingRoute.length < 2) return null
             return (
-              <Polyline
-                key={`dest-line-${v.id}`}
-                positions={v.plannedRoute}
-                pathOptions={{
-                  color: '#ef4444',
-                  weight: 5,
-                  opacity: 0.8,
-                  lineJoin: 'round',
-                  lineCap: 'round'
-                }}
-              />
+              <React.Fragment key={`route-${v.id}`}>
+                {/* Outer white border for road effect */}
+                <Polyline
+                  positions={remainingRoute}
+                  pathOptions={{ color: '#ffffff', weight: 10, opacity: 0.8, lineJoin: 'round', lineCap: 'round' }}
+                />
+                {/* Inner blue route line */}
+                <Polyline
+                  positions={remainingRoute}
+                  pathOptions={{ color: '#4285F4', weight: 7, opacity: 1, lineJoin: 'round', lineCap: 'round' }}
+                />
+              </React.Fragment>
             )
           }
+          // Fallback: dashed line if no road route
           return (
             <Polyline
               key={`dest-line-${v.id}`}
               positions={[[v.lat, v.lng], [v.destLat, v.destLng]]}
-              pathOptions={{
-                color: '#ef4444',
-                weight: 3,
-                opacity: 0.7,
-                dashArray: '10 8',
-                lineJoin: 'round',
-                lineCap: 'round'
-              }}
+              pathOptions={{ color: '#4285F4', weight: 4, opacity: 0.7, dashArray: '10 8', lineJoin: 'round', lineCap: 'round' }}
             />
           )
         })}
@@ -659,7 +685,7 @@ export default function Map({
           <Marker
             key={vehicle.id}
             position={[Number(vehicle.lat), Number(vehicle.lng)]}
-            icon={createVehicleIcon(vehicle.status)}
+            icon={createVehicleIcon(vehicle.status, vehicle.heading, vehicle.speed)}
             eventHandlers={{
               click: () => onVehicleSelect(vehicle.id)
             }}
