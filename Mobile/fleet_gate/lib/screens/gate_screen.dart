@@ -26,6 +26,8 @@ class _GateScreenState extends State<GateScreen> {
   String _result = '—';
   bool _scanning = false;
   bool _sending = false;
+  // 'departure' = vehicle leaving, 'return' = vehicle returning
+  String _scanMode = 'departure';
 
   @override
   void initState() {
@@ -100,9 +102,9 @@ class _GateScreenState extends State<GateScreen> {
     _setResult('Signed out');
   }
 
-  void _startScan() {
+  void _startScan(String mode) {
     if (_token == null) { _setResult('Sign in first'); return; }
-    setState(() => _scanning = true);
+    setState(() { _scanning = true; _scanMode = mode; });
   }
 
   Future<void> _postGateScan(String qrPayload) async {
@@ -120,7 +122,16 @@ class _GateScreenState extends State<GateScreen> {
       if (res.statusCode.toString().startsWith('2')) {
         final num = body['requestNumber'] as String?;
         final state = body['state'] as String?;
-        _setResult('✅ Trip started${num != null ? '\n$num' : ''}${state != null ? '\nstate: $state' : ''}');
+
+        String message;
+        if (state == 'IN_PROGRESS') {
+          message = '✅ Trip Started\n${num ?? ''}\nVehicle has departed.';
+        } else if (state == 'COMPLETED') {
+          message = '✅ Trip Completed\n${num ?? ''}\nVehicle has returned. Trip fully closed.';
+        } else {
+          message = '✅ Success\n${num ?? ''}\nstate: ${state ?? '—'}';
+        }
+        _setResult(message);
       } else {
         final msg = body['message'];
         final text = msg is List ? (msg as List).join(', ') : msg?.toString() ?? res.body;
@@ -137,24 +148,65 @@ class _GateScreenState extends State<GateScreen> {
     if (mounted) setState(() => _result = msg);
   }
 
+  Color get _resultColor {
+    if (_result.startsWith('✅')) return const Color(0xFFf0fdf4);
+    if (_result.startsWith('HTTP') || _result.startsWith('Error') || _result.startsWith('⚠️')) {
+      return const Color(0xFFfef2f2);
+    }
+    return Colors.white;
+  }
+
+  Color get _resultBorderColor {
+    if (_result.startsWith('✅')) return const Color(0xFF86efac);
+    if (_result.startsWith('HTTP') || _result.startsWith('Error') || _result.startsWith('⚠️')) {
+      return const Color(0xFFfca5a5);
+    }
+    return kBorder;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_scanning) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Scan Driver QR'),
+          title: Text(_scanMode == 'departure' ? 'Scan — Departure' : 'Scan — Return'),
+          backgroundColor: _scanMode == 'departure' ? kPrimary : const Color(0xFF1e40af),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => setState(() => _scanning = false),
           ),
         ),
-        body: MobileScanner(
-          onDetect: (capture) {
-            final barcode = capture.barcodes.firstOrNull;
-            if (barcode?.rawValue != null) {
-              _postGateScan(barcode!.rawValue!);
-            }
-          },
+        body: Stack(
+          children: [
+            MobileScanner(
+              onDetect: (capture) {
+                final barcode = capture.barcodes.firstOrNull;
+                if (barcode?.rawValue != null) {
+                  _postGateScan(barcode!.rawValue!);
+                }
+              },
+            ),
+            Positioned(
+              bottom: 40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _scanMode == 'departure' ? kPrimary : const Color(0xFF1e40af),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Text(
+                    _scanMode == 'departure'
+                        ? '🚗 Scan QR to start trip (departure)'
+                        : '🏁 Scan QR to complete trip (return)',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -257,22 +309,50 @@ class _GateScreenState extends State<GateScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            // Scan button
+            const SizedBox(height: 24),
+
+            // ── Scan Buttons ──────────────────────────────────────────────
+            const Text('Gate Actions', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            const SizedBox(height: 4),
+            const Text(
+              'Use Departure when a vehicle leaves campus.\nUse Return when a vehicle comes back.',
+              style: TextStyle(fontSize: 12, color: kTextSecondary),
+            ),
+            const SizedBox(height: 12),
+
+            // Departure scan
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: (_token == null || _sending) ? null : _startScan,
+                onPressed: (_token == null || _sending) ? null : () => _startScan('departure'),
                 icon: _sending
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.qr_code_scanner, size: 20),
-                label: Text(_sending ? 'Sending…' : 'Scan Driver QR'),
+                    : const Icon(Icons.directions_car_outlined, size: 20),
+                label: const Text('🚗  Scan — Departure (Start Trip)'),
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
                   minimumSize: const Size.fromHeight(56),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+
+            // Return scan
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: (_token == null || _sending) ? null : () => _startScan('return'),
+                icon: const Icon(Icons.flag_outlined, size: 20),
+                label: const Text('🏁  Scan — Return (Complete Trip)'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1e40af),
+                  minimumSize: const Size.fromHeight(56),
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 20),
             // Result
             const Text('Result', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
@@ -281,9 +361,9 @@ class _GateScreenState extends State<GateScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _resultColor,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: kBorder),
+                border: Border.all(color: _resultBorderColor),
               ),
               child: Text(
                 _result,
