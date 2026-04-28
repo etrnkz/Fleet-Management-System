@@ -368,13 +368,14 @@ export default function DashboardPage() {
 
       await driverApi.create(driverData)
       
-      showToast('Driver added successfully! You can now assign them to a vehicle.', 'success')
       setDriverAddSuccess(true)
       setDriverPhoneNumber('')
       setDriverPhoneCode('+251')
       setDriverPhoneError('')
       ;(e.target as HTMLFormElement).reset()
-      loadDashboardData()
+      showToast('Driver added successfully!', 'success')
+      // Reload in background — don't await so success shows instantly
+      loadDashboardData().catch(() => {})
     } catch (error: any) {
       showToast(error.message || 'Failed to add driver', 'error')
     } finally {

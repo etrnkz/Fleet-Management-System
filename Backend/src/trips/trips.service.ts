@@ -730,7 +730,30 @@ export class TripsService {
     }
     trip.rejectionReason = `Driver rejected: ${reason}`;
 
-    return this.tripRepository.save(trip);
+    const savedTrip = await this.tripRepository.save(trip);
+
+    // Notify deployment team that the trip needs reassignment
+    try {
+      const deploymentUsers = await this.userRepository.find({
+        where: { role: UserRole.DeploymentTeam, isActive: true },
+      });
+      for (const deployUser of deploymentUsers) {
+        await this.notificationsService.create(
+          deployUser,
+          'TripRejected' as any,
+          'Driver Rejected Assignment — Reassignment Needed',
+          `Driver rejected trip ${savedTrip.requestNumber} to ${savedTrip.destination}. Reason: ${reason}. Please allocate a new driver.`,
+          {
+            tripId: savedTrip.id,
+            requestNumber: savedTrip.requestNumber,
+            destination: savedTrip.destination,
+            reason,
+          },
+        ).catch(() => {});
+      }
+    } catch {}
+
+    return savedTrip;
   }
 
   /** Permanently remove a draft trip (requester only). */
