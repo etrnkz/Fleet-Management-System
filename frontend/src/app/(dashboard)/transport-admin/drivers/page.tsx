@@ -175,14 +175,14 @@ export default function DriversPage() {
       showToast('License number must be at least 5 characters', 'error'); return
     }
 
-    // License expiry — must be a future date
+    // License expiry — must be at least 15 days from today
     if (!addForm.licenseExpiry) {
       showToast('License expiry date is required', 'error'); return
     }
     const expiryDate = new Date(addForm.licenseExpiry + 'T00:00:00')
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-    if (expiryDate <= today) {
-      showToast('License expiry date must be in the future', 'error'); return
+    const minExpiry = new Date(); minExpiry.setDate(minExpiry.getDate() + 15); minExpiry.setHours(0, 0, 0, 0)
+    if (expiryDate < minExpiry) {
+      showToast('License expiry must be at least 15 days from today', 'error'); return
     }
 
     // Experience years
@@ -709,13 +709,29 @@ export default function DriversPage() {
                 )}
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">License Expiry *</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">License Expiry * <span className="text-gray-400 font-normal">(min. 15 days from today)</span></label>
                 <input required type="date" value={addForm.licenseExpiry}
-                  min={(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0] })()}
+                  min={(() => {
+                    const d = new Date()
+                    d.setDate(d.getDate() + 15)
+                    // Use local date parts to avoid UTC offset shifting the date
+                    const yyyy = d.getFullYear()
+                    const mm = String(d.getMonth() + 1).padStart(2, '0')
+                    const dd = String(d.getDate()).padStart(2, '0')
+                    return `${yyyy}-${mm}-${dd}`
+                  })()}
                   onChange={e => setAddForm(p => ({...p, licenseExpiry: e.target.value}))}
-                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F] ${addForm.licenseExpiry && new Date(addForm.licenseExpiry + 'T00:00:00') <= new Date() ? 'border-red-400' : 'border-gray-300'}`} />
-                {addForm.licenseExpiry && new Date(addForm.licenseExpiry + 'T00:00:00') <= new Date() && (
-                  <p className="text-xs text-red-500 mt-1">Expiry date must be in the future</p>
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F] ${
+                    addForm.licenseExpiry && (() => {
+                      const min = new Date(); min.setDate(min.getDate() + 15); min.setHours(0,0,0,0)
+                      return new Date(addForm.licenseExpiry + 'T00:00:00') < min
+                    })() ? 'border-red-400' : 'border-gray-300'
+                  }`} />
+                {addForm.licenseExpiry && (() => {
+                  const min = new Date(); min.setDate(min.getDate() + 15); min.setHours(0,0,0,0)
+                  return new Date(addForm.licenseExpiry + 'T00:00:00') < min
+                })() && (
+                  <p className="text-xs text-red-500 mt-1">Expiry must be at least 15 days from today</p>
                 )}
               </div>
               <div>
