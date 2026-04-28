@@ -179,7 +179,7 @@ export default function DriversPage() {
     if (!addForm.licenseExpiry) {
       showToast('License expiry date is required', 'error'); return
     }
-    const expiryDate = new Date(addForm.licenseExpiry)
+    const expiryDate = new Date(addForm.licenseExpiry + 'T00:00:00')
     const today = new Date(); today.setHours(0, 0, 0, 0)
     if (expiryDate <= today) {
       showToast('License expiry date must be in the future', 'error'); return
@@ -711,10 +711,10 @@ export default function DriversPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">License Expiry *</label>
                 <input required type="date" value={addForm.licenseExpiry}
-                  min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                  min={(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0] })()}
                   onChange={e => setAddForm(p => ({...p, licenseExpiry: e.target.value}))}
-                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F] ${addForm.licenseExpiry && new Date(addForm.licenseExpiry) <= new Date() ? 'border-red-400' : 'border-gray-300'}`} />
-                {addForm.licenseExpiry && new Date(addForm.licenseExpiry) <= new Date() && (
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F] ${addForm.licenseExpiry && new Date(addForm.licenseExpiry + 'T00:00:00') <= new Date() ? 'border-red-400' : 'border-gray-300'}`} />
+                {addForm.licenseExpiry && new Date(addForm.licenseExpiry + 'T00:00:00') <= new Date() && (
                   <p className="text-xs text-red-500 mt-1">Expiry date must be in the future</p>
                 )}
               </div>
