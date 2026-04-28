@@ -81,5 +81,5 @@ employee@haramaya.edu.et / Password@123 (Employee)
 
 ---
 
-Haramaya University - Department of Computer Science
+Haramaya University - Department of Information Technology
 Final Year Project - Full-Stack Web and Mobile Application
