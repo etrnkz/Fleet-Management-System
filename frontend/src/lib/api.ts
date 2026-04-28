@@ -1,4 +1,6 @@
 // Unified API client — all roles
+import { logout } from './logout'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
 
 const getAuthToken = (): string | null => {
@@ -82,8 +84,9 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}, retry = 
   if (response.status === 401 && retry) {
     const refreshed = await refreshAccessToken()
     if (refreshed) return apiFetch<T>(endpoint, options, false)
-    // Don't auto-logout — let middleware handle it on next navigation
-    throw new Error('Session expired. Please log in again.')
+    // Refresh token expired — auto logout and redirect to login
+    await logout()
+    throw new Error('Session expired.')
   }
 
   if (!response.ok) {
