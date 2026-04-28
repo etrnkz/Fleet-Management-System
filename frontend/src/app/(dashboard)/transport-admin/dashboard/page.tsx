@@ -1735,23 +1735,7 @@ export default function DashboardPage() {
                       </svg>
                     </div>
                     <h3 className="text-xl font-bold text-green-600 mb-2">Driver Added Successfully!</h3>
-                    <p className="text-gray-600 text-center text-sm mb-6">The driver account has been created and is ready to be assigned to a vehicle.</p>
-                    <div className="flex gap-3 w-full max-w-xs">
-                      <button
-                        type="button"
-                        onClick={() => { setDriverAddSuccess(false); setShowAddDriverSection(false) }}
-                        className="flex-1 px-4 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium text-sm"
-                      >
-                        Assign to Vehicle
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setShowAssignDriverForm(false); setShowAddDriverSection(false); setDriverAddSuccess(false) }}
-                        className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
-                      >
-                        Close
-                      </button>
-                    </div>
+                    <p className="text-gray-600 text-center text-sm">The driver account has been created and is ready to be assigned to a vehicle.</p>
                   </div>
                 ) : (
                 <form onSubmit={handleAddNewDriver}>
