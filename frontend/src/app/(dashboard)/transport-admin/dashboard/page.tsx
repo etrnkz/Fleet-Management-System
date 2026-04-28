@@ -293,6 +293,26 @@ export default function DashboardPage() {
   const handleAddNewDriver = async (e: React.FormEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target as HTMLFormElement)
+
+    // Validate license expiry — must be at least 15 days from today
+    const licenseExpiry = formData.get('licenseExpiry') as string
+    if (licenseExpiry) {
+      const expiryDate = new Date(licenseExpiry + 'T00:00:00')
+      const minExpiry = new Date()
+      minExpiry.setDate(minExpiry.getDate() + 15)
+      minExpiry.setHours(0, 0, 0, 0)
+      if (expiryDate < minExpiry) {
+        showToast('License expiry must be at least 15 days from today', 'error')
+        return
+      }
+    }
+
+    // Validate phone
+    if (driverPhoneError) {
+      showToast(driverPhoneError, 'error')
+      return
+    }
+
     setDriverSubmitting(true)
     
     try {
@@ -1837,11 +1857,17 @@ export default function DashboardPage() {
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             License Expiry Date <span className="text-red-500">*</span>
+                            <span className="text-gray-400 font-normal text-xs ml-1">(min. 15 days from today)</span>
                           </label>
                           <input
                             type="date"
                             name="licenseExpiry"
                             required
+                            min={(() => {
+                              const d = new Date()
+                              d.setDate(d.getDate() + 15)
+                              return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                            })()}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                           />
                         </div>
