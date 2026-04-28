@@ -294,12 +294,12 @@ export default function VehiclesPage() {
               <tr>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Plate / ID</th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Make & Model</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">Type</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Type</th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">Driver</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">Fuel</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">Mileage</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">VIP Zone</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Driver</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Fuel</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Mileage</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">VIP Zone</th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
               </tr>
             </thead>
@@ -329,8 +329,8 @@ export default function VehiclesPage() {
                       <p className="text-gray-500 text-[11px] leading-tight mt-0.5">{vehicle.model} · {vehicle.year}</p>
                     </td>
 
-                    {/* Type — hidden on xs */}
-                    <td className="px-3 py-3 hidden sm:table-cell">
+                    {/* Type */}
+                    <td className="px-3 py-3">
                       <span className="text-xs text-gray-600">{vehicle.vehicleType || '—'}</span>
                     </td>
 
@@ -345,8 +345,8 @@ export default function VehiclesPage() {
                       )}
                     </td>
 
-                    {/* Driver — hidden on sm and below */}
-                    <td className="px-3 py-3 hidden md:table-cell">
+                    {/* Driver */}
+                    <td className="px-3 py-3">
                       {vehicle.assignedDriver?.user?.name ? (
                         <>
                           <p className="text-xs font-medium text-gray-900 leading-tight">{vehicle.assignedDriver.user.name}</p>
@@ -357,20 +357,20 @@ export default function VehiclesPage() {
                       )}
                     </td>
 
-                    {/* Fuel — hidden on sm and below */}
-                    <td className="px-3 py-3 hidden md:table-cell">
+                    {/* Fuel */}
+                    <td className="px-3 py-3">
                       <span className="text-xs text-gray-600">{vehicle.fuelType}</span>
                     </td>
 
-                    {/* Mileage — hidden on md and below */}
-                    <td className="px-3 py-3 hidden lg:table-cell">
+                    {/* Mileage */}
+                    <td className="px-3 py-3">
                       <span className="text-xs text-gray-600">
                         {vehicle.currentMileage ? `${Number(vehicle.currentMileage).toLocaleString()} km` : '—'}
                       </span>
                     </td>
 
-                    {/* VIP Zone — hidden on xs */}
-                    <td className="px-3 py-3 hidden sm:table-cell">
+                    {/* VIP Zone */}
+                    <td className="px-3 py-3">
                       {vehicle.vipGeoRestrictionEnabled ? (
                         <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 whitespace-nowrap">
                           On · {Array.isArray(vehicle.restrictedZones) ? vehicle.restrictedZones.length : 0}
