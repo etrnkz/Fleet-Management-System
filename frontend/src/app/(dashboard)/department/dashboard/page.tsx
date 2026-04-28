@@ -209,7 +209,17 @@ export default function DashboardPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData(prev => {
+      if (name === 'departureDate' && prev.returnDate) {
+        const dep = new Date(value)
+        const ret = new Date(prev.returnDate)
+        const diffDays = (ret.getTime() - dep.getTime()) / (1000 * 60 * 60 * 24)
+        if (diffDays > 30 || ret < dep) {
+          return { ...prev, [name]: value, returnDate: '' }
+        }
+      }
+      return { ...prev, [name]: value }
+    })
   }
 
   const handleSubmitRequest = async (e: React.FormEvent) => {
