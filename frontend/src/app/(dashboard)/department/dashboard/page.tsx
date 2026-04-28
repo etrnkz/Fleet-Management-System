@@ -219,6 +219,12 @@ export default function DashboardPage() {
       // Combine date and time for startDateTime
       const startDateTime = `${formData.departureDate}T${formData.departureTime}:00`
       const endDateTime = `${formData.returnDate}T${formData.departureTime}:00`
+
+      const tripDays = (new Date(endDateTime).getTime() - new Date(startDateTime).getTime()) / (1000 * 60 * 60 * 24)
+      if (tripDays > 30) {
+        showToast('Trip duration cannot exceed 30 days', 'error')
+        return
+      }
       
       await tripApi.create({
         tripType: 'Normal',
@@ -766,6 +772,7 @@ export default function DashboardPage() {
                       <div>
                         <label htmlFor="returnDate" className="block text-xs md:text-sm font-medium text-gray-700 mb-1.5">
                           Return Date <span className="text-red-500">*</span>
+                          <span className="text-gray-400 font-normal ml-1">(max 30 days)</span>
                         </label>
                         <input
                           type="date"
@@ -773,9 +780,21 @@ export default function DashboardPage() {
                           name="returnDate"
                           value={formData.returnDate}
                           onChange={handleInputChange}
+                          min={formData.departureDate || undefined}
+                          max={formData.departureDate ? (() => {
+                            const d = new Date(formData.departureDate)
+                            d.setDate(d.getDate() + 30)
+                            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                          })() : undefined}
                           className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
+                        {formData.returnDate && formData.departureDate && (() => {
+                          const diff = (new Date(formData.returnDate).getTime() - new Date(formData.departureDate).getTime()) / (1000*60*60*24)
+                          return diff > 30
+                        })() && (
+                          <p className="mt-1 text-xs text-red-600">Return date cannot be more than 30 days after departure</p>
+                        )}
                       </div>
 
                       <div>

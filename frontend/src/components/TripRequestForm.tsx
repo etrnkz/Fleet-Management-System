@@ -64,19 +64,32 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
   const [emergencyPhoneNumber, setEmergencyPhoneNumber] = useState('')
   const [emergencyPhoneError, setEmergencyPhoneError] = useState('')
 
-  // Calculate minimum date (48 hours from now)
+  // Calculate minimum date (48 hours from now) using local time
   const getMinDateTime = () => {
     const now = new Date()
     now.setHours(now.getHours() + 48)
-    return now.toISOString().slice(0, 16) // Format: YYYY-MM-DDTHH:mm
+    const yyyy = now.getFullYear()
+    const mo = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+    const hh = String(now.getHours()).padStart(2, '0')
+    const mm = String(now.getMinutes()).padStart(2, '0')
+    return `${yyyy}-${mo}-${dd}T${hh}:${mm}`
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => {
+      // When start date changes, clear end date if it would exceed 30 days
+      if (name === 'startDateTime' && prev.endDateTime) {
+        const start = new Date(value)
+        const end = new Date(prev.endDateTime)
+        const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+        if (diffDays > 30 || end <= start) {
+          return { ...prev, [name]: value, endDateTime: '' }
+        }
+      }
+      return { ...prev, [name]: value }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,6 +101,12 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
     }
     if (new Date(formData.endDateTime) <= new Date(formData.startDateTime)) {
       showToast('End date must be after start date', 'error')
+      return
+    }
+
+    const tripDays = (new Date(formData.endDateTime).getTime() - new Date(formData.startDateTime).getTime()) / (1000 * 60 * 60 * 24)
+    if (tripDays > 30) {
+      showToast('Trip duration cannot exceed 30 days', 'error')
       return
     }
 
@@ -295,9 +314,31 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
                 value={formData.endDateTime}
                 onChange={handleChange}
                 min={formData.startDateTime || getMinDateTime()}
+                max={formData.startDateTime ? (() => {
+                  const d = new Date(formData.startDateTime)
+                  d.setDate(d.getDate() + 30)
+                  const yyyy = d.getFullYear()
+                  const mo = String(d.getMonth() + 1).padStart(2, '0')
+                  const dd = String(d.getDate()).padStart(2, '0')
+                  const hh = String(d.getHours()).padStart(2, '0')
+                  const mm = String(d.getMinutes()).padStart(2, '0')
+                  return `${yyyy}-${mo}-${dd}T${hh}:${mm}`
+                })() : undefined}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--fa-primary)]/30 focus:border-[var(--fa-primary)] outline-none transition-all"
                 required
               />
+              <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                Maximum trip duration is 30 days
+              </p>
+              {formData.endDateTime && formData.startDateTime && (() => {
+                const diff = (new Date(formData.endDateTime).getTime() - new Date(formData.startDateTime).getTime()) / (1000 * 60 * 60 * 24)
+                return diff > 30
+              })() && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
+                  Trip duration cannot exceed 30 days
+                </p>
+              )}
             </div>
           </div>
           
