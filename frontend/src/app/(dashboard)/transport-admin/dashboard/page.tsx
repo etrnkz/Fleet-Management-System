@@ -375,11 +375,6 @@ export default function DashboardPage() {
       setDriverPhoneError('')
       ;(e.target as HTMLFormElement).reset()
       loadDashboardData()
-      setTimeout(() => {
-        setShowAssignDriverForm(false)
-        setShowAddDriverSection(false)
-        setDriverAddSuccess(false)
-      }, 2500)
     } catch (error: any) {
       showToast(error.message || 'Failed to add driver', 'error')
     } finally {
