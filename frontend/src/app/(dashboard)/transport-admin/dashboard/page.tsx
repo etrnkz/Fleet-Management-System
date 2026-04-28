@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Toast, { ToastType } from '@/components/Toast'
 import { tripApi, vehicleApi, driverApi, maintenanceApi, fuelApi, userApi, trackingApi } from '@/lib/api'
+import { validatePhone, COUNTRY_CODES as PHONE_COUNTRY_CODES } from '@/components/PhoneInput'
 
 interface ToastMessage {
   message: string
@@ -26,35 +27,12 @@ export default function DashboardPage() {
   const [driverPhoneNumber, setDriverPhoneNumber] = useState('')
   const [driverPhoneError, setDriverPhoneError] = useState('')
 
-  const COUNTRY_CODES = [
-    { code: '+251', flag: '🇪🇹', name: 'Ethiopia' },
-    { code: '+1',   flag: '🇺🇸', name: 'USA/Canada' },
-    { code: '+44',  flag: '🇬🇧', name: 'UK' },
-    { code: '+49',  flag: '🇩🇪', name: 'Germany' },
-    { code: '+33',  flag: '🇫🇷', name: 'France' },
-    { code: '+254', flag: '🇰🇪', name: 'Kenya' },
-    { code: '+256', flag: '🇺🇬', name: 'Uganda' },
-    { code: '+255', flag: '🇹🇿', name: 'Tanzania' },
-    { code: '+20',  flag: '🇪🇬', name: 'Egypt' },
-    { code: '+27',  flag: '🇿🇦', name: 'South Africa' },
-    { code: '+234', flag: '🇳🇬', name: 'Nigeria' },
-    { code: '+91',  flag: '🇮🇳', name: 'India' },
-    { code: '+86',  flag: '🇨🇳', name: 'China' },
-    { code: '+971', flag: '🇦🇪', name: 'UAE' },
-  ]
+  const COUNTRY_CODES = PHONE_COUNTRY_CODES
 
   const validateDriverPhone = (code: string, number: string) => {
-    const digits = number.replace(/\D/g, '')
-    if (!digits) { setDriverPhoneError(''); return true }
-    if (digits.length < 7) { setDriverPhoneError('Too short — minimum 7 digits'); return false }
-    if (digits.length > 12) { setDriverPhoneError('Too long — maximum 12 digits'); return false }
-    // Ethiopia-specific: must start with 9 or 7 (mobile) or 1 (landline)
-    if (code === '+251' && digits.length === 9 && !/^[917]/.test(digits)) {
-      setDriverPhoneError('Ethiopian numbers start with 9, 7, or 1')
-      return false
-    }
-    setDriverPhoneError('')
-    return true
+    const err = validatePhone(code, number)
+    setDriverPhoneError(err)
+    return !err
   }
   const [makeInput, setMakeInput] = useState('')
   const [modelInput, setModelInput] = useState('')
@@ -1799,7 +1777,7 @@ export default function DashboardPage() {
                                 type="tel"
                                 name="phoneNumber"
                                 value={driverPhoneNumber}
-                                placeholder="912345678"
+                                placeholder={driverPhoneCode === '+251' ? '9 or 7 + 8 digits' : driverPhoneCode === '+1' ? '2025551234' : '...'}
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none ${driverPhoneError ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                                 onChange={e => {
                                   const val = e.target.value.replace(/[^\d\s\-()]/g, '')

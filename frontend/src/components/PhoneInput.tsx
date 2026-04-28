@@ -17,7 +17,7 @@ export const COUNTRY_CODES = [
 ]
 
 const RULES: Record<string, { min: number; max: number; pattern?: RegExp; msg: string }> = {
-  '+251': { min: 9,  max: 9,  pattern: /^[917]/, msg: 'Ethiopian numbers must start with 9, 7, or 1 and be exactly 9 digits' },
+  '+251': { min: 9,  max: 9,  pattern: /^[97]/, msg: 'Ethiopian numbers must start with 9 (Ethio Telecom) or 7 (Safaricom) and be exactly 9 digits' },
   '+1':   { min: 10, max: 10, pattern: /^[2-9]/, msg: 'US/Canada numbers must be exactly 10 digits and not start with 0 or 1' },
   '+44':  { min: 10, max: 10, pattern: /^[1-9]/, msg: 'UK numbers must be exactly 10 digits' },
   '+49':  { min: 10, max: 11,                    msg: 'German numbers must be 10–11 digits' },
@@ -83,7 +83,7 @@ export default function PhoneInput({
             id={id}
             value={number}
             required={required}
-            placeholder={code === '+251' ? '912345678' : code === '+1' ? '2025551234' : '...'}
+            placeholder={code === '+251' ? '9 or 7 + 8 digits (e.g. 912345678)' : code === '+1' ? '2025551234' : '...'}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm transition-all ${error ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
             onChange={e => onNumberChange(e.target.value.replace(/[^\d\s\-()]/g, ''))}
           />
