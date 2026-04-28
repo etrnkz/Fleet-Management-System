@@ -8,27 +8,57 @@ A production-grade, full-stack Fleet Management System for Haramaya University. 
 
 ```
 Fleet-Management-System/
-├── Backend/                    # NestJS REST API + WebSocket server
+├── Backend/                          # NestJS REST API + WebSocket server
+│   ├── src/                          # Source code (modules, controllers, services)
+│   ├── scripts/                      # DB setup, migration, deployment scripts
+│   ├── postman/                      # Postman collection for API testing
+│   ├── Dockerfile
+│   ├── ecosystem.config.cjs          # PM2 configuration
+│   ├── DEPLOY.md                     # Deployment guide
+│   └── SAD.md                        # System Architecture Document
+│
 ├── frontend/
 │   └── apps/
-│       ├── employee/           # Employee web app (port 3008) — trip requests & tracking
-│       ├── transport-admin/    # Transport Office web app (port 3001) — fleet operations
-│       ├── system-admin/       # System Admin web app (port 3007) — user & system management
-│       ├── college-dean/       # College Dean web app (port 3002) — approvals
-│       ├── department/         # Department Head web app (port 3003) — approvals
-│       ├── deployment-office/  # Deployment Office web app (port 3005) — vehicle allocation
-│       ├── president/          # President web app (port 3009) — final approvals
-│       ├── driver/             # Driver web app (port 3004) — trip management
-│       └── admin/              # Combined Admin web app (port 3010) — full fleet overview
+│       ├── employee/                 # Employee app (port 3008) — trip requests
+│       ├── transport-admin/          # Transport Office (port 3001) — fleet ops
+│       ├── system-admin/             # System Admin (port 3007) — user management
+│       ├── college-dean/             # College Dean (port 3002) — approvals
+│       ├── department/               # Department Head (port 3003) — approvals
+│       ├── deployment-office/        # Deployment Office (port 3005) — allocation
+│       ├── president/                # President (port 3009) — final approvals
+│       ├── driver/                   # Driver web (port 3004) — trip management
+│       └── admin/                    # Combined Admin (port 3010) — full overview
+│
 ├── Mobile/
-│   ├── fleet_driver/           # Flutter Driver app — GPS tracking + QR codes
-│   └── fleet_gate/             # Flutter Gate Scanner app — QR departure/return scanning
-├── DEFENSE.md                  # Project defense guide with 45 Q&A
-├── DATABASE_NORMALIZATION_ANALYSIS.md
-├── DATABASE_NORMALIZATION_SUMMARY.md
-├── FUEL_PRICE_DOCUMENTATION.md
-├── QUICK_REFERENCE.md
-└── live-tracking-map.html      # Standalone live GPS tracking map
+│   ├── fleet_driver/                 # Flutter Driver app — GPS + QR codes
+│   ├── fleet_gate/                   # Flutter Gate Scanner — QR departure/return
+│   └── gps-sender/                   # Android native GPS sender utility
+│
+├── docs/
+│   ├── DEFENSE.md                    # Project defense guide (45 Q&A)
+│   ├── DATABASE_NORMALIZATION_ANALYSIS.md
+│   ├── DATABASE_NORMALIZATION_SUMMARY.md
+│   ├── FUEL_PRICE_DOCUMENTATION.md
+│   ├── QUICK_REFERENCE.md
+│   ├── RUN_NORMALIZATION_MIGRATIONS.md
+│   ├── database-schema.md
+│   ├── geofence-feature.md
+│   ├── gps-location-feature.md
+│   ├── use-case-diagram.md
+│   ├── vip-security-features.md
+│   ├── activity-diagrams/            # Per-role activity diagrams
+│   ├── database/                     # SQL normalization migration scripts
+│   └── tools/
+│       └── live-tracking-map.html    # Standalone live GPS tracking map
+│
+├── scripts/                          # Cross-app deployment & dev scripts
+│   ├── dev-all-webs.mjs              # Start all frontend apps at once
+│   ├── deploy-all.ps1                # Deploy all apps
+│   └── vercel-deploy-all.mjs         # Vercel deployment
+│
+├── .gitignore
+├── README.md
+└── render.yaml                       # Render.com deployment config
 ```
 
 ---
@@ -204,6 +234,14 @@ flutter run
 flutter build apk --release
 ```
 
+### GPS Sender (Android Native Utility)
+
+```bash
+cd Mobile/gps-sender
+# Open in Android Studio and build
+# Used for testing GPS tracking independently of the driver app
+```
+
 ---
 
 ## 🔑 Default Credentials (Development / Seeded)
@@ -263,11 +301,14 @@ Schema is normalized to **Third Normal Form (3NF)**. See `DATABASE_NORMALIZATION
 
 | File | Description |
 |------|-------------|
-| `DEFENSE.md` | Full project defense guide with 45 examiner Q&A |
-| `DATABASE_NORMALIZATION_ANALYSIS.md` | Complete 3NF normalization analysis |
-| `DATABASE_NORMALIZATION_SUMMARY.md` | Normalization summary with migration guide |
-| `FUEL_PRICE_DOCUMENTATION.md` | Fuel price system documentation |
-| `QUICK_REFERENCE.md` | Quick command reference |
+| `docs/DEFENSE.md` | Full project defense guide with 45 examiner Q&A |
+| `docs/DATABASE_NORMALIZATION_ANALYSIS.md` | Complete 3NF normalization analysis |
+| `docs/DATABASE_NORMALIZATION_SUMMARY.md` | Normalization summary with migration guide |
+| `docs/FUEL_PRICE_DOCUMENTATION.md` | Fuel price system documentation |
+| `docs/QUICK_REFERENCE.md` | Quick command reference |
+| `docs/database/` | SQL normalization migration scripts |
+| `docs/activity-diagrams/` | Per-role activity diagrams |
+| `docs/tools/live-tracking-map.html` | Standalone live GPS tracking map |
 | `Backend/SAD.md` | System Architecture Document |
 | `Backend/DEPLOY.md` | Production deployment guide |
 | `Backend/REDEPLOY.md` | Redeployment guide |
@@ -317,4 +358,4 @@ Collection: `Backend/postman/collections/Fleet_Management_API.postman_collection
 **Institution**: Haramaya University, Ethiopia  
 **Department**: Computer Science  
 **Type**: Final Year Project — Full-Stack Web & Mobile Application  
-**Defense Guide**: See `DEFENSE.md` for complete technical documentation and 45 examiner Q&A pairs.
+**Defense Guide**: See `docs/DEFENSE.md` for complete technical documentation and 45 examiner Q&A pairs.
