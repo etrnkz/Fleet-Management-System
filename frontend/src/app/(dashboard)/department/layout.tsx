@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
 import { getCurrentUser } from '@/lib/api'
 import { useTheme, ThemeProvider } from '@/components/ThemeProvider'
+import { PushNotificationPrompt } from '@/components/PushNotificationPrompt'
 
 interface ToastMessage {
   id: number

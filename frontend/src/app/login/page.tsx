@@ -30,6 +30,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [savedCredentials, setSavedCredentials] = useState<{ email: string; password: string } | null>(null)
+  // Start as true to hide form until we verify no existing session
+  const [checkingSession, setCheckingSession] = useState(true)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -63,6 +65,8 @@ export default function LoginPage() {
         }
       } catch {}
     }
+    // No session found — show the login form
+    setCheckingSession(false)
   }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -126,22 +130,29 @@ export default function LoginPage() {
       }
 
       const response = await res.json()
-      const storage = rememberMe ? localStorage : sessionStorage
-      if (!rememberMe) {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('user')
-      }
+      // Always use localStorage so session is shared across tabs
+      const storage = localStorage
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('user')
       storage.setItem('access_token', response.access_token)
       storage.setItem('accessToken', response.access_token)
       if (response.refresh_token) storage.setItem('refreshToken', response.refresh_token)
       if (response.user) storage.setItem('user', JSON.stringify(response.user))
 
-      // Set cookies server-side via API route to avoid race condition with middleware
+      // Set cookies server-side via API route AND client-side for reliability
+      const minimalUser = { id: response.user?.id, role: response.user?.role, name: response.user?.name }
+      const cookieMaxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 7
+
+      // Client-side cookie (works immediately for same-tab navigation)
+      document.cookie = `accessToken=${response.access_token}; path=/; SameSite=Lax; max-age=${cookieMaxAge}`
+      document.cookie = `user=${encodeURIComponent(JSON.stringify(minimalUser))}; path=/; SameSite=Lax; max-age=${cookieMaxAge}`
+
+      // Server-side cookie via API route (persists across tabs/refreshes on Vercel)
       await fetch('/api/auth/set-cookie', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: response.access_token, user: response.user, rememberMe }),
+        body: JSON.stringify({ token: response.access_token, user: minimalUser, rememberMe }),
       })
 
       if (rememberMe) {
@@ -182,6 +193,14 @@ export default function LoginPage() {
 
   const handleSuggestionClick = () => {
     if (savedCredentials) { setEmail(savedCredentials.email); setPassword(savedCredentials.password); setRememberMe(true); setShowSuggestions(false) }
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#1B3D2F] border-t-transparent" />
+      </div>
+    )
   }
 
   return (

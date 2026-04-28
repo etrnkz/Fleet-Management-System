@@ -1,23 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Role → dashboard path mapping
-const ROLE_PATHS: Record<string, string> = {
-  Dean: '/college-dean/dashboard',
-  CollegeHead: '/college-dean/dashboard',
-  DepartmentHead: '/department/dashboard',
-  DeploymentOffice: '/deployment-office/dashboard',
-  DeploymentTeam: '/deployment-office/dashboard',
-  Driver: '/driver/dashboard',
-  Employee: '/employee/dashboard',
-  User: '/employee/dashboard',
-  President: '/president/dashboard',
-  SystemAdmin: '/system-admin/dashboard',
-  Developer: '/system-admin/dashboard',
-  TransportOffice: '/transport-admin/dashboard',
-}
-
-// Role → allowed path prefix
 const ROLE_PREFIX: Record<string, string> = {
   Dean: '/college-dean',
   CollegeHead: '/college-dean',
@@ -33,14 +16,28 @@ const ROLE_PREFIX: Record<string, string> = {
   TransportOffice: '/transport-admin',
 }
 
-const PUBLIC_PATHS = ['/', '/login', '/forgot-password', '/reset-password']
+const ROLE_PATHS: Record<string, string> = {
+  Dean: '/college-dean/dashboard',
+  CollegeHead: '/college-dean/dashboard',
+  DepartmentHead: '/department/dashboard',
+  DeploymentOffice: '/deployment-office/dashboard',
+  DeploymentTeam: '/deployment-office/dashboard',
+  Driver: '/driver/dashboard',
+  Employee: '/employee/dashboard',
+  User: '/employee/dashboard',
+  President: '/president/dashboard',
+  SystemAdmin: '/system-admin/dashboard',
+  Developer: '/system-admin/dashboard',
+  TransportOffice: '/transport-admin/dashboard',
+}
+
+const PUBLIC_PATHS = ['/', '/forgot-password', '/reset-password', '/signup']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow public paths and Next.js internals
+  // Allow Next.js internals and API routes
   if (
-    PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '?')) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname.includes('.')
@@ -48,35 +45,37 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Get token from cookies (set at login)
   const token = request.cookies.get('accessToken')?.value
   const userCookie = request.cookies.get('user')?.value
 
-  if (!token || !userCookie) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // If already logged in and trying to access login page → redirect to their dashboard
+  if (pathname === '/login' && token && userCookie) {
+    try {
+      const user = JSON.parse(decodeURIComponent(userCookie))
+      const dest = ROLE_PATHS[user?.role]
+      if (dest) return NextResponse.redirect(new URL(dest, request.url))
+    } catch {}
   }
 
-  try {
-    const user = JSON.parse(decodeURIComponent(userCookie))
-    const role = user?.role
-    const allowedPrefix = ROLE_PREFIX[role]
+  // Allow public paths
+  if (PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '?')) || pathname === '/login') {
+    return NextResponse.next()
+  }
 
-    // If role has no mapping, send to login
-    if (!allowedPrefix) {
+  // Protected routes — let through if cookie exists OR no cookie (client-side handles it)
+  if (token && userCookie) {
+    try {
+      const user = JSON.parse(decodeURIComponent(userCookie))
+      const role = user?.role
+      const allowedPrefix = ROLE_PREFIX[role]
+
+      if (!allowedPrefix) return NextResponse.redirect(new URL('/login', request.url))
+      if (pathname === '/dashboard') return NextResponse.redirect(new URL(ROLE_PATHS[role], request.url))
+      // Wrong role trying to access another role's path
+      if (!pathname.startsWith(allowedPrefix)) return NextResponse.redirect(new URL(ROLE_PATHS[role], request.url))
+    } catch {
       return NextResponse.redirect(new URL('/login', request.url))
     }
-
-    // If accessing /dashboard, redirect to role-specific dashboard
-    if (pathname === '/dashboard') {
-      return NextResponse.redirect(new URL(ROLE_PATHS[role], request.url))
-    }
-
-    // If accessing a path not belonging to their role, redirect to their dashboard
-    if (!pathname.startsWith(allowedPrefix)) {
-      return NextResponse.redirect(new URL(ROLE_PATHS[role], request.url))
-    }
-  } catch {
-    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   return NextResponse.next()

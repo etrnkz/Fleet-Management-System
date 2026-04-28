@@ -44,6 +44,12 @@ async function refreshAccessToken(): Promise<boolean> {
       if (data.refresh_token) storage.setItem('refreshToken', data.refresh_token)
       // Sync cookie for middleware
       document.cookie = `accessToken=${data.access_token}; path=/; SameSite=Lax; max-age=${60 * 60 * 7}`
+      // Also update server-side cookie
+      fetch('/api/auth/set-cookie', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: data.access_token, user: JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}'), rememberMe: !!localStorage.getItem('accessToken') }),
+      }).catch(() => {})
       return true
     } catch {
       return false

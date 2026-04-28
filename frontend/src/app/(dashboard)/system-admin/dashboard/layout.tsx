@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { systemAdminApi } from '@/lib/api'
 import { useTheme, ThemeProvider } from '@/components/ThemeProvider'
+import PasswordInput from '@/components/PasswordInput'
+import { PushNotificationPrompt } from '@/components/PushNotificationPrompt'
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
@@ -417,18 +419,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Current Password</label>
-                    <input type="password" value={passwordForm.currentPassword} onChange={e => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
+                    <PasswordInput value={passwordForm.currentPassword} onChange={e => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
+                      placeholder="Current password"
+                      className="w-full px-3 py-2.5 pl-10 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">New Password</label>
-                    <input type="password" value={passwordForm.newPassword} onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
+                    <PasswordInput value={passwordForm.newPassword} onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
+                      placeholder="New password"
+                      className="w-full px-3 py-2.5 pl-10 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Confirm New Password</label>
-                    <input type="password" value={passwordForm.confirmPassword} onChange={e => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
+                    <PasswordInput value={passwordForm.confirmPassword} onChange={e => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                      placeholder="Confirm new password"
+                      className="w-full px-3 py-2.5 pl-10 pr-10 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
                   </div>
                   <button onClick={handleSavePassword} disabled={savingPassword || !passwordForm.currentPassword || !passwordForm.newPassword}
                     className="w-full py-2.5 bg-[#1B3D2F] text-white rounded-lg text-sm font-semibold hover:bg-[#152e22] disabled:opacity-50 transition-colors">

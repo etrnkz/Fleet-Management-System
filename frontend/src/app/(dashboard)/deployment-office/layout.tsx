@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { authApi, notificationApi, userApi, inviteApi } from '@/lib/api'
 import { useTheme, ThemeProvider } from '@/components/ThemeProvider'
+import { PushNotificationPrompt } from '@/components/PushNotificationPrompt'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()

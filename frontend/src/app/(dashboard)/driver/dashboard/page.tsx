@@ -6,6 +6,8 @@ import { QRCodeSVG } from 'qrcode.react'
 import { tripApi, vehicleApi, statsApi, maintenanceApi, notificationApi, authApi, userApi, getCurrentUser } from '@/lib/api'
 import { useDriverGpsTracking } from '@/hooks/useDriverGpsTracking'
 import { useTheme, ThemeProvider } from '@/components/ThemeProvider'
+import PasswordInput from '@/components/PasswordInput'
+import { PushNotificationPrompt } from '@/components/PushNotificationPrompt'
 
 export default function DriverDashboard() {
   const router = useRouter()
@@ -983,27 +985,27 @@ export default function DriverDashboard() {
                     <form onSubmit={handleChangePassword} className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
-                        <div className="relative">
-                          <input type={showCurrentPw ? 'text' : 'password'} value={passwordForm.currentPassword}
-                            onChange={e => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
-                            className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required />
-                          <button type="button" onClick={() => setShowCurrentPw(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">{showCurrentPw ? 'Hide' : 'Show'}</button>
-                        </div>
+                        <PasswordInput value={passwordForm.currentPassword}
+                          onChange={e => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
+                          placeholder="Current password"
+                          required
+                          className="w-full px-4 py-2.5 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
-                        <div className="relative">
-                          <input type={showNewPw ? 'text' : 'password'} value={passwordForm.newPassword}
-                            onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
-                            className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required />
-                          <button type="button" onClick={() => setShowNewPw(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">{showNewPw ? 'Hide' : 'Show'}</button>
-                        </div>
+                        <PasswordInput value={passwordForm.newPassword}
+                          onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
+                          placeholder="New password"
+                          required
+                          className="w-full px-4 py-2.5 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
-                        <input type="password" value={passwordForm.confirmPassword}
+                        <PasswordInput value={passwordForm.confirmPassword}
                           onChange={e => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" required />
+                          placeholder="Confirm new password"
+                          required
+                          className="w-full px-4 py-2.5 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none text-sm" />
                       </div>
                       {passwordForm.newPassword && passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword && (
                         <p className="text-xs text-red-600">Passwords do not match</p>

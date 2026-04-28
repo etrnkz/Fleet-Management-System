@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 import { authApi, notificationApi } from '@/lib/api'
 import { useTheme, ThemeProvider } from '@/components/ThemeProvider'
+import { PushNotificationPrompt } from '@/components/PushNotificationPrompt'
 
 export default function DashboardLayout({
   children,

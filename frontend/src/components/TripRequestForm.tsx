@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { tripApi } from '@/lib/api'
+import { tripApi, getCurrentUser } from '@/lib/api'
 import Combobox from './Combobox'
 
 const DESTINATIONS = [
@@ -176,6 +176,20 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
 
     try {
       setIsSubmitting(true)
+
+      // Check for existing active/pending trips
+      const allTrips = await tripApi.getAll() as any[]
+      const currentUser = getCurrentUser()
+      const uid = currentUser?.id
+      const activeStates = ['DRAFT','PENDING_DEPARTMENT','PENDING_COLLEGE','PENDING_PRESIDENT','APPROVED_FOR_ALLOCATION','CAR_ALLOCATED','PENDING_TRANSPORT_CONFIRM','READY','IN_PROGRESS']
+      const hasActive = Array.isArray(allTrips) && allTrips.some((t: any) =>
+        (t.requester?.id === uid || t.requesterId === uid) && activeStates.includes(t.state)
+      )
+      if (hasActive) {
+        showToast('You already have an active or pending trip request. Please wait until it is completed before submitting a new one.', 'error')
+        setIsSubmitting(false)
+        return
+      }
       const tripTypeMap: Record<string, { tripType: 'Normal' | 'VIP'; tripCategory: 'STANDARD' | 'VIP' | 'SERVICE' }> = {
         STANDARD: { tripType: 'Normal', tripCategory: 'STANDARD' },
         VIP:      { tripType: 'VIP',    tripCategory: 'VIP' },

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import EmailInput from '@/components/EmailInput'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -64,14 +65,13 @@ export default function ForgotPasswordPage() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email Address
               </label>
-              <input
-                type="email"
+              <EmailInput
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.email@haramaya.edu.et"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                 required
+                className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
               />
             </div>
 

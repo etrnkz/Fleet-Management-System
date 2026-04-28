@@ -5,19 +5,26 @@ export async function POST(req: NextRequest) {
   const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 7
 
   const res = NextResponse.json({ ok: true })
-  res.cookies.set('accessToken', token, {
+
+  res.cookies.set({
+    name: 'accessToken',
+    value: token,
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'lax',
     maxAge,
     path: '/',
   })
-  res.cookies.set('user', encodeURIComponent(JSON.stringify(user)), {
+
+  res.cookies.set({
+    name: 'user',
+    value: encodeURIComponent(JSON.stringify(user)),
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'lax',
     maxAge,
     path: '/',
   })
+
   return res
 }

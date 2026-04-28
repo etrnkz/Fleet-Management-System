@@ -178,6 +178,7 @@ Stores fleet vehicles.
 | capacity | INTEGER | NOT NULL | Passenger capacity |
 | fuelType | ENUM | NOT NULL | Fuel type (see FuelType) |
 | fuelCapacity | DECIMAL(10,2) | NULL | Fuel tank capacity (liters) |
+| fuelEfficiency | DECIMAL(5,2) | NULL | Fuel efficiency in km per liter |
 | status | ENUM | DEFAULT 'Active' | Vehicle status (see VehicleStatus) |
 | currentMileage | DECIMAL(10,2) | DEFAULT 0 | Current odometer reading |
 | lastMaintenanceDate | TIMESTAMP | NULL | Last maintenance date |
@@ -304,6 +305,7 @@ Stores all trip requests and their lifecycle.
 - PENDING_TRANSPORT_CONFIRM
 - READY
 - IN_PROGRESS
+- PENDING_RETURN
 - COMPLETED
 - CANCELLED
 
@@ -876,11 +878,45 @@ All foreign key relationships have the following constraints:
 
 ---
 
+## Normalization Analysis
+
+The schema adheres to **3rd Normal Form (3NF)** with two intentional design decisions:
+
+### 1NF Compliance ✅
+- All columns contain atomic values
+- No repeating groups
+- Every table has a primary key (UUID)
+- Note: `trip_feedback.issues` (JSON array) and `vehicles.restrictedZones` (JSON) are atomic from PostgreSQL's perspective
+
+### 2NF Compliance ✅
+- All non-key columns depend on the full primary key
+- No partial dependencies (all tables use single-column UUID PKs)
+
+### 3NF Compliance ⚠️ (with justified exceptions)
+
+**Intentional denormalization:**
+- `trip_requests.estimatedFuelCost` and `actualFuelCost` are computed values stored for historical accuracy
+  - Fuel prices change over time; storing computed values at trip time is correct domain modeling
+  - Prevents incorrect historical cost calculations
+  - Justification: **temporal data integrity** > strict normalization
+
+**Minor cleanup opportunity:**
+- `audit_logs` has both `userId` column and `user` FK relation
+  - TypeORM manages FK automatically; explicit `userId` column is redundant
+  - Does not cause data integrity issues, just cosmetic redundancy
+  - Recommendation: use `@RelationId()` decorator instead of explicit column
+
+### Verdict
+The schema is production-ready with sound design decisions. The stored computed costs are a best practice for financial/historical data, not a normalization flaw.
+
+---
+
 ## Summary
 
 This database schema supports a comprehensive fleet management system with:
 - **14 main tables** covering all system entities
 - **Strong referential integrity** through foreign keys
+- **3NF compliance** with justified denormalization for temporal accuracy
 - **Comprehensive audit trail** for compliance
 - **Flexible workflow system** for different trip types
 - **Real-time tracking** capabilities

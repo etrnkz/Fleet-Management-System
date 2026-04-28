@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { driverApi, vehicleApi, userApi } from '@/lib/api'
 import Toast, { ToastType } from '@/components/Toast'
+import PasswordInput from '@/components/PasswordInput'
+import EmailInput from '@/components/EmailInput'
 
 interface ToastMessage {
   message: string
@@ -66,6 +68,7 @@ export default function DriversPage() {
     specializations: '', notes: '',
   })
   const [adding, setAdding] = useState(false)
+  const [addSuccess, setAddSuccess] = useState(false)
 
   useEffect(() => {
     loadDrivers()
@@ -131,36 +134,27 @@ export default function DriversPage() {
 
   const handleAddDriver = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (addForm.password.length < 8) {
+      showToast('Password must be at least 8 characters', 'error'); return
+    }
+    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(addForm.password)) {
+      showToast('Password must include letters and numbers', 'error'); return
+    }
     try {
       setAdding(true)
-      let userId: string
 
-      // Try to create user — if email exists, find the existing user
-      try {
-        const user: any = await userApi.create({
-          name: addForm.name,
-          email: addForm.email,
-          password: addForm.password,
-          phoneNumber: addForm.phoneNumber || undefined,
-          role: 'Driver',
-        })
-        userId = user.id
-      } catch (err: any) {
-        if (err.message?.includes('already exists') || err.message?.includes('409')) {
-          // User exists — find them
-          const users: any = await userApi.getAll()
-          const existing = Array.isArray(users) ? users.find((u: any) => u.email === addForm.email) : null
-          if (!existing) throw new Error('Email already in use by a non-Driver account')
-          if (existing.role !== 'Driver') throw new Error(`Email belongs to a ${existing.role} account, not a Driver`)
-          userId = existing.id
-        } else {
-          throw err
-        }
-      }
+      // Create user account
+      const user: any = await userApi.create({
+        name: addForm.name,
+        email: addForm.email,
+        password: addForm.password,
+        phoneNumber: addForm.phoneNumber || undefined,
+        role: 'Driver',
+      })
 
       // Create driver profile
       await driverApi.create({
-        userId,
+        userId: user.id,
         licenseNumber: addForm.licenseNumber,
         licenseExpiry: addForm.licenseExpiry,
         experienceYears: Number(addForm.experienceYears),
@@ -170,9 +164,11 @@ export default function DriversPage() {
       })
 
       showToast(`Driver "${addForm.name}" created successfully`, 'success')
-      setShowAddModal(false)
+      setAddSuccess(true)
       setAddForm({ name: '', email: '', password: '', phoneNumber: '', licenseNumber: '', licenseExpiry: '', experienceYears: 1, specializations: '', notes: '' })
       await loadDrivers()
+      // Close modal after 2 seconds
+      setTimeout(() => { setShowAddModal(false); setAddSuccess(false) }, 2000)
     } catch (error: any) {
       showToast(error.message || 'Failed to create driver', 'error')
     } finally {
@@ -594,6 +590,18 @@ export default function DriversPage() {
     {showAddModal && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+          {addSuccess ? (
+            <div className="flex flex-col items-center justify-center py-10 space-y-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-9 h-9 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Driver Added Successfully</h3>
+              <p className="text-sm text-gray-500">The driver account has been created.</p>
+            </div>
+          ) : (
+          <>
           <h3 className="font-bold text-gray-900 text-lg mb-4">Add New Driver</h3>
           <form onSubmit={handleAddDriver} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -604,13 +612,24 @@ export default function DriversPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
-                <input required type="email" value={addForm.email} onChange={e => setAddForm(p => ({...p, email: e.target.value}))}
+                <EmailInput required value={addForm.email} onChange={e => setAddForm(p => ({...p, email: e.target.value}))}
                   placeholder="driver@fleet.com" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Password *</label>
-                <input required type="password" value={addForm.password} onChange={e => setAddForm(p => ({...p, password: e.target.value}))}
-                  placeholder="Min 8 chars" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                <PasswordInput required minLength={8}
+                  value={addForm.password} onChange={e => setAddForm(p => ({...p, password: e.target.value}))}
+                  placeholder="Min 8 chars (letters + numbers)"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                {addForm.password && addForm.password.length < 8 && (
+                  <p className="text-xs text-red-500 mt-1">At least 8 characters required</p>
+                )}
+                {addForm.password && addForm.password.length >= 8 && !/(?=.*[A-Za-z])(?=.*\d)/.test(addForm.password) && (
+                  <p className="text-xs text-red-500 mt-1">Must include letters and numbers</p>
+                )}
+                {addForm.password && addForm.password.length >= 8 && /(?=.*[A-Za-z])(?=.*\d)/.test(addForm.password) && (
+                  <p className="text-xs text-green-600 mt-1">✓ Password looks good</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
@@ -654,6 +673,8 @@ export default function DriversPage() {
               </button>
             </div>
           </form>
+          </>
+          )}
         </div>
       </div>
     )}

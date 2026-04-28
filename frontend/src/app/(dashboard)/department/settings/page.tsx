@@ -7,6 +7,6 @@ import { useRouter } from 'next/navigation'
 
 export default function SettingsPage() {
   const router = useRouter()
-  useEffect(() => { router.replace('/dashboard') }, [])
+  useEffect(() => { router.replace('/department/dashboard') }, [])
   return null
 }

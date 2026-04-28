@@ -18,8 +18,6 @@ export default function DashboardPage() {
   const [vehicleStats, setVehicleStats] = useState({ total: 0, available: 0, inUse: 0, maintenance: 0 })
   const [loading, setLoading] = useState(true)
   const [selectedRequest, setSelectedRequest] = useState<any>(null)
-  const [showAssignModal, setShowAssignModal] = useState(false)
-  const [assignmentData, setAssignmentData] = useState({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' })
 
   useEffect(() => { loadDashboardData() }, [])
 
@@ -61,27 +59,6 @@ export default function DashboardPage() {
   const showNotification = (msg: string, type: 'success' | 'error' = 'success') => {
     setToastMessage(msg); setToastType(type); setShowToast(true)
     setTimeout(() => setShowToast(false), 3000)
-  }
-
-  const handleAssign = async () => {
-    if (!assignmentData.vehicleId || !assignmentData.driverId) {
-      showNotification('Please select both vehicle and driver', 'error'); return
-    }
-    try {
-      await tripApi.assignVehicleAndDriver(
-        selectedRequest.id,
-        assignmentData.vehicleId,
-        assignmentData.driverId,
-        Number(assignmentData.estimatedFuelCost) || 0,
-        Number(assignmentData.estimatedDistance) || 0,
-      )
-      setApprovedRequests(prev => prev.filter((r: any) => r.id !== selectedRequest.id))
-      setShowAssignModal(false); setSelectedRequest(null)
-      setAssignmentData({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' })
-      showNotification('Vehicle and driver assigned successfully!')
-    } catch (err: any) {
-      showNotification(err?.message || 'Failed to assign', 'error')
-    }
   }
 
   // Weekly trip counts by day
@@ -293,10 +270,6 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500 truncate">→ {trip.destination}</p>
                   </div>
                   <span className={`px-3 py-1 ${sl.color} text-xs font-medium rounded-full`}>{sl.label}</span>
-                  <button onClick={() => { setSelectedRequest(trip); setShowAssignModal(true); setAssignmentData({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' }) }}
-                    className="px-3 py-1.5 bg-[#152e22] text-white text-xs rounded-lg hover:bg-emerald-700 flex-shrink-0">
-                    Assign
-                  </button>
                 </div>
               )
             })}
@@ -348,90 +321,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Assign Modal */}
-      {showAssignModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-            <div className="flex justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Assign Vehicle & Driver</h3>
-              <button onClick={() => setShowAssignModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <p className="text-sm text-gray-500 mb-4">Trip: <span className="font-medium text-gray-800">{selectedRequest.requestNumber}</span> → {selectedRequest.destination}</p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
-                <p className="text-xs text-gray-500 mb-2">Select a vehicle — the assigned driver will fill automatically.</p>
-                <select
-                  value={assignmentData.vehicleId}
-                  onChange={e => {
-                    const vid = e.target.value
-                    const vehicle = availableVehicles.find((v: any) => v.id === vid)
-                    const driverId = vehicle?.assignedDriver?.id || ''
-                    setAssignmentData({ ...assignmentData, vehicleId: vid, driverId })
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]">
-                  <option value="">Select vehicle...</option>
-                  {availableVehicles.filter((v: any) => v.assignedDriver).map((v: any) => (
-                    <option key={v.id} value={v.id}>{v.make} {v.model} ({v.plateNumber})</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Auto-filled driver */}
-              {assignmentData.driverId && (() => {
-                const vehicle = availableVehicles.find((v: any) => v.id === assignmentData.vehicleId)
-                const driver = vehicle?.assignedDriver
-                return driver ? (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
-                    <p className="text-green-700 font-medium">Driver auto-assigned:</p>
-                    <p className="text-green-800 font-semibold">{driver.user?.name || driver.name} — {driver.licenseNumber}</p>
-                  </div>
-                ) : null
-              })()}
-
-              {/* Fuel & Distance Section */}
-              <div className="border-t border-gray-100 pt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-gray-700">Fuel & Distance Estimate</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Est. Fuel Cost (ETB)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 500"
-                      value={assignmentData.estimatedFuelCost}
-                      onChange={e => setAssignmentData({ ...assignmentData, estimatedFuelCost: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Est. Distance (km)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 120"
-                      value={assignmentData.estimatedDistance}
-                      onChange={e => setAssignmentData({ ...assignmentData, estimatedDistance: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowAssignModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
-              <button onClick={handleAssign} className="flex-1 px-4 py-2 bg-[#152e22] text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Assign</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
