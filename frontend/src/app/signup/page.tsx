@@ -135,6 +135,11 @@ export default function SignupPage() {
       return
     }
 
+    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(formData.password)) {
+      showToast('Password must contain at least one letter and one number', 'error')
+      return
+    }
+
     if (!formData.fullName.trim()) {
       showToast('Full name is required', 'error')
       return
@@ -457,7 +462,7 @@ export default function SignupPage() {
             {/* Phone Number */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
+                Phone Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
@@ -465,27 +470,46 @@ export default function SignupPage() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="+251-91-234-5678"
+                placeholder="+251912345678"
                 style={{ color: '#111827', backgroundColor: '#ffffff' }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${formData.phone && formData.phone.replace(/\D/g,'').length < 7 ? 'border-red-400' : 'border-gray-300'}`}
                 required
               />
+              <p className="mt-1 text-xs text-gray-400">Include country code, e.g. +251912345678</p>
+              {formData.phone && formData.phone.replace(/\D/g,'').length < 7 && (
+                <p className="mt-1 text-xs text-red-600">Phone number is too short</p>
+              )}
             </div>
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password <span className="text-red-500">*</span></label>
               <PasswordInput id="password" name="password" value={formData.password} onChange={handleChange}
-                placeholder="Create a password" required
+                placeholder="Min 8 chars, letters + numbers" required
                 className="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all" />
+              {formData.password && formData.password.length < 8 && (
+                <p className="mt-1 text-xs text-red-600">At least 8 characters required</p>
+              )}
+              {formData.password && formData.password.length >= 8 && !/(?=.*[A-Za-z])(?=.*\d)/.test(formData.password) && (
+                <p className="mt-1 text-xs text-amber-600">Add at least one number</p>
+              )}
+              {formData.password && formData.password.length >= 8 && /(?=.*[A-Za-z])(?=.*\d)/.test(formData.password) && (
+                <p className="mt-1 text-xs text-green-600">✓ Strong password</p>
+              )}
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">Confirm Password <span className="text-red-500">*</span></label>
               <PasswordInput id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange}
                 placeholder="Confirm your password" required
-                className="w-full px-4 py-3 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all" />
+                className={`w-full px-4 py-3 pl-10 pr-10 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none transition-all ${formData.confirmPassword && formData.confirmPassword !== formData.password ? 'border-red-400' : 'border-gray-300'}`} />
+              {formData.confirmPassword && formData.confirmPassword !== formData.password && (
+                <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+              )}
+              {formData.confirmPassword && formData.confirmPassword === formData.password && formData.password.length >= 8 && (
+                <p className="mt-1 text-xs text-green-600">✓ Passwords match</p>
+              )}
             </div>
 
             {/* Terms and Conditions */}

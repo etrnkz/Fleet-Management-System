@@ -71,6 +71,18 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Client-side validation before hitting the API
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address.')
+      return
+    }
+    if (password.length < 1) {
+      setError('Password is required.')
+      return
+    }
+
     // Block login if already logged in
     const existingUser = localStorage.getItem('user') || sessionStorage.getItem('user')
     const existingCookie = document.cookie.split(';').find(c => c.trim().startsWith('accessToken='))

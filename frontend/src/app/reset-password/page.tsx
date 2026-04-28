@@ -30,12 +30,17 @@ function ResetPasswordContent() {
     setMessage('')
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match')
+      setError('Passwords do not match.')
       return
     }
 
     if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters long')
+      setError('Password must be at least 8 characters long.')
+      return
+    }
+
+    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(newPassword)) {
+      setError('Password must contain at least one letter and one number.')
       return
     }
 
@@ -132,9 +137,15 @@ function ResetPasswordContent() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none ${confirmPassword && confirmPassword !== newPassword ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                 required
               />
+              {confirmPassword && confirmPassword !== newPassword && (
+                <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+              )}
+              {confirmPassword && confirmPassword === newPassword && newPassword.length >= 8 && (
+                <p className="mt-1 text-xs text-green-600">✓ Passwords match</p>
+              )}
             </div>
 
             <button

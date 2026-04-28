@@ -14,6 +14,13 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setError('')
     setMessage('')
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address.')
+      return
+    }
+
     setIsLoading(true)
 
     try {
