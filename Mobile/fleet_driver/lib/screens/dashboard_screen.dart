@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../core/storage.dart';
@@ -27,19 +28,24 @@ class _DashboardScreenState extends State<DashboardScreen>
   String? _activeTripId;
   GpsStatus _gpsStatus = const GpsStatus();
   int _unread = 0;
+  Timer? _uiUpdateTimer; // Periodic timer to force UI updates
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 5, vsync: this);
     _init();
+    _startUiUpdateTimer(); // Start aggressive UI update timer
   }
 
   Future<void> _init() async {
     _svc = await FleetService.create();
     _gps = GpsService();
     _gps.statusStream.listen((s) {
-      if (mounted) setState(() => _gpsStatus = s);
+      if (mounted) {
+        setState(() => _gpsStatus = s);
+        print('📍 Dashboard: GPS status updated - Speed: ${s.currentSpeed?.toStringAsFixed(1) ?? "N/A"} km/h');
+      }
     });
     final user = await Storage.getUser();
     setState(() {
@@ -50,6 +56,20 @@ class _DashboardScreenState extends State<DashboardScreen>
     _loadUnread();
   }
 
+  // Aggressive UI update timer - forces rebuild every 5 seconds
+  void _startUiUpdateTimer() {
+    _uiUpdateTimer?.cancel();
+    _uiUpdateTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (mounted && _activeTripId != null) {
+        // Force UI rebuild to show latest GPS data
+        setState(() {
+          // This forces a rebuild with current _gpsStatus
+          print('🔄 Forcing UI update - Speed: ${_gpsStatus.currentSpeed?.toStringAsFixed(1) ?? "N/A"} km/h, Last: ${_gpsStatus.lastPostedAt}');
+        });
+      }
+    });
+  }
+
   Future<void> _pollActiveTrip() async {
     if (_user == null) return;
     try {
@@ -58,14 +78,15 @@ class _DashboardScreenState extends State<DashboardScreen>
       if (tripId != _activeTripId) {
         setState(() => _activeTripId = tripId);
         if (tripId != null) {
+          // Auto-start GPS tracking for IN_PROGRESS trip
           await _gps.start(tripId);
         } else {
           await _gps.stop();
         }
       }
     } catch (_) {}
-    // Poll every 30s
-    Future.delayed(const Duration(seconds: 30), () {
+    // Poll every 5s to match GPS interval
+    Future.delayed(const Duration(seconds: 5), () {
       if (mounted) _pollActiveTrip();
     });
   }
@@ -228,6 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void dispose() {
+    _uiUpdateTimer?.cancel(); // Cancel timer
     _tabCtrl.dispose();
     _gps.dispose();
     super.dispose();

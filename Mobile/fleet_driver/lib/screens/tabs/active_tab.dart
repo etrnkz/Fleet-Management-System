@@ -21,12 +21,9 @@ class ActiveTab extends StatefulWidget {
   State<ActiveTab> createState() => _ActiveTabState();
 }
 
-class _ActiveTabState extends State<ActiveTab> with AutomaticKeepAliveClientMixin {
+class _ActiveTabState extends State<ActiveTab> {
   List<Map<String, dynamic>> _trips = [];
   bool _loading = true;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -37,7 +34,13 @@ class _ActiveTabState extends State<ActiveTab> with AutomaticKeepAliveClientMixi
   @override
   void didUpdateWidget(ActiveTab old) {
     super.didUpdateWidget(old);
-    if (old.activeTripId != widget.activeTripId) _load();
+    if (old.activeTripId != widget.activeTripId) {
+      _load();
+    }
+    // Always rebuild when GPS status changes to show fresh data
+    if (old.gpsStatus != widget.gpsStatus) {
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _load() async {
@@ -65,9 +68,13 @@ class _ActiveTabState extends State<ActiveTab> with AutomaticKeepAliveClientMixi
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final gps = widget.gpsStatus;
     final isShutdown = gps.geofenceStatus == GeofenceStatus.shutdown;
+    
+    // Debug: Print GPS updates to verify data is flowing
+    if (gps.currentSpeed != null) {
+      print('🚗 ActiveTab: Speed = ${gps.currentSpeed!.toStringAsFixed(1)} km/h, Last GPS = ${gps.lastPostedAt}');
+    }
 
     return RefreshIndicator(
       color: kPrimary,
@@ -198,14 +205,40 @@ class _ActiveTabState extends State<ActiveTab> with AutomaticKeepAliveClientMixi
                                 ),
                               ],
                               const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed: () => _showQr(trip),
-                                  icon: const Icon(Icons.qr_code, size: 18),
-                                  label: const Text('Show QR Code'),
+                              // Only show QR code button if trip is not IN_PROGRESS
+                              if (trip['state'] != 'IN_PROGRESS') ...[
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _showQr(trip),
+                                    icon: const Icon(Icons.qr_code, size: 18),
+                                    label: const Text('Show QR Code'),
+                                  ),
                                 ),
-                              ),
+                              ] else ...[
+                                // Show info message when trip is IN_PROGRESS
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFf0f9f4),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: kPrimary.withOpacity(0.2)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.info_outline, color: kPrimary, size: 16),
+                                      const SizedBox(width: 8),
+                                      const Expanded(
+                                        child: Text(
+                                          'Trip in progress - QR code not needed while traveling',
+                                          style: TextStyle(fontSize: 12, color: kTextSecondary),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),

@@ -26,8 +26,10 @@ class _GateScreenState extends State<GateScreen> {
   String _result = '—';
   bool _scanning = false;
   bool _sending = false;
-  // 'departure' = vehicle leaving, 'return' = vehicle returning
-  String _scanMode = 'departure';
+  bool _loadingTrips = false;
+  List<Map<String, dynamic>> _activeTrips = [];
+  List<Map<String, dynamic>> _scanHistory = [];
+  bool _showingHistory = false;
 
   @override
   void initState() {
@@ -102,9 +104,24 @@ class _GateScreenState extends State<GateScreen> {
     _setResult('Signed out');
   }
 
-  void _startScan(String mode) {
+  void _startSmartScan() {
     if (_token == null) { _setResult('Sign in first'); return; }
-    setState(() { _scanning = true; _scanMode = mode; });
+    setState(() { _scanning = true; });
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inSeconds < 60) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else {
+      return '${difference.inDays}d ago';
+    }
   }
 
   Future<void> _postGateScan(String qrPayload) async {
@@ -144,6 +161,104 @@ class _GateScreenState extends State<GateScreen> {
     }
   }
 
+  // Check trip state from QR code to determine appropriate action
+  Future<Map<String, dynamic>?> _getTripFromQR(String qrPayload) async {
+    try {
+      String tripId;
+      
+      // Handle different QR code formats
+      if (qrPayload.startsWith('{') && qrPayload.endsWith('}')) {
+        // JSON format: {"tripId":"uuid","requestNumber":"TR-xxx",...}
+        final qrData = jsonDecode(qrPayload) as Map<String, dynamic>;
+        tripId = qrData['tripId'] as String;
+        print('🔍 Parsed JSON QR: ${qrData['requestNumber']} (${qrData['action']})');
+      } else if (qrPayload.startsWith('TRIP:')) {
+        // Legacy format: "TRIP:uuid"
+        tripId = qrPayload.substring(5);
+      } else {
+        // Plain UUID format
+        tripId = qrPayload.trim();
+      }
+
+      print('🔍 Fetching trip details for ID: $tripId');
+
+      final res = await http.get(
+        Uri.parse('$_base/trips/$tripId'),
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 Trip fetch response: ${res.statusCode}');
+      
+      if (res.statusCode == 200) {
+        final trip = jsonDecode(res.body) as Map<String, dynamic>;
+        print('✅ Trip fetched: ${trip['requestNumber']} - ${trip['state']}');
+        return trip;
+      } else {
+        print('❌ Trip fetch failed: ${res.statusCode} - ${res.body}');
+      }
+    } catch (e) {
+      print('❌ Error fetching trip: $e');
+    }
+    return null;
+  }
+
+  Future<void> _handleSmartScan(String qrPayload) async {
+    setState(() { _scanning = false; _sending = true; _result = 'Checking trip state…'; });
+    
+    try {
+      final trip = await _getTripFromQR(qrPayload);
+      if (trip == null) {
+        _setResult('❌ Could not fetch trip information');
+        return;
+      }
+
+      final state = trip['state'] as String?;
+      final requestNumber = trip['requestNumber'] as String?;
+
+      if (state == 'READY') {
+        // Trip is ready for departure
+        _setResult('🚗 Departure scan for $requestNumber');
+        await _postGateScan(qrPayload);
+        _addToHistory(trip, 'DEPARTURE');
+      } else if (state == 'PENDING_RETURN') {
+        // Trip is waiting for return scan
+        _setResult('🏁 Return scan for $requestNumber');
+        await _postGateScan(qrPayload);
+        _addToHistory(trip, 'RETURN');
+      } else if (state == 'IN_PROGRESS') {
+        // Trip is in progress - no scan needed
+        _setResult('⚠️ Trip $requestNumber is IN PROGRESS\nVehicle is traveling. No scan needed until return.');
+      } else if (state == 'COMPLETED') {
+        // Trip already completed
+        _setResult('ℹ️ Trip $requestNumber is already COMPLETED');
+      } else {
+        // Other states
+        _setResult('ℹ️ Trip $requestNumber\nState: $state\nNo scan action available for this state.');
+      }
+    } catch (e) {
+      _setResult('Error: $e');
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  void _addToHistory(Map<String, dynamic> trip, String action) {
+    final historyEntry = {
+      ...trip,
+      'scanAction': action,
+      'scannedAt': DateTime.now().toIso8601String(),
+    };
+    setState(() {
+      _scanHistory.insert(0, historyEntry); // Add to beginning
+      if (_scanHistory.length > 50) {
+        _scanHistory = _scanHistory.sublist(0, 50); // Keep only last 50
+      }
+    });
+  }
+
   void _setResult(String msg) {
     if (mounted) setState(() => _result = msg);
   }
@@ -169,8 +284,8 @@ class _GateScreenState extends State<GateScreen> {
     if (_scanning) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(_scanMode == 'departure' ? 'Scan — Departure' : 'Scan — Return'),
-          backgroundColor: _scanMode == 'departure' ? kPrimary : const Color(0xFF1e40af),
+          title: const Text('Smart QR Scanner'),
+          backgroundColor: const Color(0xFF059669), // Green for smart scan
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => setState(() => _scanning = false),
@@ -182,7 +297,7 @@ class _GateScreenState extends State<GateScreen> {
               onDetect: (capture) {
                 final barcode = capture.barcodes.firstOrNull;
                 if (barcode?.rawValue != null) {
-                  _postGateScan(barcode!.rawValue!);
+                  _handleSmartScan(barcode!.rawValue!);
                 }
               },
             ),
@@ -194,14 +309,12 @@ class _GateScreenState extends State<GateScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    color: _scanMode == 'departure' ? kPrimary : const Color(0xFF1e40af),
+                    color: const Color(0xFF059669), // Green for smart scan
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  child: Text(
-                    _scanMode == 'departure'
-                        ? '🚗 Scan QR to start trip (departure)'
-                        : '🏁 Scan QR to complete trip (return)',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  child: const Text(
+                    '📱 Scan QR - Smart detection (departure/return)',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -309,44 +422,128 @@ class _GateScreenState extends State<GateScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // ── Scan Buttons ──────────────────────────────────────────────
-            const Text('Gate Actions', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            // ── Scan History ──────────────────────────────────
+            Row(
+              children: [
+                const Text('Recent Scans', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                const Spacer(),
+                if (_scanHistory.isNotEmpty)
+                  TextButton(
+                    onPressed: () => setState(() => _scanHistory.clear()),
+                    child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            
+            if (_scanHistory.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: const Center(
+                  child: Text(
+                    'No scans yet.\nScan QR codes to see history here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: kTextMuted, fontSize: 12),
+                  ),
+                ),
+              )
+            else
+              ...(_scanHistory.map((entry) {
+                final requestNumber = entry['requestNumber'] as String? ?? '';
+                final destination = entry['destination'] as String? ?? '';
+                final vehiclePlate = entry['allocatedVehicle']?['plateNumber'] as String? ?? '';
+                final scanAction = entry['scanAction'] as String? ?? '';
+                final scannedAt = DateTime.parse(entry['scannedAt'] as String);
+                final timeAgo = _getTimeAgo(scannedAt);
+                
+                final isDeparture = scanAction == 'DEPARTURE';
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDeparture ? const Color(0xFFf0f9f4) : const Color(0xFFfef3c7),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDeparture ? kPrimary.withOpacity(0.3) : const Color(0xFFf59e0b).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isDeparture ? Icons.directions_car : Icons.flag,
+                        color: isDeparture ? kPrimary : const Color(0xFFf59e0b),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              requestNumber,
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            Text(
+                              '$vehiclePlate → $destination',
+                              style: const TextStyle(fontSize: 11, color: kTextMuted),
+                            ),
+                            Text(
+                              timeAgo,
+                              style: const TextStyle(fontSize: 10, color: kTextMuted, fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDeparture ? kPrimary : const Color(0xFFf59e0b),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          scanAction,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList()),
+
+            const SizedBox(height: 20),
+
+            // ── Gate QR Scanner ──────────────────────────────────────────────
+            const Text('Gate Scanner', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             const SizedBox(height: 4),
             const Text(
-              'Use Departure when a vehicle leaves campus.\nUse Return when a vehicle comes back.',
+              'Smart QR scanning - automatically detects departure or return based on trip state.',
               style: TextStyle(fontSize: 12, color: kTextSecondary),
             ),
             const SizedBox(height: 12),
 
-            // Departure scan
+            // Single smart scan button - always available (gate's job to scan)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: (_token == null || _sending) ? null : () => _startScan('departure'),
+                onPressed: (_token == null || _sending) ? null : () => _startSmartScan(),
                 icon: _sending
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Icon(Icons.directions_car_outlined, size: 20),
-                label: const Text('🚗  Scan — Departure (Start Trip)'),
+                    : const Icon(Icons.qr_code_scanner, size: 20),
+                label: const Text('📱  Scan QR Code'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  minimumSize: const Size.fromHeight(56),
-                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Return scan
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: (_token == null || _sending) ? null : () => _startScan('return'),
-                icon: const Icon(Icons.flag_outlined, size: 20),
-                label: const Text('🏁  Scan — Return (Complete Trip)'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1e40af),
                   minimumSize: const Size.fromHeight(56),
                   textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
