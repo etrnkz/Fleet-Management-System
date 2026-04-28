@@ -1003,12 +1003,9 @@ export default function DashboardPage() {
 
               {/* Action Buttons */}
               <div className="mt-6 flex gap-3">
-                <button className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium">
-                  Take Action
-                </button>
                 <button 
                   onClick={closeAlertDetails}
-                  className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-4 py-3 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium"
                 >
                   Close
                 </button>
