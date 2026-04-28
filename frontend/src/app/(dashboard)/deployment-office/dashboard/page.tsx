@@ -61,10 +61,63 @@ export default function DashboardPage() {
     setTimeout(() => setShowToast(false), 3000)
   }
 
-  // Weekly trip counts by day
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-  const dayCounts = [1,2,3,4,5,6,0].map(d => approvedRequests.filter((t: any) => new Date(t.createdAt).getDay() === d).length)
-  const maxDay = Math.max(...dayCounts, 1)
+  // Filter allTrips by selected period and build chart data
+  const getPeriodStart = () => {
+    const now = new Date()
+    if (selectedPeriod === 'day') { const d = new Date(now); d.setHours(0,0,0,0); return d }
+    if (selectedPeriod === 'week') { const d = new Date(now); d.setDate(d.getDate() - 6); d.setHours(0,0,0,0); return d }
+    if (selectedPeriod === 'month') { const d = new Date(now); d.setDate(1); d.setHours(0,0,0,0); return d }
+    // year
+    return new Date(now.getFullYear(), 0, 1)
+  }
+
+  const periodTrips = allTrips.filter((t: any) => new Date(t.createdAt) >= getPeriodStart())
+
+  // Build bar chart labels + counts based on period
+  const chartData = (() => {
+    const now = new Date()
+    if (selectedPeriod === 'day') {
+      // 24 hours, grouped by hour
+      return Array.from({ length: 24 }, (_, h) => ({
+        label: `${String(h).padStart(2,'0')}h`,
+        count: periodTrips.filter((t: any) => new Date(t.createdAt).getHours() === h).length,
+      })).filter((_, i) => i % 3 === 0) // show every 3h to avoid clutter
+    }
+    if (selectedPeriod === 'week') {
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(now)
+        d.setDate(d.getDate() - (6 - i))
+        return {
+          label: dayNames[d.getDay()],
+          count: periodTrips.filter((t: any) => {
+            const td = new Date(t.createdAt)
+            return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth() && td.getDate() === d.getDate()
+          }).length,
+        }
+      })
+    }
+    if (selectedPeriod === 'month') {
+      // Group by week of month (week 1–5)
+      return Array.from({ length: 5 }, (_, i) => ({
+        label: `Wk ${i+1}`,
+        count: periodTrips.filter((t: any) => Math.floor((new Date(t.createdAt).getDate() - 1) / 7) === i).length,
+      }))
+    }
+    // year — last 12 months
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1)
+      return {
+        label: d.toLocaleString('default', { month: 'short' }),
+        count: periodTrips.filter((t: any) => {
+          const td = new Date(t.createdAt)
+          return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth()
+        }).length,
+      }
+    })
+  })()
+
+  const maxCount = Math.max(...chartData.map(d => d.count), 1)
 
   // Donut
   const circ = 2 * Math.PI * 40
@@ -136,19 +189,22 @@ export default function DashboardPage() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Fleet Utilization */}
+        {/* Trip Requests Chart */}
         <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h2 className="text-base font-bold text-gray-900 mb-4">Trip Requests by Day</h2>
-          <div className="space-y-3">
-            {days.map((day, idx) => {
-              const pct = Math.round((dayCounts[idx] / maxDay) * 100)
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold text-gray-900">Trip Requests</h2>
+            <span className="text-xs text-gray-400 capitalize">{selectedPeriod === 'day' ? 'Today' : selectedPeriod === 'week' ? 'Last 7 days' : selectedPeriod === 'month' ? 'This month' : 'This year'} · {periodTrips.length} total</span>
+          </div>
+          <div className="space-y-2">
+            {chartData.map((item) => {
+              const pct = Math.round((item.count / maxCount) * 100)
               return (
-                <div key={day} className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-gray-600 w-10">{day}</span>
+                <div key={item.label} className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-gray-600 w-10 flex-shrink-0">{item.label}</span>
                   <div className="flex-1 bg-gray-100 rounded-full h-7 overflow-hidden">
                     <div className="bg-[#1B3D2F] h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500"
-                      style={{ width: `${pct}%`, minWidth: dayCounts[idx] > 0 ? '20px' : '0' }}>
-                      {dayCounts[idx] > 0 && <span className="text-xs font-medium text-white">{dayCounts[idx]}</span>}
+                      style={{ width: `${pct}%`, minWidth: item.count > 0 ? '20px' : '0' }}>
+                      {item.count > 0 && <span className="text-xs font-medium text-white">{item.count}</span>}
                     </div>
                   </div>
                 </div>
