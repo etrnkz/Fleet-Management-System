@@ -36,6 +36,7 @@ export default function DashboardPage() {
   }
   const [makeInput, setMakeInput] = useState('')
   const [modelInput, setModelInput] = useState('')
+  const [vehiclePurchaseDate, setVehiclePurchaseDate] = useState('')
   const [makeSuggestions, setMakeSuggestions] = useState<string[]>([])
   const [modelSuggestions, setModelSuggestions] = useState<string[]>([])
   const [showMakeSuggestions, setShowMakeSuggestions] = useState(false)
@@ -234,6 +235,29 @@ export default function DashboardPage() {
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target as HTMLFormElement)
+
+    // Validate insurance expiry vs purchase date
+    const purchaseDateVal = formData.get('purchaseDate') as string
+    const insuranceExpiryVal = formData.get('insuranceExpiryDate') as string
+    if (insuranceExpiryVal) {
+      const expiry = new Date(insuranceExpiryVal)
+      if (purchaseDateVal) {
+        const purchase = new Date(purchaseDateVal)
+        purchase.setDate(purchase.getDate() + 1)
+        if (expiry < purchase) {
+          showToast('Insurance expiry must be at least 1 day after the purchase date', 'error')
+          return
+        }
+      } else {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        tomorrow.setHours(0, 0, 0, 0)
+        if (expiry < tomorrow) {
+          showToast('Insurance expiry must be a future date', 'error')
+          return
+        }
+      }
+    }
     
     try {
       const vehicleData: any = {
@@ -263,6 +287,7 @@ export default function DashboardPage() {
       setVehicleAddSuccess(true)
       setMakeInput('')
       setModelInput('')
+      setVehiclePurchaseDate('')
       setTimeout(() => {
         setShowAddVehicleForm(false)
         setVehicleAddSuccess(false)
@@ -1402,6 +1427,11 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     name="purchaseDate"
+                    value={vehiclePurchaseDate}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={e => {
+                      setVehiclePurchaseDate(e.target.value)
+                    }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
@@ -1413,8 +1443,20 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     name="insuranceExpiryDate"
+                    min={vehiclePurchaseDate ? (() => {
+                      const d = new Date(vehiclePurchaseDate)
+                      d.setDate(d.getDate() + 1)
+                      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                    })() : (() => {
+                      const d = new Date()
+                      d.setDate(d.getDate() + 1)
+                      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                    })()}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
+                  {vehiclePurchaseDate && (
+                    <p className="mt-1 text-xs text-gray-400">Must be after purchase date ({vehiclePurchaseDate})</p>
+                  )}
                 </div>
 
                 <div>
