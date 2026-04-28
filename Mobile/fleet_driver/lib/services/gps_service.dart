@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:vibration/vibration.dart';
 import '../core/api_client.dart';
 import '../core/storage.dart';
@@ -59,11 +58,10 @@ class GpsStatus {
 }
 
 class GpsService {
-  static const _minIntervalMs = 4000;
+  static const _minIntervalMs = 5000; // Send every 5 seconds
 
   final _statusController = StreamController<GpsStatus>.broadcast();
   StreamSubscription<Position>? _positionSub;
-  io.Socket? _socket;
   DateTime? _lastSent;
   GpsStatus _status = const GpsStatus();
   GeofenceStatus _prevGeofence = GeofenceStatus.clear;
@@ -87,15 +85,17 @@ class GpsService {
       return;
     }
 
-    // 2. Connect WebSocket
-    await _connectSocket(tripId);
+    // 2. Use REST API only - no WebSocket (more reliable)
+    print('📍 Starting GPS with REST API only');
+    print('🚫 WebSocket disabled - using REST API for better reliability');
 
     // 3. Start GPS stream
-    _emit(_status.copyWith(active: true));
+    _emit(_status.copyWith(active: true, connected: true)); // Mark as connected since we're using REST
     _positionSub = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5,
+        distanceFilter: 1, // Update every 1 meter
+        timeLimit: Duration(seconds: 1), // Force update every second
       ),
     ).listen(
       (pos) => _onPosition(tripId, pos),
@@ -103,109 +103,51 @@ class GpsService {
     );
   }
 
-  Future<void> _connectSocket(String tripId) async {
-    final base = await Storage.getApiBase() ?? kDefaultApiBase;
-    final token = await Storage.getAccessToken();
-
-    // Strip /api/v1 to get the socket server root
-    final wsUrl = base.replaceAll(RegExp(r'/api/v\d+$'), '');
-
-    _socket = io.io(
-      '$wsUrl/tracking',
-      io.OptionBuilder()
-          .setTransports(['websocket'])
-          .enableAutoConnect()
-          .enableReconnection()
-          .setReconnectionAttempts(999)
-          .setReconnectionDelay(2000)
-          .setExtraHeaders(token != null ? {'Authorization': 'Bearer $token'} : {})
-          .setQuery({'token': token ?? ''})
-          .build(),
-    );
-
-    _socket!.onConnect((_) {
-      _emit(_status.copyWith(connected: true, lastError: null));
-      // Join the trip room so we receive geofence responses
-      _socket!.emit('join-trip', {'tripId': tripId});
-    });
-
-    _socket!.onDisconnect((_) {
-      _emit(_status.copyWith(connected: false));
-    });
-
-    _socket!.onConnectError((e) {
-      _emit(_status.copyWith(
-        connected: false,
-        lastError: 'WebSocket connection failed: $e',
-      ));
-    });
-
-    // Listen for location-update ack from server (contains geofence status)
-    _socket!.on('location-update', (data) {
-      if (data is Map) {
-        final loc = data['location'] as Map?;
-        if (loc != null) _handleServerResponse(loc);
-      }
-    });
-
-    _socket!.connect();
-  }
-
-  void _handleServerResponse(Map<dynamic, dynamic> loc) {
-    final geoStr = loc['geofenceStatus'] as String? ?? 'clear';
-    final geo = _parseGeo(geoStr);
-    final zoneName = loc['violationZoneName'] as String?;
-
-    // Haptic on shutdown trigger
-    if (geo == GeofenceStatus.shutdown && _prevGeofence != GeofenceStatus.shutdown) {
-      Vibration.vibrate(pattern: [0, 500, 200, 500, 200, 500]);
-    }
-    _prevGeofence = geo;
-
-    _emit(_status.copyWith(
-      lastPostedAt: DateTime.now(),
-      lastError: null,
-      geofenceStatus: geo,
-      violationZoneName: zoneName,
-    ));
-  }
-
   Future<void> _onPosition(String tripId, Position pos) async {
+    // ALWAYS update UI immediately with current position and speed
+    // This ensures UI gets fresh data even if we don't send to backend
+    final now = DateTime.now();
     _emit(_status.copyWith(
       currentPosition: pos,
       currentSpeed: pos.speed >= 0 ? pos.speed * 3.6 : null,
       currentHeading: pos.heading,
+      lastPostedAt: now, // Update timestamp on every position change
     ));
+    
+    print('📍 GPS Position: ${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)} @ ${(pos.speed * 3.6).toStringAsFixed(1)} km/h');
 
-    final now = DateTime.now();
+    // But only send to backend every 5 seconds to save battery/network
     if (_lastSent != null &&
-        now.difference(_lastSent!).inMilliseconds < _minIntervalMs) return;
+        now.difference(_lastSent!).inMilliseconds < _minIntervalMs) {
+      print('⏭️  Skipping backend send (too soon)');
+      return;
+    }
     _lastSent = now;
 
-    final payload = <String, dynamic>{
-      'tripId': tripId,
-      'location': {
+    // Use REST API only - no WebSocket
+    try {
+      final base = await Storage.getApiBase() ?? kDefaultApiBase;
+      final token = await Storage.getAccessToken();
+      
+      final api = ApiClient(base);
+      await api.post('/tracking/$tripId/location', {
         'latitude': pos.latitude,
         'longitude': pos.longitude,
-        'metadata': {'source': 'flutter-driver-ws'},
+        'metadata': {'source': 'flutter-driver-rest'},
         if (pos.speed >= 0) 'speed': pos.speed * 3.6,
         if (pos.heading != 0) 'heading': pos.heading,
         if (pos.altitude != 0) 'altitude': pos.altitude,
         if (pos.accuracy > 0) 'accuracy': pos.accuracy,
-      },
-    };
-
-    if (_socket != null && _socket!.connected) {
-      // Send via WebSocket
-      _socket!.emitWithAck('update-location', payload, ack: (response) {
-        if (response is Map) {
-          final loc = response['location'] as Map?;
-          if (loc != null) _handleServerResponse(loc);
-        }
       });
-    } else {
-      // Fallback to REST if socket is disconnected
-      _emit(_status.copyWith(lastError: 'WebSocket disconnected — retrying…'));
+      
+      print('✅ GPS sent to backend: ${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)} @ ${(pos.speed * 3.6).toStringAsFixed(1)} km/h');
+      
+      _emit(_status.copyWith(
+        lastError: null,
+      ));
+    } catch (e) {
+      print('❌ Failed to send GPS to backend: $e');
+      _emit(_status.copyWith(lastError: 'Failed to send location: $e'));
     }
   }
 
@@ -213,15 +155,7 @@ class GpsService {
     await _positionSub?.cancel();
     _positionSub = null;
 
-    if (_socket != null) {
-      if (_currentTripId != null) {
-        _socket!.emit('leave-trip', {'tripId': _currentTripId});
-      }
-      _socket!.disconnect();
-      _socket!.dispose();
-      _socket = null;
-    }
-
+    // No WebSocket to disconnect - REST API only
     _currentTripId = null;
     _status = const GpsStatus();
     _prevGeofence = GeofenceStatus.clear;

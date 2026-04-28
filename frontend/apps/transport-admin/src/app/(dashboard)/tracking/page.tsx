@@ -114,6 +114,7 @@ export default function LiveTrackingPage() {
   const [zoneRadius, setZoneRadius] = useState(500)
   const [showGeofenceModal, setShowGeofenceModal] = useState(false)
   const [routePoints, setRoutePoints] = useState<RoutePoint[]>([])
+  const [wsConnected, setWsConnected] = useState(false)
   const [tripStats, setTripStats] = useState<{
     distance: number
     fuelUsed: number
@@ -347,17 +348,42 @@ export default function LiveTrackingPage() {
 
     // WebSocket for real-time updates
     const token = typeof window !== 'undefined'
-      ? (localStorage.getItem('accessToken') || localStorage.getItem('access_token'))
+      ? (localStorage.getItem('accessToken') ||
+         sessionStorage.getItem('accessToken') ||
+         localStorage.getItem('access_token') ||
+         sessionStorage.getItem('access_token'))
       : null
     
     if (token) {
       socketRef.current = io(`${WS_URL}/tracking`, {
         auth: { token },
-        transports: ['websocket']
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000,
+        timeout: 20000,
       })
 
       socketRef.current.on('connect', () => {
-        console.log('WebSocket connected')
+        console.log('WebSocket connected:', socketRef.current?.id)
+        setWsConnected(true)
+        socketRef.current?.emit('join-live')
+      })
+
+      socketRef.current.on('disconnect', (reason) => {
+        console.log('WebSocket disconnected:', reason)
+        setWsConnected(false)
+      })
+
+      socketRef.current.on('connect_error', (err) => {
+        console.warn('WebSocket connect error:', err.message)
+        setWsConnected(false)
+      })
+
+      socketRef.current.on('reconnect', (attempt) => {
+        console.log('WebSocket reconnected after', attempt, 'attempts')
+        setWsConnected(true)
         socketRef.current?.emit('join-live')
       })
 
@@ -420,6 +446,7 @@ export default function LiveTrackingPage() {
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect()
+        socketRef.current = null
       }
     }
   }, [])
@@ -494,6 +521,13 @@ export default function LiveTrackingPage() {
             <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
               <span className="text-sm font-medium text-gray-700">{trips.length} Active</span>
+            </div>
+
+            <div className={`flex items-center gap-2 px-4 py-2 border rounded-lg ${wsConnected ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
+              <span className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></span>
+              <span className={`text-sm font-medium ${wsConnected ? 'text-green-700' : 'text-yellow-700'}`}>
+                {wsConnected ? 'Live' : 'Reconnecting...'}
+              </span>
             </div>
             
             <button 

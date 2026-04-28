@@ -395,11 +395,10 @@ export const trackingApi = {
     }),
 };
 
-// WebSocket URL for real-time tracking
-const WS_BASE_URL = (
+// WebSocket base URL (no namespace — namespace is appended by the socket client)
+export const WS_URL = (
   process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000'
-).replace(/\/$/, '');
-export const WS_URL = WS_BASE_URL.endsWith('/tracking') ? WS_BASE_URL : `${WS_BASE_URL}/tracking`;
+).replace(/\/$/, '').replace(/\/tracking$/, '');
 
 // Invite APIs
 export const inviteApi = {

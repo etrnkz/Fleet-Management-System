@@ -179,15 +179,18 @@ class _TripCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: onQr,
-                    icon: const Icon(Icons.qr_code, size: 16),
-                    label: const Text('QR Code'),
-                    style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
+                // Only show QR code button if trip is not IN_PROGRESS
+                if (trip['state'] != 'IN_PROGRESS') ...[
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: onQr,
+                      icon: const Icon(Icons.qr_code, size: 16),
+                      label: const Text('QR Code'),
+                      style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
+                  const SizedBox(width: 10),
+                ],
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: onReject,
@@ -201,6 +204,31 @@ class _TripCard extends StatelessWidget {
                 ),
               ],
             ),
+            // Show info message when trip is IN_PROGRESS
+            if (trip['state'] == 'IN_PROGRESS') ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf0f9f4),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: kPrimary.withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.navigation, color: kPrimary, size: 14),
+                    const SizedBox(width: 6),
+                    const Expanded(
+                      child: Text(
+                        'Trip in progress - Vehicle is traveling',
+                        style: TextStyle(fontSize: 11, color: kTextSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
