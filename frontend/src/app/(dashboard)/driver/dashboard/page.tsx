@@ -69,6 +69,24 @@ export default function DriverDashboard() {
   useEffect(() => { loadAll() }, [])
   useEffect(() => { const id = setInterval(loadActiveTrips, 45_000); return () => clearInterval(id) }, [])
 
+  // Auto-close QR modal when gate scans it (trip moves READY → IN_PROGRESS)
+  useEffect(() => {
+    if (!qrTrip) return
+    const tripId = qrTrip.id
+    const id = setInterval(async () => {
+      try {
+        const trip = await tripApi.getById(tripId) as any
+        if (trip?.state === 'IN_PROGRESS' || trip?.state === 'COMPLETED') {
+          setQrTrip(null)
+          setToast({ message: 'Trip started — QR scanned by gate keeper', type: 'success' })
+          setTimeout(() => setToast(null), 4000)
+        }
+      } catch {}
+    }, 3000)
+    return () => clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrTrip?.id])
+
   // Poll assigned vehicle every 30s to detect assignment/revocation
   useEffect(() => {
     const poll = async () => {
