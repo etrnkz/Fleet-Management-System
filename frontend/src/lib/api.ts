@@ -141,7 +141,7 @@ export const tripApi = {
   rejectTransport: (id: string, data: { reason: string }) =>
     apiFetch(`/trips/${id}/reject-transport`, { method: 'POST', body: JSON.stringify(data) }),
   rejectAssignment: (id: string, data: { reason: string }) =>
-    apiFetch(`/trips/${id}/reject`, { method: 'POST', body: JSON.stringify(data) }),
+    apiFetch(`/trips/${id}/driver-reject`, { method: 'POST', body: JSON.stringify(data) }),
   complete: (id: string, data: any) =>
     apiFetch(`/trips/${id}/complete`, { method: 'POST', body: JSON.stringify(data) }),
   completeTrip: (id: string, data: any) =>
