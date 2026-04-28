@@ -175,6 +175,9 @@ export default function FuelPage() {
             e.preventDefault()
             const p = parseFloat(petrolPrice)
             const d = parseFloat(dieselPrice)
+            if (isNaN(p) || p <= 0) { setToast({ message: 'Petrol price must be a positive number', type: 'error' }); return }
+            if (isNaN(d) || d <= 0) { setToast({ message: 'Diesel price must be a positive number', type: 'error' }); return }
+            if (p > 10000 || d > 10000) { setToast({ message: 'Price seems too high — please check the value', type: 'error' }); return }
             if (!isNaN(p) && !isNaN(d) && p > 0 && d > 0) {
               saveFuelPrices({ petrol: p, diesel: d })
               setPriceSaved(true)

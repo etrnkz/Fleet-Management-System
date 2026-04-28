@@ -46,10 +46,41 @@ const COUNTRY_CODES = [
 function validatePhone(code: string, number: string): string {
   const digits = number.replace(/\D/g, '')
   if (!digits) return ''
-  if (digits.length < 7) return 'Too short — minimum 7 digits'
-  if (digits.length > 12) return 'Too long — maximum 12 digits'
-  if (code === '+251' && digits.length === 9 && !/^[917]/.test(digits))
-    return 'Ethiopian numbers start with 9, 7, or 1'
+
+  // Per-country rules: [minDigits, maxDigits, pattern?, patternMessage?]
+  const rules: Record<string, { min: number; max: number; pattern?: RegExp; msg?: string }> = {
+    '+251': { min: 9,  max: 9,  pattern: /^[917]/, msg: 'Ethiopian numbers must start with 9, 7, or 1 and be exactly 9 digits' },
+    '+1':   { min: 10, max: 10, pattern: /^[2-9]/, msg: 'US/Canada numbers must be exactly 10 digits and not start with 0 or 1' },
+    '+44':  { min: 10, max: 10, pattern: /^[1-9]/,  msg: 'UK numbers must be exactly 10 digits' },
+    '+49':  { min: 10, max: 11, msg: 'German numbers must be 10–11 digits' },
+    '+33':  { min: 9,  max: 9,  pattern: /^[1-9]/, msg: 'French numbers must be exactly 9 digits' },
+    '+254': { min: 9,  max: 9,  pattern: /^[17]/,  msg: 'Kenyan numbers must start with 7 or 1 and be exactly 9 digits' },
+    '+256': { min: 9,  max: 9,  pattern: /^[37]/,  msg: 'Ugandan numbers must start with 3 or 7 and be exactly 9 digits' },
+    '+255': { min: 9,  max: 9,  pattern: /^[67]/,  msg: 'Tanzanian numbers must start with 6 or 7 and be exactly 9 digits' },
+    '+20':  { min: 10, max: 10, pattern: /^[1]/,   msg: 'Egyptian numbers must start with 1 and be exactly 10 digits' },
+    '+27':  { min: 9,  max: 9,  pattern: /^[6-8]/, msg: 'South African numbers must start with 6, 7, or 8 and be exactly 9 digits' },
+    '+234': { min: 10, max: 10, pattern: /^[7-9]/, msg: 'Nigerian numbers must start with 7, 8, or 9 and be exactly 10 digits' },
+    '+91':  { min: 10, max: 10, pattern: /^[6-9]/, msg: 'Indian numbers must start with 6–9 and be exactly 10 digits' },
+    '+971': { min: 9,  max: 9,  pattern: /^[5]/,   msg: 'UAE mobile numbers must start with 5 and be exactly 9 digits' },
+  }
+
+  const rule = rules[code]
+  if (!rule) {
+    // Generic fallback for unlisted codes
+    if (digits.length < 7) return 'Too short — minimum 7 digits'
+    if (digits.length > 12) return 'Too long — maximum 12 digits'
+    return ''
+  }
+
+  if (digits.length < rule.min || digits.length > rule.max) {
+    const range = rule.min === rule.max ? `exactly ${rule.min}` : `${rule.min}–${rule.max}`
+    return rule.msg || `Must be ${range} digits for ${code}`
+  }
+
+  if (rule.pattern && !rule.pattern.test(digits)) {
+    return rule.msg || `Invalid format for ${code}`
+  }
+
   return ''
 }
 

@@ -57,6 +57,9 @@ export default function UsersPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.name.trim()) { showToast('Full name is required', 'error'); return }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { showToast('Please enter a valid email address', 'error'); return }
+    if (form.password.length < 8) { showToast('Password must be at least 8 characters', 'error'); return }
     setActionLoading('create')
     try {
       await systemAdminApi.createUser(form)

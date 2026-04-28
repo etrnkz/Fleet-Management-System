@@ -130,6 +130,27 @@ export default function SignupPage() {
       return
     }
 
+    if (formData.password.length < 8) {
+      showToast('Password must be at least 8 characters', 'error')
+      return
+    }
+
+    if (!formData.fullName.trim()) {
+      showToast('Full name is required', 'error')
+      return
+    }
+
+    if (!formData.employeeId.trim()) {
+      showToast('Employee ID is required', 'error')
+      return
+    }
+
+    const phoneDigits = formData.phone.replace(/\D/g, '')
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+      showToast('Please enter a valid phone number', 'error')
+      return
+    }
+
     if (!formData.agreeToTerms) {
       showToast('Please agree to the terms and conditions', 'error')
       return
