@@ -87,17 +87,10 @@ rectangle "Fleet Management System" {
   usecase "View Audit Logs" as UC_AUDIT
 
   ' ════════════════════════════════════════════════════
-  ' <<include>> — only the most critical mandatory steps
+  ' <<include>> — mandatory sub-steps
   ' ════════════════════════════════════════════════════
 
-  ' Login is required before any action
-  UC_SUBMIT  ..> UC_LOGIN : <<include>>
-  UC_APPROVE ..> UC_LOGIN : <<include>>
-  UC_ALLOC   ..> UC_LOGIN : <<include>>
-  UC_ACCEPT  ..> UC_LOGIN : <<include>>
-  UC_SCANDEP ..> UC_LOGIN : <<include>>
-
-  ' Forgot password always leads to Reset Password
+  ' Forgot password flow includes reset as mandatory next step
   UC_FORGOT ..> UC_RESET : <<include>>
 
   ' Approve/Reject requires viewing the pending list first
@@ -207,8 +200,9 @@ TRIP EXECUTION
 
 | Relationship | Type | Meaning |
 |---|---|---|
-| Any protected use case → Login | `<<include>>` | Must authenticate first |
-| Forgot Password → Reset Password | `<<include>>` | Reset is the mandatory next step |
-| Approve / Reject → View Pending Approvals | `<<include>>` | Must see the list before acting |
-| Scan Return QR → Provide Feedback | `<<extend>>` | Feedback unlocked only on completion |
+| Forgot Password → Reset Password | `<<include>>` | Reset is the mandatory next step in the forgot flow |
+| Approve / Reject → View Pending Approvals | `<<include>>` | Must see the list before acting on a trip |
+| Scan Return QR → Provide Feedback | `<<extend>>` | Feedback unlocked only after trip completes |
 | Scan Departure QR → Live Tracking | `<<extend>>` | Tracking activates only when trip starts |
+
+> Each actor connects directly to **Login** — this shows that authentication is required before accessing any use case. No `<<include>>` arrows to Login are needed because the actor-to-Login association already expresses this.

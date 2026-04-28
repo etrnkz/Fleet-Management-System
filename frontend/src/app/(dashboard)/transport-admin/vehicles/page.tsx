@@ -248,7 +248,7 @@ export default function VehiclesPage() {
           <Combobox
             value={searchQuery}
             onChange={setSearchQuery}
-            options={[...new Set(vehicles.flatMap(v => [v.plateNumber, v.make, v.model].filter(Boolean)))]}
+            options={Array.from(new Set(vehicles.flatMap(v => [v.plateNumber, v.make, v.model].filter(Boolean) as string[])))}
             placeholder="Search by plate, make, or model..."
           />
 
@@ -286,211 +286,121 @@ export default function VehiclesPage() {
         </div>
       </div>
 
-      {/* Mobile / Tablet Card View */}
-      <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-3">
-        {filteredVehicles.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center md:col-span-2">
-            <svg className="w-12 h-12 text-gray-300 mb-3 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p className="text-gray-500 font-medium text-sm">No vehicles found</p>
-            <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
-          </div>
-        ) : (
-          filteredVehicles.map((vehicle) => (
-            <div key={vehicle.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-gray-900 truncate">{vehicle.plateNumber}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{vehicle.vehicleId || 'N/A'}</p>
-                </div>
-                <div className="ml-2">
-                  {vehicle.onTrip ? (
-                    <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700 whitespace-nowrap">
-                      On Duty
-                    </span>
-                  ) : (
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap ${getStatusColor(vehicle.status)}`}>
-                      {vehicle.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Make & Model</p>
-                  <p className="text-xs font-medium text-gray-900">{vehicle.make}</p>
-                  <p className="text-[10px] text-gray-500">{vehicle.model} ({vehicle.year})</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Type</p>
-                  <p className="text-xs font-medium text-gray-900">{vehicle.vehicleType || 'N/A'}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Driver</p>
-                  {vehicle.assignedDriver?.user?.name ? (
-                    <>
-                      <p className="text-xs font-medium text-gray-900">{vehicle.assignedDriver.user.name}</p>
-                      <p className="text-[10px] text-gray-500">{vehicle.assignedDriver.licenseNumber || 'N/A'}</p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-gray-400 italic">No driver</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Fuel Type</p>
-                  <p className="text-xs font-medium text-gray-900">{vehicle.fuelType}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Mileage</p>
-                  <p className="text-xs font-medium text-gray-900">{vehicle.currentMileage ? `${vehicle.currentMileage.toLocaleString()} km` : 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">VIP Zone</p>
-                  {vehicle.vipGeoRestrictionEnabled ? (
-                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800">
-                      On ({Array.isArray(vehicle.restrictedZones) ? vehicle.restrictedZones.length : 0})
-                    </span>
-                  ) : (
-                    <span className="text-xs text-gray-400">Off</span>
-                  )}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => openGeofenceEditor(vehicle)}
-                className="w-full mt-2 px-3 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-xs font-medium"
-              >
-                Manage VIP Zones
-              </button>
-            </div>
-          ))
-        )}
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 md:col-span-2">
-          <p className="text-xs text-gray-600">Showing {filteredVehicles.length} of {vehicles.length} vehicles</p>
-          <button onClick={loadVehicles} className="flex items-center gap-2 px-3 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-xs font-medium">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Desktop Table View */}
-      <div className="hidden lg:flex flex-1 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-col">
-        <div className="overflow-x-auto flex-1">
-          <table className="w-full" style={{ minWidth: '1200px' }}>
-            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+      {/* Single responsive table — works at any viewport width or zoom level */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-sm" style={{ minWidth: '640px' }}>
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '100px' }}>Vehicle ID</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '120px' }}>Plate Number</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '150px' }}>Make & Model</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '80px' }}>Type</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '100px' }}>Status</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '120px' }}>Driver</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '90px' }}>Fuel Type</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '100px' }}>Mileage</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '90px' }}>VIP zone</th>
-                <th className="px-2 lg:px-3 xl:px-4 py-3 text-left text-[10px] lg:text-xs font-semibold text-gray-600 uppercase tracking-wider" style={{ minWidth: '100px' }}>Actions</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Plate / ID</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Make & Model</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">Type</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">Driver</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden md:table-cell">Fuel</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">Mileage</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">VIP Zone</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-gray-100 bg-white">
               {filteredVehicles.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center">
-                      <svg className="w-12 h-12 xl:w-16 xl:h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      <p className="text-gray-500 font-medium text-sm xl:text-base">No vehicles found</p>
-                      <p className="text-xs xl:text-sm text-gray-400 mt-1">Try adjusting your filters or add a new vehicle</p>
-                    </div>
+                  <td colSpan={9} className="px-6 py-12 text-center">
+                    <svg className="w-12 h-12 text-gray-300 mb-3 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <p className="text-gray-500 font-medium text-sm">No vehicles found</p>
+                    <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
                   </td>
                 </tr>
               ) : (
                 filteredVehicles.map((vehicle) => (
-                <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    <span className="text-xs xl:text-sm font-semibold text-gray-900 block">{vehicle.vehicleId || vehicle.plateNumber}</span>
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    <span className="text-xs xl:text-sm text-gray-900 font-medium block">{vehicle.plateNumber}</span>
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    <div className="flex flex-col">
-                      <span className="text-xs xl:text-sm text-gray-900 font-medium">{vehicle.make}</span>
-                      <span className="text-[10px] xl:text-xs text-gray-500">{vehicle.model} ({vehicle.year})</span>
-                    </div>
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    <span className="text-xs xl:text-sm text-gray-600 block">{vehicle.vehicleType || 'N/A'}</span>
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    {vehicle.onTrip ? (
-                      <span className="inline-block px-2 xl:px-3 py-1 rounded-full text-[10px] xl:text-xs font-medium bg-blue-100 text-blue-700 whitespace-nowrap">
-                        On Duty
+                  <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
+                    {/* Plate / ID — always visible */}
+                    <td className="px-3 py-3">
+                      <p className="font-semibold text-gray-900 text-xs leading-tight">{vehicle.plateNumber}</p>
+                      <p className="text-gray-400 text-[11px] leading-tight mt-0.5">{vehicle.vehicleId || '—'}</p>
+                    </td>
+
+                    {/* Make & Model — always visible */}
+                    <td className="px-3 py-3">
+                      <p className="font-medium text-gray-900 text-xs leading-tight">{vehicle.make}</p>
+                      <p className="text-gray-500 text-[11px] leading-tight mt-0.5">{vehicle.model} · {vehicle.year}</p>
+                    </td>
+
+                    {/* Type — hidden on xs */}
+                    <td className="px-3 py-3 hidden sm:table-cell">
+                      <span className="text-xs text-gray-600">{vehicle.vehicleType || '—'}</span>
+                    </td>
+
+                    {/* Status — always visible */}
+                    <td className="px-3 py-3">
+                      {vehicle.onTrip ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-100 text-blue-700 whitespace-nowrap">On Duty</span>
+                      ) : (
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${getStatusColor(vehicle.status)}`}>
+                          {vehicle.status}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Driver — hidden on sm and below */}
+                    <td className="px-3 py-3 hidden md:table-cell">
+                      {vehicle.assignedDriver?.user?.name ? (
+                        <>
+                          <p className="text-xs font-medium text-gray-900 leading-tight">{vehicle.assignedDriver.user.name}</p>
+                          <p className="text-[11px] text-gray-400 leading-tight mt-0.5">{vehicle.assignedDriver.licenseNumber || '—'}</p>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">No driver</span>
+                      )}
+                    </td>
+
+                    {/* Fuel — hidden on sm and below */}
+                    <td className="px-3 py-3 hidden md:table-cell">
+                      <span className="text-xs text-gray-600">{vehicle.fuelType}</span>
+                    </td>
+
+                    {/* Mileage — hidden on md and below */}
+                    <td className="px-3 py-3 hidden lg:table-cell">
+                      <span className="text-xs text-gray-600">
+                        {vehicle.currentMileage ? `${Number(vehicle.currentMileage).toLocaleString()} km` : '—'}
                       </span>
-                    ) : (
-                      <span className={`inline-block px-2 xl:px-3 py-1 rounded-full text-[10px] xl:text-xs font-medium whitespace-nowrap ${getStatusColor(vehicle.status)}`}>
-                        {vehicle.status}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    {vehicle.assignedDriver?.user?.name ? (
-                      <div className="flex flex-col">
-                        <span className="text-xs xl:text-sm text-gray-900 font-medium">{vehicle.assignedDriver.user.name}</span>
-                        <span className="text-[10px] xl:text-xs text-gray-500">{vehicle.assignedDriver.licenseNumber || 'N/A'}</span>
-                      </div>
-                    ) : (
-                      <span className="text-xs xl:text-sm text-gray-400 italic">No driver</span>
-                    )}
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    <span className="text-xs xl:text-sm text-gray-600 block">{vehicle.fuelType}</span>
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    <span className="text-xs xl:text-sm text-gray-600 block">{vehicle.currentMileage ? `${vehicle.currentMileage.toLocaleString()} km` : 'N/A'}</span>
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    {vehicle.vipGeoRestrictionEnabled ? (
-                      <span className="inline-block px-2 py-1 rounded text-[10px] xl:text-xs font-medium bg-amber-100 text-amber-800 whitespace-nowrap">
-                        On ({Array.isArray(vehicle.restrictedZones) ? vehicle.restrictedZones.length : 0})
-                      </span>
-                    ) : (
-                      <span className="text-[10px] xl:text-xs text-gray-400">Off</span>
-                    )}
-                  </td>
-                  <td className="px-2 lg:px-3 xl:px-4 py-3 xl:py-4">
-                    <button
-                      type="button"
-                      onClick={() => openGeofenceEditor(vehicle)}
-                      className="text-xs xl:text-sm font-medium text-[#1B3D2F] hover:text-[#152e22] hover:underline whitespace-nowrap"
-                    >
-                      VIP / zones
-                    </button>
-                  </td>
-                </tr>
-              ))
+                    </td>
+
+                    {/* VIP Zone — hidden on xs */}
+                    <td className="px-3 py-3 hidden sm:table-cell">
+                      {vehicle.vipGeoRestrictionEnabled ? (
+                        <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 whitespace-nowrap">
+                          On · {Array.isArray(vehicle.restrictedZones) ? vehicle.restrictedZones.length : 0}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-gray-400">Off</span>
+                      )}
+                    </td>
+
+                    {/* Actions — always visible */}
+                    <td className="px-3 py-3">
+                      <button
+                        type="button"
+                        onClick={() => openGeofenceEditor(vehicle)}
+                        className="text-xs font-medium text-[#1B3D2F] hover:underline whitespace-nowrap"
+                      >
+                        VIP Zones
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
 
-        <div className="px-3 xl:px-6 py-3 xl:py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50">
-          <p className="text-xs xl:text-sm text-gray-600">Showing {filteredVehicles.length} of {vehicles.length} vehicles</p>
-          <button onClick={loadVehicles} className="flex items-center gap-2 px-3 xl:px-4 py-2 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-xs xl:text-sm font-medium whitespace-nowrap">
-            <svg className="w-3 h-3 xl:w-4 xl:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="px-4 py-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2 bg-gray-50">
+          <p className="text-xs text-gray-600">Showing {filteredVehicles.length} of {vehicles.length} vehicles</p>
+          <button onClick={loadVehicles} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-xs font-medium">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Refresh
