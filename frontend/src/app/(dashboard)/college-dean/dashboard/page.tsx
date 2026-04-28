@@ -190,6 +190,12 @@ export default function DashboardPage() {
       const startDateTime = `${formData.departureDate}T${formData.departureTime}:00`
       const endDateTime = `${formData.returnDate}T${formData.departureTime}:00`
 
+      const hoursUntilStart = (new Date(startDateTime).getTime() - Date.now()) / (1000 * 60 * 60)
+      if (hoursUntilStart < 48) {
+        showToast('Departure date must be at least 48 hours from now', 'error')
+        return
+      }
+
       const tripDays = (new Date(endDateTime).getTime() - new Date(startDateTime).getTime()) / (1000 * 60 * 60 * 24)
       if (tripDays > 30) {
         showToast('Trip duration cannot exceed 30 days', 'error')
@@ -776,9 +782,15 @@ export default function DashboardPage() {
                           name="departureDate"
                           value={formData.departureDate}
                           onChange={handleInputChange}
+                          min={(() => {
+                            const d = new Date()
+                            d.setHours(d.getHours() + 48)
+                            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                          })()}
                           className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
+                        <p className="mt-1 text-xs text-amber-600">Must be at least 48 hours from now</p>
                       </div>
 
                       <div>

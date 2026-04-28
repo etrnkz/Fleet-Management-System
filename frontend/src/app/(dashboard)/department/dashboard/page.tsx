@@ -6,7 +6,16 @@ import ConfirmModal from '@/components/ConfirmModal'
 import Toast from '@/components/Toast'
 import { tripApi, vehicleApi, auditApi, getCurrentUser } from '@/lib/api'
 
-const minDateTime = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().slice(0, 16)
+const minDateTime = (() => {
+  const d = new Date()
+  d.setHours(d.getHours() + 48)
+  const yyyy = d.getFullYear()
+  const mo = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${yyyy}-${mo}-${dd}T${hh}:${mm}`
+})()
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -89,6 +98,10 @@ export default function DashboardPage() {
     }
     if (new Date(tripForm.endDateTime) <= new Date(tripForm.startDateTime)) {
       showToast('End date must be after start date', 'error'); return
+    }
+    const tripDays = (new Date(tripForm.endDateTime).getTime() - new Date(tripForm.startDateTime).getTime()) / (1000 * 60 * 60 * 24)
+    if (tripDays > 30) {
+      showToast('Trip duration cannot exceed 30 days', 'error'); return
     }
     setSubmittingTrip(true)
     try {
@@ -229,6 +242,12 @@ export default function DashboardPage() {
       // Combine date and time for startDateTime
       const startDateTime = `${formData.departureDate}T${formData.departureTime}:00`
       const endDateTime = `${formData.returnDate}T${formData.departureTime}:00`
+
+      const hoursUntilStart = (new Date(startDateTime).getTime() - Date.now()) / (1000 * 60 * 60)
+      if (hoursUntilStart < 48) {
+        showToast('Departure date must be at least 48 hours from now', 'error')
+        return
+      }
 
       const tripDays = (new Date(endDateTime).getTime() - new Date(startDateTime).getTime()) / (1000 * 60 * 60 * 24)
       if (tripDays > 30) {
@@ -759,9 +778,15 @@ export default function DashboardPage() {
                           name="departureDate"
                           value={formData.departureDate}
                           onChange={handleInputChange}
+                          min={(() => {
+                            const d = new Date()
+                            d.setHours(d.getHours() + 48)
+                            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                          })()}
                           className="w-full px-3 md:px-4 py-2 md:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none text-xs md:text-sm"
                           required
                         />
+                        <p className="mt-1 text-xs text-amber-600">Must be at least 48 hours from now</p>
                       </div>
 
                       <div>
@@ -1008,13 +1033,34 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
-                  <input required type="datetime-local" min={minDateTime} value={tripForm.startDateTime} onChange={e => setTripForm({...tripForm, startDateTime: e.target.value})}
+                  <input required type="datetime-local" min={minDateTime} value={tripForm.startDateTime}
+                    onChange={e => {
+                      const val = e.target.value
+                      setTripForm(prev => {
+                        if (prev.endDateTime) {
+                          const start = new Date(val)
+                          const end = new Date(prev.endDateTime)
+                          const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+                          if (diff > 30 || end <= start) return { ...prev, startDateTime: val, endDateTime: '' }
+                        }
+                        return { ...prev, startDateTime: val }
+                      })
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                  <p className="mt-1 text-xs text-amber-600">Must be at least 48 hours from now</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">End Date & Time *</label>
-                  <input required type="datetime-local" min={tripForm.startDateTime || minDateTime} value={tripForm.endDateTime} onChange={e => setTripForm({...tripForm, endDateTime: e.target.value})}
+                  <input required type="datetime-local"
+                    min={tripForm.startDateTime || minDateTime}
+                    max={tripForm.startDateTime ? (() => {
+                      const d = new Date(tripForm.startDateTime)
+                      d.setDate(d.getDate() + 30)
+                      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+                    })() : undefined}
+                    value={tripForm.endDateTime} onChange={e => setTripForm({...tripForm, endDateTime: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                  <p className="mt-1 text-xs text-gray-500">Maximum 30 days from start</p>
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
