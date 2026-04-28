@@ -5,6 +5,7 @@ import { driverApi, vehicleApi, userApi } from '@/lib/api'
 import Toast, { ToastType } from '@/components/Toast'
 import PasswordInput from '@/components/PasswordInput'
 import EmailInput from '@/components/EmailInput'
+import PhoneInput, { validatePhone } from '@/components/PhoneInput'
 
 interface ToastMessage {
   message: string
@@ -69,6 +70,9 @@ export default function DriversPage() {
   })
   const [adding, setAdding] = useState(false)
   const [addSuccess, setAddSuccess] = useState(false)
+  const [phoneCode, setPhoneCode] = useState('+251')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [phoneError, setPhoneError] = useState('')
 
   useEffect(() => {
     loadDrivers()
@@ -134,21 +138,70 @@ export default function DriversPage() {
 
   const handleAddDriver = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Full name
+    if (addForm.name.trim().length < 2) {
+      showToast('Full name must be at least 2 characters', 'error'); return
+    }
+    if (!/^[A-Za-z\u00C0-\u024F\s'-]+$/.test(addForm.name.trim())) {
+      showToast('Full name must contain only letters, spaces, hyphens or apostrophes', 'error'); return
+    }
+
+    // Email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addForm.email.trim())) {
+      showToast('Please enter a valid email address', 'error'); return
+    }
+
+    // Password
     if (addForm.password.length < 8) {
       showToast('Password must be at least 8 characters', 'error'); return
     }
     if (!/(?=.*[A-Za-z])(?=.*\d)/.test(addForm.password)) {
       showToast('Password must include letters and numbers', 'error'); return
     }
+
+    // Phone number (required for a driver)
+    const pErr = validatePhone(phoneCode, phoneNumber)
+    if (!phoneNumber.trim()) {
+      showToast('Phone number is required for a driver', 'error'); return
+    }
+    if (pErr) {
+      setPhoneError(pErr)
+      showToast(pErr, 'error'); return
+    }
+
+    // License number — must be non-empty and at least 5 chars
+    if (addForm.licenseNumber.trim().length < 5) {
+      showToast('License number must be at least 5 characters', 'error'); return
+    }
+
+    // License expiry — must be a future date
+    if (!addForm.licenseExpiry) {
+      showToast('License expiry date is required', 'error'); return
+    }
+    const expiryDate = new Date(addForm.licenseExpiry)
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    if (expiryDate <= today) {
+      showToast('License expiry date must be in the future', 'error'); return
+    }
+
+    // Experience years
+    const exp = Number(addForm.experienceYears)
+    if (!Number.isInteger(exp) || exp < 0 || exp > 50) {
+      showToast('Experience years must be a whole number between 0 and 50', 'error'); return
+    }
+
     try {
       setAdding(true)
+
+      const fullPhone = `${phoneCode}${phoneNumber.replace(/\D/g, '')}`
 
       // Create user account
       const user: any = await userApi.create({
         name: addForm.name,
         email: addForm.email,
         password: addForm.password,
-        phoneNumber: addForm.phoneNumber || undefined,
+        phoneNumber: fullPhone,
         role: 'Driver',
       })
 
@@ -158,7 +211,7 @@ export default function DriversPage() {
         licenseNumber: addForm.licenseNumber,
         licenseExpiry: addForm.licenseExpiry,
         experienceYears: Number(addForm.experienceYears),
-        phoneNumber: addForm.phoneNumber || undefined,
+        phoneNumber: fullPhone,
         specializations: addForm.specializations || undefined,
         notes: addForm.notes || undefined,
       })
@@ -166,6 +219,9 @@ export default function DriversPage() {
       showToast(`Driver "${addForm.name}" created successfully`, 'success')
       setAddSuccess(true)
       setAddForm({ name: '', email: '', password: '', phoneNumber: '', licenseNumber: '', licenseExpiry: '', experienceYears: 1, specializations: '', notes: '' })
+      setPhoneNumber('')
+      setPhoneCode('+251')
+      setPhoneError('')
       await loadDrivers()
       // Close modal after 2 seconds
       setTimeout(() => { setShowAddModal(false); setAddSuccess(false) }, 2000)
@@ -631,24 +687,41 @@ export default function DriversPage() {
                   <p className="text-xs text-green-600 mt-1">✓ Password looks good</p>
                 )}
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
-                <input value={addForm.phoneNumber} onChange={e => setAddForm(p => ({...p, phoneNumber: e.target.value}))}
-                  placeholder="+251912345678" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+              <div className="col-span-2">
+                <PhoneInput
+                  id="phoneNumber"
+                  label="Phone Number"
+                  required
+                  code={phoneCode}
+                  number={phoneNumber}
+                  error={phoneError}
+                  onCodeChange={c => { setPhoneCode(c); setPhoneError(validatePhone(c, phoneNumber)) }}
+                  onNumberChange={n => { setPhoneNumber(n); setPhoneError(validatePhone(phoneCode, n)) }}
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">License Number *</label>
                 <input required value={addForm.licenseNumber} onChange={e => setAddForm(p => ({...p, licenseNumber: e.target.value}))}
-                  placeholder="DL-123456789" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                  placeholder="e.g. ETH-DL-123456" minLength={5}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F] ${addForm.licenseNumber && addForm.licenseNumber.trim().length < 5 ? 'border-red-400' : 'border-gray-300'}`} />
+                {addForm.licenseNumber && addForm.licenseNumber.trim().length < 5 && (
+                  <p className="text-xs text-red-500 mt-1">At least 5 characters required</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">License Expiry *</label>
-                <input required type="date" value={addForm.licenseExpiry} onChange={e => setAddForm(p => ({...p, licenseExpiry: e.target.value}))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
+                <input required type="date" value={addForm.licenseExpiry}
+                  min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                  onChange={e => setAddForm(p => ({...p, licenseExpiry: e.target.value}))}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F] ${addForm.licenseExpiry && new Date(addForm.licenseExpiry) <= new Date() ? 'border-red-400' : 'border-gray-300'}`} />
+                {addForm.licenseExpiry && new Date(addForm.licenseExpiry) <= new Date() && (
+                  <p className="text-xs text-red-500 mt-1">Expiry date must be in the future</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Experience (years) *</label>
-                <input required type="number" min={0} max={50} value={addForm.experienceYears} onChange={e => setAddForm(p => ({...p, experienceYears: Number(e.target.value)}))}
+                <input required type="number" min={0} max={50} step={1} value={addForm.experienceYears}
+                  onChange={e => setAddForm(p => ({...p, experienceYears: Number(e.target.value)}))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B3D2F]" />
               </div>
               <div>
