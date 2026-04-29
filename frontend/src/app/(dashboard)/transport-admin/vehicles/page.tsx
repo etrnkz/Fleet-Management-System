@@ -237,7 +237,7 @@ export default function VehiclesPage() {
 
   return (
     <>
-    <div className="p-2 sm:p-4 lg:p-6 h-full flex flex-col gap-3 sm:gap-4 lg:gap-6">
+    <div className="p-2 sm:p-4 lg:p-6 flex flex-col gap-3 sm:gap-4 lg:gap-6 min-h-0">
       <div className="px-2 sm:px-0">
         <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">Vehicle Management</h1>
         <p className="text-xs sm:text-sm text-gray-500">Monitor and manage your fleet status and assignments</p>
@@ -287,7 +287,7 @@ export default function VehiclesPage() {
       </div>
 
       {/* Single responsive table — works at any viewport width or zoom level */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-sm" style={{ minWidth: '640px' }}>
             <thead className="bg-gray-50 border-b border-gray-200">
