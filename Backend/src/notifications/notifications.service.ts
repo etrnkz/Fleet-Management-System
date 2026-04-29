@@ -1,24 +1,74 @@
-import { Injectable, forwardRef, Inject } from '@nestjs/common';
+import { Injectable, forwardRef, Inject, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification, NotificationType } from './entities/notification.entity';
+import { PushSubscription } from './entities/push-subscription.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { SmsService } from '../sms/sms.service';
 import { EmailService } from '../email/email.service';
 import { NotificationsGateway } from './notifications.gateway';
+import * as webpush from 'web-push';
+
+// Configure VAPID once on module load
+const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY  || '';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT     || 'mailto:admin@fleet.edu';
+
+if (VAPID_PUBLIC && VAPID_PRIVATE) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+}
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
+    @InjectRepository(PushSubscription)
+    private readonly pushSubscriptionRepository: Repository<PushSubscription>,
     private readonly usersService: UsersService,
     private readonly smsService: SmsService,
     private readonly emailService: EmailService,
     @Inject(forwardRef(() => NotificationsGateway))
     private readonly notificationsGateway: NotificationsGateway,
   ) {}
+
+  async savePushSubscription(userId: string, subscription: any): Promise<void> {
+    if (!subscription?.endpoint) return;
+    // Upsert by endpoint — replace if already exists for this user
+    await this.pushSubscriptionRepository.delete({ userId });
+    const sub = this.pushSubscriptionRepository.create({
+      userId,
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys?.p256dh || '',
+      auth: subscription.keys?.auth || '',
+    });
+    await this.pushSubscriptionRepository.save(sub);
+  }
+
+  private async sendWebPushToUser(userId: string, title: string, body: string, url = '/'): Promise<void> {
+    if (!VAPID_PUBLIC || !VAPID_PRIVATE) return;
+    try {
+      const subs = await this.pushSubscriptionRepository.find({ where: { userId } });
+      for (const sub of subs) {
+        try {
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            JSON.stringify({ title, body, url }),
+          );
+        } catch (err: any) {
+          // 410 Gone = subscription expired, remove it
+          if (err.statusCode === 410) {
+            await this.pushSubscriptionRepository.delete({ id: sub.id });
+          }
+        }
+      }
+    } catch (err) {
+      this.logger.error('Web push failed', err);
+    }
+  }
 
   async create(
     recipient: User,
@@ -54,6 +104,9 @@ export class NotificationsService {
         console.error('Failed to send real-time notification:', error);
       }
     }
+
+    // Send browser push notification (non-blocking)
+    this.sendWebPushToUser(recipient.id, title, message).catch(() => {});
 
     return savedNotification;
   }
