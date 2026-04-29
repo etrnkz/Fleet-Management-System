@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { userApi, getCurrentUser } from '@/lib/api'
 import Toast from '@/components/Toast'
@@ -125,42 +125,40 @@ export default function ProfilePage() {
     )
   }
 
+  const headerActions = useMemo(() => !editMode ? (
+    <button
+      type="button"
+      onClick={() => setEditMode(true)}
+      className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152e22]"
+    >
+      Edit Profile
+    </button>
+  ) : (
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={() => { setEditMode(false); loadProfile() }}
+        className="px-4 py-2.5 bg-[#eceef0] text-[#424845] text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#e0e3e5]"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#1e4a6e] disabled:opacity-50"
+      >
+        {saving ? 'Saving...' : 'Save'}
+      </button>
+    </div>
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [editMode, saving])
+
   return (
     <EmployeeShell
       title="My Profile"
       subtitle="Official employee record (on file)"
-      headerActions={
-        !editMode ? (
-          <button
-            type="button"
-            onClick={() => setEditMode(true)}
-            className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152e22]"
-          >
-            Edit Profile
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setEditMode(false)
-                loadProfile()
-              }}
-              className="px-4 py-2.5 bg-[#eceef0] text-[#424845] text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#e0e3e5]"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#1e4a6e] disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        )
-      }
+      headerActions={headerActions}
     >
       {toast.show && (
         <Toast
