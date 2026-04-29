@@ -53,6 +53,8 @@ export default function VehiclesPage() {
   const [vipGeoEnabled, setVipGeoEnabled] = useState(false)
   const [geofenceZones, setGeofenceZones] = useState<RestrictedZone[]>([])
   const [savingGeofence, setSavingGeofence] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 15
 
   useEffect(() => {
     loadVehicles()
@@ -198,6 +200,13 @@ export default function VehiclesPage() {
   }
 
   const filteredVehicles = getFilteredVehicles()
+  const totalPages = Math.max(1, Math.ceil(filteredVehicles.length / PAGE_SIZE))
+  const pagedVehicles = filteredVehicles.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = (val: string) => { setSearchQuery(val); setCurrentPage(1) }
+  const handleTypeChange = (val: string) => { setVehicleType(val || 'all'); setCurrentPage(1) }
+  const handleStatusChange = (val: string) => { setStatusFilter(val || 'all'); setCurrentPage(1) }
 
   const stats = [
     {
@@ -247,7 +256,7 @@ export default function VehiclesPage() {
         <div className="flex flex-col gap-2 sm:gap-3">
           <Combobox
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={handleSearchChange}
             options={Array.from(new Set(vehicles.flatMap(v => [v.plateNumber, v.make, v.model].filter(Boolean) as string[])))}
             placeholder="Search by plate, make, or model..."
           />
@@ -255,14 +264,14 @@ export default function VehiclesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             <Combobox
               value={vehicleType === 'all' ? '' : vehicleType}
-              onChange={val => setVehicleType(val || 'all')}
+              onChange={handleTypeChange}
               options={['Truck', 'Van', 'Bus', 'Sedan', 'SUV', 'Pickup', 'Minibus']}
               placeholder="Vehicle Type"
             />
 
             <Combobox
               value={statusFilter === 'all' ? '' : statusFilter}
-              onChange={val => setStatusFilter(val || 'all')}
+              onChange={handleStatusChange}
               options={['Active', 'Maintenance', 'Inactive']}
               placeholder="Status"
             />
@@ -271,9 +280,9 @@ export default function VehiclesPage() {
           {(searchQuery || vehicleType !== 'all' || statusFilter !== 'all') && (
             <button 
               onClick={() => {
-                setSearchQuery('')
-                setVehicleType('all')
-                setStatusFilter('all')
+                handleSearchChange('')
+                handleTypeChange('')
+                handleStatusChange('')
               }}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm"
             >
@@ -315,7 +324,7 @@ export default function VehiclesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredVehicles.map((vehicle) => (
+                pagedVehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
                     {/* Plate / ID — always visible */}
                     <td className="px-3 py-3">
@@ -398,13 +407,32 @@ export default function VehiclesPage() {
         </div>
 
         <div className="px-4 py-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-2 bg-gray-50">
-          <p className="text-xs text-gray-600">Showing {filteredVehicles.length} of {vehicles.length} vehicles</p>
-          <button onClick={loadVehicles} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-xs font-medium">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
-          </button>
+          <p className="text-xs text-gray-600">
+            Showing {filteredVehicles.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredVehicles.length)} of {filteredVehicles.length} vehicles
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="text-xs text-gray-600">{currentPage} / {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+            <button onClick={loadVehicles} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors text-xs font-medium">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
