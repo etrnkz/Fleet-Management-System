@@ -28,6 +28,9 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [vehicles, setVehicles] = useState<any[]>([])
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  // Lifted from SettingsProfile to survive re-renders
+  const [settingsActiveTab, setSettingsActiveTab] = useState('profile')
+  const [settingsPasswordData, setSettingsPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(null)
@@ -852,7 +855,8 @@ export default function DashboardPage() {
   // Settings/Profile Component
   const SettingsProfile = () => {
     const [saving, setSaving] = useState(false)
-    const [activeTab, setActiveTab] = useState('profile')
+    const activeTab = settingsActiveTab
+    const setActiveTab = setSettingsActiveTab
     const [colleges, setColleges] = useState<{ id: string; name: string }[]>([])
     const [departments, setDepartments] = useState<{ id: string; name: string; collegeId?: string; college?: { id: string } }[]>([])
     const [availableDepartments, setAvailableDepartments] = useState<{ id: string; name: string }[]>([])
@@ -865,11 +869,8 @@ export default function DashboardPage() {
       office: '',
       department: '',
     })
-    const [passwordData, setPasswordData] = useState({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    })
+    const passwordData = settingsPasswordData
+    const setPasswordData = setSettingsPasswordData
 
     useEffect(() => {
       loadProfileData()
@@ -1114,24 +1115,30 @@ export default function DashboardPage() {
     }
 
     const handleChangePassword = async () => {
+      if (!passwordData.currentPassword) {
+        showToast('Current password is required', 'error')
+        return
+      }
       if (passwordData.newPassword !== passwordData.confirmPassword) {
         showToast('New passwords do not match', 'error')
         return
       }
-      
-      if (passwordData.newPassword.length < 6) {
-        showToast('Password must be at least 6 characters long', 'error')
+      if (passwordData.newPassword.length < 8) {
+        showToast('Password must be at least 8 characters long', 'error')
+        return
+      }
+      if (!/(?=.*[A-Za-z])(?=.*\d)/.test(passwordData.newPassword)) {
+        showToast('Password must contain letters and numbers', 'error')
         return
       }
 
       try {
         setSaving(true)
-        
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
+        await userApi.changePassword({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
         })
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
         showToast('Password changed successfully!', 'success')
       } catch (error: any) {
         showToast(error.message || 'Failed to change password', 'error')
