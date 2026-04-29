@@ -1,11 +1,70 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { userApi, getCurrentUser } from '@/lib/api'
 import Toast from '@/components/Toast'
 import { EmployeeShell } from '@/components/EmployeeShell'
 import PasswordInput from '@/components/PasswordInput'
+
+// Isolated component — its state changes don't re-render ProfilePage
+const ChangePasswordForm = memo(function ChangePasswordForm({ onToast }: { onToast: (msg: string, type: 'success' | 'error') => void }) {
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [savingPw, setSavingPw] = useState(false)
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!pwForm.currentPassword) { onToast('Current password is required', 'error'); return }
+    if (pwForm.newPassword.length < 8) { onToast('New password must be at least 8 characters', 'error'); return }
+    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(pwForm.newPassword)) { onToast('New password must contain letters and numbers', 'error'); return }
+    if (pwForm.newPassword !== pwForm.confirmPassword) { onToast('Passwords do not match', 'error'); return }
+    try {
+      setSavingPw(true)
+      await userApi.changePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword })
+      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      onToast('Password changed successfully!', 'success')
+    } catch (error: any) {
+      onToast(error.message || 'Failed to change password', 'error')
+    } finally {
+      setSavingPw(false)
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
+      <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Change Password</h3>
+      <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+        <div>
+          <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Current Password</label>
+          <PasswordInput value={pwForm.currentPassword} onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
+            placeholder="Enter current password" required
+            className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">New Password</label>
+          <PasswordInput value={pwForm.newPassword} onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
+            placeholder="Min 8 chars, letters + numbers" required
+            className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
+          {pwForm.newPassword && pwForm.newPassword.length < 8 && <p className="mt-1 text-xs text-red-600">At least 8 characters required</p>}
+          {pwForm.newPassword && pwForm.newPassword.length >= 8 && !/(?=.*[A-Za-z])(?=.*\d)/.test(pwForm.newPassword) && <p className="mt-1 text-xs text-amber-600">Add at least one number</p>}
+          {pwForm.newPassword && pwForm.newPassword.length >= 8 && /(?=.*[A-Za-z])(?=.*\d)/.test(pwForm.newPassword) && <p className="mt-1 text-xs text-green-600">✓ Strong password</p>}
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Confirm New Password</label>
+          <PasswordInput value={pwForm.confirmPassword} onChange={e => setPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
+            placeholder="Repeat new password" required
+            className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none ${pwForm.confirmPassword && pwForm.confirmPassword !== pwForm.newPassword ? 'border-red-400' : 'border-[#c1c8c4]'}`} />
+          {pwForm.confirmPassword && pwForm.confirmPassword !== pwForm.newPassword && <p className="mt-1 text-xs text-red-600">Passwords do not match</p>}
+          {pwForm.confirmPassword && pwForm.confirmPassword === pwForm.newPassword && pwForm.newPassword.length >= 8 && <p className="mt-1 text-xs text-green-600">✓ Passwords match</p>}
+        </div>
+        <button type="submit" disabled={savingPw}
+          className="px-6 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152e22] disabled:opacity-50">
+          {savingPw ? 'Changing...' : 'Change Password'}
+        </button>
+      </form>
+    </div>
+  )
+})
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -19,13 +78,7 @@ export default function ProfilePage() {
     email: '',
     phoneNumber: '',
     employeeId: '',
-    organizationType: '',
-    college: '',
-    office: '',
-    department: '',
   })
-  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
-  const [savingPw, setSavingPw] = useState(false)
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false, message: '', type: 'success'
   })
@@ -44,16 +97,11 @@ export default function ProfilePage() {
     const currentUser = getCurrentUser()
     const userData = localStorage.getItem('userData')
     const parsedData = userData ? JSON.parse(userData) : {}
-    
     setFormData({
       name: currentUser?.name || '',
       email: currentUser?.email || '',
       phoneNumber: currentUser?.phoneNumber || '',
       employeeId: parsedData.employeeId || '',
-      organizationType: parsedData.organizationType || '',
-      college: parsedData.college || '',
-      office: parsedData.office || '',
-      department: parsedData.department || '',
     })
     setProfileImage(parsedData.profileImage || null)
     setLoading(false)
@@ -82,27 +130,6 @@ export default function ProfilePage() {
       showToast(error.message || 'Failed to update profile', 'error')
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!pwForm.currentPassword) { showToast('Current password is required', 'error'); return }
-    if (pwForm.newPassword.length < 8) { showToast('New password must be at least 8 characters', 'error'); return }
-    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(pwForm.newPassword)) { showToast('New password must contain letters and numbers', 'error'); return }
-    if (pwForm.newPassword !== pwForm.confirmPassword) { showToast('Passwords do not match', 'error'); return }
-    try {
-      setSavingPw(true)
-      await userApi.changePassword({
-        currentPassword: pwForm.currentPassword,
-        newPassword: pwForm.newPassword,
-      })
-      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
-      showToast('Password changed successfully!', 'success')
-    } catch (error: any) {
-      showToast(error.message || 'Failed to change password', 'error')
-    } finally {
-      setSavingPw(false)
     }
   }
 
@@ -261,64 +288,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Change Password */}
-        <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
-          <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Change Password</h3>
-          <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-            <div>
-              <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Current Password</label>
-              <PasswordInput
-                value={pwForm.currentPassword}
-                onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
-                placeholder="Enter current password"
-                required
-                className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">New Password</label>
-              <PasswordInput
-                value={pwForm.newPassword}
-                onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
-                placeholder="Min 8 chars, letters + numbers"
-                required
-                className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
-              />
-              {pwForm.newPassword && pwForm.newPassword.length < 8 && (
-                <p className="mt-1 text-xs text-red-600">At least 8 characters required</p>
-              )}
-              {pwForm.newPassword && pwForm.newPassword.length >= 8 && !/(?=.*[A-Za-z])(?=.*\d)/.test(pwForm.newPassword) && (
-                <p className="mt-1 text-xs text-amber-600">Add at least one number</p>
-              )}
-              {pwForm.newPassword && pwForm.newPassword.length >= 8 && /(?=.*[A-Za-z])(?=.*\d)/.test(pwForm.newPassword) && (
-                <p className="mt-1 text-xs text-green-600">✓ Strong password</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Confirm New Password</label>
-              <PasswordInput
-                value={pwForm.confirmPassword}
-                onChange={e => setPwForm(p => ({ ...p, confirmPassword: e.target.value }))}
-                placeholder="Repeat new password"
-                required
-                className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none ${pwForm.confirmPassword && pwForm.confirmPassword !== pwForm.newPassword ? 'border-red-400' : 'border-[#c1c8c4]'}`}
-              />
-              {pwForm.confirmPassword && pwForm.confirmPassword !== pwForm.newPassword && (
-                <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
-              )}
-              {pwForm.confirmPassword && pwForm.confirmPassword === pwForm.newPassword && pwForm.newPassword.length >= 8 && (
-                <p className="mt-1 text-xs text-green-600">✓ Passwords match</p>
-              )}
-            </div>
-            <button
-              type="submit"
-              disabled={savingPw}
-              className="px-6 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152e22] disabled:opacity-50"
-            >
-              {savingPw ? 'Changing...' : 'Change Password'}
-            </button>
-          </form>
-        </div>
+        {/* Change Password — isolated component so its state doesn't cause scroll jump */}
+        <ChangePasswordForm onToast={showToast} />
       </div>
     </EmployeeShell>
   )
