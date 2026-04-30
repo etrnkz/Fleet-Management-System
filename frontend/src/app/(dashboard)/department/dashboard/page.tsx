@@ -332,32 +332,22 @@ export default function DashboardPage() {
   }
 
   const handleExportTrips = () => {
-    console.log('Exporting trip history...')
-    // Create CSV content from completed trips
-    const headers = ['Date', 'Route', 'Requested By', 'Fuel Consumption', 'Status']
-    const csvContent = [
-      headers.join(','),
-      ...completedTrips.map(trip => 
-        [
-          new Date(trip.startDateTime).toLocaleDateString(),
-          `"Main Campus → ${trip.destination}"`,
-          trip.requester?.name || 'N/A',
-          trip.fuelConsumed ? `${trip.fuelConsumed}L` : 'N/A',
-          trip.state
-        ].join(',')
-      )
-    ].join('\n')
-
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
+    const headers = ['Date', 'Route', 'Requested By', 'Fuel Cost', 'Distance', 'Status']
+    const csvRows = completedTrips.map(trip => [
+      new Date(trip.startDateTime).toLocaleDateString(),
+      `Main Campus → ${trip.destination}`,
+      trip.requester?.name || 'N/A',
+      trip.actualFuelCost ? `ETB ${Number(trip.actualFuelCost).toFixed(2)}` : 'N/A',
+      trip.actualDistance ? `${Number(trip.actualDistance).toFixed(1)} km` : 'N/A',
+      trip.state,
+    ])
+    const csv = [headers, ...csvRows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
     const a = document.createElement('a')
-    a.href = url
-    a.download = `trip-history-${new Date().toISOString().split('T')[0]}.csv`
-    document.body.appendChild(a)
+    a.href = URL.createObjectURL(blob)
+    a.download = `department-trips-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
+    showToast('Trip history exported as CSV', 'success')
   }
 
   const getPriorityColor = (priority: string) => {
@@ -388,15 +378,25 @@ export default function DashboardPage() {
   })()
   const maxBar = Math.max(...monthlyBars.map(b => b.count), 1)
 
-  const fleetStatus = vehicles.slice(0, 3).map((vehicle: any) => ({
-    id: vehicle.id,
-    name: vehicle.plateNumber,
-    location: `${vehicle.status} / LOCATION`,
-    status: vehicle.status,
-    statusColor: vehicle.status === 'Active' ? 'text-[#1B3D2F]' : 'text-orange-600',
-    percentage: vehicle.status === 'Active' ? 85 : 12,
-    vehicle: `${vehicle.make} ${vehicle.model} • ${vehicle.plateNumber}`
-  }))
+  const fleetStatus = vehicles.slice(0, 3).map((vehicle: any) => {
+    // Calculate utilization: Active = high, Maintenance = low, Inactive = 0
+    const pct = vehicle.status === 'Active' ? 90
+      : vehicle.status === 'Maintenance' ? 20
+      : vehicle.status === 'Inactive' ? 5 : 50
+    const isOnTrip = vehicle.onTrip || false
+    return {
+      id: vehicle.id,
+      name: vehicle.plateNumber,
+      location: isOnTrip ? 'On Trip' : vehicle.status,
+      status: isOnTrip ? 'On Trip' : vehicle.status,
+      statusColor: isOnTrip ? 'text-blue-600'
+        : vehicle.status === 'Active' ? 'text-[#1B3D2F]'
+        : vehicle.status === 'Maintenance' ? 'text-orange-600'
+        : 'text-gray-500',
+      percentage: isOnTrip ? 100 : pct,
+      vehicle: `${vehicle.make} ${vehicle.model} • ${vehicle.plateNumber}`,
+    }
+  })
 
   // Filter trips based on search query - use real trips data
   const completedTrips = trips.filter((t: any) => t.state === 'COMPLETED')
@@ -461,30 +461,16 @@ export default function DashboardPage() {
               {/* Chart Background */}
               <div className="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200">
                 <div className="flex justify-between items-end h-32 md:h-48 gap-2 md:gap-3">
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '45%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">MAY</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '60%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">JUN</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '80%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">JUL</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '100%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">AUG</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '55%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">SEP</span>
-                  </div>
-                  <div className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
-                    <div className="w-full bg-[#152e22] rounded-t shadow-sm" style={{ height: '70%' }}></div>
-                    <span className="text-[10px] md:text-xs text-gray-700 font-medium">OCT</span>
-                  </div>
+                  {monthlyBars.map(({ label, count }) => (
+                    <div key={label} className="flex flex-col justify-end items-center gap-1 md:gap-2 flex-1">
+                      <span className="text-[9px] text-gray-500">{count > 0 ? count : ''}</span>
+                      <div
+                        className="w-full bg-[#152e22] rounded-t shadow-sm transition-all"
+                        style={{ height: `${Math.round((count / maxBar) * 100)}%`, minHeight: count > 0 ? '4px' : '2px' }}
+                      ></div>
+                      <span className="text-[10px] md:text-xs text-gray-700 font-medium">{label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
