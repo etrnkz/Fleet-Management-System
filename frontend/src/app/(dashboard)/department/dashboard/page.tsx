@@ -20,7 +20,10 @@ const minDateTime = (() => {
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [selectedMonth] = useState('October 2024')
+  const [selectedMonth] = useState(() => {
+    const d = new Date()
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+  })
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -370,7 +373,22 @@ export default function DashboardPage() {
     }
   }
 
-  const fleetStatus = vehicles.slice(0, 3).map((vehicle: any, index: number) => ({
+  // Compute monthly trip counts for the last 6 months from real data
+  const monthlyBars = (() => {
+    const now = new Date()
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+      const label = d.toLocaleString('en-US', { month: 'short' }).toUpperCase()
+      const count = trips.filter((t: any) => {
+        const td = new Date(t.createdAt || t.startDateTime)
+        return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth()
+      }).length
+      return { label, count }
+    })
+  })()
+  const maxBar = Math.max(...monthlyBars.map(b => b.count), 1)
+
+  const fleetStatus = vehicles.slice(0, 3).map((vehicle: any) => ({
     id: vehicle.id,
     name: vehicle.plateNumber,
     location: `${vehicle.status} / LOCATION`,
@@ -414,7 +432,7 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <p className="text-xs sm:text-sm text-gray-500">
-            Semester II, 2024 | Last updated: {new Date().toLocaleString('en-US', { 
+            {selectedMonth} | Last updated: {new Date().toLocaleString('en-US', { 
               month: 'short', 
               day: 'numeric', 
               hour: '2-digit', 
