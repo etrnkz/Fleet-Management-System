@@ -55,11 +55,25 @@ export default function ReportsPage() {
   }
 
   const handleExportPDF = () => {
-    showToast('PDF export functionality coming soon', 'info')
+    // Build CSV and trigger download as a simple export
+    const headers = ['Date', 'Destination', 'Requester', 'Status']
+    const rows = trips.slice(0, 100).map(t => [
+      t.startDateTime ? new Date(t.startDateTime).toLocaleDateString() : 'N/A',
+      t.destination || 'N/A',
+      t.requester?.name || 'N/A',
+      t.state?.replace(/_/g, ' ') || 'N/A',
+    ])
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `college-report-${new Date().toISOString().slice(0,10)}.csv`
+    a.click()
+    showToast('Report exported as CSV', 'success')
   }
 
   const handleExportExcel = () => {
-    showToast('Excel export functionality coming soon', 'info')
+    handleExportPDF() // same CSV export
   }
 
   const completedTrips = trips.filter(t => t.state === 'COMPLETED')
@@ -199,7 +213,7 @@ export default function ReportsPage() {
                       {vehicle.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{vehicle.mileage?.toLocaleString()} km</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{vehicle.currentMileage ? `${Number(vehicle.currentMileage).toLocaleString()} km` : '—'}</td>
                 </tr>
               ))}
             </tbody>

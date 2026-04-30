@@ -464,44 +464,50 @@ export default function DashboardPage() {
           <p className="text-[#44474E] mt-2 font-medium">Official policies and reference materials for university transport.</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-4">
+
+      {/* Info banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 flex items-start gap-3">
+        <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <p className="text-sm font-semibold text-blue-800">Documents are managed by the Transport Office</p>
+          <p className="text-xs text-blue-700 mt-1">
+            Official policies, trip request guides, route tables, and safety guidelines are maintained by the Transport Office.
+            Contact <span className="font-semibold">transport@haramaya.edu.et</span> to request or access documents.
+          </p>
+        </div>
+      </div>
+
+      {/* Document types reference */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
-          { name: 'Vehicle Usage Policy.pdf', date: 'Updated Jan 2025', size: '2.5 MB', color: 'red' },
-          { name: 'Trip Request Guide.docx', date: 'Uploaded Jan 2025', size: '1.2 MB', color: 'blue' },
-          { name: 'Route & Rate Table 2025.xlsx', date: 'Updated Feb 2025', size: '945 KB', color: 'green' },
-          { name: 'Safety Guidelines.pdf', date: 'Updated Dec 2024', size: '1.8 MB', color: 'red' },
-          { name: 'Fleet Maintenance Schedule.pdf', date: 'Updated Feb 2025', size: '3.1 MB', color: 'red' },
+          { name: 'Vehicle Usage Policy', type: 'PDF', icon: 'red', desc: 'Rules and regulations for university vehicle use' },
+          { name: 'Trip Request Guide', type: 'DOCX', icon: 'blue', desc: 'Step-by-step guide for submitting trip requests' },
+          { name: 'Route & Rate Table', type: 'XLSX', icon: 'green', desc: 'Approved routes and fuel rate information' },
+          { name: 'Safety Guidelines', type: 'PDF', icon: 'red', desc: 'Passenger and driver safety requirements' },
         ].map((doc, index) => (
-          <div key={index} className="bg-white rounded border border-[#C4C6D0]/40 shadow-sm p-6 hover:border-[#1B3D2F]/30 transition-colors">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded flex items-center justify-center ${
-                  doc.color === 'red' ? 'bg-red-50' : doc.color === 'blue' ? 'bg-blue-50' : 'bg-green-50'
-                }`}>
-                  <svg className={`w-6 h-6 ${
-                    doc.color === 'red' ? 'text-red-600' : doc.color === 'blue' ? 'text-blue-600' : 'text-green-600'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-base font-semibold text-[#1B3D2F] font-serif">{doc.name}</p>
-                  <p className="text-sm text-[#565F71]">{doc.date} • {doc.size}</p>
-                </div>
+          <div key={index} className="bg-white rounded border border-[#C4C6D0]/40 shadow-sm p-5 hover:border-[#1B3D2F]/30 transition-colors">
+            <div className="flex items-center gap-4">
+              <div className={`w-10 h-10 rounded flex items-center justify-center flex-shrink-0 ${
+                doc.icon === 'red' ? 'bg-red-50' : doc.icon === 'blue' ? 'bg-blue-50' : 'bg-green-50'
+              }`}>
+                <svg className={`w-5 h-5 ${
+                  doc.icon === 'red' ? 'text-red-600' : doc.icon === 'blue' ? 'text-blue-600' : 'text-green-600'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
               </div>
-              <div className="flex gap-2">
-                <button className="p-2 hover:bg-[#ECEEF3] rounded-lg transition-colors" title="View">
-                  <svg className="w-5 h-5 text-[#565F71]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-                <button className="p-2 hover:bg-[#ECEEF3] rounded-lg transition-colors" title="Download">
-                  <svg className="w-5 h-5 text-[#565F71]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-[#1B3D2F] truncate">{doc.name}</p>
+                  <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">{doc.type}</span>
+                </div>
+                <p className="text-xs text-[#565F71] mt-0.5">{doc.desc}</p>
               </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-400">Contact transport@haramaya.edu.et to request this document</p>
             </div>
           </div>
         ))}

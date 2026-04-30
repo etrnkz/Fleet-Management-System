@@ -234,7 +234,7 @@ export default function VehiclesPage() {
                 {/* Mileage */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Mileage</span>
-                  <span className="text-sm font-medium text-gray-900">{vehicle.mileage?.toLocaleString()} km</span>
+                <span className="text-sm font-medium text-gray-900">{vehicle.currentMileage ? `${Number(vehicle.currentMileage).toLocaleString()} km` : '—'}</span>
                 </div>
 
                 {/* Last Service */}

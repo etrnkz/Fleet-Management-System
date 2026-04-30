@@ -317,7 +317,7 @@ export default function VehiclesPage() {
               {/* Mileage */}
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <span className="text-xs text-gray-600">Mileage</span>
-                <span className="text-sm font-medium text-gray-800">{vehicle.mileage}</span>
+                <span className="text-sm font-medium text-gray-800">{vehicle.currentMileage ? `${Number(vehicle.currentMileage).toLocaleString()} km` : '—'}</span>
               </div>
             </div>
           </div>
@@ -424,11 +424,11 @@ export default function VehiclesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-sm text-gray-600">Mileage</p>
-                    <p className="font-medium text-gray-800">{selectedVehicle.mileage}</p>
+                <span className="text-sm font-medium text-gray-800">{selectedVehicle.currentMileage ? `${Number(selectedVehicle.currentMileage).toLocaleString()} km` : '—'}</span>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-sm text-gray-600">Fuel Level</p>
-                    <p className="font-medium text-gray-800">{selectedVehicle.fuelLevel}%</p>
+                    <p className="font-medium text-gray-800">{selectedVehicle.fuelLevel != null ? `${selectedVehicle.fuelLevel}%` : 'N/A'}</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-sm text-gray-600">Capacity</p>
