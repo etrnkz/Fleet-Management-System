@@ -16,7 +16,6 @@ class FleetService {
     final res = await _api.post('/auth/login', {
       'email': email,
       'password': password,
-      'appType': 'driver',
     });
     return Map<String, dynamic>.from(res);
   }
