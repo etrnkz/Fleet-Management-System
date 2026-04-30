@@ -6,7 +6,6 @@ import {
   IsOptional,
   Min,
   Max,
-  Matches,
   IsDateString,
   IsBoolean,
   IsArray,
@@ -14,7 +13,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { FuelType, VehicleStatus } from '../entities/vehicle.entity';
+import { FuelType, ServiceVehicleType, VehicleStatus } from '../entities/vehicle.entity';
 import { RestrictedZoneDto } from './restricted-zone.dto';
 
 export class CreateVehicleDto {
@@ -186,4 +185,35 @@ export class CreateVehicleDto {
   @ValidateNested({ each: true })
   @Type(() => RestrictedZoneDto)
   restrictedZones?: RestrictedZoneDto[];
+
+  @ApiPropertyOptional({
+    description: 'Mark as a service vehicle (shuttle or security) — exempt from trip workflow',
+  })
+  @IsBoolean()
+  @IsOptional()
+  isServiceVehicle?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ServiceVehicleType,
+    description: 'Type of service vehicle: Shuttle or Security',
+  })
+  @IsEnum(ServiceVehicleType)
+  @IsOptional()
+  serviceVehicleType?: ServiceVehicleType;
+
+  @ApiPropertyOptional({
+    example: 'Morning: 06:30 campus → town. Evening: 17:00 town → campus',
+    description: 'Operational schedule for service vehicles',
+  })
+  @IsString()
+  @IsOptional()
+  serviceSchedule?: string;
+
+  @ApiPropertyOptional({
+    example: 'Main Campus → Harar Town Center → Dire Dawa',
+    description: 'Route description for service vehicles',
+  })
+  @IsString()
+  @IsOptional()
+  serviceRoute?: string;
 }

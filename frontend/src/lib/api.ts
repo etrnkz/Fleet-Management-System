@@ -203,6 +203,12 @@ export const vehicleApi = {
     apiFetch(`/vehicles/${vehicleId}/assign-driver`, { method: 'PATCH', body: JSON.stringify({ driverId }) }),
   unassignDriver: (vehicleId: string) =>
     apiFetch(`/vehicles/${vehicleId}/unassign-driver`, { method: 'PATCH' }),
+  // Service vehicles (shuttle + security) — exempt from trip workflow
+  getServiceVehicles: () => apiFetch('/vehicles/service/all'),
+  registerServiceVehicle: (data: any) =>
+    apiFetch('/vehicles/service/register', { method: 'POST', body: JSON.stringify(data) }),
+  updateServiceVehicle: (id: string, data: any) =>
+    apiFetch(`/vehicles/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 }
 
 // ── Drivers ───────────────────────────────────────────────────────────────────
