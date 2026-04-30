@@ -199,3 +199,11 @@ Mobile/fleet_driver/android/local.properties
 Mobile/fleet_gate/android/local.properties
 Mobile/fleet_driver/android/.gradle/
 Mobile/fleet_gate/android/.gradle/
+
+# fleet_mobile (merged driver + gate app)
+Mobile/fleet_mobile/build/
+Mobile/fleet_mobile/.dart_tool/
+Mobile/fleet_mobile/.flutter-plugins
+Mobile/fleet_mobile/.flutter-plugins-dependencies
+Mobile/fleet_mobile/android/local.properties
+Mobile/fleet_mobile/android/.gradle/
