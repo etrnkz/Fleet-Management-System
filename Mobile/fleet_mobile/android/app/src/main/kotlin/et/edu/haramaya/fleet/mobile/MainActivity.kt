@@ -1,4 +1,4 @@
-package et.edu.haramaya.fleet.driver
+package et.edu.haramaya.fleet.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
