@@ -49,6 +49,29 @@ export class VehiclesService {
     });
   }
 
+  async findServiceVehicles(): Promise<Vehicle[]> {
+    return this.vehicleRepository.find({
+      where: { isServiceVehicle: true },
+      relations: ['assignedDriver', 'assignedDriver.user'],
+      order: { serviceVehicleType: 'ASC', plateNumber: 'ASC' },
+    });
+  }
+
+  async registerServiceVehicle(dto: CreateVehicleDto): Promise<Vehicle> {
+    const existing = await this.vehicleRepository.findOne({
+      where: { plateNumber: dto.plateNumber },
+    });
+    if (existing) {
+      throw new ConflictException('Vehicle with this plate number already exists');
+    }
+    const vehicle = this.vehicleRepository.create({
+      ...dto,
+      isServiceVehicle: true,
+      status: VehicleStatus.Active,
+    });
+    return this.vehicleRepository.save(vehicle);
+  }
+
   async findAvailable(
     startDateTime?: Date,
     endDateTime?: Date,

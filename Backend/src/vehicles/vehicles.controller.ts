@@ -63,17 +63,6 @@ export class VehiclesController {
 
   @Get('available')
   @ApiOperation({ summary: 'Get available vehicles' })
-  @ApiQuery({
-    name: 'startDateTime',
-    required: false,
-    description: 'Start date/time for availability check',
-  })
-  @ApiQuery({
-    name: 'endDateTime',
-    required: false,
-    description: 'End date/time for availability check',
-  })
-  @ApiResponse({ status: 200, description: 'List of available vehicles' })
   findAvailable(
     @Query('startDateTime') startDateTime?: string,
     @Query('endDateTime') endDateTime?: string,
@@ -81,6 +70,21 @@ export class VehiclesController {
     const start = startDateTime ? new Date(startDateTime) : undefined;
     const end = endDateTime ? new Date(endDateTime) : undefined;
     return this.vehiclesService.findAvailable(start, end);
+  }
+
+  @Get('service/all')
+  @ApiOperation({ summary: 'Get all service vehicles (shuttle + security)' })
+  @ApiResponse({ status: 200, description: 'List of service vehicles' })
+  findServiceVehicles() {
+    return this.vehiclesService.findServiceVehicles();
+  }
+
+  @Post('service/register')
+  @Roles(UserRole.TransportOffice, UserRole.Developer)
+  @ApiOperation({ summary: 'Register a service vehicle (shuttle or security)' })
+  @ApiResponse({ status: 201, description: 'Service vehicle registered' })
+  registerServiceVehicle(@Body() dto: CreateVehicleDto) {
+    return this.vehiclesService.registerServiceVehicle(dto);
   }
 
   @Get('statistics')

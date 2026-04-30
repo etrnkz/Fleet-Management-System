@@ -22,6 +22,14 @@ export enum FuelType {
   Hybrid = 'Hybrid',
 }
 
+/** Category for special always-on vehicles that don't go through the trip workflow */
+export enum ServiceVehicleType {
+  /** Shuttle that takes workers to/from campus on a fixed schedule */
+  Shuttle = 'Shuttle',
+  /** Security/patrol vehicle that operates continuously */
+  Security = 'Security',
+}
+
 /** Forbidden circular zones: if a VIP-restricted vehicle enters, engine-off is simulated. */
 export type VehicleRestrictedZone = {
   name?: string;
@@ -100,6 +108,25 @@ export class Vehicle {
 
   @Column({ type: 'simple-json', nullable: true })
   restrictedZones: VehicleRestrictedZone[] | null;
+
+  /** True for shuttle and security vehicles — they are always active, never go through trip workflow */
+  @Column({ default: false })
+  isServiceVehicle: boolean;
+
+  /** Type of service vehicle (only relevant when isServiceVehicle = true) */
+  @Column({ type: 'varchar', nullable: true })
+  serviceVehicleType: ServiceVehicleType | null;
+
+  /**
+   * Schedule / operational notes for service vehicles.
+   * e.g. "Morning: 06:30 depart campus → town. Evening: 17:00 depart town → campus"
+   */
+  @Column({ type: 'text', nullable: true })
+  serviceSchedule: string | null;
+
+  /** Route description for service vehicles */
+  @Column({ type: 'text', nullable: true })
+  serviceRoute: string | null;
 
   @ManyToOne(() => Driver, { nullable: true, eager: true })
   @JoinColumn({ name: 'assignedDriverId' })
