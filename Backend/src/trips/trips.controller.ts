@@ -398,8 +398,8 @@ export class TripsController {
       },
     },
   })
-  getStatistics() {
-    return this.tripsService.getStatistics();
+  getStatistics(@Request() req) {
+    return this.tripsService.getStatistics(req.user.id, req.user.role);
   }
 
   @Get('feedback/statistics')
