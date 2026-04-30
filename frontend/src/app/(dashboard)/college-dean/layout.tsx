@@ -129,23 +129,50 @@ export default function DashboardLayout({
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [inviteMode, setInviteMode] = useState<'email' | 'csv'>('email')
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Profile updated:', formData)
-    showToast('Profile updated successfully!', 'success')
-    setProfileModalOpen(false)
+  const getInitials = (name: string) => {
+    if (!name) return '?'
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToast('New passwords do not match!', 'error')
-      return
+    try {
+      const { userApi } = await import('@/lib/api')
+      await userApi.updateProfile({ name: formData.fullName, phoneNumber: formData.phone })
+      const updatedUser = { ...user, name: formData.fullName, phoneNumber: formData.phone }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      showToast('Profile updated successfully!', 'success')
+      setProfileModalOpen(false)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to update profile', 'error')
     }
-    console.log('Password changed')
-    showToast('Password changed successfully!', 'success')
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-    setProfileModalOpen(false)
+  }
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      showToast('Please fill in all password fields', 'error'); return
+    }
+    if (passwordData.newPassword === passwordData.currentPassword) {
+      showToast('New password must be different from your current password', 'error'); return
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showToast('New passwords do not match!', 'error'); return
+    }
+    const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
+    if (!strong.test(passwordData.newPassword)) {
+      showToast('Password must be at least 8 characters with uppercase, lowercase, number, and special character', 'error'); return
+    }
+    try {
+      const { userApi } = await import('@/lib/api')
+      await userApi.changePassword({ currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword })
+      showToast('Password changed successfully!', 'success')
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setProfileModalOpen(false)
+    } catch (error: any) {
+      showToast(error.message || 'Failed to change password', 'error')
+    }
   }
 
   const openProfileModal = () => {
@@ -537,7 +564,7 @@ export default function DashboardLayout({
                   <div className="text-xs text-gray-500 hidden lg:block">{user?.department?.name || user?.college?.name || user?.role}</div>
                 </div>
                 <div className="w-10 h-10 bg-[#152e22] rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">AK</span>
+                  <span className="text-white font-medium text-sm">{getInitials(user?.name || '')}</span>
                 </div>
                 <svg className="w-4 h-4 text-gray-500 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -559,7 +586,7 @@ export default function DashboardLayout({
                     <div className="p-3 sm:p-4 border-b border-gray-200">
                       <div className="flex items-center gap-2 sm:gap-3 mb-3">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#152e22] rounded-full flex items-center justify-center">
-                          <span className="text-white font-medium text-base sm:text-lg">AK</span>
+                          <span className="text-white font-medium text-base sm:text-lg">{getInitials(user?.name || '')}</span>
                         </div>
                         <div>
                           <div className="text-sm sm:text-base font-medium text-gray-900">{user?.name || 'User'}</div>
@@ -706,7 +733,7 @@ export default function DashboardLayout({
                       <label className="block text-sm font-medium text-gray-700 mb-4">Profile Picture</label>
                       <div className="flex items-center gap-6">
                         <div className="w-24 h-24 bg-[#152e22] rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-3xl">AK</span>
+                          <span className="text-white font-bold text-3xl">{getInitials(user?.name || '')}</span>
                         </div>
                         <div>
                           <button
@@ -1122,3 +1149,4 @@ export default function DashboardLayout({
     </ThemeProvider>
   )
 }
+
