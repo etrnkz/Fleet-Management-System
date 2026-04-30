@@ -23,6 +23,8 @@ export default function ApprovalsPage() {
     type: 'success'
   })
 
+  const [allTrips, setAllTrips] = useState<any[]>([])
+
   useEffect(() => {
     const currentUser = getCurrentUser()
     if (!currentUser) {
@@ -37,14 +39,23 @@ export default function ApprovalsPage() {
     try {
       setLoading(true)
       const currentUser = getCurrentUser()
-      const data = await tripApi.getAll()
-      const all = Array.isArray(data) ? data : []
+      // Load pending approvals (college-scoped) AND all college trips for history tabs
+      const [pendingData, allData] = await Promise.all([
+        tripApi.getPendingApprovals().catch(() => []),
+        tripApi.getAll().catch(() => []),
+      ])
+      const pending = Array.isArray(pendingData) ? pendingData : []
+      const all = Array.isArray(allData) ? allData : []
+
+      // Merge: pending approvals + already-processed trips (approved/rejected)
       // Exclude trips submitted by the dean themselves
-      const filtered = all.filter((t: any) =>
-        t.requester?.id !== currentUser?.id &&
-        t.requesterId !== currentUser?.id
+      const myId = currentUser?.id
+      const processed = all.filter((t: any) =>
+        (t.requester?.id !== myId && t.requesterId !== myId) &&
+        !pending.find((p: any) => p.id === t.id)
       )
-      setRequests(filtered)
+      setRequests([...pending, ...processed])
+      setAllTrips(all)
     } catch (error) {
       console.error('Failed to load requests:', error)
     } finally {
