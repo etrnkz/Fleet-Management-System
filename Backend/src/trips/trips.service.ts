@@ -1171,68 +1171,104 @@ export class TripsService {
       .where('trip.state IN (:...states)', { states })
       .orderBy('trip.createdAt', 'ASC');
 
-    // For department heads, only show trips from their department
+    // For department heads, only show trips from their own department
     if (role === UserRole.DepartmentHead) {
-      query
-        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
-        .leftJoin('approver.department', 'approverDepartment')
-        .andWhere('requesterDepartment.id = approverDepartment.id');
+      const approver = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['department'],
+      });
+      if (!approver?.department?.id) return [];
+      query.andWhere('requesterDepartment.id = :deptId', {
+        deptId: approver.department.id,
+      });
     }
 
-    // For college heads and deans, only show trips from their college
+    // For college heads and deans, only show trips from their own college
     if (role === UserRole.CollegeHead || role === UserRole.Dean) {
-      query
-        .leftJoin('users', 'approver', 'approver.id = :userId', { userId })
-        .leftJoin('approver.college', 'approverCollege')
-        .andWhere('requesterCollege.id = approverCollege.id');
+      const approver = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['college'],
+      });
+      if (!approver?.college?.id) return [];
+      query.andWhere('requesterCollege.id = :collegeId', {
+        collegeId: approver.college.id,
+      });
     }
 
     return query.getMany();
   }
 
-  async getStatistics() {
-    const total = await this.tripRepository.count();
-    const draft = await this.tripRepository.count({
-      where: { state: TripState.DRAFT },
-    });
-    const pending = await this.tripRepository.count({
-      where: [
-        { state: TripState.PENDING_DEPARTMENT },
-        { state: TripState.PENDING_COLLEGE },
-      ],
-    });
-    const approved = await this.tripRepository.count({
-      where: { state: TripState.APPROVED_FOR_ALLOCATION },
-    });
-    const inProgress = await this.tripRepository.count({
-      where: { state: TripState.IN_PROGRESS },
-    });
-    const completed = await this.tripRepository.count({
-      where: { state: TripState.COMPLETED },
-    });
-    const rejected = await this.tripRepository.count({
-      where: [
-        { state: TripState.REJECTED },
-        { state: TripState.AUTO_REJECTED_TIMEOUT },
-      ],
-    });
-    const cancelled = await this.tripRepository.count({
-      where: { state: TripState.CANCELLED },
-    });
+  async getStatistics(userId?: string, role?: UserRole) {
+    // Build a base query scoped to the caller's visibility
+    const scopedCount = async (extraWhere?: object | object[]) => {
+      const qb = this.tripRepository.createQueryBuilder('trip')
+        .leftJoin('trip.requester', 'requester')
+        .leftJoin('requester.department', 'requesterDepartment')
+        .leftJoin('requester.college', 'requesterCollege');
 
-    // Calculate total fuel cost
+      if (role === UserRole.DepartmentHead && userId) {
+        const approver = await this.userRepository.findOne({
+          where: { id: userId }, relations: ['department'],
+        });
+        if (approver?.department?.id) {
+          qb.andWhere('requesterDepartment.id = :deptId', { deptId: approver.department.id });
+        }
+      } else if ((role === UserRole.Dean || role === UserRole.CollegeHead) && userId) {
+        const approver = await this.userRepository.findOne({
+          where: { id: userId }, relations: ['college'],
+        });
+        if (approver?.college?.id) {
+          qb.andWhere('requesterCollege.id = :collegeId', { collegeId: approver.college.id });
+        }
+      }
+
+      if (extraWhere) {
+        const conditions = Array.isArray(extraWhere) ? extraWhere : [extraWhere];
+        qb.andWhere(
+          '(' + conditions.map((_, i) => `trip.state = :s${i}`).join(' OR ') + ')',
+          Object.fromEntries(conditions.map((c: any, i) => [`s${i}`, c.state])),
+        );
+      }
+      return qb.getCount();
+    };
+
+    const total      = await scopedCount();
+    const draft      = await scopedCount({ state: TripState.DRAFT });
+    const pending    = await scopedCount([
+      { state: TripState.PENDING_DEPARTMENT },
+      { state: TripState.PENDING_COLLEGE },
+      { state: TripState.PENDING_PRESIDENT },
+    ]);
+    const approved   = await scopedCount({ state: TripState.APPROVED_FOR_ALLOCATION });
+    const inProgress = await scopedCount({ state: TripState.IN_PROGRESS });
+    const completed  = await scopedCount({ state: TripState.COMPLETED });
+    const rejected   = await scopedCount([
+      { state: TripState.REJECTED },
+      { state: TripState.AUTO_REJECTED_TIMEOUT },
+    ]);
+    const cancelled  = await scopedCount({ state: TripState.CANCELLED });
+
+    // Calculate total fuel cost and distance from completed trips
     const fuelResult = await this.tripRepository
       .createQueryBuilder('trip')
       .select('SUM(trip.actualFuelCost)', 'totalFuel')
       .where('trip.state = :state', { state: TripState.COMPLETED })
       .getRawOne();
 
-    // Calculate total distance
     const distanceResult = await this.tripRepository
       .createQueryBuilder('trip')
       .select('SUM(trip.actualDistance)', 'totalDistance')
       .where('trip.state = :state', { state: TripState.COMPLETED })
       .getRawOne();
+
+    // Calculate averageTripsPerDay based on last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentTrips = await this.tripRepository
+      .createQueryBuilder('trip')
+      .where('trip.createdAt >= :since', { since: thirtyDaysAgo })
+      .getCount();
+    const averageTripsPerDay = parseFloat((recentTrips / 30).toFixed(2));
 
     return {
       total,
@@ -1243,13 +1279,10 @@ export class TripsService {
       completed,
       rejected,
       cancelled,
-      totalFuelCost: fuelResult?.totalFuel
-        ? parseFloat(fuelResult.totalFuel)
-        : 0,
-      totalDistance: distanceResult?.totalDistance
-        ? parseFloat(distanceResult.totalDistance)
-        : 0,
-      completionRate: total > 0 ? ((completed / total) * 100).toFixed(2) : 0,
+      totalFuelCost: fuelResult?.totalFuel ? parseFloat(fuelResult.totalFuel) : 0,
+      totalDistance: distanceResult?.totalDistance ? parseFloat(distanceResult.totalDistance) : 0,
+      completionRate: total > 0 ? parseFloat(((completed / total) * 100).toFixed(2)) : 0,
+      averageTripsPerDay,
     };
   }
 
@@ -1351,21 +1384,23 @@ export class TripsService {
       );
     }
 
-    trip.state = TripState.COMPLETED;
+    // Move to PENDING_RETURN — gate must scan vehicle on return to fully complete
+    trip.state = TripState.PENDING_RETURN;
     trip.completedAt = now;
-
-    // Update driver statistics (distance unknown at this point — set to 0 as placeholder)
-    if (trip.allocatedDriver) {
-      await this.driversService.incrementTripStats(trip.allocatedDriver.id, 0).catch(() => {});
-      await this.driversService.updateStatus(trip.allocatedDriver.id, DriverStatus.Available).catch(() => {});
-    }
 
     const savedTrip = await this.tripRepository.save(trip);
 
+    // Notify requester that gate return scan is needed
     try {
-      await this.notificationsService.notifyTripCompletedEarly(savedTrip, reason);
+      await this.notificationsService.create(
+        trip.requester,
+        'TripCompleted' as any,
+        'Trip Marked Complete — Awaiting Gate Return Scan',
+        `Your trip ${trip.requestNumber} has been marked complete. The vehicle must be scanned at the gate on return to finalize.`,
+        { tripId: trip.id, requestNumber: trip.requestNumber },
+      );
     } catch (error) {
-      console.error('Failed to send notification:', error);
+      // non-blocking
     }
 
     try {
@@ -1375,10 +1410,10 @@ export class TripsService {
         AuditEntity.Trip,
         savedTrip.id,
         null,
-        { state: TripState.COMPLETED, completedBy: 'requester', reason },
+        { state: TripState.PENDING_RETURN, completedBy: 'requester', reason },
         undefined,
         undefined,
-        `Trip completed early by requester: ${savedTrip.requestNumber}`,
+        `Trip marked complete by requester, pending gate return scan: ${savedTrip.requestNumber}`,
       );
     } catch (e) { /* non-blocking */ }
 
