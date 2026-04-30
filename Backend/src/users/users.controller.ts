@@ -197,6 +197,20 @@ export class UsersController {
       throw new BadRequestException('Current password is incorrect');
     }
 
+    // Reject if new password is the same as the current password
+    const isSame = await user.validatePassword(body.newPassword);
+    if (isSame) {
+      throw new BadRequestException('New password must be different from your current password');
+    }
+
+    // Enforce password strength: min 8 chars, uppercase, lowercase, number, special char
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!strongPassword.test(body.newPassword)) {
+      throw new BadRequestException(
+        'Password must be at least 8 characters and include uppercase, lowercase, number, and special character',
+      );
+    }
+
     const hashed = await bcrypt.hash(body.newPassword, 10);
     await this.usersService.update(req.user.id, { password: hashed } as any);
     return { message: 'Password updated successfully' };
