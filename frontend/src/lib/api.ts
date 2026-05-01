@@ -179,15 +179,20 @@ export const tripApi = {
 }
 
 // ── Vehicles ──────────────────────────────────────────────────────────────────
+import { cachedFetch, invalidateCachePrefix, CACHE_KEYS } from './cache'
+
 export const vehicleApi = {
-  getAll: (status?: string) => apiFetch(`/vehicles${status ? `?status=${status}` : ''}`),
+  getAll: (status?: string) => {
+    if (!status) return cachedFetch(CACHE_KEYS.VEHICLES, () => apiFetch('/vehicles'), 20_000)
+    return apiFetch(`/vehicles?status=${status}`)
+  },
   getAllVehicles: (params?: Record<string, string | number>) => {
     const q = params ? `?${new URLSearchParams(Object.entries(params).reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}))}` : ''
     return apiFetch(`/vehicles${q}`)
   },
-  getAvailableVehicles: () => apiFetch('/vehicles?status=AVAILABLE'),
+  getAvailableVehicles: () =>
+    cachedFetch(CACHE_KEYS.VEHICLES_AVAILABLE, () => apiFetch('/vehicles?status=AVAILABLE'), 15_000),
   getAssignedVehicle: async () => {
-    // Get current driver's profile and return their assigned vehicle
     const drivers: any[] = await apiFetch('/drivers') as any[]
     const user = getCurrentUser()
     if (!user) return null
@@ -195,36 +200,67 @@ export const vehicleApi = {
     return myDriver?.assignedVehicle ?? null
   },
   getById: (id: string) => apiFetch(`/vehicles/${id}`),
-  create: (data: any) => apiFetch('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: any) =>
-    apiFetch(`/vehicles/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: string) => apiFetch(`/vehicles/${id}`, { method: 'DELETE' }),
-  assignDriver: (vehicleId: string, driverId: string) =>
-    apiFetch(`/vehicles/${vehicleId}/assign-driver`, { method: 'PATCH', body: JSON.stringify({ driverId }) }),
-  unassignDriver: (vehicleId: string) =>
-    apiFetch(`/vehicles/${vehicleId}/unassign-driver`, { method: 'PATCH' }),
-  // Service vehicles (shuttle + security) — exempt from trip workflow
-  getServiceVehicles: () => apiFetch('/vehicles/service/all'),
-  registerServiceVehicle: (data: any) =>
-    apiFetch('/vehicles/service/register', { method: 'POST', body: JSON.stringify(data) }),
-  updateServiceVehicle: (id: string, data: any) =>
-    apiFetch(`/vehicles/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  create: (data: any) => {
+    invalidateCachePrefix('vehicles')
+    return apiFetch('/vehicles', { method: 'POST', body: JSON.stringify(data) })
+  },
+  update: (id: string, data: any) => {
+    invalidateCachePrefix('vehicles')
+    return apiFetch(`/vehicles/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+  },
+  delete: (id: string) => {
+    invalidateCachePrefix('vehicles')
+    return apiFetch(`/vehicles/${id}`, { method: 'DELETE' })
+  },
+  assignDriver: (vehicleId: string, driverId: string) => {
+    invalidateCachePrefix('vehicles')
+    return apiFetch(`/vehicles/${vehicleId}/assign-driver`, { method: 'PATCH', body: JSON.stringify({ driverId }) })
+  },
+  unassignDriver: (vehicleId: string) => {
+    invalidateCachePrefix('vehicles')
+    return apiFetch(`/vehicles/${vehicleId}/unassign-driver`, { method: 'PATCH' })
+  },
+  getServiceVehicles: () =>
+    cachedFetch(CACHE_KEYS.VEHICLES_SERVICE, () => apiFetch('/vehicles/service/all'), 30_000),
+  registerServiceVehicle: (data: any) => {
+    invalidateCachePrefix('vehicles')
+    return apiFetch('/vehicles/service/register', { method: 'POST', body: JSON.stringify(data) })
+  },
+  updateServiceVehicle: (id: string, data: any) => {
+    invalidateCachePrefix('vehicles')
+    return apiFetch(`/vehicles/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+  },
 }
 
 // ── Drivers ───────────────────────────────────────────────────────────────────
 export const driverApi = {
-  getAll: (status?: string) => apiFetch(`/drivers${status ? `?status=${status}` : ''}`),
-  getAllDrivers: () => apiFetch('/drivers'),
+  getAll: (status?: string) => {
+    if (!status) return cachedFetch(CACHE_KEYS.DRIVERS, () => apiFetch('/drivers'), 20_000)
+    return apiFetch(`/drivers?status=${status}`)
+  },
+  getAllDrivers: () => cachedFetch(CACHE_KEYS.DRIVERS, () => apiFetch('/drivers'), 20_000),
   getAvailableDrivers: () => apiFetch('/drivers?status=AVAILABLE'),
   getById: (id: string) => apiFetch(`/drivers/${id}`),
-  create: (data: any) => apiFetch('/drivers', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: any) =>
-    apiFetch(`/drivers/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: string) => apiFetch(`/drivers/${id}`, { method: 'DELETE' }),
-  assignVehicle: (driverId: string, vehicleId: string) =>
-    apiFetch(`/drivers/${driverId}/assign-vehicle`, { method: 'POST', body: JSON.stringify({ vehicleId }) }),
-  unassignVehicle: (driverId: string) =>
-    apiFetch(`/drivers/${driverId}/assign-vehicle`, { method: 'DELETE' }),
+  create: (data: any) => {
+    invalidateCachePrefix('drivers')
+    return apiFetch('/drivers', { method: 'POST', body: JSON.stringify(data) })
+  },
+  update: (id: string, data: any) => {
+    invalidateCachePrefix('drivers')
+    return apiFetch(`/drivers/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+  },
+  delete: (id: string) => {
+    invalidateCachePrefix('drivers')
+    return apiFetch(`/drivers/${id}`, { method: 'DELETE' })
+  },
+  assignVehicle: (driverId: string, vehicleId: string) => {
+    invalidateCachePrefix('drivers'); invalidateCachePrefix('vehicles')
+    return apiFetch(`/drivers/${driverId}/assign-vehicle`, { method: 'POST', body: JSON.stringify({ vehicleId }) })
+  },
+  unassignVehicle: (driverId: string) => {
+    invalidateCachePrefix('drivers'); invalidateCachePrefix('vehicles')
+    return apiFetch(`/drivers/${driverId}/assign-vehicle`, { method: 'DELETE' })
+  },
 }
 
 // ── Maintenance ───────────────────────────────────────────────────────────────
@@ -324,13 +360,14 @@ export const WS_URL = (() => {
 
 // ── Departments / Colleges ────────────────────────────────────────────────────
 export const departmentApi = {
-  getAll: () => apiFetch('/departments'),
+  // Colleges and departments rarely change — cache for 5 minutes
+  getAll: () => cachedFetch(CACHE_KEYS.DEPARTMENTS, () => apiFetch('/departments'), 300_000),
   getById: (id: string) => apiFetch(`/departments/${id}`),
   getByCollege: (collegeId: string) => apiFetch(`/departments?collegeId=${collegeId}`),
 }
 
 export const collegeApi = {
-  getAll: () => apiFetch('/colleges'),
+  getAll: () => cachedFetch(CACHE_KEYS.COLLEGES, () => apiFetch('/colleges'), 300_000),
   getById: (id: string) => apiFetch(`/colleges/${id}`),
 }
 
