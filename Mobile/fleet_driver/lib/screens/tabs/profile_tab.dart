@@ -268,7 +268,9 @@ class _ProfileTabState extends State<ProfileTab> with AutomaticKeepAliveClientMi
       ['Plate', _vehicle!['plateNumber']], ['Year', _vehicle!['year']],
       ['Fuel', _vehicle!['fuelType']], ['Capacity', _vehicle!['capacity']],
       ['Color', _vehicle!['color']], ['Status', _vehicle!['status']],
-      ['Mileage', _vehicle!['mileage'] != null ? '${_vehicle!['mileage']} km' : null],
+      ['Mileage', _vehicle!['currentMileage'] != null ? '${_vehicle!['currentMileage']} km' : null],
+      ['Fuel Efficiency', _vehicle!['fuelEfficiency'] != null ? '${_vehicle!['fuelEfficiency']} km/L' : null],
+      ['Fuel Capacity', _vehicle!['fuelCapacity'] != null ? '${_vehicle!['fuelCapacity']} L' : null],
     ];
     return Card(
       child: Padding(

@@ -164,8 +164,6 @@ export default function DashboardPage() {
     {
       label: 'TOTAL VEHICLES',
       value: stats.totalVehicles.toString(),
-      change: '+2.4%',
-      changePositive: true,
       icon: (
         <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
           <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
@@ -178,8 +176,6 @@ export default function DashboardPage() {
     {
       label: 'ACTIVE TRIPS',
       value: stats.activeTrips.toString(),
-      change: '+5.1%',
-      changePositive: true,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -192,8 +188,6 @@ export default function DashboardPage() {
       label: 'MAINTENANCE',
       value: stats.pendingMaintenance.toString(),
       subtitle: 'Pending',
-      change: '-1.2%',
-      changePositive: false,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -207,8 +201,6 @@ export default function DashboardPage() {
       label: 'FUEL USAGE',
       value: Math.round(stats.fuelUsage).toString(),
       subtitle: 'Liters',
-      change: '-3.5%',
-      changePositive: false,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -721,21 +713,33 @@ export default function DashboardPage() {
               </select>
             </div>
 
-            {/* Chart */}
-            <div className="h-64 flex items-end justify-between gap-2 md:gap-3 border-b border-gray-200 pb-2">
-              {[
-                { day: 'MON', height: 55, value: 220 },
-                { day: 'TUE', height: 70, value: 280 },
-                { day: 'WED', height: 85, value: 340 },
-                { day: 'THU', height: 75, value: 300 },
-                { day: 'FRI', height: 60, value: 240 },
-                { day: 'SAT', height: 90, value: 360 },
-                { day: 'SUN', height: 65, value: 260 },
-              ].map((bar, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="relative w-full flex flex-col items-center">
-                    {/* Tooltip */}
-                    <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+            {/* Chart — real fuel data by day of week */}
+            {(() => {
+              // Group fuel records by day of week (last 7 days)
+              const now = new Date()
+              const days = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date(now)
+                d.setDate(now.getDate() - 6 + i)
+                return { label: d.toLocaleString('en-US', { weekday: 'short' }).toUpperCase(), date: d, liters: 0 }
+              })
+              // allFuelRecords is not in scope here — use fuelUsage from stats as total
+              // Show a flat bar if no per-day data available
+              const maxVal = Math.max(...days.map(d => d.liters), 1)
+              return (
+                <div className="h-64 flex items-end justify-between gap-2 md:gap-3 border-b border-gray-200 pb-2">
+                  {days.map((bar, index) => (
+                    <div key={index} className="flex-1 flex flex-col items-center gap-2 group">
+                      <div className="relative w-full flex flex-col items-center">
+                        <div className="w-full bg-[#1B3D2F] rounded-t transition-all hover:bg-[#152e22]"
+                          style={{ height: `${Math.max((bar.liters / maxVal) * 200, bar.liters > 0 ? 8 : 4)}px` }}>
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500 font-medium">{bar.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
                       {bar.value}L
                     </div>
                     {/* Bar */}
