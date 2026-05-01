@@ -441,9 +441,11 @@ export const statsApi = {
     const mine = (Array.isArray(trips) ? trips : []).filter((t: any) =>
       t.allocatedDriver?.user?.id === userId || t.allocatedDriver?.userId === userId
     )
+    const completed = mine.filter((t: any) => t.state === 'COMPLETED')
     return {
-      completedTrips: mine.filter((t: any) => t.state === 'COMPLETED').length,
-      totalDistance: mine.reduce((s: number, t: any) => s + (t.actualDistance || t.estimatedDistance || 0), 0),
+      completedTrips: completed.length,
+      totalDistance: completed.reduce((s: number, t: any) => s + (Number(t.actualDistance) || Number(t.estimatedDistance) || 0), 0),
+      totalFuelCost: completed.reduce((s: number, t: any) => s + (Number(t.actualFuelCost) || 0), 0),
     }
   },
 }

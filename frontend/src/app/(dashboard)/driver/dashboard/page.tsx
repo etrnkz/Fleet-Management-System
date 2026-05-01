@@ -1076,7 +1076,7 @@ export default function DriverDashboard() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-[#1B3D2F]/5 rounded-xl p-3">
                   <p className="text-xs text-gray-500 mb-1">Distance</p>
-                  <p className="text-lg font-bold text-[#1B3D2F]">{selectedTrip.actualDistance || selectedTrip.estimatedDistance || '—'} <span className="text-xs font-normal">km</span></p>
+                  <p className="text-lg font-bold text-[#1B3D2F]">{selectedTrip.actualDistance ? `${Number(selectedTrip.actualDistance).toFixed(1)}` : selectedTrip.estimatedDistance ? `~${Number(selectedTrip.estimatedDistance).toFixed(1)}` : '—'} <span className="text-xs font-normal">km</span></p>
                 </div>
                 <div className="bg-orange-50 rounded-xl p-3">
                   <p className="text-xs text-gray-500 mb-1">Fuel Cost</p>
