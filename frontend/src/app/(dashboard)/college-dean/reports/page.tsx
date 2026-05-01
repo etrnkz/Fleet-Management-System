@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
 import { tripApi, vehicleApi, driverApi, getCurrentUser } from '@/lib/api'
+import { printTripsReport, exportTripsCSV } from '@/lib/exportUtils'
 
 export default function ReportsPage() {
   const router = useRouter()
@@ -55,46 +56,12 @@ export default function ReportsPage() {
   }
 
   const handleExportPDF = () => {
-    const rows = trips.slice(0, 500).map(t => `
-      <tr>
-        <td>${t.startDateTime ? new Date(t.startDateTime).toLocaleDateString() : 'N/A'}</td>
-        <td>${t.destination || 'N/A'}</td>
-        <td>${t.requester?.name || 'N/A'}</td>
-        <td>${t.requester?.department?.name || 'N/A'}</td>
-        <td>${t.state?.replace(/_/g, ' ') || 'N/A'}</td>
-        <td>${t.actualFuelCost ? `ETB ${Number(t.actualFuelCost).toFixed(2)}` : 'N/A'}</td>
-      </tr>`).join('')
-    const html = `<!DOCTYPE html><html><head><title>College Report</title>
-      <style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}
-      th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}
-      th{background:#1B3D2F;color:white}h1{color:#1B3D2F}</style></head>
-      <body><h1>College Trip Report</h1>
-      <p>Generated: ${new Date().toLocaleString()} | Total trips: ${trips.length}</p>
-      <table><thead><tr><th>Date</th><th>Destination</th><th>Requester</th><th>Department</th><th>Status</th><th>Fuel Cost</th></tr></thead>
-      <tbody>${rows}</tbody></table></body></html>`
-    const w = window.open('', '_blank')
-    if (w) { w.document.write(html); w.document.close(); w.print() }
+    printTripsReport(trips, 'College Trip Report', true)
     showToast('Print dialog opened', 'success')
   }
 
   const handleExportExcel = () => {
-    const headers = ['Date', 'Destination', 'Requester', 'Department', 'Status', 'Fuel Cost (ETB)', 'Distance (km)', 'Passengers']
-    const rows = trips.slice(0, 500).map(t => [
-      t.startDateTime ? new Date(t.startDateTime).toLocaleDateString() : 'N/A',
-      t.destination || 'N/A',
-      t.requester?.name || 'N/A',
-      t.requester?.department?.name || 'N/A',
-      t.state?.replace(/_/g, ' ') || 'N/A',
-      t.actualFuelCost ? Number(t.actualFuelCost).toFixed(2) : 'N/A',
-      t.actualDistance ? Number(t.actualDistance).toFixed(1) : 'N/A',
-      t.passengerCount || 'N/A',
-    ])
-    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `college-report-${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
+    exportTripsCSV(trips, 'college-report', true)
     showToast('Report exported', 'success')
   }
 

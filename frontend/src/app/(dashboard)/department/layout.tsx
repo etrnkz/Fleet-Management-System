@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Toast from '@/components/Toast'
 import { getCurrentUser } from '@/lib/api'
+import { getInitials, getTimeAgo, doLogout } from '@/lib/utils'
 import { useTheme, ThemeProvider } from '@/components/ThemeProvider'
 import { PushNotificationPrompt } from '@/components/PushNotificationPrompt'
 
@@ -86,20 +87,6 @@ export default function DashboardLayout({
   }
 
   const unreadCount = notifications.filter((n: any) => !n.isRead).length
-
-  const getInitials = (name: string) => {
-    if (!name) return '?'
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-  }
-
-  const getTimeAgo = (date: Date) => {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
-    if (seconds < 60) return 'Just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
-    return date.toLocaleDateString()
-  }
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning') => {
     const id = Date.now()
