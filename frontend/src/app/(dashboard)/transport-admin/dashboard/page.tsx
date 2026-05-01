@@ -739,20 +739,8 @@ export default function DashboardPage() {
                   ))}
                 </div>
               )
-            })()}top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                      {bar.value}L
-                    </div>
-                    {/* Bar */}
-                    <div 
-                      className="w-full bg-gradient-to-t from-[#1B3D2F] to-[#152e22] rounded-t-lg hover:from-[#1B3D2F] hover:to-[#152e22] transition-all cursor-pointer shadow-sm"
-                      style={{ height: `${bar.height}%`, minHeight: '20px' }}
-                    ></div>
-                  </div>
-                  <span className="text-xs text-gray-600 font-medium">{bar.day}</span>
-                </div>
-              ))}
-            </div>
-            
+            })()}
+
             {/* Legend */}
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-500">
               <div className="flex items-center gap-2">
