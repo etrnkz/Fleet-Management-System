@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import ConfirmModal from '@/components/ConfirmModal'
 import Toast from '@/components/Toast'
 import { tripApi, vehicleApi, auditApi, getCurrentUser } from '@/lib/api'
+import { getMonthlyTripBars, doLogout } from '@/lib/utils'
 
 const minDateTime = (() => {
   const d = new Date()
