@@ -1,15 +1,11 @@
 import {
   Controller,
   Get,
-  Post,
   Patch,
   Param,
   Query,
-  Body,
   UseGuards,
   Request,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -43,15 +39,6 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'Unread count' })
   getUnreadCount(@Request() req) {
     return this.notificationsService.getUnreadCount(req.user.id);
-  }
-
-  @Post('subscribe')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Save browser push subscription' })
-  @ApiResponse({ status: 200, description: 'Subscription saved' })
-  async subscribe(@Request() req, @Body() body: { subscription: any }) {
-    await this.notificationsService.savePushSubscription(req.user.id, body.subscription);
-    return { message: 'Subscription saved' };
   }
 
   @Patch(':id/read')

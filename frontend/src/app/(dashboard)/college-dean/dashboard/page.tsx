@@ -9,7 +9,10 @@ import { tripApi, vehicleApi, auditApi, getCurrentUser } from '@/lib/api'
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
-  const [selectedMonth] = useState('October 2024')
+  const [selectedMonth] = useState(() => {
+    const d = new Date()
+    return d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+  })
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')

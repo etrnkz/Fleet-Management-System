@@ -22,6 +22,10 @@ const LIVE_ROOM = 'live-tracking'; // global room for all active vehicle locatio
   },
   namespace: '/tracking',
   transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  connectTimeout: 45000,
+  allowEIO3: true,
 })
 export class TrackingGateway
   implements OnGatewayConnection, OnGatewayDisconnect

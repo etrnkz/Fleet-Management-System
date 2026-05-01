@@ -5,13 +5,12 @@ import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsGateway } from './notifications.gateway';
 import { Notification } from './entities/notification.entity';
-import { PushSubscription } from './entities/push-subscription.entity';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, PushSubscription]),
+    TypeOrmModule.forFeature([Notification]),
     UsersModule,
     EmailModule,
     JwtModule.register({

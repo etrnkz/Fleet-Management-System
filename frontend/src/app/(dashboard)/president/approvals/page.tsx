@@ -29,94 +29,63 @@ export default function ApprovalsPage() {
   const loadApprovalsData = async () => {
     try {
       setLoading(true)
-      
-      // Load all trips and filter client-side by status
-      const allTrips = await tripApi.getAll().catch(() => [])
 
-      const pendingStatuses = ['pending_president', 'PENDING_PRESIDENT']
-      const approvedStatuses = ['approved_for_allocation', 'APPROVED_FOR_ALLOCATION', 'approved', 'APPROVED', 'completed', 'COMPLETED', 'in_progress', 'IN_PROGRESS']
-      const rejectedStatuses = ['rejected', 'REJECTED']
+      // Use getPendingApprovals for the pending tab — backend scopes to PENDING_PRESIDENT
+      const [pendingData, allData] = await Promise.all([
+        tripApi.getPendingApprovals().catch(() => []),
+        tripApi.getAll().catch(() => []),
+      ])
 
-      const pendingTrips = allTrips.filter((t: any) => pendingStatuses.includes(t.status || t.state || ''))
-      const approvedTrips = allTrips.filter((t: any) => approvedStatuses.includes(t.status || t.state || ''))
-      const rejectedTrips = allTrips.filter((t: any) => rejectedStatuses.includes(t.status || t.state || ''))
+      const pending = Array.isArray(pendingData) ? pendingData : []
+      const all = Array.isArray(allData) ? allData : []
 
-      // Transform pending trips to approval requests format
-      const transformedPending = pendingTrips.map((trip: any) => ({
+      // History: approved = moved past president level; rejected = REJECTED state
+      const approvedTrips = all.filter((t: any) =>
+        ['APPROVED_FOR_ALLOCATION','CAR_ALLOCATED','PENDING_TRANSPORT_CONFIRM',
+         'READY','IN_PROGRESS','PENDING_RETURN','COMPLETED'].includes(t.state)
+      )
+      const rejectedTrips = all.filter((t: any) =>
+        ['REJECTED','AUTO_REJECTED_TIMEOUT','CANCELLED'].includes(t.state)
+      )
+
+      const transformTrip = (trip: any, status: string) => ({
         id: trip.id,
-        type: trip.purpose?.includes('International') ? 'International Trip' : 
-              trip.purpose?.includes('Research') ? 'Research Trip' :
-              trip.purpose?.includes('VIP') ? 'VIP Transport' :
-              trip.purpose?.includes('Emergency') ? 'Medical Emergency' : 'Academic Trip',
-        department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
+        requestNumber: trip.requestNumber,
+        type: trip.tripType === 'VIP' ? 'VIP Trip' : 'Official Trip',
+        department: trip.requester?.department?.name || trip.requester?.college?.name || 'N/A',
         requester: {
-          name: trip.requester ? (trip.requester.name || `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() || 'Unknown') : 'Unknown',
+          name: trip.requester?.name || 'Unknown',
           position: trip.requester?.role || 'Staff',
           email: trip.requester?.email || 'N/A',
-          phone: trip.requester?.phone || 'N/A'
+          phone: trip.requester?.phoneNumber || 'N/A',
         },
         purpose: trip.purpose || 'Official business',
         destination: trip.destination || 'N/A',
         tripDates: {
           start: formatDate(trip.startDateTime),
-          end: formatDate(trip.endDateTime)
+          end: formatDate(trip.endDateTime),
         },
-        duration: trip.startDateTime && trip.endDateTime ? 
-          `${Math.ceil((new Date(trip.endDateTime).getTime() - new Date(trip.startDateTime).getTime()) / (1000 * 60 * 60 * 24))} days` : 'N/A',
-        vehicleType: trip.allocatedVehicle ? `${trip.allocatedVehicle.make} ${trip.allocatedVehicle.model}` : 'To be assigned',
+        duration: trip.startDateTime && trip.endDateTime
+          ? `${Math.ceil((new Date(trip.endDateTime).getTime() - new Date(trip.startDateTime).getTime()) / (1000 * 60 * 60 * 24))} days`
+          : 'N/A',
+        vehicleType: trip.allocatedVehicle
+          ? `${trip.allocatedVehicle.make} ${trip.allocatedVehicle.model}`
+          : 'To be assigned',
         passengers: trip.passengerCount || 1,
-        estimatedCost: trip.estimatedFuelCost ? `ETB ${Number(trip.estimatedFuelCost).toLocaleString()}` : 'N/A',
-        budgetStatus: 'Available',
-        deanApproval: {
-          status: trip.state?.includes('COLLEGE') ? 'Approved' : 'Pending',
-          date: trip.updatedAt ? new Date(trip.updatedAt).toISOString().split('T')[0] : 'N/A',
-          comments: 'Approved by college dean'
-        },
-        priority: trip.purpose?.toLowerCase().includes('emergency') ? 'urgent' :
-                 trip.purpose?.toLowerCase().includes('international') ? 'high' : 'normal',
-        status: 'pending',
+        estimatedCost: trip.estimatedFuelCost
+          ? `ETB ${Number(trip.estimatedFuelCost).toLocaleString()}`
+          : 'N/A',
+        priority: trip.tripType === 'VIP' ? 'high' : 'normal',
+        status,
+        state: trip.state,
         submittedDate: trip.createdAt ? new Date(trip.createdAt).toISOString().split('T')[0] : 'N/A',
-        documents: ['Trip Request.pdf']
-      }))
+        rejectionReason: trip.rejectionReason || null,
+        documents: ['Trip Request.pdf'],
+      })
 
-      // Transform approved trips
-      const transformedApproved = approvedTrips.map((trip: any) => ({
-        id: trip.id,
-        type: trip.purpose?.includes('Research') ? 'Research Trip' : 'Academic Trip',
-        department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
-        requester: { 
-          name: trip.requester ? (trip.requester.name || `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() || 'Unknown') : 'Unknown',
-          position: trip.requester?.role || 'Staff'
-        },
-        purpose: trip.purpose || 'Official business',
-        destination: trip.destination || 'N/A',
-        status: 'approved',
-        approvedDate: trip.updatedAt ? new Date(trip.updatedAt).toISOString().split('T')[0] : 'N/A',
-        approvedBy: 'President',
-        priority: 'normal'
-      }))
-
-      // Transform rejected trips
-      const transformedRejected = rejectedTrips.map((trip: any) => ({
-        id: trip.id,
-        type: 'Trip Request',
-        department: trip.requester?.department?.name || trip.requester?.college?.name || 'Unknown Department',
-        requester: { 
-          name: trip.requester ? (trip.requester.name || `${trip.requester.firstName || ''} ${trip.requester.lastName || ''}`.trim() || 'Unknown') : 'Unknown',
-          position: trip.requester?.role || 'Staff'
-        },
-        purpose: trip.purpose || 'Official business',
-        destination: trip.destination || 'N/A',
-        status: 'rejected',
-        rejectedDate: trip.updatedAt ? new Date(trip.updatedAt).toISOString().split('T')[0] : 'N/A',
-        rejectedBy: 'President',
-        reason: trip.rejectionReason || 'Not approved',
-        priority: 'normal'
-      }))
-
-      setApprovalRequests(transformedPending)
-      setApprovedRequests(transformedApproved)
-      setRejectedRequests(transformedRejected)
+      setApprovalRequests(pending.map((t: any) => transformTrip(t, 'pending')))
+      setApprovedRequests(approvedTrips.map((t: any) => transformTrip(t, 'approved')))
+      setRejectedRequests(rejectedTrips.map((t: any) => transformTrip(t, 'rejected')))
     } catch (error) {
       console.error('Failed to load approvals data:', error)
       setApprovalRequests([])

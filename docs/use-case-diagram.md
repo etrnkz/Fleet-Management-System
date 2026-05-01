@@ -119,19 +119,16 @@ EMP --> UC_FEEDBACK
 
 ' ── Department Head ──────────────────────────────────────
 DEPT --> UC_LOGIN
-DEPT --> UC_PENDING
 DEPT --> UC_APPROVE
 DEPT --> UC_REJECT
 
 ' ── Dean / College Head ──────────────────────────────────
 DEAN --> UC_LOGIN
-DEAN --> UC_PENDING
 DEAN --> UC_APPROVE
 DEAN --> UC_REJECT
 
 ' ── President ────────────────────────────────────────────
 PRES --> UC_LOGIN
-PRES --> UC_PENDING
 PRES --> UC_APPROVE
 PRES --> UC_REJECT
 PRES --> UC_REPORTS

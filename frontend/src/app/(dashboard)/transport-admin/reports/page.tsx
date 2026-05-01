@@ -168,7 +168,7 @@ export default function ReportsPage() {
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4">
                       <span className="text-xs md:text-sm text-gray-900">
-                        {vehicle.mileage ? `${vehicle.mileage.toLocaleString()} km` : '-'}
+                        {vehicle.currentMileage ? `${Number(vehicle.currentMileage).toLocaleString()} km` : '—'}
                       </span>
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4">

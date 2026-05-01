@@ -201,18 +201,18 @@ export default function DashboardLayout({
 
   const handleSaveProfile = async () => {
     try {
-      const updatedUser = {
-        ...user,
-        ...editedUser
-      }
-      // In a real app, you would call an API to update the user
-      // await userApi.update(updatedUser)
-      localStorage.setItem('user', JSON.stringify(updatedUser))
-      setUser(updatedUser)
+      const { userApi } = await import('@/lib/api')
+      await userApi.updateProfile({
+        name: editedUser.name,
+        phoneNumber: editedUser.phoneNumber,
+      })
+      const freshUserData = await userApi.getProfile()
+      setUser(freshUserData)
+      localStorage.setItem('user', JSON.stringify(freshUserData))
       setShowProfileModal(false)
       setShowSuccessToast(true)
       setTimeout(() => setShowSuccessToast(false), 3000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save profile:', error)
     }
   }
@@ -230,10 +230,11 @@ export default function DashboardLayout({
       setSettingsSaving(true)
       const { userApi } = await import('@/lib/api')
       await userApi.updateProfile({ name: settingsForm.name, phoneNumber: settingsForm.phoneNumber })
-      // Fetch fresh user data from backend
       const freshUserData = await userApi.getProfile()
       setUser(freshUserData)
       localStorage.setItem('user', JSON.stringify(freshUserData))
+      setShowSuccessToast(true)
+      setTimeout(() => setShowSuccessToast(false), 3000)
     } catch (error: any) {
       console.error('Failed to save settings:', error)
     } finally {
@@ -242,13 +243,21 @@ export default function DashboardLayout({
   }
 
   const handlePasswordChange = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) return
+    if (passwordData.newPassword === passwordData.currentPassword) return
     if (passwordData.newPassword !== passwordData.confirmPassword) return
-    if (passwordData.newPassword.length < 6) return
+    const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
+    if (!strong.test(passwordData.newPassword)) return
     try {
       setSavingPassword(true)
       const { userApi } = await import('@/lib/api')
-      await userApi.updateProfile({ password: passwordData.newPassword, currentPassword: passwordData.currentPassword })
+      await userApi.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      })
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowSuccessToast(true)
+      setTimeout(() => setShowSuccessToast(false), 3000)
     } catch (error: any) {
       console.error('Failed to change password:', error)
     } finally {
@@ -1189,10 +1198,19 @@ export default function DashboardLayout({
                         </div>
                       </div>
                     ))}
-                    <button onClick={handlePasswordChange} disabled={savingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                    <button onClick={handlePasswordChange} disabled={savingPassword || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword === passwordData.currentPassword || passwordData.newPassword !== passwordData.confirmPassword || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(passwordData.newPassword)}
                       className="px-6 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] disabled:opacity-50 font-medium">
                       {savingPassword ? 'Updating...' : 'Update Password'}
                     </button>
+                    {passwordData.newPassword && passwordData.currentPassword && passwordData.newPassword === passwordData.currentPassword && (
+                      <p className="text-xs text-red-500">New password must be different from current password</p>
+                    )}
+                    {passwordData.newPassword && passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                      <p className="text-xs text-red-500">Passwords do not match</p>
+                    )}
+                    {passwordData.newPassword && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(passwordData.newPassword) && (
+                      <p className="text-xs text-orange-500">Min 8 chars with uppercase, lowercase, number and special character</p>
+                    )}
                   </div>
                 )}
                 {/* Account Tab */}

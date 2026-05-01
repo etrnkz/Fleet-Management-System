@@ -58,7 +58,7 @@ export function PushNotificationPrompt() {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token')
       if (!token) return
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/subscribe`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ subscription: subscription.toJSON() })

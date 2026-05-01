@@ -141,7 +141,7 @@ export const tripApi = {
   rejectTransport: (id: string, data: { reason: string }) =>
     apiFetch(`/trips/${id}/reject-transport`, { method: 'POST', body: JSON.stringify(data) }),
   rejectAssignment: (id: string, data: { reason: string }) =>
-    apiFetch(`/trips/${id}/driver-reject`, { method: 'POST', body: JSON.stringify(data) }),
+    apiFetch(`/trips/${id}/reject`, { method: 'POST', body: JSON.stringify(data) }),
   complete: (id: string, data: any) =>
     apiFetch(`/trips/${id}/complete`, { method: 'POST', body: JSON.stringify(data) }),
   completeTrip: (id: string, data: any) =>
@@ -203,6 +203,12 @@ export const vehicleApi = {
     apiFetch(`/vehicles/${vehicleId}/assign-driver`, { method: 'PATCH', body: JSON.stringify({ driverId }) }),
   unassignDriver: (vehicleId: string) =>
     apiFetch(`/vehicles/${vehicleId}/unassign-driver`, { method: 'PATCH' }),
+  // Service vehicles (shuttle + security) — exempt from trip workflow
+  getServiceVehicles: () => apiFetch('/vehicles/service/all'),
+  registerServiceVehicle: (data: any) =>
+    apiFetch('/vehicles/service/register', { method: 'POST', body: JSON.stringify(data) }),
+  updateServiceVehicle: (id: string, data: any) =>
+    apiFetch(`/vehicles/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 }
 
 // ── Drivers ───────────────────────────────────────────────────────────────────

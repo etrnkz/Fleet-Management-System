@@ -36,7 +36,6 @@ export default function DashboardPage() {
   }
   const [makeInput, setMakeInput] = useState('')
   const [modelInput, setModelInput] = useState('')
-  const [vehiclePurchaseDate, setVehiclePurchaseDate] = useState('')
   const [makeSuggestions, setMakeSuggestions] = useState<string[]>([])
   const [modelSuggestions, setModelSuggestions] = useState<string[]>([])
   const [showMakeSuggestions, setShowMakeSuggestions] = useState(false)
@@ -235,29 +234,6 @@ export default function DashboardPage() {
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault()
     const formData = new FormData(e.target as HTMLFormElement)
-
-    // Validate insurance expiry vs purchase date
-    const purchaseDateVal = formData.get('purchaseDate') as string
-    const insuranceExpiryVal = formData.get('insuranceExpiryDate') as string
-    if (insuranceExpiryVal) {
-      const expiry = new Date(insuranceExpiryVal)
-      if (purchaseDateVal) {
-        const purchase = new Date(purchaseDateVal)
-        purchase.setDate(purchase.getDate() + 1)
-        if (expiry < purchase) {
-          showToast('Insurance expiry must be at least 1 day after the purchase date', 'error')
-          return
-        }
-      } else {
-        const tomorrow = new Date()
-        tomorrow.setDate(tomorrow.getDate() + 1)
-        tomorrow.setHours(0, 0, 0, 0)
-        if (expiry < tomorrow) {
-          showToast('Insurance expiry must be a future date', 'error')
-          return
-        }
-      }
-    }
     
     try {
       const vehicleData: any = {
@@ -287,7 +263,6 @@ export default function DashboardPage() {
       setVehicleAddSuccess(true)
       setMakeInput('')
       setModelInput('')
-      setVehiclePurchaseDate('')
       setTimeout(() => {
         setShowAddVehicleForm(false)
         setVehicleAddSuccess(false)
@@ -368,14 +343,18 @@ export default function DashboardPage() {
 
       await driverApi.create(driverData)
       
+      showToast('Driver added successfully! You can now assign them to a vehicle.', 'success')
       setDriverAddSuccess(true)
       setDriverPhoneNumber('')
       setDriverPhoneCode('+251')
       setDriverPhoneError('')
       ;(e.target as HTMLFormElement).reset()
-      showToast('Driver added successfully!', 'success')
-      // Reload in background — don't await so success shows instantly
-      loadDashboardData().catch(() => {})
+      loadDashboardData()
+      setTimeout(() => {
+        setShowAssignDriverForm(false)
+        setShowAddDriverSection(false)
+        setDriverAddSuccess(false)
+      }, 2500)
     } catch (error: any) {
       showToast(error.message || 'Failed to add driver', 'error')
     } finally {
@@ -1423,11 +1402,6 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     name="purchaseDate"
-                    value={vehiclePurchaseDate}
-                    max={new Date().toISOString().split('T')[0]}
-                    onChange={e => {
-                      setVehiclePurchaseDate(e.target.value)
-                    }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
                 </div>
@@ -1439,20 +1413,8 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     name="insuranceExpiryDate"
-                    min={vehiclePurchaseDate ? (() => {
-                      const d = new Date(vehiclePurchaseDate)
-                      d.setDate(d.getDate() + 1)
-                      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-                    })() : (() => {
-                      const d = new Date()
-                      d.setDate(d.getDate() + 1)
-                      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-                    })()}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none"
                   />
-                  {vehiclePurchaseDate && (
-                    <p className="mt-1 text-xs text-gray-400">Must be after purchase date ({vehiclePurchaseDate})</p>
-                  )}
                 </div>
 
                 <div>
@@ -1724,6 +1686,19 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <>
+                {driverAddSuccess ? (
+                  /* Success State */
+                  <div className="p-12 flex flex-col items-center justify-center">
+                    <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                      <svg className="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-green-600 mb-2">Driver Added Successfully!</h3>
+                    <p className="text-gray-600 text-center">The driver account has been created and is ready to be assigned to a vehicle.</p>
+                  </div>
+                ) : (
+                <>
               {/* Add New Driver Form */}
               {showAddDriverSection && (
                 <>
@@ -1736,7 +1711,23 @@ export default function DashboardPage() {
                       </svg>
                     </div>
                     <h3 className="text-xl font-bold text-green-600 mb-2">Driver Added Successfully!</h3>
-                    <p className="text-gray-600 text-center text-sm">The driver account has been created and is ready to be assigned to a vehicle.</p>
+                    <p className="text-gray-600 text-center text-sm mb-6">The driver account has been created and is ready to be assigned to a vehicle.</p>
+                    <div className="flex gap-3 w-full max-w-xs">
+                      <button
+                        type="button"
+                        onClick={() => { setDriverAddSuccess(false); setShowAddDriverSection(false) }}
+                        className="flex-1 px-4 py-2.5 bg-[#1B3D2F] text-white rounded-lg hover:bg-[#152e22] transition-colors font-medium text-sm"
+                      >
+                        Assign to Vehicle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowAssignDriverForm(false); setShowAddDriverSection(false); setDriverAddSuccess(false) }}
+                        className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
                 ) : (
                 <form onSubmit={handleAddNewDriver}>
@@ -1964,6 +1955,8 @@ export default function DashboardPage() {
                 </form>
                 )}
                 </>
+              )}
+              </>
               )}
               </>
               )}

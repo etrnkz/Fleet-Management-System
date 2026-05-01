@@ -7,7 +7,6 @@ import Toast from '@/components/Toast'
 import { EmployeeShell } from '@/components/EmployeeShell'
 import PasswordInput from '@/components/PasswordInput'
 
-// Isolated component — its state changes don't re-render ProfilePage
 const ChangePasswordForm = memo(function ChangePasswordForm({ onToast }: { onToast: (msg: string, type: 'success' | 'error') => void }) {
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [savingPw, setSavingPw] = useState(false)
@@ -73,22 +72,14 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [profileImage, setProfileImage] = useState<string | null>(null)
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phoneNumber: '',
-    employeeId: '',
-  })
+  const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', employeeId: '' })
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
     show: false, message: '', type: 'success'
   })
 
   useEffect(() => {
     const currentUser = getCurrentUser()
-    if (!currentUser) {
-      router.push('/login')
-      return
-    }
+    if (!currentUser) { router.push('/login'); return }
     setUser(currentUser)
     loadProfile()
   }, [])
@@ -115,10 +106,7 @@ export default function ProfilePage() {
     if (!formData.name.trim()) { showToast('Full name is required', 'error'); return }
     try {
       setSaving(true)
-      await userApi.updateProfile({
-        name: formData.name,
-        phoneNumber: formData.phoneNumber,
-      })
+      await userApi.updateProfile({ name: formData.name, phoneNumber: formData.phoneNumber })
       const freshUserData = await userApi.getProfile()
       setUser(freshUserData)
       localStorage.setItem('user', JSON.stringify(freshUserData))
@@ -137,12 +125,29 @@ export default function ProfilePage() {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string)
-      }
+      reader.onloadend = () => { setProfileImage(reader.result as string) }
       reader.readAsDataURL(file)
     }
   }
+
+  const headerActions = useMemo(() => !editMode ? (
+    <button type="button" onClick={() => setEditMode(true)}
+      className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152e22]">
+      Edit Profile
+    </button>
+  ) : (
+    <div className="flex gap-2">
+      <button type="button" onClick={() => { setEditMode(false); loadProfile() }}
+        className="px-4 py-2.5 bg-[#eceef0] text-[#424845] text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#e0e3e5]">
+        Cancel
+      </button>
+      <button type="button" onClick={handleSave} disabled={saving}
+        className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#1e4a6e] disabled:opacity-50">
+        {saving ? 'Saving...' : 'Save'}
+      </button>
+    </div>
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [editMode, saving])
 
   if (loading) {
     return (
@@ -152,51 +157,13 @@ export default function ProfilePage() {
     )
   }
 
-  const headerActions = useMemo(() => !editMode ? (
-    <button
-      type="button"
-      onClick={() => setEditMode(true)}
-      className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#152e22]"
-    >
-      Edit Profile
-    </button>
-  ) : (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={() => { setEditMode(false); loadProfile() }}
-        className="px-4 py-2.5 bg-[#eceef0] text-[#424845] text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#e0e3e5]"
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="px-4 py-2.5 bg-[#1B3D2F] text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-[#1e4a6e] disabled:opacity-50"
-      >
-        {saving ? 'Saving...' : 'Save'}
-      </button>
-    </div>
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [editMode, saving])
-
   return (
-    <EmployeeShell
-      title="My Profile"
-      subtitle="Official employee record (on file)"
-      headerActions={headerActions}
-    >
+    <EmployeeShell title="My Profile" subtitle="Official employee record (on file)" headerActions={headerActions}>
       {toast.show && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast({ show: false, message: '', type: 'success' })}
-        />
+        <Toast message={toast.message} type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'success' })} />
       )}
-
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Profile Image */}
         <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
           <div className="flex flex-col items-center">
             <div className="relative">
@@ -219,21 +186,13 @@ export default function ProfilePage() {
                   </svg>
                 </label>
               )}
-              <input
-                type="file"
-                id="profileImageUpload"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-                disabled={!editMode}
-              />
+              <input type="file" id="profileImageUpload" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={!editMode} />
             </div>
             <h2 className="text-2xl font-bold text-[#1B3D2F] mt-4 tracking-tight">{formData.name}</h2>
             <p className="text-sm text-[#424845] font-medium uppercase tracking-wide">{user?.role}</p>
           </div>
         </div>
 
-        {/* Personal Information */}
         <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
           <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Personal Information</h3>
           <div className="space-y-4">
@@ -241,12 +200,8 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Full Name</label>
                 {editMode ? (
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
-                  />
+                  <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
                 ) : (
                   <p className="text-base text-[#191c1e] py-2">{formData.name}</p>
                 )}
@@ -256,17 +211,12 @@ export default function ProfilePage() {
                 <p className="text-base text-gray-900 py-2">{formData.email}</p>
               </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Phone Number</label>
                 {editMode ? (
-                  <input
-                    type="tel"
-                    value={formData.phoneNumber}
-                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
-                  />
+                  <input type="tel" value={formData.phoneNumber} onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
                 ) : (
                   <p className="text-base text-[#191c1e] py-2">{formData.phoneNumber || 'Not provided'}</p>
                 )}
@@ -274,12 +224,8 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Employee ID</label>
                 {editMode ? (
-                  <input
-                    type="text"
-                    value={formData.employeeId}
-                    onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none"
-                  />
+                  <input type="text" value={formData.employeeId} onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-[#c1c8c4] rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none" />
                 ) : (
                   <p className="text-base text-[#191c1e] py-2">{formData.employeeId || 'Not provided'}</p>
                 )}
@@ -288,10 +234,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Change Password — isolated component so its state doesn't cause scroll jump */}
         <ChangePasswordForm onToast={showToast} />
       </div>
     </EmployeeShell>
   )
 }
-
