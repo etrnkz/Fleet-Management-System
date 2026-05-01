@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -23,6 +23,11 @@ export default function ProfilePage() {
     office: '',
     department: '',
   })
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+    show: false,
+    message: '',
+    type: 'success'
+  })
 
   // Change password state
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -30,10 +35,6 @@ export default function ProfilePage() {
   const [showCurrentPw, setShowCurrentPw] = useState(false)
   const [showNewPw, setShowNewPw] = useState(false)
   const [showConfirmPw, setShowConfirmPw] = useState(false)
-
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
-    show: false, message: '', type: 'success'
-  })
 
   useEffect(() => {
     const currentUser = getCurrentUser()
@@ -68,40 +69,12 @@ export default function ProfilePage() {
     setToast({ show: true, message, type })
   }
 
-  // Password strength checker
-  const getPasswordStrength = (pw: string) => {
-    if (!pw) return null
-    const checks = {
-      length: pw.length >= 8,
-      upper: /[A-Z]/.test(pw),
-      lower: /[a-z]/.test(pw),
-      number: /\d/.test(pw),
-      special: /[\W_]/.test(pw),
-    }
-    const passed = Object.values(checks).filter(Boolean).length
-    if (passed <= 2) return { label: 'Weak', color: 'bg-red-500', width: 'w-1/4' }
-    if (passed === 3) return { label: 'Fair', color: 'bg-yellow-500', width: 'w-2/4' }
-    if (passed === 4) return { label: 'Good', color: 'bg-blue-500', width: 'w-3/4' }
-    return { label: 'Strong', color: 'bg-green-500', width: 'w-full' }
-  }
-
   const handleChangePassword = async () => {
     const { currentPassword, newPassword, confirmPassword } = pwForm
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      showToast('Please fill in all password fields', 'error'); return
-    }
-    if (newPassword === currentPassword) {
-      showToast('New password must be different from your current password', 'error'); return
-    }
-    if (newPassword !== confirmPassword) {
-      showToast('New password and confirmation do not match', 'error'); return
-    }
-    const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/
-    if (!strong.test(newPassword)) {
-      showToast('Password must be at least 8 characters with uppercase, lowercase, number, and special character', 'error'); return
-    }
-
+    if (!currentPassword || !newPassword || !confirmPassword) { showToast('Please fill in all password fields', 'error'); return }
+    if (newPassword === currentPassword) { showToast('New password must be different from your current password', 'error'); return }
+    if (newPassword !== confirmPassword) { showToast('Passwords do not match', 'error'); return }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(newPassword)) { showToast('Password must be at least 8 characters with uppercase, lowercase, number, and special character', 'error'); return }
     try {
       setPwSaving(true)
       await userApi.changePassword({ currentPassword, newPassword })
@@ -304,7 +277,8 @@ export default function ProfilePage() {
 
         {/* Organization Information */}
         <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
-          <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Organization Information</h3>          <div className="space-y-4">
+          <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Organization Information</h3>
+          <div className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Organization Type</label>
               {editMode ? (
@@ -370,13 +344,11 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-      </div>
 
         {/* Change Password */}
         <div className="bg-white rounded-xl p-8 border border-[#e0e3e5]/80 shadow-[40px_0_40px_-20px_rgba(4,30,24,0.04)]">
           <h3 className="text-sm font-bold text-[#1B3D2F] uppercase tracking-wider mb-6">Change Password</h3>
           <div className="space-y-4 max-w-md">
-
             {/* Current Password */}
             <div>
               <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Current Password</label>
@@ -390,15 +362,13 @@ export default function ProfilePage() {
                 />
                 <button type="button" onClick={() => setShowCurrentPw(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showCurrentPw ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                  )}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
                 </button>
               </div>
             </div>
-
             {/* New Password */}
             <div>
               <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">New Password</label>
@@ -412,28 +382,27 @@ export default function ProfilePage() {
                 />
                 <button type="button" onClick={() => setShowNewPw(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showNewPw ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                  )}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
                 </button>
               </div>
-              {/* Password strength bar */}
               {pwForm.newPassword && (() => {
-                const s = getPasswordStrength(pwForm.newPassword)
-                return s ? (
+                const checks = { length: pwForm.newPassword.length >= 8, upper: /[A-Z]/.test(pwForm.newPassword), lower: /[a-z]/.test(pwForm.newPassword), number: /\d/.test(pwForm.newPassword), special: /[\W_]/.test(pwForm.newPassword) }
+                const passed = Object.values(checks).filter(Boolean).length
+                const s = passed <= 2 ? { label: 'Weak', color: 'bg-red-500', width: 'w-1/4' } : passed === 3 ? { label: 'Fair', color: 'bg-yellow-500', width: 'w-2/4' } : passed === 4 ? { label: 'Good', color: 'bg-blue-500', width: 'w-3/4' } : { label: 'Strong', color: 'bg-green-500', width: 'w-full' }
+                return (
                   <div className="mt-2">
                     <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full transition-all ${s.color} ${s.width}`} />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{s.label} — min 8 chars, uppercase, lowercase, number, special character</p>
+                    <p className="text-xs text-gray-500 mt-1">{s.label} - min 8 chars, uppercase, lowercase, number, special character</p>
                   </div>
-                ) : null
+                )
               })()}
             </div>
-
-            {/* Confirm New Password */}
+            {/* Confirm Password */}
             <div>
               <label className="block text-xs font-semibold text-[#424845] uppercase tracking-wide mb-2">Confirm New Password</label>
               <div className="relative">
@@ -442,29 +411,23 @@ export default function ProfilePage() {
                   value={pwForm.confirmPassword}
                   onChange={e => setPwForm({ ...pwForm, confirmPassword: e.target.value })}
                   placeholder="Confirm new password"
-                  className={`w-full px-4 py-2.5 pr-10 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none ${
-                    pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword
-                      ? 'border-red-400 bg-red-50'
-                      : 'border-[#c1c8c4]'
-                  }`}
+                  className={`w-full px-4 py-2.5 pr-10 border rounded-lg focus:ring-2 focus:ring-[#1B3D2F]/30 focus:border-[#1B3D2F] outline-none ${pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword ? 'border-red-400 bg-red-50' : 'border-[#c1c8c4]'}`}
                 />
                 <button type="button" onClick={() => setShowConfirmPw(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showConfirmPw ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                  )}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
                 </button>
               </div>
               {pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
                 <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
               )}
               {pwForm.confirmPassword && pwForm.newPassword === pwForm.confirmPassword && pwForm.newPassword && (
-                <p className="text-xs text-green-600 mt-1">✓ Passwords match</p>
+                <p className="text-xs text-green-600 mt-1">Passwords match</p>
               )}
             </div>
-
             <button
               type="button"
               onClick={handleChangePassword}
