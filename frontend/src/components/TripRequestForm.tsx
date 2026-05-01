@@ -214,7 +214,11 @@ export default function TripRequestForm({ onSuccess, onCancel, showToast }: Trip
                 name="destination"
                 label="Destination"
                 value={formData.destination}
-                onChange={val => setFormData(prev => ({ ...prev, destination: val }))}
+                onChange={val => {
+                  // Only allow English (ASCII printable) characters
+                  const englishOnly = val.replace(/[^\x20-\x7E]/g, '')
+                  setFormData(prev => ({ ...prev, destination: englishOnly }))
+                }}
                 options={DESTINATIONS}
                 placeholder="Enter or select destination"
                 required
