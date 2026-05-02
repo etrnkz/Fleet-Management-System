@@ -142,8 +142,10 @@ export default function LiveTrackingPage() {
       const response = await tripApi.getAll()
       const tripsArray = Array.isArray(response) ? response : []
       
-      // Only keep IN_PROGRESS trips — completed/cancelled must never appear here
-      const inProgressTrips = tripsArray.filter((t: any) => t.state === 'IN_PROGRESS')
+      // Keep IN_PROGRESS and READY trips — READY means allocated and about to depart
+      const inProgressTrips = tripsArray.filter((t: any) => 
+        t.state === 'IN_PROGRESS' || t.state === 'READY'
+      )
       
       // Fetch location data for each trip
       const tripsWithLocation = await Promise.all(
@@ -540,8 +542,12 @@ export default function LiveTrackingPage() {
       try {
         const response = await tripApi.getAll()
         const allTrips = Array.isArray(response) ? response : []
-        // Only IN_PROGRESS trips are trackable
-        const activeIds = new Set(allTrips.filter((t: any) => t.state === 'IN_PROGRESS').map((t: any) => t.id))
+        // Only IN_PROGRESS and READY trips are trackable
+        const activeIds = new Set(
+          allTrips
+            .filter((t: any) => t.state === 'IN_PROGRESS' || t.state === 'READY')
+            .map((t: any) => t.id)
+        )
 
         // Remove completed/non-active trips from list immediately
         setTrips(prev => prev.filter(t => activeIds.has(t.id)))
@@ -574,11 +580,13 @@ export default function LiveTrackingPage() {
 
   const getStatusColor = (state: string) => {
     if (state === 'IN_PROGRESS') return 'bg-green-100 text-green-700'
+    if (state === 'READY') return 'bg-blue-100 text-blue-700'
     return 'bg-gray-100 text-gray-700'
   }
 
   const getStatusText = (state: string) => {
     if (state === 'IN_PROGRESS') return 'In Progress'
+    if (state === 'READY') return 'Ready to Depart'
     return state
   }
 
@@ -637,6 +645,7 @@ export default function LiveTrackingPage() {
             >
               <option value="all">All Status</option>
               <option value="IN_PROGRESS">In Progress</option>
+              <option value="READY">Ready to Depart</option>
             </select>
           </div>
         </div>
@@ -730,7 +739,7 @@ export default function LiveTrackingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
               <p className="text-gray-600 font-medium">No active trips found</p>
-              <p className="text-sm text-gray-500 mt-1">Trips will appear here when they are in progress</p>
+              <p className="text-sm text-gray-500 mt-1">Trips in progress or ready to depart will appear here</p>
             </div>
           ) : (
             filteredTrips.map((trip) => (
@@ -810,9 +819,11 @@ export default function LiveTrackingPage() {
                     <p className="text-sm font-semibold text-gray-900">{trip.passengerCount}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">Current Speed</p>
+                    <p className="text-xs text-gray-600 mb-1">GPS / Speed</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {trip.currentLocation ? `${Math.round(trip.currentLocation.speed)} km/h` : 'N/A'}
+                      {trip.currentLocation
+                        ? `${Math.round(trip.currentLocation.speed)} km/h`
+                        : <span className="text-gray-400 font-normal text-xs">Awaiting GPS</span>}
                     </p>
                   </div>
                 </div>
