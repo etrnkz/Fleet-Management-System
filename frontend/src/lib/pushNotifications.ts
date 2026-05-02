@@ -9,6 +9,69 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+/** Play a short two-tone chime using Web Audio API — no external file needed */
+export function playNotificationSound(): void {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const notes = [880, 1100]; // A5 → C#6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.12;
+      gain.gain.setValueAtTime(0.25, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
+      osc.start(start);
+      osc.stop(start + 0.3);
+    });
+  } catch {}
+}
+
+/** Show a browser Notification directly (foreground fallback) */
+export function showBrowserNotification(title: string, body: string, url = '/'): void {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const n = new Notification(title, {
+    body,
+    icon: '/hulogo.png',
+    badge: '/hulogo.png',
+    tag: 'fleet-foreground',
+    renotify: true,
+  });
+  n.onclick = () => { window.focus(); if (url !== '/') window.location.href = url; n.close(); };
+}
+
+/**
+ * Listen for messages from the service worker.
+ * When a push arrives while the app is open, the SW sends a postMessage
+ * so we can show an in-app toast + play sound.
+ *
+ * @param onNotification callback with { title, body, url }
+ * @returns cleanup function
+ */
+export function listenForPushMessages(
+  onNotification: (data: { title: string; body: string; url: string }) => void
+): () => void {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return () => {};
+
+  const handler = (event: MessageEvent) => {
+    if (event.data?.type === 'PUSH_NOTIFICATION') {
+      playNotificationSound();
+      onNotification({ title: event.data.title, body: event.data.body, url: event.data.url || '/' });
+    }
+    if (event.data?.type === 'NOTIFICATION_CLICK' && event.data.url) {
+      window.location.href = event.data.url;
+    }
+  };
+
+  navigator.serviceWorker.addEventListener('message', handler);
+  return () => navigator.serviceWorker.removeEventListener('message', handler);
+}
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
   try { return await navigator.serviceWorker.register('/sw.js', { scope: '/' }); }
