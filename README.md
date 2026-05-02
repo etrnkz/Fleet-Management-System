@@ -1,85 +1,122 @@
-﻿# Fleet Management System - Haramaya University
+﻿# Fleet Management System — Haramaya University
 
-A production-grade full-stack Fleet Management System. Digitizes vehicle fleet operations including trip requests, multi-level approvals, real-time GPS tracking, driver management, fuel tracking, and maintenance.
+Production-grade full-stack Fleet Management System. Digitizes vehicle fleet operations including trip requests, multi-level approvals, real-time GPS tracking, driver management, fuel tracking, and maintenance.
 
 ---
 
 ## Repository Structure
 
-- **Backend/** - NestJS REST API + WebSocket server (20 modules, PostgreSQL, TypeORM)
-- **frontend/** - Unified Next.js web app (single app, all 8 roles, role-based routing)
-- **Mobile/fleet_driver/** - Flutter Driver app (GPS tracking + QR codes)
-- **Mobile/fleet_gate/** - Flutter Gate Scanner (QR departure/return scanning)
-- **docs/** - Defense guide, normalization analysis, diagrams, SQL scripts
-
----
-
-## Frontend - Unified App (Single Port)
-
-All roles in one Next.js app. After login, users are routed to their role dashboard:
-
-- employee/ - Trip requests and tracking
-- transport-admin/ - Fleet operations
-- system-admin/ - User and system management
-- college-dean/ - College-level approvals
-- department/ - Department-level approvals
-- deployment-office/ - Vehicle allocation
-- president/ - Final approvals
-- driver/ - Driver trip management
+```
+Fleet-Management-System/
+├── Backend/          NestJS REST API + WebSocket server (PostgreSQL, TypeORM)
+├── frontend/         Unified Next.js web app — all 8 roles, role-based routing
+├── Mobile/
+│   └── fleet_mobile/ Flutter app — Driver & Gate Scanner (unified)
+└── docs/             Defense guide, normalization analysis, diagrams
+```
 
 ---
 
 ## Tech Stack
 
-- Backend: NestJS 11, TypeScript, PostgreSQL 15, TypeORM, Socket.IO, JWT
-- Frontend: Next.js 14, React, TypeScript, Tailwind CSS
-- Mobile: Flutter (Dart)
-- Deployment: PM2, Cloudflare Tunnel, Docker
+| Layer | Technology |
+|-------|-----------|
+| Backend | NestJS 11, TypeScript, PostgreSQL 15, TypeORM, Socket.IO, JWT |
+| Frontend | Next.js 14, React, TypeScript, Tailwind CSS |
+| Mobile | Flutter 3 (Dart) — Android |
+| Deployment | PM2, Cloudflare Tunnel, Docker |
 
 ---
 
-## Trip States
+## Web App — Role Dashboards
 
-DRAFT > PENDING_DEPARTMENT > PENDING_COLLEGE > PENDING_PRESIDENT > APPROVED_FOR_ALLOCATION > CAR_ALLOCATED > PENDING_TRANSPORT_CONFIRM > READY > IN_PROGRESS > PENDING_RETURN > COMPLETED
+Single Next.js app. After login, users are routed automatically by role:
+
+| Role | Path |
+|------|------|
+| Employee | `/employee/dashboard` |
+| Department Head | `/department/dashboard` |
+| College Dean | `/college-dean/dashboard` |
+| President | `/president/dashboard` |
+| Transport Office | `/transport-admin/dashboard` |
+| Deployment Office | `/deployment-office/dashboard` |
+| Driver | `/driver/dashboard` |
+| System Admin | `/system-admin/dashboard` |
+
+---
+
+## Mobile App — `fleet_mobile`
+
+One app, two interfaces — role is detected automatically on login:
+
+- **Driver** — GPS tracking, trip management, maintenance reports, QR display
+- **Gate** — QR scanner, scan history, departure/return gate log
+
+---
+
+## Trip Workflow
+
+```
+DRAFT → PENDING_DEPARTMENT → PENDING_COLLEGE → PENDING_PRESIDENT
+      → APPROVED_FOR_ALLOCATION → CAR_ALLOCATED → READY
+      → IN_PROGRESS → PENDING_RETURN → COMPLETED
+```
 
 ---
 
 ## Setup
 
 ### Backend
-cd Backend && npm install && cp .env.example .env
-npm run migration:run && npm run seed && npm run start:dev
-Swagger: http://localhost:3000/api/docs
+```bash
+cd Backend
+npm install
+cp .env.example .env        # configure DB credentials
+npm run migration:run
+npm run seed
+npm run start:dev
+# Swagger: http://localhost:3000/api/docs
+```
 
 ### Frontend
-cd frontend && npm install && npm run dev
-Runs on http://localhost:3000
+```bash
+cd frontend
+npm install
+npm run dev
+# http://localhost:3001
+```
 
 ### Mobile
-cd Mobile/fleet_driver && flutter pub get && flutter run
-cd Mobile/fleet_gate && flutter pub get && flutter run
+```bash
+cd Mobile/fleet_mobile
+flutter pub get
+flutter run                  # or: flutter build apk --release
+```
 
 ---
 
 ## Default Credentials
 
-admin@haramaya.edu.et / Password@123 (System Admin)
-transport@haramaya.edu.et / Password@123 (Transport Office)
-john@driver.com / Password@123 (Driver)
-gate@haramaya.edu.et / Password@123 (Gate)
-employee@haramaya.edu.et / Password@123 (Employee)
+| Role | Email | Password |
+|------|-------|----------|
+| System Admin | admin@haramaya.edu.et | Password@123 |
+| Transport Office | transport@haramaya.edu.et | Password@123 |
+| Driver | driver@haramaya.edu.et | Password@123 |
+| Employee | emp.computer-science@haramaya.edu.et | Password@123 |
 
 ---
 
 ## Documentation
 
-- docs/DEFENSE.md - Project defense guide with 45 examiner Q&A
-- docs/DATABASE_NORMALIZATION_ANALYSIS.md - 3NF normalization analysis
-- docs/QUICK_REFERENCE.md - Quick command reference
-- Backend/SAD.md - System Architecture Document
-- Backend/DEPLOY.md - Production deployment guide
+| File | Description |
+|------|-------------|
+| `docs/DEFENSE.md` | Project defense guide — 45 examiner Q&A |
+| `docs/DATABASE_NORMALIZATION_ANALYSIS.md` | 3NF normalization analysis |
+| `docs/QUICK_REFERENCE.md` | Quick command reference |
+| `Backend/DEPLOY.md` | Production deployment guide |
+| `Backend/REDEPLOY.md` | Re-deployment / update guide |
+| `Backend/postman/` | Postman collection + environments |
 
 ---
 
-Haramaya University - Department of Information Technology
-Final Year Project - Full-Stack Web and Mobile Application
+**Haramaya University — Department of Information Technology**  
+Final Year Project — Full-Stack Web and Mobile Application

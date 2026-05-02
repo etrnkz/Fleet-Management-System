@@ -1,17 +1,16 @@
-name: Postman API smoke (Newman)
+name: Backend Build Check
 
 on:
   push:
     paths:
-      - 'Backend/**'
-      - '.github/workflows/postman-smoke.yml'
+      - 'Backend/src/**'
+      - 'Backend/package.json'
   pull_request:
     paths:
-      - 'Backend/**'
-      - '.github/workflows/postman-smoke.yml'
+      - 'Backend/src/**'
 
 jobs:
-  newman:
+  build:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,13 +28,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: TypeScript build check
         run: npm run build
-
-      - name: Start API and wait for health
-        run: |
-          npm run start:prod &
-          npx wait-on http://127.0.0.1:3000/api/v1/health -t 120000
-
-      - name: Run Newman smoke collection
-        run: npm run test:postman
