@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/theme.dart';
 import 'core/storage.dart';
-import 'screens/login_screen.dart';
+import 'screens/landing_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/gate_screen.dart';
 
@@ -24,6 +24,9 @@ class FleetMobileApp extends StatelessWidget {
   }
 }
 
+/// Checks for an existing session.
+/// - If logged in  → routes directly to the correct dashboard (no landing shown).
+/// - If not logged in → shows the landing screen.
 class _Splash extends StatefulWidget {
   const _Splash();
   @override
@@ -38,30 +41,34 @@ class _SplashState extends State<_Splash> {
   }
 
   Future<void> _check() async {
+    // Small delay so the splash bg renders before we navigate
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+
     final token = await Storage.getAccessToken();
     if (!mounted) return;
 
     if (token != null) {
-      // Already logged in — route based on saved role
       final user = await Storage.getUser();
       final role = user?['role'] as String?;
       _routeByRole(role);
     } else {
+      // No session — show the landing page
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const LandingScreen(),
+          transitionsBuilder: (_, anim, __, child) =>
+              FadeTransition(opacity: anim, child: child),
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
       );
     }
   }
 
   void _routeByRole(String? role) {
-    Widget screen;
-    if (role == 'Gate') {
-      screen = const GateScreen();
-    } else {
-      // Driver, or any other role defaults to driver dashboard
-      screen = const DashboardScreen();
-    }
+    final Widget screen =
+        role == 'Gate' ? const GateScreen() : const DashboardScreen();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => screen),
@@ -70,31 +77,11 @@ class _SplashState extends State<_Splash> {
 
   @override
   Widget build(BuildContext context) {
+    // Minimal dark splash while we check storage
     return const Scaffold(
-      backgroundColor: kPrimary,
+      backgroundColor: Color(0xFF0d1f17),
       body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.directions_car, color: Colors.white, size: 56),
-            SizedBox(height: 16),
-            Text(
-              'Fleet Mobile',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Haramaya University',
-              style: TextStyle(color: Colors.white60, fontSize: 13),
-            ),
-            SizedBox(height: 32),
-            CircularProgressIndicator(color: Colors.white),
-          ],
-        ),
+        child: Icon(Icons.directions_car_rounded, color: Colors.white38, size: 48),
       ),
     );
   }
