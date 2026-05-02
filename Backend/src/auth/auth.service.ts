@@ -23,8 +23,8 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {
     this.refreshSecret =
+      this.configService.get<string>('jwt.refreshSecret') ||
       this.configService.get<string>('JWT_REFRESH_SECRET') ||
-      this.configService.get<string>('jwt.secret') ||
       'REFRESH_SECRET_KEY';
   }
 
@@ -107,8 +107,13 @@ export class AuthService {
       role: user.role,
     };
 
-    const accessTokenExpiry = loginDto.keepMeSignedIn ? '45d' : '7h';
-    const refreshTokenExpiry = loginDto.keepMeSignedIn ? '45d' : '7h';
+    const accessTokenExpiry = loginDto.keepMeSignedIn
+      ? (this.configService.get<string>('jwt.rememberMeExpiration') || '45d')
+      : (this.configService.get<string>('jwt.expiration') || '7h');
+
+    const refreshTokenExpiry = loginDto.keepMeSignedIn
+      ? (this.configService.get<string>('jwt.rememberMeExpiration') || '45d')
+      : (this.configService.get<string>('jwt.refreshExpiration') || '7d');
 
     const accessToken = this.jwtService.sign(payload, { expiresIn: accessTokenExpiry as any });
     const refreshToken = this.jwtService.sign(payload, {
@@ -150,7 +155,7 @@ export class AuthService {
       // Rotate refresh token on each use
       const newRefreshToken = this.jwtService.sign(newPayload, {
         secret: this.refreshSecret,
-        expiresIn: (process.env.JWT_REFRESH_EXPIRATION || '7d') as any,
+        expiresIn: (this.configService.get<string>('jwt.refreshExpiration') || '7d') as any,
       });
 
       return {
@@ -184,7 +189,7 @@ export class AuthService {
       resetTokenExpiry: expiry,
     } as any);
 
-    const resetLink = `${this.configService.get('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token=${token}`;
+    const resetLink = `${this.configService.get('app.frontendUrl', 'http://localhost:3001')}/reset-password?token=${token}`;
 
     await this.emailService.sendEmail({
       to: email,
