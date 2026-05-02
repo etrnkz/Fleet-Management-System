@@ -162,11 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Sign In',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Your role is detected automatically after login',
-                      style: TextStyle(color: kTextSecondary, fontSize: 13),
-                    ),
                     const SizedBox(height: 16),
 
                     // API URL toggle
@@ -282,29 +277,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: Colors.white, strokeWidth: 2),
                               )
                             : const Text('Sign In'),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Role info
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFf0f9f4),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: kPrimary.withOpacity(0.15)),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.info_outline, color: kPrimary, size: 16),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Drivers get GPS tracking & trip management.\nGate personnel get QR scanner & scan history.',
-                              style: TextStyle(fontSize: 11, color: kTextSecondary, height: 1.5),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ],

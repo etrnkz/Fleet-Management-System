@@ -94,7 +94,7 @@ function LandingPageContent() {
         </h1>
 
         <p className="text-white/50 text-base sm:text-lg max-w-md mb-12 leading-relaxed">
-          Unified portal for all institutional roles. Sign in to access your dashboard.
+          Haramaya University
         </p>
 
         {/* CTA */}
