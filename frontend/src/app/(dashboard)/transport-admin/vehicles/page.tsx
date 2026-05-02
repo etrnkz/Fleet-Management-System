@@ -517,6 +517,12 @@ export default function VehiclesPage() {
                         <p className="text-xs text-gray-600">{v.assignedDriver.user.name}</p>
                       </div>
                     )}
+                    {!v.assignedDriver?.user?.name && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        <p className="text-xs text-amber-600 font-medium">No driver assigned</p>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <span>{v.fuelType}</span>
                       {v.capacity && <><span></span><span>{v.capacity} seats</span></>}
@@ -569,6 +575,30 @@ export default function VehiclesPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Driver Assignment — shown prominently at top */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Assigned Driver *
+              </label>
+              <select
+                value={serviceForm.assignedDriverId}
+                onChange={e => setServiceForm(f => ({ ...f, assignedDriverId: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white">
+                <option value="">— Select a driver —</option>
+                {allDrivers
+                  .filter(d => d.status !== 'Inactive')
+                  .map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.user?.name} · {d.licenseNumber}
+                      {d.status === 'Available' ? '' : ` (${d.status})`}
+                    </option>
+                  ))}
+              </select>
+              <p className="text-[11px] text-gray-400 mt-1">
+                Driver's mobile app will auto-start GPS tracking for this vehicle on login.
+              </p>
             </div>
 
             {/* Basic info */}
@@ -644,23 +674,6 @@ export default function VehiclesPage() {
                   ? 'Morning: 06:30 depart campus  town\nEvening: 17:00 depart town  campus'
                   : 'e.g. 24/7 campus patrol, shift A: 06:00-18:00, shift B: 18:00-06:00'}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none" />
-            </div>
-
-            {/* Driver Assignment */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Assigned Driver</label>
-              <select
-                value={serviceForm.assignedDriverId}
-                onChange={e => setServiceForm(f => ({ ...f, assignedDriverId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white">
-                <option value="">— No driver assigned —</option>
-                {allDrivers.map(d => (
-                  <option key={d.id} value={d.id}>
-                    {d.user?.name} · {d.licenseNumber}
-                  </option>
-                ))}
-              </select>
-              <p className="text-[11px] text-gray-400 mt-1">The assigned driver's mobile app will auto-start GPS tracking for this vehicle.</p>
             </div>
 
             {/* Notes */}
