@@ -1,10 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { systemAdminApi } from '@/lib/api'
+import { systemAdminApi, collegeApi, departmentApi } from '@/lib/api'
 import Combobox from '@/components/Combobox'
 
-const ROLES = ['User', 'DepartmentHead', 'CollegeHead', 'Dean', 'President', 'TransportOffice', 'DeploymentTeam', 'MaintenanceTeam', 'Driver', 'SystemAdmin', 'Developer']
+const ROLES = ['User', 'DepartmentHead', 'CollegeHead', 'Dean', 'President', 'TransportOffice', 'DeploymentTeam', 'MaintenanceTeam', 'Driver', 'Gate', 'SystemAdmin', 'Developer']
+
+// Roles that need a college assignment
+const COLLEGE_ROLES = ['Dean', 'CollegeHead']
+// Roles that need both college + department
+const DEPT_ROLES = ['DepartmentHead', 'User']
 
 const ROLE_COLORS: Record<string, string> = {
   SystemAdmin: 'bg-red-100 text-red-700',
@@ -32,14 +37,40 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'User', phoneNumber: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'User', phoneNumber: '', collegeId: '', departmentId: '' })
   const [showBulkModal, setShowBulkModal] = useState(false)
   const [bulkFile, setBulkFile] = useState<File | null>(null)
   const [bulkRole, setBulkRole] = useState('User')
   const [bulkLoading, setBulkLoading] = useState(false)
   const [exportLoading, setExportLoading] = useState(false)
 
-  useEffect(() => { loadUsers() }, [])
+  // Colleges and departments for assignment
+  const [colleges, setColleges] = useState<any[]>([])
+  const [allDepartments, setAllDepartments] = useState<any[]>([])
+  const [filteredDepts, setFilteredDepts] = useState<any[]>([])
+
+  useEffect(() => { loadUsers(); loadStructure() }, [])
+
+  const loadStructure = async () => {
+    try {
+      const [cols, depts] = await Promise.all([collegeApi.getAll(), departmentApi.getAll()])
+      setColleges(Array.isArray(cols) ? cols : [])
+      setAllDepartments(Array.isArray(depts) ? depts : [])
+    } catch {}
+  }
+
+  // When college changes in form, filter departments
+  const handleCollegeChange = (collegeId: string) => {
+    setForm(f => ({ ...f, collegeId, departmentId: '' }))
+    if (collegeId) {
+      setFilteredDepts(allDepartments.filter((d: any) => d.college?.id === collegeId))
+    } else {
+      setFilteredDepts(allDepartments)
+    }
+  }
+
+  const needsCollege = (role: string) => COLLEGE_ROLES.includes(role) || DEPT_ROLES.includes(role)
+  const needsDept = (role: string) => DEPT_ROLES.includes(role)
 
   const loadUsers = async () => {
     setLoading(true)
@@ -60,12 +91,22 @@ export default function UsersPage() {
     if (!form.name.trim()) { showToast('Full name is required', 'error'); return }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { showToast('Please enter a valid email address', 'error'); return }
     if (form.password.length < 8) { showToast('Password must be at least 8 characters', 'error'); return }
+    if (needsCollege(form.role) && !form.collegeId) { showToast('Please select a college for this role', 'error'); return }
+    if (needsDept(form.role) && !form.departmentId) { showToast('Please select a department for this role', 'error'); return }
     setActionLoading('create')
     try {
-      await systemAdminApi.createUser(form)
+      await systemAdminApi.createUser({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+        phoneNumber: form.phoneNumber || undefined,
+        ...(form.collegeId ? { collegeId: form.collegeId } : {}),
+        ...(form.departmentId ? { departmentId: form.departmentId } : {}),
+      })
       showToast('User created successfully', 'success')
       setShowCreateModal(false)
-      setForm({ name: '', email: '', password: '', role: 'User', phoneNumber: '' })
+      setForm({ name: '', email: '', password: '', role: 'User', phoneNumber: '', collegeId: '', departmentId: '' })
       loadUsers()
     } catch (err: any) {
       showToast(err.message || 'Failed to create user', 'error')
@@ -77,7 +118,13 @@ export default function UsersPage() {
     if (!selectedUser) return
     setActionLoading('edit')
     try {
-      await systemAdminApi.updateUser(selectedUser.id, { name: form.name, role: form.role, phoneNumber: form.phoneNumber })
+      await systemAdminApi.updateUser(selectedUser.id, {
+        name: form.name,
+        role: form.role,
+        phoneNumber: form.phoneNumber || undefined,
+        ...(form.collegeId ? { collegeId: form.collegeId } : {}),
+        ...(form.departmentId ? { departmentId: form.departmentId } : {}),
+      })
       showToast('User updated successfully', 'success')
       setShowEditModal(false)
       loadUsers()
@@ -122,7 +169,10 @@ export default function UsersPage() {
 
   const openEdit = (user: any) => {
     setSelectedUser(user)
-    setForm({ name: user.name || '', email: user.email || '', password: '', role: user.role || 'User', phoneNumber: user.phoneNumber || '' })
+    const collegeId = user.college?.id || user.department?.college?.id || ''
+    setForm({ name: user.name || '', email: user.email || '', password: '', role: user.role || 'User', phoneNumber: user.phoneNumber || '', collegeId, departmentId: user.department?.id || '' })
+    if (collegeId) setFilteredDepts(allDepartments.filter((d: any) => d.college?.id === collegeId))
+    else setFilteredDepts(allDepartments)
     setShowEditModal(true)
   }
 
@@ -264,7 +314,12 @@ export default function UsersPage() {
                         <div className="w-8 h-8 bg-[#1B3D2F] rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-white text-xs font-bold">{user.name?.charAt(0)?.toUpperCase() || '?'}</span>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">{user.name || 'N/A'}</span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{user.name || 'N/A'}</p>
+                          {(user.department?.name || user.college?.name) && (
+                            <p className="text-[11px] text-gray-400">{user.department?.name || user.college?.name}</p>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{user.email}</td>
@@ -326,11 +381,34 @@ export default function UsersPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                   <Combobox
                     value={form.role}
-                    onChange={val => setForm(p => ({...p, role: val}))}
+                    onChange={val => { setForm(p => ({...p, role: val, collegeId: '', departmentId: ''})); setFilteredDepts(allDepartments) }}
                     options={ROLES}
                     placeholder="Select role..."
                   />
                 </div>
+                {/* College — for Dean, CollegeHead, DepartmentHead, Employee */}
+                {needsCollege(form.role) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">College <span className="text-red-500">*</span></label>
+                    <select value={form.collegeId} onChange={e => handleCollegeChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm bg-white">
+                      <option value="">— Select college —</option>
+                      {colleges.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                )}
+                {/* Department — for DepartmentHead, Employee */}
+                {needsDept(form.role) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Department <span className="text-red-500">*</span></label>
+                    <select value={form.departmentId} onChange={e => setForm(p => ({...p, departmentId: e.target.value}))}
+                      disabled={!form.collegeId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm bg-white disabled:bg-gray-50 disabled:text-gray-400">
+                      <option value="">{form.collegeId ? '— Select department —' : '— Select college first —'}</option>
+                      {filteredDepts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                )}
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
                   <button type="submit" disabled={actionLoading === 'create'} className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] disabled:opacity-50">
@@ -371,11 +449,34 @@ export default function UsersPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                   <Combobox
                     value={form.role}
-                    onChange={val => setForm(p => ({...p, role: val}))}
+                    onChange={val => { setForm(p => ({...p, role: val, collegeId: '', departmentId: ''})); setFilteredDepts(allDepartments) }}
                     options={ROLES}
                     placeholder="Select role..."
                   />
                 </div>
+                {/* College */}
+                {needsCollege(form.role) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">College <span className="text-red-500">*</span></label>
+                    <select value={form.collegeId} onChange={e => handleCollegeChange(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm bg-white">
+                      <option value="">— Select college —</option>
+                      {colleges.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                )}
+                {/* Department */}
+                {needsDept(form.role) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Department <span className="text-red-500">*</span></label>
+                    <select value={form.departmentId} onChange={e => setForm(p => ({...p, departmentId: e.target.value}))}
+                      disabled={!form.collegeId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1B3D2F] outline-none text-sm bg-white disabled:bg-gray-50 disabled:text-gray-400">
+                      <option value="">{form.collegeId ? '— Select department —' : '— Select college first —'}</option>
+                      {filteredDepts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                )}
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">Cancel</button>
                   <button type="submit" disabled={actionLoading === 'edit'} className="flex-1 px-4 py-2 bg-[#1B3D2F] text-white rounded-lg text-sm font-medium hover:bg-[#152e22] disabled:opacity-50">
