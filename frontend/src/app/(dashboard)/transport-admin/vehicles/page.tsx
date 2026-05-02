@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect } from 'react'
-import { vehicleApi, tripApi } from '@/lib/api'
+import { vehicleApi, tripApi, driverApi } from '@/lib/api'
 import Toast, { ToastType } from '@/components/Toast'
 import Combobox from '@/components/Combobox'
 
@@ -57,6 +57,7 @@ const EMPTY_SERVICE_FORM = {
   serviceSchedule: '',
   serviceRoute: '',
   notes: '',
+  assignedDriverId: '' as string,
 }
 
 export default function VehiclesPage() {
@@ -78,11 +79,22 @@ export default function VehiclesPage() {
   const [editingServiceVehicle, setEditingServiceVehicle] = useState<Vehicle | null>(null)
   const [serviceForm, setServiceForm] = useState({ ...EMPTY_SERVICE_FORM })
   const [savingService, setSavingService] = useState(false)
+  const [allDrivers, setAllDrivers] = useState<{ id: string; user: { name: string }; licenseNumber: string }[]>([])
 
   useEffect(() => {
     loadVehicles()
     loadServiceVehicles()
+    loadDrivers()
   }, [])
+
+  const loadDrivers = async () => {
+    try {
+      const data = await driverApi.getAll() as any[]
+      setAllDrivers(Array.isArray(data) ? data : [])
+    } catch {
+      setAllDrivers([])
+    }
+  }
 
   const loadVehicles = async () => {
     try {
@@ -128,6 +140,7 @@ export default function VehiclesPage() {
         serviceSchedule: vehicle.serviceSchedule ?? '',
         serviceRoute: vehicle.serviceRoute ?? '',
         notes: '',
+        assignedDriverId: vehicle.assignedDriver?.id ?? '',
       })
     } else {
       setEditingServiceVehicle(null)
@@ -148,20 +161,38 @@ export default function VehiclesPage() {
     }
     try {
       setSavingService(true)
+      const { assignedDriverId, ...vehiclePayload } = serviceForm
       const payload = {
-        ...serviceForm,
+        ...vehiclePayload,
         year: Number(serviceForm.year),
         capacity: Number(serviceForm.capacity),
         isServiceVehicle: true,
         status: 'Active',
       }
+
+      let savedVehicleId: string
       if (editingServiceVehicle) {
         await vehicleApi.updateServiceVehicle(editingServiceVehicle.id, payload)
+        savedVehicleId = editingServiceVehicle.id
         showToast('Service vehicle updated', 'success')
       } else {
-        await vehicleApi.registerServiceVehicle(payload)
+        const created = await vehicleApi.registerServiceVehicle(payload) as any
+        savedVehicleId = created?.id
         showToast('Service vehicle registered', 'success')
       }
+
+      // Assign or unassign driver
+      if (savedVehicleId) {
+        const currentDriverId = editingServiceVehicle?.assignedDriver?.id ?? ''
+        if (assignedDriverId && assignedDriverId !== currentDriverId) {
+          // Assign new driver
+          await driverApi.assignVehicle(assignedDriverId, savedVehicleId)
+        } else if (!assignedDriverId && currentDriverId) {
+          // Unassign driver
+          await driverApi.unassignVehicle(currentDriverId)
+        }
+      }
+
       closeServiceForm()
       loadServiceVehicles()
     } catch (error: any) {
@@ -613,6 +644,23 @@ export default function VehiclesPage() {
                   ? 'Morning: 06:30 depart campus  town\nEvening: 17:00 depart town  campus'
                   : 'e.g. 24/7 campus patrol, shift A: 06:00-18:00, shift B: 18:00-06:00'}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none resize-none" />
+            </div>
+
+            {/* Driver Assignment */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Assigned Driver</label>
+              <select
+                value={serviceForm.assignedDriverId}
+                onChange={e => setServiceForm(f => ({ ...f, assignedDriverId: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white">
+                <option value="">— No driver assigned —</option>
+                {allDrivers.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.user?.name} · {d.licenseNumber}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-gray-400 mt-1">The assigned driver's mobile app will auto-start GPS tracking for this vehicle.</p>
             </div>
 
             {/* Notes */}

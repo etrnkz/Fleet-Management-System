@@ -106,13 +106,13 @@ export default function LiveTrackingPage() {
   const [turningOffEngine, setTurningOffEngine] = useState(false)
   const socketRef = useRef<Socket | null>(null)
 
-  // Service vehicles live state
+  // Service vehicles: registered list + live GPS merged
+  const [registeredServiceVehicles, setRegisteredServiceVehicles] = useState<any[]>([])
   const [serviceVehicleLive, setServiceVehicleLive] = useState<Record<string, {
     vehicleId: string; plateNumber: string; make: string; model: string
     serviceVehicleType: string; driverName: string | null
     lat: number; lng: number; speed: number; heading: number | null; timestamp: string
   }>>({})
-
   // Map view states
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
@@ -172,10 +172,21 @@ export default function LiveTrackingPage() {
       
       setTrips(tripsWithLocation)
 
-      // Also load service vehicle live locations
+      // Also load service vehicle live locations + registered list
       try {
         const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
         const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token') || ''
+
+        // Load registered service vehicles (always available, even without live GPS)
+        const svRegRes = await fetch(`${API_BASE}/vehicles/service/all`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (svRegRes.ok) {
+          const svReg: any[] = await svRegRes.json()
+          setRegisteredServiceVehicles(Array.isArray(svReg) ? svReg : [])
+        }
+
+        // Load live GPS positions (in-memory, only present if driver posted recently)
         const svRes = await fetch(`${API_BASE}/tracking/service-vehicles/live`, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -630,43 +641,83 @@ export default function LiveTrackingPage() {
           </div>
         </div>
 
-        {/* Service Vehicles Live */}
-        {Object.values(serviceVehicleLive).length > 0 && (
-          <div className="mb-4">
+        {/* Service Vehicles — always show registered ones, merge live GPS */}
+        {registeredServiceVehicles.length > 0 && (
+          <div className="mb-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
               <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              Service Vehicles — Always Active ({Object.values(serviceVehicleLive).length})
+              Service Vehicles — Always Active ({registeredServiceVehicles.length})
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-              {Object.values(serviceVehicleLive).map(sv => (
-                <div key={sv.vehicleId} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sv.serviceVehicleType === 'Security' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {sv.serviceVehicleType === 'Security' ? '🛡 Security' : '🚌 Shuttle'}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-xs text-green-700 font-medium">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      Live GPS
-                    </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {registeredServiceVehicles.map(sv => {
+                const live = serviceVehicleLive[sv.id]
+                const hasLive = !!live
+                return (
+                  <div key={sv.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                    {/* Header bar */}
+                    <div className={`px-4 py-2 flex items-center justify-between ${sv.serviceVehicleType === 'Security' ? 'bg-red-50 border-b border-red-100' : 'bg-blue-50 border-b border-blue-100'}`}>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sv.serviceVehicleType === 'Security' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {sv.serviceVehicleType === 'Security' ? '🛡 Security' : '🚌 Shuttle'}
+                      </span>
+                      {hasLive ? (
+                        <span className="flex items-center gap-1.5 text-xs text-green-700 font-semibold">
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                          Live GPS
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                          <span className="w-1.5 h-1.5 bg-gray-300 rounded-full" />
+                          No GPS yet
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                      <div>
+                        <p className="font-bold text-gray-900">{sv.plateNumber}</p>
+                        <p className="text-sm text-gray-500">{sv.make} {sv.model} · {sv.year}</p>
+                      </div>
+
+                      {/* Driver */}
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        {sv.assignedDriver?.user?.name
+                          ? <span className="font-medium text-gray-700">{sv.assignedDriver.user.name}</span>
+                          : <span className="italic text-gray-400">No driver assigned</span>}
+                      </div>
+
+                      {/* Route */}
+                      {sv.serviceRoute && (
+                        <div className="flex items-start gap-2 text-xs text-gray-500">
+                          <svg className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
+                          <span>{sv.serviceRoute}</span>
+                        </div>
+                      )}
+
+                      {/* Live GPS data */}
+                      {hasLive ? (
+                        <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className={`font-bold ${live.speed > 5 ? 'text-green-600' : 'text-gray-500'}`}>
+                              {Math.round(live.speed)} km/h
+                            </span>
+                            <span className="text-gray-400">{getTimeAgo(new Date(live.timestamp))}</span>
+                          </div>
+                          <p className="text-[11px] text-gray-400">{live.lat.toFixed(5)}, {live.lng.toFixed(5)}</p>
+                        </div>
+                      ) : (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-[11px] text-gray-400">
+                            {sv.assignedDriver?.user?.name
+                              ? `Waiting for ${sv.assignedDriver.user.name} to go online`
+                              : 'Assign a driver to start tracking'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="font-bold text-gray-900">{sv.plateNumber}</p>
-                  <p className="text-sm text-gray-500">{sv.make} {sv.model}</p>
-                  {sv.driverName && (
-                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                      {sv.driverName}
-                    </p>
-                  )}
-                  <div className="mt-3 flex items-center gap-3 text-xs text-gray-600">
-                    <span className={`font-semibold ${sv.speed > 5 ? 'text-green-600' : 'text-gray-500'}`}>
-                      {Math.round(sv.speed)} km/h
-                    </span>
-                    <span className="text-gray-300">·</span>
-                    <span>{sv.lat.toFixed(5)}, {sv.lng.toFixed(5)}</span>
-                  </div>
-                  <p className="text-[11px] text-gray-400 mt-1">{getTimeAgo(new Date(sv.timestamp))}</p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
