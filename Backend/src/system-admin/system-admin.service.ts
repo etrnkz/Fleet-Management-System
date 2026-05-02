@@ -252,9 +252,10 @@ export class SystemAdminService {
 
     const typeStats = await this.vehicleRepository
       .createQueryBuilder('vehicle')
-      .select('vehicle.type', 'type')
+      .select('vehicle.vehicleType', 'type')
       .addSelect('COUNT(*)', 'count')
-      .groupBy('vehicle.type')
+      .where('vehicle.vehicleType IS NOT NULL')
+      .groupBy('vehicle.vehicleType')
       .getRawMany();
 
     return {
@@ -313,27 +314,27 @@ export class SystemAdminService {
     const query = this.auditRepository
       .createQueryBuilder('audit')
       .leftJoinAndSelect('audit.user', 'user')
-      .orderBy('audit.timestamp', 'DESC')
-      .limit(filters.limit);
+      .orderBy('audit.createdAt', 'DESC')
+      .take(filters.limit);
 
     if (filters.startDate) {
-      query.andWhere('audit.timestamp >= :startDate', {
+      query.andWhere('audit.createdAt >= :startDate', {
         startDate: new Date(filters.startDate),
       });
     }
 
     if (filters.endDate) {
-      query.andWhere('audit.timestamp <= :endDate', {
+      query.andWhere('audit.createdAt <= :endDate', {
         endDate: new Date(filters.endDate),
       });
     }
 
     if (filters.userId) {
-      query.andWhere('audit.user.id = :userId', { userId: filters.userId });
+      query.andWhere('audit.userId = :userId', { userId: filters.userId });
     }
 
     if (filters.action) {
-      query.andWhere('audit.action ILIKE :action', {
+      query.andWhere('LOWER(audit.action) LIKE LOWER(:action)', {
         action: `%${filters.action}%`,
       });
     }

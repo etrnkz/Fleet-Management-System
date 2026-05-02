@@ -448,7 +448,7 @@ export const systemAdminApi = {
   getSystemHealth: () => apiFetch('/system-admin/system-health'),
   getAuditLogs: (params?: Record<string, string | number>) => {
     const q = params ? `?${new URLSearchParams(Object.entries(params).reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}))}` : ''
-    return apiFetch(`/audit${q}`)
+    return apiFetch(`/system-admin/audit-logs${q}`)
   },
   createBackup: () => apiFetch('/system-admin/backup', { method: 'POST' }),
   getBackups: () => apiFetch('/system-admin/backups'),
@@ -456,15 +456,10 @@ export const systemAdminApi = {
   enableMaintenanceMode: (reason?: string, duration?: number) =>
     apiFetch('/system-admin/maintenance-mode', { method: 'POST', body: JSON.stringify({ reason, duration }) }),
   disableMaintenanceMode: () => apiFetch('/system-admin/maintenance-mode', { method: 'DELETE' }),
-  bulkImportUsers: (formData: FormData) => {
-    const token = getAuthToken()
-    return fetch(`${API_BASE_URL}/system-admin/bulk/users/import`, {
+  bulkImportUsers: (users: any[]) => {
+    return apiFetch('/system-admin/bulk/users/import', {
       method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    }).then(async res => {
-      if (!res.ok) { const err = await res.json().catch(() => ({ message: 'Failed' })); throw new Error(err.message) }
-      return res.json()
+      body: JSON.stringify({ users }),
     })
   },
 }
