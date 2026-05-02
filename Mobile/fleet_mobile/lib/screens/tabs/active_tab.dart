@@ -164,27 +164,45 @@ class _ActiveTabState extends State<ActiveTab> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: isShutdown ? kErrorBg : kPrimaryBg,
+                                  color: isShutdown
+                                      ? kErrorBg
+                                      : gps.isOffline
+                                          ? const Color(0xFFFFF9C4)
+                                          : kPrimaryBg,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(
-                                      isShutdown ? Icons.warning_rounded : Icons.gps_fixed,
+                                      isShutdown
+                                          ? Icons.warning_rounded
+                                          : gps.isOffline
+                                              ? Icons.wifi_off_rounded
+                                              : Icons.gps_fixed,
                                       size: 14,
-                                      color: isShutdown ? kError : kPrimary,
+                                      color: isShutdown
+                                          ? kError
+                                          : gps.isOffline
+                                              ? kWarningText
+                                              : kPrimary,
                                     ),
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
                                         isShutdown
                                             ? 'Restricted zone${gps.violationZoneName != null ? ': ${gps.violationZoneName}' : ''}'
-                                            : gps.active
-                                                ? 'GPS live${gps.lastPostedAt != null ? ' · last ping ${gps.lastPostedAt!.hour.toString().padLeft(2, '0')}:${gps.lastPostedAt!.minute.toString().padLeft(2, '0')}' : ''}'
-                                                : 'GPS initialising…',
+                                            : gps.isOffline
+                                                ? 'Offline — ${gps.offlineQueueSize} point${gps.offlineQueueSize == 1 ? '' : 's'} buffered, will sync when reconnected'
+                                                : gps.active
+                                                    ? 'GPS live${gps.lastPostedAt != null ? ' · last ping ${gps.lastPostedAt!.hour.toString().padLeft(2, '0')}:${gps.lastPostedAt!.minute.toString().padLeft(2, '0')}' : ''}${gps.offlineQueueSize > 0 ? ' · syncing ${gps.offlineQueueSize} buffered' : ''}'
+                                                    : 'GPS initialising…',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: isShutdown ? kError : kPrimary,
+                                          color: isShutdown
+                                              ? kError
+                                              : gps.isOffline
+                                                  ? kWarningText
+                                                  : kPrimary,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -192,7 +210,7 @@ class _ActiveTabState extends State<ActiveTab> {
                                   ],
                                 ),
                               ),
-                              if (gps.lastError != null) ...[
+                              if (gps.lastError != null && !gps.isOffline) ...[
                                 const SizedBox(height: 8),
                                 Container(
                                   padding: const EdgeInsets.all(8),

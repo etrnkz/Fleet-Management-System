@@ -232,6 +232,29 @@ export class TrackingController {
     return location;
   }
 
+  @Post('service-vehicle/:vehicleId/locations/bulk')
+  @ApiOperation({
+    summary: 'Bulk upload offline locations for a service vehicle',
+    description: 'Upload multiple GPS locations recorded while offline for a shuttle or security vehicle',
+  })
+  @ApiResponse({ status: 201, description: 'Locations processed' })
+  async bulkUpdateServiceVehicleLocations(
+    @Param('vehicleId', ParseUUIDPipe) vehicleId: string,
+    @Body() body: { locations: UpdateLocationDto[] },
+  ) {
+    const locations = Array.isArray(body) ? body : (body.locations ?? []);
+    let lastLocation: any = null;
+    for (const dto of locations) {
+      try {
+        lastLocation = await this.trackingService.saveServiceVehicleLocation(vehicleId, dto);
+      } catch (_) {}
+    }
+    if (lastLocation) {
+      this.trackingGateway.broadcastServiceVehicleLocation(vehicleId, lastLocation);
+    }
+    return { count: locations.length, message: `${locations.length} locations processed` };
+  }
+
   @Get('service-vehicle/:vehicleId/driver-vehicle')
   @ApiOperation({
     summary: 'Get service vehicle assigned to a driver user',

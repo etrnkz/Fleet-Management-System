@@ -508,7 +508,7 @@ export class TrackingService {
   async saveServiceVehicleLocation(
     vehicleId: string,
     dto: UpdateLocationDto,
-  ): Promise<ServiceVehicleLocation> {
+  ): Promise<ServiceVehicleLocation & { geofenceStatus: string; engineSimulatedOff: boolean; violationZoneName: string | null }> {
     const vehicle = await this.vehicleRepository.findOne({
       where: { id: vehicleId },
       relations: ['assignedDriver', 'assignedDriver.user'],
@@ -518,7 +518,43 @@ export class TrackingService {
       throw new BadRequestException('Vehicle is not a service vehicle');
     }
 
-    const loc: ServiceVehicleLocation = {
+    // Evaluate geofence (service vehicles can also have restricted zones)
+    const geofence = evaluateVipGeofenceForPoint(vehicle, dto.latitude, dto.longitude);
+
+    // Fire notifications on state change (reuse same cache key as vehicleId)
+    const prevStatus = geofenceStateCache.get(vehicleId) ?? 'clear';
+    if (geofence.status !== prevStatus) {
+      geofenceStateCache.set(vehicleId, geofence.status);
+      if (geofence.status !== 'clear') {
+        const plateNumber = vehicle.plateNumber;
+        const zoneName = geofence.violationZoneName ?? 'Restricted zone';
+        const isWarning = geofence.status === 'warning';
+        const notifType = isWarning ? NotificationType.GeofenceWarning : NotificationType.GeofenceViolation;
+        const title = isWarning
+          ? `⚠️ Geofence Warning — ${plateNumber} (${vehicle.serviceVehicleType})`
+          : `🚨 Geofence Violation — Engine Shutdown — ${plateNumber} (${vehicle.serviceVehicleType})`;
+        const message = isWarning
+          ? `Service vehicle ${plateNumber} is approaching restricted zone "${zoneName}". Engine shutdown will trigger if it enters.`
+          : `Service vehicle ${plateNumber} has entered restricted zone "${zoneName}". Engine shutdown has been triggered.`;
+        const notifData = { vehicleId, plateNumber, zoneName, geofenceStatus: geofence.status };
+
+        try {
+          const transportUsers = await this.usersService.findByRole(UserRole.TransportOffice);
+          for (const user of transportUsers) {
+            await this.notificationsService.create(user, notifType, title, message, notifData).catch(() => {});
+            if (user.phoneNumber) {
+              if (isWarning) {
+                this.smsService.sendGeofenceWarningSms(user.phoneNumber, plateNumber, zoneName).catch(() => {});
+              } else {
+                this.smsService.sendGeofenceShutdownSms(user.phoneNumber, plateNumber, zoneName).catch(() => {});
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+
+    const loc: ServiceVehicleLocation & { geofenceStatus: string; engineSimulatedOff: boolean; violationZoneName: string | null } = {
       vehicleId: vehicle.id,
       plateNumber: vehicle.plateNumber,
       make: vehicle.make,
@@ -531,6 +567,9 @@ export class TrackingService {
       speed: dto.speed ?? null,
       heading: dto.heading ?? null,
       timestamp: new Date(),
+      geofenceStatus: geofence.status,
+      engineSimulatedOff: geofence.engineSimulatedOff,
+      violationZoneName: geofence.violationZoneName,
     };
     serviceVehicleLocations.set(vehicleId, loc);
     return loc;

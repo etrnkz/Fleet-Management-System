@@ -191,6 +191,9 @@ export class TrackingGateway
       speed: location.speed ?? null,
       heading: location.heading ?? null,
       timestamp: location.timestamp ?? new Date().toISOString(),
+      geofenceStatus: location.geofenceStatus ?? 'clear',
+      engineSimulatedOff: location.engineSimulatedOff ?? false,
+      violationZoneName: location.violationZoneName ?? null,
     });
   }
 
