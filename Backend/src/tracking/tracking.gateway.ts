@@ -176,6 +176,24 @@ export class TrackingGateway
     });
   }
 
+  /** Broadcast a service vehicle location update to the global live map room */
+  broadcastServiceVehicleLocation(vehicleId: string, location: any) {
+    this.server.to(LIVE_ROOM).emit('service-vehicle-location', {
+      vehicleId,
+      plateNumber: location.plateNumber ?? null,
+      make: location.make ?? null,
+      model: location.model ?? null,
+      fuelType: location.fuelType ?? null,
+      serviceVehicleType: location.serviceVehicleType ?? null,
+      driverName: location.driverName ?? null,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      speed: location.speed ?? null,
+      heading: location.heading ?? null,
+      timestamp: location.timestamp ?? new Date().toISOString(),
+    });
+  }
+
   /**
    * Send a notification to a specific user's socket room.
    * Users join their own room `user-{userId}` on connect.

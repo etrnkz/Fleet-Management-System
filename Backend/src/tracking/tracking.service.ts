@@ -8,12 +8,30 @@ import { Repository, Between } from 'typeorm';
 import { GpsLocation } from './entities/gps-location.entity';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { TripRequest, TripState } from '../trips/entities/trip-request.entity';
+import { Vehicle } from '../vehicles/entities/vehicle.entity';
 import { evaluateVipGeofenceForPoint, GeofenceResult } from '../vehicles/utils/vip-geofence.util';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
 import { UsersService } from '../users/users.service';
 import { UserRole } from '../users/entities/user.entity';
 import { SmsService } from '../sms/sms.service';
+
+/** In-memory store for service vehicle live locations (no DB migration needed) */
+export interface ServiceVehicleLocation {
+  vehicleId: string;
+  plateNumber: string;
+  make: string;
+  model: string;
+  fuelType: string;
+  serviceVehicleType: string;
+  driverName: string | null;
+  latitude: number;
+  longitude: number;
+  speed: number | null;
+  heading: number | null;
+  timestamp: Date;
+}
+const serviceVehicleLocations = new Map<string, ServiceVehicleLocation>();
 
 export type LocationSavePayload = {
   id: string;
@@ -43,6 +61,8 @@ export class TrackingService {
     private readonly gpsLocationRepository: Repository<GpsLocation>,
     @InjectRepository(TripRequest)
     private readonly tripRepository: Repository<TripRequest>,
+    @InjectRepository(Vehicle)
+    private readonly vehicleRepository: Repository<Vehicle>,
     private readonly notificationsService: NotificationsService,
     private readonly usersService: UsersService,
     private readonly smsService: SmsService,
@@ -482,6 +502,59 @@ export class TrackingService {
     } catch {
       return location;
     }
+  }
+
+  /** Save GPS location for a service vehicle (shuttle/security) — no trip needed */
+  async saveServiceVehicleLocation(
+    vehicleId: string,
+    dto: UpdateLocationDto,
+  ): Promise<ServiceVehicleLocation> {
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { id: vehicleId },
+      relations: ['assignedDriver', 'assignedDriver.user'],
+    });
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    if (!vehicle.isServiceVehicle) {
+      throw new BadRequestException('Vehicle is not a service vehicle');
+    }
+
+    const loc: ServiceVehicleLocation = {
+      vehicleId: vehicle.id,
+      plateNumber: vehicle.plateNumber,
+      make: vehicle.make,
+      model: vehicle.model,
+      fuelType: vehicle.fuelType,
+      serviceVehicleType: vehicle.serviceVehicleType ?? 'Shuttle',
+      driverName: (vehicle.assignedDriver as any)?.user?.name ?? null,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+      speed: dto.speed ?? null,
+      heading: dto.heading ?? null,
+      timestamp: new Date(),
+    };
+    serviceVehicleLocations.set(vehicleId, loc);
+    return loc;
+  }
+
+  /** Get live locations for all service vehicles that have reported in the last 5 minutes */
+  getServiceVehicleLiveLocations(): ServiceVehicleLocation[] {
+    const cutoff = new Date(Date.now() - 5 * 60 * 1000);
+    return Array.from(serviceVehicleLocations.values()).filter(
+      (l) => l.timestamp >= cutoff,
+    );
+  }
+
+  /** Get the assigned service vehicle for a driver user */
+  async getDriverServiceVehicle(userId: string): Promise<Vehicle | null> {
+    // Find driver record for this user
+    const vehicles = await this.vehicleRepository
+      .createQueryBuilder('v')
+      .leftJoinAndSelect('v.assignedDriver', 'd')
+      .leftJoinAndSelect('d.user', 'u')
+      .where('v.isServiceVehicle = :sv', { sv: true })
+      .andWhere('u.id = :uid', { uid: userId })
+      .getMany();
+    return vehicles[0] ?? null;
   }
 
   async deleteOldLocations(daysOld: number = 90): Promise<number> {

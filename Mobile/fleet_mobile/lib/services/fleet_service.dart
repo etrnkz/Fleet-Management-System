@@ -161,4 +161,39 @@ class FleetService {
     final res = await _api.post('/tracking/$tripId/location', body);
     return Map<String, dynamic>.from(res ?? {});
   }
+
+  // ── Service Vehicle ───────────────────────────────────────────────────────
+
+  /// Returns the service vehicle (shuttle/security) assigned to this driver user, or null.
+  Future<Map<String, dynamic>?> getMyServiceVehicle(String userId) async {
+    try {
+      final res = await _api.get('/tracking/service-vehicle/$userId/driver-vehicle');
+      if (res == null) return null;
+      return Map<String, dynamic>.from(res);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Post GPS location for a service vehicle (no trip needed).
+  Future<void> postServiceVehicleLocation(
+    String vehicleId, {
+    required double latitude,
+    required double longitude,
+    double? speed,
+    double? heading,
+    double? altitude,
+    double? accuracy,
+  }) async {
+    final body = <String, dynamic>{
+      'latitude': latitude,
+      'longitude': longitude,
+      'metadata': {'source': 'flutter-service-vehicle'},
+    };
+    if (speed != null) body['speed'] = speed;
+    if (heading != null) body['heading'] = heading;
+    if (altitude != null) body['altitude'] = altitude;
+    if (accuracy != null) body['accuracy'] = accuracy;
+    await _api.post('/tracking/service-vehicle/$vehicleId/location', body);
+  }
 }

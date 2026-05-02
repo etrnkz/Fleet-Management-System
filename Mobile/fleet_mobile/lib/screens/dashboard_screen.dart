@@ -73,19 +73,35 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<void> _pollActiveTrip() async {
     if (_user == null) return;
     try {
-      final trips = await _svc.getActiveTrips(_user!['id'] as String);
+      final userId = _user!['id'] as String;
+
+      // First check if this driver is assigned to a service vehicle
+      final serviceVehicle = await _svc.getMyServiceVehicle(userId);
+      if (serviceVehicle != null) {
+        final vehicleId = serviceVehicle['id'] as String;
+        if (_activeTripId != vehicleId) {
+          setState(() => _activeTripId = vehicleId);
+          await _gps.startServiceVehicle(vehicleId);
+        }
+        // Service vehicle — keep polling but don't look for trips
+        Future.delayed(const Duration(seconds: 5), () {
+          if (mounted) _pollActiveTrip();
+        });
+        return;
+      }
+
+      // Regular driver — look for active trips
+      final trips = await _svc.getActiveTrips(userId);
       final tripId = trips.isNotEmpty ? trips.first['id'] as String : null;
       if (tripId != _activeTripId) {
         setState(() => _activeTripId = tripId);
         if (tripId != null) {
-          // Auto-start GPS tracking for IN_PROGRESS trip
           await _gps.start(tripId);
         } else {
           await _gps.stop();
         }
       }
     } catch (_) {}
-    // Poll every 5s to match GPS interval
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) _pollActiveTrip();
     });

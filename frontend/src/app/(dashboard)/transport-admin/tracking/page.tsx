@@ -106,6 +106,13 @@ export default function LiveTrackingPage() {
   const [turningOffEngine, setTurningOffEngine] = useState(false)
   const socketRef = useRef<Socket | null>(null)
 
+  // Service vehicles live state
+  const [serviceVehicleLive, setServiceVehicleLive] = useState<Record<string, {
+    vehicleId: string; plateNumber: string; make: string; model: string
+    serviceVehicleType: string; driverName: string | null
+    lat: number; lng: number; speed: number; heading: number | null; timestamp: string
+  }>>({})
+
   // Map view states
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null)
@@ -164,6 +171,35 @@ export default function LiveTrackingPage() {
       )
       
       setTrips(tripsWithLocation)
+
+      // Also load service vehicle live locations
+      try {
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token') || ''
+        const svRes = await fetch(`${API_BASE}/tracking/service-vehicles/live`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        if (svRes.ok) {
+          const svData: any[] = await svRes.json()
+          const svMap: typeof serviceVehicleLive = {}
+          for (const sv of svData) {
+            svMap[sv.vehicleId] = {
+              vehicleId: sv.vehicleId,
+              plateNumber: sv.plateNumber,
+              make: sv.make,
+              model: sv.model,
+              serviceVehicleType: sv.serviceVehicleType,
+              driverName: sv.driverName,
+              lat: sv.latitude,
+              lng: sv.longitude,
+              speed: sv.speed ?? 0,
+              heading: sv.heading ?? null,
+              timestamp: sv.timestamp,
+            }
+          }
+          setServiceVehicleLive(svMap)
+        }
+      } catch {}
     } catch (error: any) {
       console.error('Failed to load trips:', error)
       showToast(error.message || 'Failed to load trips', 'error')
@@ -463,6 +499,25 @@ export default function LiveTrackingPage() {
       showToast(`⚠️ ALERT: ${data.vehiclePlate} entered restricted zone!`, 'error')
     })
 
+    socketRef.current.on('service-vehicle-location', (update: any) => {
+      setServiceVehicleLive(prev => ({
+        ...prev,
+        [update.vehicleId]: {
+          vehicleId: update.vehicleId,
+          plateNumber: update.plateNumber,
+          make: update.make,
+          model: update.model,
+          serviceVehicleType: update.serviceVehicleType,
+          driverName: update.driverName,
+          lat: update.latitude,
+          lng: update.longitude,
+          speed: update.speed ?? 0,
+          heading: update.heading ?? null,
+          timestamp: update.timestamp,
+        }
+      }))
+    })
+
     return () => {
       socketRef.current?.disconnect()
     }
@@ -574,6 +629,47 @@ export default function LiveTrackingPage() {
             </select>
           </div>
         </div>
+
+        {/* Service Vehicles Live */}
+        {Object.values(serviceVehicleLive).length > 0 && (
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              Service Vehicles — Always Active ({Object.values(serviceVehicleLive).length})
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+              {Object.values(serviceVehicleLive).map(sv => (
+                <div key={sv.vehicleId} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sv.serviceVehicleType === 'Security' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {sv.serviceVehicleType === 'Security' ? '🛡 Security' : '🚌 Shuttle'}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-green-700 font-medium">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                      Live GPS
+                    </span>
+                  </div>
+                  <p className="font-bold text-gray-900">{sv.plateNumber}</p>
+                  <p className="text-sm text-gray-500">{sv.make} {sv.model}</p>
+                  {sv.driverName && (
+                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                      {sv.driverName}
+                    </p>
+                  )}
+                  <div className="mt-3 flex items-center gap-3 text-xs text-gray-600">
+                    <span className={`font-semibold ${sv.speed > 5 ? 'text-green-600' : 'text-gray-500'}`}>
+                      {Math.round(sv.speed)} km/h
+                    </span>
+                    <span className="text-gray-300">·</span>
+                    <span>{sv.lat.toFixed(5)}, {sv.lng.toFixed(5)}</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-1">{getTimeAgo(new Date(sv.timestamp))}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Trips List */}
         <div className="space-y-4">

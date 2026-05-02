@@ -203,4 +203,42 @@ export class TrackingController {
   getLiveVehicleLocations() {
     return this.trackingService.getLiveVehicleLocations();
   }
+
+  // ── Service Vehicle Tracking ──────────────────────────────────────────────
+
+  @Get('service-vehicles/live')
+  @ApiOperation({
+    summary: 'Get live locations for all service vehicles',
+    description: 'Returns latest GPS positions for shuttle and security vehicles (reported in last 5 min)',
+  })
+  @ApiResponse({ status: 200, description: 'Live service vehicle locations' })
+  getServiceVehicleLiveLocations() {
+    return this.trackingService.getServiceVehicleLiveLocations();
+  }
+
+  @Post('service-vehicle/:vehicleId/location')
+  @ApiOperation({
+    summary: 'Update GPS location for a service vehicle',
+    description: 'Post location for a shuttle or security vehicle (no trip required)',
+  })
+  @ApiResponse({ status: 201, description: 'Location saved and broadcast' })
+  async updateServiceVehicleLocation(
+    @Param('vehicleId', ParseUUIDPipe) vehicleId: string,
+    @Body() dto: UpdateLocationDto,
+  ) {
+    const location = await this.trackingService.saveServiceVehicleLocation(vehicleId, dto);
+    // Broadcast to live tracking room
+    this.trackingGateway.broadcastServiceVehicleLocation(vehicleId, location);
+    return location;
+  }
+
+  @Get('service-vehicle/:vehicleId/driver-vehicle')
+  @ApiOperation({
+    summary: 'Get service vehicle assigned to a driver user',
+    description: 'Returns the service vehicle (shuttle/security) assigned to the given user ID',
+  })
+  @ApiResponse({ status: 200, description: 'Service vehicle info or null' })
+  getDriverServiceVehicle(@Param('vehicleId') userId: string) {
+    return this.trackingService.getDriverServiceVehicle(userId);
+  }
 }

@@ -66,6 +66,7 @@ class GpsService {
   GpsStatus _status = const GpsStatus();
   GeofenceStatus _prevGeofence = GeofenceStatus.clear;
   String? _currentTripId;
+  String? _currentServiceVehicleId; // set when tracking a service vehicle
 
   Stream<GpsStatus> get statusStream => _statusController.stream;
   GpsStatus get status => _status;
@@ -73,7 +74,19 @@ class GpsService {
   Future<void> start(String tripId) async {
     await stop();
     _currentTripId = tripId;
+    _currentServiceVehicleId = null;
+    await _startTracking();
+  }
 
+  /// Start GPS for a service vehicle (no trip needed).
+  Future<void> startServiceVehicle(String vehicleId) async {
+    await stop();
+    _currentServiceVehicleId = vehicleId;
+    _currentTripId = null;
+    await _startTracking();
+  }
+
+  Future<void> _startTracking() async {
     // 1. Request location permission
     final permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied ||
@@ -85,68 +98,64 @@ class GpsService {
       return;
     }
 
-    // 2. Use REST API only - no WebSocket (more reliable)
-    print('📍 Starting GPS with REST API only');
-    print('🚫 WebSocket disabled - using REST API for better reliability');
-
-    // 3. Start GPS stream
-    _emit(_status.copyWith(active: true, connected: true)); // Mark as connected since we're using REST
+    _emit(_status.copyWith(active: true, connected: true));
     _positionSub = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 1, // Update every 1 meter
-        timeLimit: Duration(seconds: 1), // Force update every second
+        distanceFilter: 1,
+        timeLimit: Duration(seconds: 1),
       ),
     ).listen(
-      (pos) => _onPosition(tripId, pos),
+      (pos) => _onPosition(pos),
       onError: (e) => _emit(_status.copyWith(lastError: e.toString())),
     );
   }
 
-  Future<void> _onPosition(String tripId, Position pos) async {
-    // ALWAYS update UI immediately with current position and speed
-    // This ensures UI gets fresh data even if we don't send to backend
+  Future<void> _onPosition(Position pos) async {
+    final tripId = _currentTripId;
+    final serviceVehicleId = _currentServiceVehicleId;
+
     final now = DateTime.now();
     _emit(_status.copyWith(
       currentPosition: pos,
       currentSpeed: pos.speed >= 0 ? pos.speed * 3.6 : null,
       currentHeading: pos.heading,
-      lastPostedAt: now, // Update timestamp on every position change
+      lastPostedAt: now,
     ));
-    
-    print('📍 GPS Position: ${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)} @ ${(pos.speed * 3.6).toStringAsFixed(1)} km/h');
 
-    // But only send to backend every 5 seconds to save battery/network
     if (_lastSent != null &&
         now.difference(_lastSent!).inMilliseconds < _minIntervalMs) {
-      print('⏭️  Skipping backend send (too soon)');
       return;
     }
     _lastSent = now;
 
-    // Use REST API only - no WebSocket
     try {
       final base = await Storage.getApiBase() ?? kDefaultApiBase;
-      final token = await Storage.getAccessToken();
-      
       final api = ApiClient(base);
-      await api.post('/tracking/$tripId/location', {
+      final body = <String, dynamic>{
         'latitude': pos.latitude,
         'longitude': pos.longitude,
-        'metadata': {'source': 'flutter-driver-rest'},
         if (pos.speed >= 0) 'speed': pos.speed * 3.6,
         if (pos.heading != 0) 'heading': pos.heading,
         if (pos.altitude != 0) 'altitude': pos.altitude,
         if (pos.accuracy > 0) 'accuracy': pos.accuracy,
-      });
-      
-      print('✅ GPS sent to backend: ${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)} @ ${(pos.speed * 3.6).toStringAsFixed(1)} km/h');
-      
-      _emit(_status.copyWith(
-        lastError: null,
-      ));
+      };
+
+      if (serviceVehicleId != null) {
+        // Service vehicle — use vehicle endpoint
+        body['metadata'] = {'source': 'flutter-service-vehicle'};
+        await api.post('/tracking/service-vehicle/$serviceVehicleId/location', body);
+        print('✅ Service vehicle GPS sent: ${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)}');
+      } else if (tripId != null) {
+        // Regular trip
+        body['metadata'] = {'source': 'flutter-driver-rest'};
+        await api.post('/tracking/$tripId/location', body);
+        print('✅ Trip GPS sent: ${pos.latitude.toStringAsFixed(6)}, ${pos.longitude.toStringAsFixed(6)} @ ${(pos.speed * 3.6).toStringAsFixed(1)} km/h');
+      }
+
+      _emit(_status.copyWith(lastError: null));
     } catch (e) {
-      print('❌ Failed to send GPS to backend: $e');
+      print('❌ Failed to send GPS: $e');
       _emit(_status.copyWith(lastError: 'Failed to send location: $e'));
     }
   }
@@ -154,9 +163,8 @@ class GpsService {
   Future<void> stop() async {
     await _positionSub?.cancel();
     _positionSub = null;
-
-    // No WebSocket to disconnect - REST API only
     _currentTripId = null;
+    _currentServiceVehicleId = null;
     _status = const GpsStatus();
     _prevGeofence = GeofenceStatus.clear;
     _lastSent = null;
