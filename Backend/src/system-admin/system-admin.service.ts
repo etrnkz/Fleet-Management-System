@@ -373,36 +373,108 @@ export class SystemAdminService {
   }
 
   // Backup Management
-  async createBackup() {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupName = `backup-${timestamp}`;
+  private readonly backupDir = path.join(process.cwd(), 'backups');
 
-    // In a real system, you would create actual database backup
-    return {
-      message: 'Backup created successfully',
-      backupName,
-      timestamp: new Date(),
-      note: 'In production, this would create actual database backup',
+  private ensureBackupDir() {
+    if (!fs.existsSync(this.backupDir)) {
+      fs.mkdirSync(this.backupDir, { recursive: true });
+    }
+  }
+
+  async createBackup() {
+    this.ensureBackupDir();
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `backup-${timestamp}.sql`;
+    const filepath = path.join(this.backupDir, filename);
+
+    // Get DB connection details from DataSource
+    const opts = this.dataSource.options as any;
+    const host     = opts.host     || process.env.DB_HOST     || 'localhost';
+    const port     = opts.port     || process.env.DB_PORT     || '5432';
+    const username = opts.username || process.env.DB_USERNAME || 'postgres';
+    const password = opts.password || process.env.DB_PASSWORD || 'postgres';
+    const database = opts.database || process.env.DB_NAME     || 'fleet_management';
+
+    return new Promise<any>((resolve, reject) => {
+      const { exec } = require('child_process');
+      const env = { ...process.env, PGPASSWORD: String(password) };
+      const cmd = `pg_dump -h ${host} -p ${port} -U ${username} -F p -f "${filepath}" ${database}`;
+
+      exec(cmd, { env }, (error: any) => {
+        if (error) {
+          // pg_dump not available — fall back to JSON export
+          this.createJsonBackup(filepath.replace('.sql', '.json'), database)
+            .then(jsonFile => {
+              const stat = fs.statSync(jsonFile);
+              resolve({
+                message: 'Backup created (JSON format — pg_dump not available)',
+                filename: path.basename(jsonFile),
+                size: `${Math.round(stat.size / 1024)} KB`,
+                createdAt: new Date().toISOString(),
+                format: 'json',
+              });
+            })
+            .catch(reject);
+          return;
+        }
+
+        const stat = fs.statSync(filepath);
+        resolve({
+          message: 'Backup created successfully',
+          filename,
+          size: `${Math.round(stat.size / 1024)} KB`,
+          createdAt: new Date().toISOString(),
+          format: 'sql',
+        });
+      });
+    });
+  }
+
+  private async createJsonBackup(filepath: string, _database: string): Promise<string> {
+    // Export key tables as JSON
+    const [users, vehicles, trips, drivers] = await Promise.all([
+      this.userRepository.find({ select: ['id', 'email', 'name', 'role', 'isActive', 'createdAt'] }),
+      this.vehicleRepository.find(),
+      this.tripRepository.find({ take: 1000, order: { createdAt: 'DESC' } }),
+      this.dataSource.query('SELECT id, "licenseNumber", status, "userId" FROM drivers'),
+    ]);
+
+    const backup = {
+      exportedAt: new Date().toISOString(),
+      tables: {
+        users: { count: users.length, data: users },
+        vehicles: { count: vehicles.length, data: vehicles },
+        trips: { count: trips.length, data: trips },
+        drivers: { count: drivers.length, data: drivers },
+      },
     };
+
+    fs.writeFileSync(filepath, JSON.stringify(backup, null, 2));
+    return filepath;
   }
 
   async listBackups() {
-    // In a real system, you would list actual backup files
-    return {
-      backups: [
-        {
-          name: 'backup-2024-01-15T10-30-00',
-          size: '125MB',
-          created: '2024-01-15T10:30:00Z',
-        },
-        {
-          name: 'backup-2024-01-14T10-30-00',
-          size: '123MB',
-          created: '2024-01-14T10:30:00Z',
-        },
-      ],
-      note: 'In production, this would list actual backup files',
-    };
+    this.ensureBackupDir();
+    try {
+      const files = fs.readdirSync(this.backupDir)
+        .filter(f => f.startsWith('backup-') && (f.endsWith('.sql') || f.endsWith('.json')))
+        .map(f => {
+          const filepath = path.join(this.backupDir, f);
+          const stat = fs.statSync(filepath);
+          return {
+            name: f,
+            filename: f,
+            size: `${Math.round(stat.size / 1024)} KB`,
+            createdAt: stat.birthtime.toISOString(),
+            format: f.endsWith('.sql') ? 'sql' : 'json',
+          };
+        })
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      return files;
+    } catch {
+      return [];
+    }
   }
 
   // Maintenance Mode
