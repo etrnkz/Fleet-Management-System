@@ -30,7 +30,7 @@ export class CollegesController {
   constructor(private readonly collegesService: CollegesService) {}
 
   @Post()
-  @Roles(UserRole.Developer, UserRole.Dean)
+  @Roles(UserRole.Developer, UserRole.SystemAdmin, UserRole.Dean)
   @ApiOperation({ summary: 'Create a new college' })
   @ApiResponse({ status: 201, description: 'College created successfully' })
   @ApiResponse({ status: 409, description: 'College code already exists' })
@@ -54,7 +54,7 @@ export class CollegesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.Developer, UserRole.Dean)
+  @Roles(UserRole.Developer, UserRole.SystemAdmin, UserRole.Dean)
   @ApiOperation({ summary: 'Update college' })
   @ApiResponse({ status: 200, description: 'College updated successfully' })
   @ApiResponse({ status: 404, description: 'College not found' })
@@ -66,7 +66,7 @@ export class CollegesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.Developer)
+  @Roles(UserRole.Developer, UserRole.SystemAdmin)
   @ApiOperation({ summary: 'Delete college' })
   @ApiResponse({ status: 200, description: 'College deleted successfully' })
   @ApiResponse({ status: 404, description: 'College not found' })

@@ -32,7 +32,7 @@ export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
   @Post()
-  @Roles(UserRole.Developer, UserRole.Dean, UserRole.CollegeHead)
+  @Roles(UserRole.Developer, UserRole.SystemAdmin, UserRole.Dean, UserRole.CollegeHead)
   @ApiOperation({ summary: 'Create a new department' })
   @ApiResponse({ status: 201, description: 'Department created successfully' })
   @ApiResponse({ status: 409, description: 'Department code already exists' })
@@ -64,7 +64,7 @@ export class DepartmentsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.Developer, UserRole.Dean, UserRole.CollegeHead)
+  @Roles(UserRole.Developer, UserRole.SystemAdmin, UserRole.Dean, UserRole.CollegeHead)
   @ApiOperation({ summary: 'Update department' })
   @ApiResponse({ status: 200, description: 'Department updated successfully' })
   @ApiResponse({ status: 404, description: 'Department not found' })
@@ -76,7 +76,7 @@ export class DepartmentsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.Developer)
+  @Roles(UserRole.Developer, UserRole.SystemAdmin)
   @ApiOperation({ summary: 'Delete department' })
   @ApiResponse({ status: 200, description: 'Department deleted successfully' })
   @ApiResponse({ status: 404, description: 'Department not found' })
