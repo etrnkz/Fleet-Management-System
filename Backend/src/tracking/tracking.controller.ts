@@ -32,6 +32,8 @@ export class TrackingController {
     private readonly trackingGateway: TrackingGateway,
   ) {}
 
+  // ── Trip-based tracking (generic :tripId routes — must come LAST) ─────────
+
   @Get(':tripId/geofence-config')
   @ApiOperation({
     summary: 'Geofence config for allocated vehicle',
@@ -204,39 +206,32 @@ export class TrackingController {
     return this.trackingService.getLiveVehicleLocations();
   }
 
-  // ── Service Vehicle Tracking ──────────────────────────────────────────────
+  // ── Service Vehicle Tracking ─────────────────────────────────────────────
+  // IMPORTANT: these must be declared BEFORE the generic :tripId routes
+  // so NestJS doesn't try to match 'service-vehicles' or 'service-vehicle'
+  // as a UUID tripId param.
 
   @Get('service-vehicles/live')
-  @ApiOperation({
-    summary: 'Get live locations for all service vehicles',
-    description: 'Returns latest GPS positions for shuttle and security vehicles (reported in last 5 min)',
-  })
+  @ApiOperation({ summary: 'Get live locations for all service vehicles' })
   @ApiResponse({ status: 200, description: 'Live service vehicle locations' })
   getServiceVehicleLiveLocations() {
     return this.trackingService.getServiceVehicleLiveLocations();
   }
 
   @Post('service-vehicle/:vehicleId/location')
-  @ApiOperation({
-    summary: 'Update GPS location for a service vehicle',
-    description: 'Post location for a shuttle or security vehicle (no trip required)',
-  })
+  @ApiOperation({ summary: 'Update GPS location for a service vehicle' })
   @ApiResponse({ status: 201, description: 'Location saved and broadcast' })
   async updateServiceVehicleLocation(
     @Param('vehicleId', ParseUUIDPipe) vehicleId: string,
     @Body() dto: UpdateLocationDto,
   ) {
     const location = await this.trackingService.saveServiceVehicleLocation(vehicleId, dto);
-    // Broadcast to live tracking room
     this.trackingGateway.broadcastServiceVehicleLocation(vehicleId, location);
     return location;
   }
 
   @Post('service-vehicle/:vehicleId/locations/bulk')
-  @ApiOperation({
-    summary: 'Bulk upload offline locations for a service vehicle',
-    description: 'Upload multiple GPS locations recorded while offline for a shuttle or security vehicle',
-  })
+  @ApiOperation({ summary: 'Bulk upload offline locations for a service vehicle' })
   @ApiResponse({ status: 201, description: 'Locations processed' })
   async bulkUpdateServiceVehicleLocations(
     @Param('vehicleId', ParseUUIDPipe) vehicleId: string,
@@ -255,13 +250,11 @@ export class TrackingController {
     return { count: locations.length, message: `${locations.length} locations processed` };
   }
 
-  @Get('service-vehicle/:vehicleId/driver-vehicle')
-  @ApiOperation({
-    summary: 'Get service vehicle assigned to a driver user',
-    description: 'Returns the service vehicle (shuttle/security) assigned to the given user ID',
-  })
+  @Get('service-vehicle/:userId/driver-vehicle')
+  @ApiOperation({ summary: 'Get service vehicle assigned to a driver user' })
   @ApiResponse({ status: 200, description: 'Service vehicle info or null' })
-  getDriverServiceVehicle(@Param('vehicleId') userId: string) {
+  getDriverServiceVehicle(@Param('userId') userId: string) {
     return this.trackingService.getDriverServiceVehicle(userId);
   }
-}
+
+  // ── Trip-based tracking (generic :tripId routes — must come LAST) ─────────
