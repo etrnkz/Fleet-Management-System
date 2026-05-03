@@ -14,12 +14,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      User,
-      TripRequest,
-      Vehicle,
-      MaintenanceRequest,
-      Notification,
-      AuditLog,
+      User, TripRequest, Vehicle, MaintenanceRequest, Notification, AuditLog,
     ]),
     UsersModule,
     NotificationsModule,

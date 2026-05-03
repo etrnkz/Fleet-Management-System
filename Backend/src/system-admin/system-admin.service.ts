@@ -19,6 +19,7 @@ import { UpdateSystemUserDto } from './dto/update-system-user.dto';
 import { SystemConfigDto } from './dto/system-config.dto';
 import { UsersService } from '../users/users.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../email/email.service';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -52,6 +53,7 @@ export class SystemAdminService {
     private readonly dataSource: DataSource,
     private readonly usersService: UsersService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
   ) {}
 
   // User Management
@@ -96,7 +98,31 @@ export class SystemAdminService {
   }
 
   async createSystemUser(createUserDto: CreateSystemUserDto) {
-    return this.usersService.create(createUserDto);
+    // Generate password if not provided
+    const rawPassword = createUserDto.password || this.generateTempPassword();
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+    const user = await this.usersService.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
+    // Send welcome email with credentials (non-blocking)
+    this.emailService.sendInvitationEmail({
+      to: user.email,
+      name: user.name,
+      password: rawPassword,
+      inviterName: 'System Administrator',
+      inviterRole: 'SystemAdmin',
+      welcomeMessage: `Your account has been created with role: ${user.role}. Please log in and change your password.`,
+    }).catch(() => {/* email failure should not block user creation */});
+
+    return user;
+  }
+
+  private generateTempPassword(): string {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!'
+    return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
   }
 
   async updateUser(id: string, updateUserDto: UpdateSystemUserDto) {
@@ -139,22 +165,36 @@ export class SystemAdminService {
 
   async resetUserPassword(id: string) {
     const user = await this.usersService.findById(id);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new NotFoundException('User not found');
 
-    // Generate new password
-    const newPassword = Math.random().toString(36).slice(-8);
+    const newPassword = this.generateTempPassword();
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-
     user.password = hashedPassword;
     await this.userRepository.save(user);
 
-    // In a real system, you would send this via email
+    // Send new password via email (non-blocking)
+    this.emailService.sendEmail({
+      to: user.email,
+      subject: 'Fleet Management — Password Reset',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+          <h2 style="color:#1B3D2F;">Password Reset</h2>
+          <p>Dear ${user.name},</p>
+          <p>Your password has been reset by the System Administrator.</p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0;">
+            <p style="margin:0;"><strong>New Password:</strong>
+              <code style="background:#e5e7eb;padding:2px 8px;border-radius:4px;">${newPassword}</code>
+            </p>
+          </div>
+          <p>Please log in and change your password immediately.</p>
+          <p style="color:#6b7280;font-size:13px;">Haramaya University Fleet Management System</p>
+        </div>
+      `,
+    }).catch(() => {});
+
     return {
-      message: 'Password reset successfully',
+      message: 'Password reset successfully. New password sent to user email.',
       temporaryPassword: newPassword,
-      note: 'In production, this would be sent via email',
     };
   }
 
