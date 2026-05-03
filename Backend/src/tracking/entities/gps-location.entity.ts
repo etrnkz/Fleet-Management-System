@@ -26,17 +26,17 @@ export class GpsLocation {
   @Column('decimal', { precision: 10, scale: 7 })
   longitude: number;
 
-  @Column('decimal', { precision: 5, scale: 2, nullable: true })
-  speed: number; // km/h
-
-  @Column('decimal', { precision: 5, scale: 2, nullable: true })
-  heading: number; // degrees (0-360)
+  @Column('decimal', { precision: 6, scale: 2, nullable: true })
+  speed: number; // km/h — up to 9999.99
 
   @Column('decimal', { precision: 6, scale: 2, nullable: true })
-  altitude: number; // meters
+  heading: number; // degrees 0-360
 
-  @Column('decimal', { precision: 4, scale: 2, nullable: true })
-  accuracy: number; // meters
+  @Column('decimal', { precision: 8, scale: 2, nullable: true })
+  altitude: number; // meters — up to 999999.99
+
+  @Column('decimal', { precision: 8, scale: 2, nullable: true })
+  accuracy: number; // meters — up to 999999.99
 
   @Column({ default: false })
   isOffline: boolean; // Was this location recorded offline?
