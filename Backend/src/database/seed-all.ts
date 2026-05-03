@@ -104,7 +104,11 @@ async function seedAll() {
 
   for (const cd of COLLEGES_DATA) {
     let college = await collegeRepo.findOne({ where: { name: cd.name } })
-    if (!college) college = await collegeRepo.save(collegeRepo.create({ name: cd.name, code: cd.code }))
+    if (!college) {
+      const byCode = await collegeRepo.findOne({ where: { code: cd.code } })
+      if (byCode) { colleges[cd.name] = byCode; continue }
+      college = await collegeRepo.save(collegeRepo.create({ name: cd.name, code: cd.code }))
+    }
     colleges[cd.name] = college
 
     for (const deptName of cd.departments) {
@@ -112,6 +116,12 @@ async function seedAll() {
       if (!dept) {
         const idx = cd.departments.indexOf(deptName) + 1
         const code = `${cd.code}${idx.toString().padStart(2, '0')}`
+        // Also check by code — avoid duplicate key if code already used
+        const byCode = await departmentRepo.findOne({ where: { code } })
+        if (byCode) {
+          departments[deptName] = byCode
+          continue
+        }
         dept = await departmentRepo.save(departmentRepo.create({ name: deptName, code, college }))
       }
       departments[deptName] = dept
@@ -123,9 +133,12 @@ async function seedAll() {
     if (!dept) {
       const idx = ADMIN_OFFICES.indexOf(officeName) + 1
       const code = `ADM${idx.toString().padStart(2, '0')}`
-      dept = await departmentRepo.save(departmentRepo.create({ name: officeName, code }))
+      const byCode = await departmentRepo.findOne({ where: { code } })
+      if (!byCode) {
+        dept = await departmentRepo.save(departmentRepo.create({ name: officeName, code }))
+      }
     }
-    departments[officeName] = dept
+    if (dept) departments[officeName] = dept
   }
 
   // ── 3. System accounts ──────────────────────────────────────────────────────
