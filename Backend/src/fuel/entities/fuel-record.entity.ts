@@ -25,21 +25,21 @@ export class FuelRecord {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'varchar' })
   vehicleId: string;
 
   @ManyToOne(() => Vehicle, { eager: true })
   @JoinColumn({ name: 'vehicleId' })
   vehicle: Vehicle;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   tripId: string;
 
   @ManyToOne(() => TripRequest, { nullable: true })
   @JoinColumn({ name: 'tripId' })
   trip: TripRequest;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'varchar' })
   recordedById: string;
 
   @ManyToOne(() => User, { eager: true })
