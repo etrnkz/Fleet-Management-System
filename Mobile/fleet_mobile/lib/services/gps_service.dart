@@ -234,13 +234,15 @@ class GpsService {
 
       if (serviceVehicleId != null) {
         body['metadata'] = {'source': 'flutter-service-vehicle'};
-        await api.post('/tracking/service-vehicle/$serviceVehicleId/location', body);
+        final res = await api.post('/tracking/service-vehicle/$serviceVehicleId/location', body);
+        _handleGeofenceResponse(res);
       } else if (tripId != null) {
         body['metadata'] = {'source': 'flutter-driver-rest'};
-        await api.post('/tracking/$tripId/location', body);
+        final res = await api.post('/tracking/$tripId/location', body);
+        _handleGeofenceResponse(res);
       }
 
-      // Back online — clear offline state
+      // Back online — clear offline state (preserve geofence status)
       _emit(_status.copyWith(
         lastError: null,
         isOffline: false,
@@ -348,6 +350,21 @@ class GpsService {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  /// Parse geofence status from backend response and update UI.
+  void _handleGeofenceResponse(dynamic res) {
+    if (res == null || res is! Map) return;
+    final geoStr = res['geofenceStatus'] as String? ?? 'clear';
+    final geo = parseGeo(geoStr);
+    final zoneName = res['violationZoneName'] as String?;
+    _emit(_status.copyWith(
+      geofenceStatus: geo,
+      violationZoneName: zoneName,
+    ));
+    if (geo != GeofenceStatus.clear) {
+      print('🚨 Geofence: $geoStr zone=$zoneName');
+    }
+  }
 
   GeofenceStatus parseGeo(String s) {
     switch (s.toLowerCase()) {
