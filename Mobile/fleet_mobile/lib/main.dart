@@ -45,25 +45,34 @@ class _SplashState extends State<_Splash> {
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
 
-    final token = await Storage.getAccessToken();
-    if (!mounted) return;
+    try {
+      final token = await Storage.getAccessToken();
+      if (!mounted) return;
 
-    if (token != null) {
-      final user = await Storage.getUser();
-      final role = user?['role'] as String?;
-      _routeByRole(role);
-    } else {
-      // No session — show the landing page
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const LandingScreen(),
-          transitionsBuilder: (_, anim, __, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 400),
-        ),
-      );
+      if (token != null) {
+        final user = await Storage.getUser();
+        final role = user?['role'] as String?;
+        _routeByRole(role);
+      } else {
+        _goToLanding();
+      }
+    } catch (_) {
+      // Keystore corrupted — clear and go to landing
+      await Storage.deleteAll();
+      if (mounted) _goToLanding();
     }
+  }
+
+  void _goToLanding() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const LandingScreen(),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
   }
 
   void _routeByRole(String? role) {

@@ -28,13 +28,23 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loadSaved() async {
-    final email = await Storage.getRememberEmail();
-    final base  = await Storage.getApiBase();
-    if (mounted) {
-      setState(() {
-        if (email != null) { _emailCtrl.text = email; _rememberMe = true; }
-        _apiCtrl.text = base ?? 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1';
-      });
+    try {
+      final email = await Storage.getRememberEmail();
+      final base  = await Storage.getApiBase();
+      if (mounted) {
+        setState(() {
+          if (email != null) { _emailCtrl.text = email; _rememberMe = true; }
+          _apiCtrl.text = base ?? 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1';
+        });
+      }
+    } catch (_) {
+      // Keystore fully corrupted — wipe and start fresh
+      await Storage.deleteAll();
+      if (mounted) {
+        setState(() {
+          _apiCtrl.text = 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1';
+        });
+      }
     }
   }
 
