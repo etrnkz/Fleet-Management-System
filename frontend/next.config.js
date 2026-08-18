@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+
   typescript: {
     // TODO: Fix 54 pre-existing TS errors, then set to false
     ignoreBuildErrors: true,

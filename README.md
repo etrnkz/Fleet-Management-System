@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/public/hulogo.png" alt="Fleet Management System" width="120">
+  <img src="frontend/public/hulogo.png" alt="Fleet Management System" width="300">
 </p>
 
 <p align="center">
@@ -7,6 +7,8 @@
   <img src="https://img.shields.io/badge/next.js-14-black?logo=next.js&logoColor=white" alt="Next.js 14">
   <img src="https://img.shields.io/badge/flutter-3-02569B?logo=flutter&logoColor=white" alt="Flutter 3">
   <img src="https://img.shields.io/badge/postgresql-15-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 15">
+  <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/kubernetes-ready-326CE5?logo=kubernetes&logoColor=white" alt="Kubernetes">
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="Apache 2.0">
   <img src="https://img.shields.io/badge/status-active-success" alt="Active">
 </p>
@@ -115,7 +117,23 @@ Fleet-Management-System/
 └── docs/             Documentation, diagrams
 ```
 
-## License
+## Deployment
+
+### Docker
+
+```sh
+docker compose up -d
+```
+
+Services: `backend` (port 3000), `frontend` (port 3010), `postgres` (port 5432).
+
+### Kubernetes
+
+```sh
+kubectl apply -f k8s/
+```
+
+Requires a running cluster with an ingress controller (e.g. NGINX Ingress).
 
 Licensed under the Apache License 2.0 — see [LICENSE](LICENSE) for details.
 
