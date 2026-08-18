@@ -3,11 +3,10 @@ const nextConfig = {
   output: 'standalone',
 
   typescript: {
-    // TODO: Fix 54 pre-existing TS errors, then set to false
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    // TODO: Configure ESLint (.eslintrc.json), then set to false
+    // TODO: Install eslint-config-next, then set to false
     ignoreDuringBuilds: true,
   },
 

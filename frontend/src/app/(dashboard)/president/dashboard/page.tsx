@@ -71,8 +71,8 @@ export default function Dashboard() {
         collegeApi.getAll().catch(() => []),
       ])
 
-      const allTrips = trips || []
-      const allVehicles = vehicles || []
+      const allTrips: any[] = Array.isArray(trips) ? trips : []
+      const allVehicles: any[] = Array.isArray(vehicles) ? vehicles : []
 
       // Filter trips by selected period
       const now = new Date()
@@ -94,7 +94,7 @@ export default function Dashboard() {
       const activeTrips = filteredTrips.filter((t: any) =>
         ['IN_PROGRESS', 'in_progress', 'READY', 'ready'].includes(t.status || t.state || '')
       ).length
-      const pendingApprovals = (pendingTrips || []).length
+      const pendingApprovals = ((pendingTrips as any[]) || []).length
       const activeVehicles = allVehicles.filter((v: any) =>
         ['Active', 'active', 'ACTIVE'].includes(v.status || '')
       ).length
@@ -158,7 +158,7 @@ export default function Dashboard() {
 
       // Pending requests list
       if (pendingTrips) {
-        setPendingRequests(pendingTrips.slice(0, 5).map((trip: any) => ({
+        setPendingRequests((pendingTrips as any[]).slice(0, 5).map((trip: any) => ({
           id: trip.id,
           department: trip.requester?.department?.name || 'Unknown',
           purpose: trip.purpose || 'No purpose specified',

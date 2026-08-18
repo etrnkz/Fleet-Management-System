@@ -102,7 +102,7 @@ export default function FuelPage() {
       setFuelRecords(records)
 
       // Fetch statistics
-      const stats = await fuelApi.getStatistics(startDate.toISOString(), endDate.toISOString()) as FuelStatistics
+      const stats = await fuelApi.getStatistics({ startDate: startDate.toISOString(), endDate: endDate.toISOString() }) as FuelStatistics
       setStatistics(stats)
 
       // Fetch vehicles

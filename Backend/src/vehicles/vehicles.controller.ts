@@ -63,6 +63,7 @@ export class VehiclesController {
 
   @Get('available')
   @ApiOperation({ summary: 'Get available vehicles' })
+  @ApiResponse({ status: 200, description: 'List of available vehicles' })
   findAvailable(
     @Query('startDateTime') startDateTime?: string,
     @Query('endDateTime') endDateTime?: string,
@@ -118,6 +119,7 @@ export class VehiclesController {
   @Roles(UserRole.Developer, UserRole.TransportOffice, UserRole.MaintenanceTeam)
   @ApiOperation({ summary: 'Set vehicle maintenance status' })
   @ApiResponse({ status: 200, description: 'Maintenance status updated' })
+  @ApiResponse({ status: 404, description: 'Vehicle not found' })
   setMaintenanceStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('underMaintenance') underMaintenance: boolean,

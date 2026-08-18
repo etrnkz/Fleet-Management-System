@@ -11,7 +11,7 @@ export default function AuditPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const result = await auditApi.getAuditLogs()
+        const result = await auditApi.getAuditLogs() as any
         setLogs(Array.isArray(result?.data) ? result.data : Array.isArray(result) ? result : [])
       } catch (err: any) {
         setError(err.message || 'Failed to load audit logs')

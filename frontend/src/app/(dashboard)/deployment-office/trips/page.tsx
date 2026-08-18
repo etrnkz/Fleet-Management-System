@@ -15,7 +15,7 @@ export default function TripsPage() {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
-  const [assignmentData, setAssignmentData] = useState({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' })
+  const [assignmentData, setAssignmentData] = useState({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' } as { vehicleId: string; driverId: string; estimatedFuelCost: string; estimatedDistance: string })
   const [vehicleSearch, setVehicleSearch] = useState('')
   const [driverSearch, setDriverSearch] = useState('')
   const [fuelRequest, setFuelRequest] = useState({ amount: '', urgency: 'normal', notes: '' })
@@ -109,7 +109,7 @@ export default function TripsPage() {
 
       setShowAssignModal(false)
       setSelectedTrip(null)
-      setAssignmentData({ vehicleId: '', driverId: '' })
+      setAssignmentData({ vehicleId: '', driverId: '', estimatedFuelCost: '', estimatedDistance: '' })
       showNotification(`Vehicle and driver assigned successfully to ${selectedTrip.id}!`)
     } catch (error: any) {
       showNotification(error?.message || 'Failed to assign vehicle and driver', 'error')

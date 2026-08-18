@@ -79,7 +79,7 @@ export default function VehiclesPage() {
   const [editingServiceVehicle, setEditingServiceVehicle] = useState<Vehicle | null>(null)
   const [serviceForm, setServiceForm] = useState({ ...EMPTY_SERVICE_FORM })
   const [savingService, setSavingService] = useState(false)
-  const [allDrivers, setAllDrivers] = useState<{ id: string; user: { name: string }; licenseNumber: string }[]>([])
+  const [allDrivers, setAllDrivers] = useState<{ id: string; user: { name: string }; licenseNumber: string; status?: string }[]>([])
 
   useEffect(() => {
     loadVehicles()

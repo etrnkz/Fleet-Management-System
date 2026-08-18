@@ -1198,7 +1198,7 @@ export default function DashboardPage() {
                         const val = e.target.value
                         setMakeInput(val)
                         if (val.length > 0) {
-                          const unique = [...new Set(allVehicles.map((v: any) => v.make).filter((m: string) => m?.toLowerCase().startsWith(val.toLowerCase())))]
+                          const unique = Array.from(new Set(allVehicles.map((v: any) => v.make).filter((m: string) => m?.toLowerCase().startsWith(val.toLowerCase()))))
                           setMakeSuggestions(unique.slice(0, 6))
                           setShowMakeSuggestions(unique.length > 0)
                         } else {
@@ -1243,7 +1243,7 @@ export default function DashboardPage() {
                         const val = e.target.value
                         setModelInput(val)
                         if (val.length > 0) {
-                          const unique = [...new Set(allVehicles.map((v: any) => v.model).filter((m: string) => m?.toLowerCase().startsWith(val.toLowerCase())))]
+                          const unique = Array.from(new Set(allVehicles.map((v: any) => v.model).filter((m: string) => m?.toLowerCase().startsWith(val.toLowerCase()))))
                           setModelSuggestions(unique.slice(0, 6))
                           setShowModelSuggestions(unique.length > 0)
                         } else {

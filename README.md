@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/public/hulogo.png" alt="Fleet Management System" width="300">
+  <img src="frontend/public/hulogo.png" alt="Fleet Management System" width="180">
 </p>
 
 <p align="center">
@@ -119,10 +119,12 @@ Fleet-Management-System/
 
 ## Deployment
 
-### Docker
+### Docker / Podman
 
 ```sh
 docker compose up -d
+# or
+podman compose up -d
 ```
 
 Services: `backend` (port 3000), `frontend` (port 3010), `postgres` (port 5432).

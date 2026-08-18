@@ -41,7 +41,7 @@ export function showBrowserNotification(title: string, body: string, url = '/'):
     badge: '/hulogo.png',
     tag: 'fleet-foreground',
     renotify: true,
-  });
+  } as any);
   n.onclick = () => { window.focus(); if (url !== '/') window.location.href = url; n.close(); };
 }
 

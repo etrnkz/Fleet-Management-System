@@ -47,6 +47,7 @@ export class AuthController {
     description:
       'Returns colleges and departments for signup forms without authentication.',
   })
+  @ApiResponse({ status: 200, description: 'Colleges and departments list' })
   async getSignupMetadata() {
     const [colleges, departments] = await Promise.all([
       this.collegesService.findAll(),
@@ -177,6 +178,8 @@ export class AuthController {
     description: 'Get new access token using refresh token. Accepts token in Authorization header (Bearer) or request body.',
   })
   @ApiHeader({ name: 'Authorization', description: 'Bearer refresh_token (optional if body provided)' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refreshToken(
     @Headers('authorization') authHeader: string,
     @Body() body: { refresh_token?: string },
@@ -193,6 +196,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout user', description: 'Invalidate the current JWT token' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
   async logout(@Headers('authorization') authHeader: string) {
     const token = authHeader?.replace('Bearer ', '');
 

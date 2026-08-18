@@ -93,7 +93,7 @@ export default function DashboardLayout({
 
   const loadUserData = async () => {
     try {
-      const userData = await authApi.getCurrentUser()
+      const userData = await authApi.getCurrentUser() as any
       setUser(userData)
       setEditedUser({
         name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
@@ -117,7 +117,7 @@ export default function DashboardLayout({
 
   const loadNotifications = async () => {
     try {
-      const notificationsData = await notificationApi.getAll()
+      const notificationsData = await notificationApi.getAll() as any[]
       
       // Transform notifications to use real data where available
       const enhancedNotifications = notificationsData.map((notif: any) => {
@@ -204,7 +204,7 @@ export default function DashboardLayout({
       const { userApi } = await import('@/lib/api')
       await userApi.updateProfile({
         name: editedUser.name,
-        phoneNumber: editedUser.phoneNumber,
+        phoneNumber: editedUser.phone,
       })
       const freshUserData = await userApi.getProfile()
       setUser(freshUserData)

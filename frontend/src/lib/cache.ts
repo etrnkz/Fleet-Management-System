@@ -41,7 +41,7 @@ export function invalidateCache(key: string): void {
 
 /** Invalidate all cache entries matching a prefix */
 export function invalidateCachePrefix(prefix: string): void {
-  for (const key of store.keys()) {
+  for (const key of Array.from(store.keys())) {
     if (key.startsWith(prefix)) store.delete(key)
   }
 }

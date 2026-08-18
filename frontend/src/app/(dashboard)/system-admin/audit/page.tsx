@@ -33,7 +33,7 @@ export default function AuditPage() {
       if (filterUserId) filters.userId = filterUserId
       if (startDate) filters.startDate = startDate
       if (endDate) filters.endDate = endDate
-      const data = await systemAdminApi.getAuditLogs(filters)
+      const data = await systemAdminApi.getAuditLogs(filters) as any
       setLogs(Array.isArray(data) ? data : data?.data || [])
     } catch { setLogs([]) }
     finally { setLoading(false) }

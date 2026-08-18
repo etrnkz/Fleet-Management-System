@@ -15,13 +15,13 @@ export default function DepartmentsPage() {
   const loadCollegesData = async () => {
     try {
       setLoading(true)
-      const collegesData = await collegeApi.getAll()
+      const collegesData = await collegeApi.getAll() as any[]
       
       // Load departments for each college and calculate stats
       const collegesWithStats = await Promise.all(
         collegesData.map(async (college: any) => {
           try {
-            const departments = await departmentApi.getByCollege(college.id)
+            const departments = await departmentApi.getByCollege(college.id) as any[]
             
             // Calculate real stats from actual data
             const totalVehicles = departments.reduce((sum: number, dept: any) => sum + (dept.vehicleCount || 0), 0)

@@ -93,7 +93,7 @@ VIP Trip: User → Dean → Allocation → Transport → Execution`,
       'https://github.com/etrnkz/Fleet-Management-System',
       'support@fleet.school.edu',
     )
-    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
+    .setLicense('Apache 2.0', 'https://opensource.org/licenses/Apache-2.0')
     .addTag('App', 'System information and health checks')
     .addTag('Authentication', 'User authentication and authorization')
     .addTag('Users', 'User management and profiles')

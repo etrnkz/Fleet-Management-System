@@ -17,15 +17,15 @@ export default function VehiclesPage() {
   const loadVehiclesData = async () => {
     try {
       setLoading(true)
-      const vehiclesData = await vehicleApi.getAll()
+      const vehiclesData = await vehicleApi.getAll() as any[]
       
       // Enhance vehicles with additional data
       const enhancedVehicles = await Promise.all(
         vehiclesData.map(async (vehicle: any) => {
-          let driver = null
+          let driverData: any = null
           if (vehicle.assignedDriverId) {
             try {
-              driver = await driverApi.getById(vehicle.assignedDriverId)
+              driverData = await driverApi.getById(vehicle.assignedDriverId) as any
             } catch (error) {
               console.error(`Failed to load driver for vehicle ${vehicle.id}:`, error)
             }
@@ -43,11 +43,11 @@ export default function VehiclesPage() {
             type: `${vehicle.make} ${vehicle.model}`,
             capacity: vehicle.capacity ? `${vehicle.capacity} seats` : 'N/A',
             status: status,
-            driver: driver ? {
-              name: `${driver.user?.firstName || ''} ${driver.user?.lastName || ''}`.trim(),
-              phone: driver.user?.phone || 'N/A',
-              licenseNumber: driver.licenseNumber || 'N/A',
-              experience: driver.experience || 'N/A',
+            driver: driverData ? {
+              name: `${driverData.user?.firstName || ''} ${driverData.user?.lastName || ''}`.trim(),
+              phone: driverData.user?.phone || 'N/A',
+              licenseNumber: driverData.licenseNumber || 'N/A',
+              experience: driverData.experience || 'N/A',
               assignedVehicle: vehicle.plateNumber
             } : null,
             department: department,
