@@ -68,6 +68,25 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+      - name: Check bundle size
+        run: |
+          echo "Checking build output size..."
+          du -sh .next/
+          # Fail if the build output exceeds 200 MB (standalone includes node_modules)
+          SIZE=$(du -sb .next/ | cut -f1)
+          MAX_SIZE=$((200 * 1024 * 1024))
+          if [ "$SIZE" -gt "$MAX_SIZE" ]; then
+            echo "Build output too large: $(( SIZE / 1024 / 1024 )) MB (max: 200 MB)"
+            exit 1
+          fi
+          echo "Build output size: $(( SIZE / 1024 / 1024 )) MB - OK"
+      - name: Lighthouse CI
+        if: github.event_name == 'pull_request'
+        run: |
+          npx @lhci/cli autorun --config=../.lighthouserc.js
+        env:
+          LHCI_BUILD_CONTEXT__currentBranch: ${{ github.head_ref }}
+          LHCI_BUILD_CONTEXT__commitMessage: ${{ github.event.pull_request.title }}
 
   mobile:
     name: Mobile

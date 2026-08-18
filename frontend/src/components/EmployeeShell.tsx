@@ -314,6 +314,7 @@ function EmployeeShellInner({ children, title, subtitle, headerActions }: Employ
                   type="button"
                   onClick={() => setProfileDropdownOpen(p => !p)}
                   className="w-10 h-10 rounded border border-[var(--fa-outline-variant)]/30 bg-[var(--fa-primary)] flex items-center justify-center text-[var(--fa-on-primary)] text-sm font-bold hover:opacity-90 transition-opacity"
+                  aria-label="Toggle profile menu"
                 >
                   {(user?.name || 'U').charAt(0).toUpperCase()}
                 </button>

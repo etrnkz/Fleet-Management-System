@@ -58,7 +58,7 @@ function LandingPageContent() {
             className="w-9 h-9 object-contain rounded-full ring-1 ring-white/10"
           />
           <div>
-            <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em] leading-none">
+            <p className="text-[9px] font-bold text-white/50 uppercase tracking-[0.2em] leading-none">
               Haramaya University
             </p>
             <p className="text-sm font-bold text-white leading-tight tracking-tight">
@@ -117,7 +117,7 @@ function LandingPageContent() {
           ].map((s) => (
             <div key={s.label} className="bg-[#0d1f17] px-6 py-5 text-center">
               <p className="text-2xl font-bold text-white">{s.value}</p>
-              <p className="text-xs text-white/40 mt-1 uppercase tracking-wide">{s.label}</p>
+              <p className="text-xs text-white/60 mt-1 uppercase tracking-wide">{s.label}</p>
             </div>
           ))}
         </div>
@@ -125,14 +125,14 @@ function LandingPageContent() {
 
       {/* ── Footer ── */}
       <footer className="px-8 py-5 flex items-center justify-between border-t border-white/5">
-        <p className="text-white/30 text-xs">
+        <p className="text-white/50 text-xs">
           © {new Date().getFullYear()} Haramaya University Fleet Management System
         </p>
         <a
           href="https://haramaya.edu.et"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-white/30 hover:text-white/60 text-xs transition-colors"
+          className="text-white/50 hover:text-white/80 text-xs transition-colors"
         >
           haramaya.edu.et
         </a>

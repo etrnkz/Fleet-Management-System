@@ -325,7 +325,7 @@ export default function DriverDashboard() {
                 : 'Your vehicle has been unassigned by the Transport Office.'}
             </p>
           </div>
-          <button onClick={() => setVehicleBanner(null)} className="opacity-70 hover:opacity-100">
+          <button onClick={() => setVehicleBanner(null)} className="opacity-70 hover:opacity-100" aria-label="Dismiss banner">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -371,7 +371,7 @@ export default function DriverDashboard() {
         {/* Header */}
         <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-40">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg flex-shrink-0">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg flex-shrink-0" aria-label="Open menu">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <h1 className="text-lg sm:text-xl font-semibold text-[#1B3D2F] truncate">{sectionTitle}</h1>
@@ -404,7 +404,7 @@ export default function DriverDashboard() {
             </button>
 
             <div className="relative" ref={notifRef}>
-              <button onClick={() => setShowNotifDropdown(p => !p)} className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+              <button onClick={() => setShowNotifDropdown(p => !p)} className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg" aria-label="Notifications">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                 {unreadCount > 0 && <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">{unreadCount > 9 ? '9+' : unreadCount}</span>}
               </button>
@@ -431,7 +431,7 @@ export default function DriverDashboard() {
             <div className="relative" ref={profileRef}>
               <button onClick={() => setShowProfileDropdown(p => !p)} className="flex items-center gap-2 hover:bg-gray-50 rounded-lg p-2">
                 <div className="w-8 h-8 bg-[#1B3D2F] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {profileImage ? <img src={profileImage} alt="" className="w-full h-full object-cover" /> : <span className="text-white text-xs font-bold">{initials}</span>}
+                  {profileImage ? <img src={profileImage} alt="Profile photo" className="w-full h-full object-cover" /> : <span className="text-white text-xs font-bold">{initials}</span>}
                 </div>
                 <div className="hidden sm:block text-left min-w-0">
                   <p className="text-sm font-medium text-gray-900 leading-tight truncate">{userData?.name || 'Driver'}</p>
@@ -446,7 +446,7 @@ export default function DriverDashboard() {
                     <div className="p-4 bg-[#1B3D2F]/5 border-b border-gray-200">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#1B3D2F] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {profileImage ? <img src={profileImage} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold text-sm">{initials}</span>}
+                          {profileImage ? <img src={profileImage} alt="Profile photo" className="w-full h-full object-cover" /> : <span className="text-white font-bold text-sm">{initials}</span>}
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{userData?.name || 'Driver'}</p>
@@ -1043,7 +1043,7 @@ export default function DriverDashboard() {
                 <h3 className="text-base font-bold text-gray-900">Trip Details</h3>
                 <p className="text-xs text-gray-400 font-mono">{selectedTrip.requestNumber || selectedTrip.id.slice(0,8)}</p>
               </div>
-              <button onClick={() => setSelectedTrip(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSelectedTrip(null)} className="text-gray-400 hover:text-gray-600" aria-label="Close dialog">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -1150,7 +1150,7 @@ export default function DriverDashboard() {
           <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">Trip QR Code</h3>
-              <button onClick={() => setQrTrip(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setQrTrip(null)} className="text-gray-400 hover:text-gray-600" aria-label="Close dialog">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>

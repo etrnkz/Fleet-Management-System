@@ -214,7 +214,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Header */}
         <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 z-40">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg" aria-label="Open menu">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <h1 className="text-base font-semibold text-[#1B3D2F]">
@@ -290,7 +290,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <p className="text-xs text-gray-500">{user?.role || 'SystemAdmin'}</p>
                 </div>
                 <div className="w-9 h-9 bg-[#1B3D2F] rounded-full flex items-center justify-center overflow-hidden">
-                  {profileImage ? <img src={profileImage} alt="" className="w-full h-full object-cover" /> : <span className="text-white text-xs font-bold">{initials}</span>}
+                  {profileImage ? <img src={profileImage} alt="Profile photo" className="w-full h-full object-cover" /> : <span className="text-white text-xs font-bold">{initials}</span>}
                 </div>
                 <svg className="w-4 h-4 text-gray-400 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -304,7 +304,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="p-4 border-b border-gray-200">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-12 h-12 bg-[#1B3D2F] rounded-full flex items-center justify-center overflow-hidden">
-                          {profileImage ? <img src={profileImage} alt="" className="w-full h-full object-cover" /> : <span className="text-white font-bold text-lg">{initials}</span>}
+                          {profileImage ? <img src={profileImage} alt="Profile photo" className="w-full h-full object-cover" /> : <span className="text-white font-bold text-lg">{initials}</span>}
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-gray-900">{user?.name || 'System Admin'}</p>
@@ -363,7 +363,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">Account Settings</h3>
-              <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close settings">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -383,7 +383,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div className="flex flex-col items-center gap-3 pb-4 border-b border-gray-100">
                     <div className="relative">
                       <div className="w-20 h-20 rounded-full bg-[#1B3D2F] flex items-center justify-center overflow-hidden">
-                        {profileImage ? <img src={profileImage} alt="" className="w-full h-full object-cover" /> : <span className="text-white text-2xl font-bold">{initials}</span>}
+                        {profileImage ? <img src={profileImage} alt="Profile photo" className="w-full h-full object-cover" /> : <span className="text-white text-2xl font-bold">{initials}</span>}
                       </div>
                       <label htmlFor="photoUpload" className="absolute bottom-0 right-0 w-7 h-7 bg-[#1B3D2F] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#152e22]">
                         <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>

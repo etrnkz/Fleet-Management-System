@@ -259,7 +259,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Header */}
         <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 z-40">
           <div className="flex items-center gap-2 sm:gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg" aria-label="Open menu">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <h1 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 truncate">{pageTitle}</h1>
@@ -269,8 +269,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Theme Toggle */}
             <button
               type="button"
-              onClick={toggleTheme}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={toggleTheme}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Toggle theme"
               aria-label="Toggle theme"
             >
               {isDark ? (
@@ -285,7 +286,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
             {/* Notifications */}
             <div className="relative" ref={notifRef}>
-              <button onClick={() => setShowNotifDropdown(p => !p)} className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+              <button onClick={() => setShowNotifDropdown(p => !p)} className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg" aria-label="Toggle notifications">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                 {unreadCount > 0 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] sm:min-w-[20px] sm:h-5 px-1 sm:px-1.5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">{unreadCount > 9 ? '9+' : unreadCount}</span>}
               </button>
@@ -395,7 +396,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
                 <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
-                <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close settings">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -472,7 +473,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="relative">
                           <input type={show ? 'text' : 'password'} value={(passwordForm as any)[key]} onChange={e => setPasswordForm(p => ({...p, [key]: e.target.value}))}
                             className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700 outline-none text-sm" required />
-                          {key !== 'confirmPassword' && <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></button>}
+                          {key !== 'confirmPassword' && <button type="button" onClick={toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label="Toggle password visibility"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></button>}
                         </div>
                       </div>
                     ))}
