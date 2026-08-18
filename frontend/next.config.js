@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
+    // TODO: Fix 54 pre-existing TS errors, then set to false
     ignoreBuildErrors: true,
   },
   eslint: {
+    // TODO: Configure ESLint (.eslintrc.json), then set to false
     ignoreDuringBuilds: true,
   },
 

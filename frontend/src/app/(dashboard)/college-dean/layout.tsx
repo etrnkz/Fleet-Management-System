@@ -70,7 +70,7 @@ export default function DashboardLayout({
   const loadNotifications = async () => {
     try {
       const { notificationApi } = await import('@/lib/api')
-      const data = await notificationApi.getAll(false) // Get unread notifications
+      const data = await notificationApi.getAll()
       setNotifications(Array.isArray(data) ? data.slice(0, 5) : []) // Show only 5 most recent
     } catch (error) {
       console.error('Failed to load notifications:', error)
