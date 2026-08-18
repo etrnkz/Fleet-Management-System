@@ -59,21 +59,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       } catch {}
     }
     // Check maintenance mode status - use raw fetch to avoid auto-logout on 401
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/system-admin/config`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/system-admin/config`, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => r.ok ? r.json() : null).then((cfg: any) => {
       if (cfg) setMaintenanceActive(cfg?.maintenanceMode?.enabled || false)
     }).catch(() => {})
 
     // Load notifications + system health alerts
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/notifications`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications`, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => r.ok ? r.json() : []).then((data: any) => {
       const backendNotifs = Array.isArray(data) ? data.filter((n: any) => !n.isRead).slice(0, 10) : []
       
       // Add system health alerts
       const systemAlerts: any[] = []
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/system-admin/system-health`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/system-admin/system-health`, {
         headers: { Authorization: `Bearer ${token}` }
       }).then(r => r.ok ? r.json() : null).then((health: any) => {
         if (health) {
@@ -100,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSavingProfile(true)
     try {
       const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/users/me`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/users/me`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: profileForm.name, phoneNumber: profileForm.phoneNumber })
@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSavingPassword(true)
     try {
       const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/users/me/password`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/users/me/password`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword })

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
@@ -87,7 +87,7 @@ export default function DashboardLayout({
         if (cachedUser) {
           setUser(cachedUser)
         }
-        // Fetch fresh data from API in background — don't redirect on failure
+        // Fetch fresh data from API in background � don't redirect on failure
         try {
           const freshUser = await userApi.getProfile()
           setUser(freshUser)
@@ -110,7 +110,7 @@ export default function DashboardLayout({
         ? localStorage.getItem('accessToken') || localStorage.getItem('access_token') || sessionStorage.getItem('accessToken') || sessionStorage.getItem('access_token')
         : null
       if (!token) return
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/notifications`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (!res.ok) return
@@ -199,7 +199,7 @@ export default function DashboardLayout({
       ? localStorage.getItem('accessToken') || localStorage.getItem('access_token') || sessionStorage.getItem('accessToken') || sessionStorage.getItem('access_token')
       : null
     if (token && !notification.isRead && !notification.read) {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/notifications/${notification.id}/read`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications/${notification.id}/read`, {
         method: 'PATCH', headers: { Authorization: `Bearer ${token}` }
       }).catch(() => {})
       setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true, isRead: true } : n))
@@ -613,7 +613,7 @@ export default function DashboardLayout({
                                   ? localStorage.getItem('accessToken') || localStorage.getItem('access_token') || sessionStorage.getItem('accessToken') || sessionStorage.getItem('access_token')
                                   : null
                                 if (token) {
-                                  await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/notifications/${notification.id}/read`, {
+                                  await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications/${notification.id}/read`, {
                                     method: 'PATCH', headers: { Authorization: `Bearer ${token}` }
                                   }).catch(() => {})
                                 }
@@ -635,7 +635,7 @@ export default function DashboardLayout({
                               ? localStorage.getItem('accessToken') || localStorage.getItem('access_token') || sessionStorage.getItem('accessToken') || sessionStorage.getItem('access_token')
                               : null
                             if (token) {
-                              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/notifications/read-all`, {
+                              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/notifications/read-all`, {
                                 method: 'PATCH', headers: { Authorization: `Bearer ${token}` }
                               }).catch(() => {})
                             }
@@ -851,7 +851,7 @@ export default function DashboardLayout({
                       <p className="text-sm font-semibold text-blue-900">Assigned Vehicle</p>
                     </div>
                     <p className="text-gray-900 font-bold mb-1">VEH-042 - Toyota Coaster Bus</p>
-                    <p className="text-sm text-gray-600">Plate: ET-3-12345 • Capacity: 45 seats</p>
+                    <p className="text-sm text-gray-600">Plate: ET-3-12345 � Capacity: 45 seats</p>
                     <p className="text-xs text-blue-600 mt-2">Assigned by Deployment Office</p>
                   </div>
 
@@ -1227,8 +1227,8 @@ export default function DashboardLayout({
                     </button>
                     {inviteResult && (
                       <div className="space-y-2">
-                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3"><p className="text-sm font-medium text-[#1B3D2F]">✓ {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p><div className="flex flex-wrap gap-1 mt-1">{inviteResult.invited.map(e => <span key={e} className="text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div></div>}
-                        {inviteResult.failed.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-sm font-medium text-red-800">✗ {inviteResult.failed.length} failed</p><div className="space-y-1 mt-1">{inviteResult.failed.map(f => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div></div>}
+                        {inviteResult.invited.length > 0 && <div className="bg-[#1B3D2F]/10 border border-[#1B3D2F]/20 rounded-lg p-3"><p className="text-sm font-medium text-[#1B3D2F]">? {inviteResult.invited.length} invitation{inviteResult.invited.length !== 1 ? 's' : ''} sent</p><div className="flex flex-wrap gap-1 mt-1">{inviteResult.invited.map(e => <span key={e} className="text-xs bg-[#1B3D2F]/15 text-[#1B3D2F] px-2 py-1 rounded">{e}</span>)}</div></div>}
+                        {inviteResult.failed.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-sm font-medium text-red-800">? {inviteResult.failed.length} failed</p><div className="space-y-1 mt-1">{inviteResult.failed.map(f => <p key={f.email} className="text-xs text-red-700">{f.email}: {f.reason}</p>)}</div></div>}
                       </div>
                     )}
                   </div>

@@ -1,9 +1,9 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 const getToken = () =>
   typeof window !== 'undefined'

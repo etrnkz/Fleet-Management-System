@@ -1,4 +1,4 @@
-ï»¿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { vehicleApi, tripApi, driverApi } from '@/lib/api'
@@ -255,7 +255,7 @@ export default function VehiclesPage() {
     try {
       setSavingGeofence(true)
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'}/vehicles/${geofenceVehicle.id}/geofence`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/vehicles/${geofenceVehicle.id}/geofence`,
         {
           method: 'PATCH',
           headers: {
@@ -577,7 +577,7 @@ export default function VehiclesPage() {
               </div>
             </div>
 
-            {/* Driver Assignment â€” shown prominently at top */}
+            {/* Driver Assignment — shown prominently at top */}
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">
                 Assigned Driver *
@@ -586,12 +586,12 @@ export default function VehiclesPage() {
                 value={serviceForm.assignedDriverId}
                 onChange={e => setServiceForm(f => ({ ...f, assignedDriverId: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1B3D2F] focus:border-transparent outline-none bg-white">
-                <option value="">â€” Select a driver â€”</option>
+                <option value="">— Select a driver —</option>
                 {allDrivers
                   .filter(d => d.status !== 'Inactive')
                   .map(d => (
                     <option key={d.id} value={d.id}>
-                      {d.user?.name} Â· {d.licenseNumber}
+                      {d.user?.name} ? {d.licenseNumber}
                       {d.status === 'Available' ? '' : ` (${d.status})`}
                     </option>
                   ))}

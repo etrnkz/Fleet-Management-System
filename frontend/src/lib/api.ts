@@ -1,7 +1,7 @@
 // Unified API client — all roles
 import { logout } from './logout'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null
@@ -353,7 +353,7 @@ export const trackingApi = {
 }
 
 export const WS_URL = (() => {
-  const base = (process.env.NEXT_PUBLIC_WS_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com').replace(/\/$/, '')
+  const base = (process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000').replace(/\/$/, '')
   // Remove /tracking suffix if present — the namespace is added by socket.io client
   return base.endsWith('/tracking') ? base.slice(0, -'/tracking'.length) : base
 })()

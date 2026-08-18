@@ -84,7 +84,7 @@ export function PushNotificationPrompt() {
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token')
       if (!token) return
-      const base = process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
+      const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
       await fetch(`${base}/notifications/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

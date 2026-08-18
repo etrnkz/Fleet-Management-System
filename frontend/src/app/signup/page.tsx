@@ -7,7 +7,7 @@ import EmailInput from '@/components/EmailInput'
 import PasswordInput from '@/components/PasswordInput'
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 export default function SignupPage() {
   const router = useRouter()

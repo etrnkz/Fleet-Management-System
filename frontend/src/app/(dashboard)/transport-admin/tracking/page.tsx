@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
@@ -142,7 +142,7 @@ export default function LiveTrackingPage() {
       const response = await tripApi.getAll()
       const tripsArray = Array.isArray(response) ? response : []
       
-      // Keep IN_PROGRESS and READY trips — READY means allocated and about to depart
+      // Keep IN_PROGRESS and READY trips � READY means allocated and about to depart
       const inProgressTrips = tripsArray.filter((t: any) => 
         t.state === 'IN_PROGRESS' || t.state === 'READY'
       )
@@ -176,7 +176,7 @@ export default function LiveTrackingPage() {
 
       // Also load service vehicle live locations + registered list
       try {
-        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://fingers-pointer-ste-lottery.trycloudflare.com/api/v1'
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
         const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token') || ''
 
         // Load registered service vehicles (always available, even without live GPS)
@@ -234,14 +234,14 @@ export default function LiveTrackingPage() {
   // Calculate distance between two points (Haversine formula)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371e3 // Earth's radius in meters
-    const φ1 = lat1 * Math.PI / 180
-    const φ2 = lat2 * Math.PI / 180
-    const Δφ = (lat2 - lat1) * Math.PI / 180
-    const Δλ = (lon2 - lon1) * Math.PI / 180
+    const ?1 = lat1 * Math.PI / 180
+    const ?2 = lat2 * Math.PI / 180
+    const ?? = (lat2 - lat1) * Math.PI / 180
+    const ?? = (lon2 - lon1) * Math.PI / 180
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2)
+    const a = Math.sin(??/2) * Math.sin(??/2) +
+              Math.cos(?1) * Math.cos(?2) *
+              Math.sin(??/2) * Math.sin(??/2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
 
     return R * c // Distance in meters
@@ -297,7 +297,7 @@ export default function LiveTrackingPage() {
       lat >= ET_BOUNDS.minLat && lat <= ET_BOUNDS.maxLat &&
       lng >= ET_BOUNDS.minLng && lng <= ET_BOUNDS.maxLng
 
-    // Geocode destination — restrict to Ethiopia
+    // Geocode destination � restrict to Ethiopia
     let destLat: number | null = null
     let destLng: number | null = null
     try {
@@ -313,7 +313,7 @@ export default function LiveTrackingPage() {
       }
     } catch {}
 
-    // Fetch road-following route from OSRM — filter points outside Ethiopia
+    // Fetch road-following route from OSRM � filter points outside Ethiopia
     let plannedRoute: [number, number][] = []
     if (destLat && destLng && inEthiopia(currentLat, currentLng)) {
       try {
@@ -414,7 +414,7 @@ export default function LiveTrackingPage() {
   // Load trips on mount
   useEffect(() => { loadActiveTrips() }, [])
 
-  // Initialize WebSocket — persistent connection regardless of view
+  // Initialize WebSocket � persistent connection regardless of view
   useEffect(() => {
     const token = typeof window !== 'undefined'
       ? (localStorage.getItem('accessToken') || localStorage.getItem('access_token') ||
@@ -434,21 +434,21 @@ export default function LiveTrackingPage() {
     })
 
     socketRef.current.on('connect', () => {
-      console.log('✅ WebSocket connected:', socketRef.current?.id)
+      console.log('? WebSocket connected:', socketRef.current?.id)
       socketRef.current?.emit('join-live')
     })
 
     socketRef.current.on('disconnect', (reason) => {
-      console.warn('⚠️ WebSocket disconnected:', reason)
+      console.warn('?? WebSocket disconnected:', reason)
     })
 
     socketRef.current.on('reconnect', (attempt) => {
-      console.log('🔄 WebSocket reconnected after', attempt, 'attempts')
+      console.log('?? WebSocket reconnected after', attempt, 'attempts')
       socketRef.current?.emit('join-live')
     })
 
     socketRef.current.on('connect_error', (err) => {
-      console.error('❌ WebSocket error:', err.message)
+      console.error('? WebSocket error:', err.message)
     })
 
     socketRef.current.on('live-snapshot', (snapshot: any[]) => {
@@ -509,7 +509,7 @@ export default function LiveTrackingPage() {
     })
 
     socketRef.current.on('geofence-violation', (data: any) => {
-      showToast(`⚠️ ALERT: ${data.vehiclePlate} entered restricted zone!`, 'error')
+      showToast(`?? ALERT: ${data.vehiclePlate} entered restricted zone!`, 'error')
     })
 
     socketRef.current.on('service-vehicle-location', (update: any) => {
@@ -650,12 +650,12 @@ export default function LiveTrackingPage() {
           </div>
         </div>
 
-        {/* Service Vehicles — always show registered ones, merge live GPS */}
+        {/* Service Vehicles � always show registered ones, merge live GPS */}
         {registeredServiceVehicles.length > 0 && (
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
               <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              Service Vehicles — Always Active ({registeredServiceVehicles.length})
+              Service Vehicles � Always Active ({registeredServiceVehicles.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {registeredServiceVehicles.map(sv => {
@@ -666,7 +666,7 @@ export default function LiveTrackingPage() {
                     {/* Header bar */}
                     <div className={`px-4 py-2 flex items-center justify-between ${sv.serviceVehicleType === 'Security' ? 'bg-red-50 border-b border-red-100' : 'bg-blue-50 border-b border-blue-100'}`}>
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sv.serviceVehicleType === 'Security' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                        {sv.serviceVehicleType === 'Security' ? '🛡 Security' : '🚌 Shuttle'}
+                        {sv.serviceVehicleType === 'Security' ? '?? Security' : '?? Shuttle'}
                       </span>
                       {hasLive ? (
                         <span className="flex items-center gap-1.5 text-xs text-green-700 font-semibold">
@@ -684,7 +684,7 @@ export default function LiveTrackingPage() {
                     <div className="p-4 space-y-2">
                       <div>
                         <p className="font-bold text-gray-900">{sv.plateNumber}</p>
-                        <p className="text-sm text-gray-500">{sv.make} {sv.model} · {sv.year}</p>
+                        <p className="text-sm text-gray-500">{sv.make} {sv.model} ? {sv.year}</p>
                       </div>
 
                       {/* Driver */}
@@ -758,7 +758,7 @@ export default function LiveTrackingPage() {
                       )}
                       {trip.isInRestrictedZone && (
                         <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 animate-pulse">
-                          ⚠️ In Restricted Zone
+                          ?? In Restricted Zone
                         </span>
                       )}
                     </div>
@@ -948,7 +948,7 @@ export default function LiveTrackingPage() {
               Tracking: {selectedTrip?.requestNumber}
             </h1>
             <p className="text-sm text-gray-600">
-              {selectedTrip?.destination} • {selectedTrip?.requester.name}
+              {selectedTrip?.destination} � {selectedTrip?.requester.name}
             </p>
           </div>
         </div>
@@ -977,7 +977,7 @@ export default function LiveTrackingPage() {
         </div>
       </div>
 
-      {/* Trip Statistics — live from GPS WebSocket */}
+      {/* Trip Statistics � live from GPS WebSocket */}
       {vehicles.length > 0 && vehicles[0].traveledKm != null && vehicles[0].traveledKm > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -1004,7 +1004,7 @@ export default function LiveTrackingPage() {
               <div>
                 <p className="text-xs text-gray-500">Fuel Remaining</p>
                 <p className="text-xl font-bold text-gray-900">{vehicles[0].fuelRemainingLiters?.toFixed(1)} L</p>
-                <p className="text-xs text-gray-400">{vehicles[0].fuelRemainingPercent}% · ~{vehicles[0].fuelRemainingKm} km</p>
+                <p className="text-xs text-gray-400">{vehicles[0].fuelRemainingPercent}% ? ~{vehicles[0].fuelRemainingKm} km</p>
               </div>
             </div>
           </div>
@@ -1043,7 +1043,7 @@ export default function LiveTrackingPage() {
         {!selectedTrip?.currentLocation && (
           <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-yellow-500 border-t-transparent" />
-            <span className="text-sm text-yellow-700 font-medium">Waiting for live GPS from driver — showing trip start area</span>
+            <span className="text-sm text-yellow-700 font-medium">Waiting for live GPS from driver � showing trip start area</span>
           </div>
         )}
         <div className="h-[calc(100vh-200px)]">
